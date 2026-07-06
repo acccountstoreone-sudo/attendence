@@ -7,7 +7,7 @@ import { Camera, CheckCircle2, AlertCircle, RefreshCw, ShieldCheck, ScanFace } f
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface FaceCaptureProps {
-  onCapture: (base64Image: string) => Promise<void>;
+  onCapture: (base64Image: string, faceDescriptor?: number[]) => Promise<void>;
   isGpsVerified: boolean;
   gpsDistance?: number | null;
   isLoading?: boolean;
@@ -27,6 +27,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [cameraError, setCameraError] = useState<string>('');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [faceDescriptor, setFaceDescriptor] = useState<number[] | null>(null);
   const [verificationState, setVerificationState] = useState<VerificationState>('idle');
   const [feedback, setFeedback] = useState<string>('Align your face within the biometric frame');
 
@@ -86,23 +87,59 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const handleConfirmSubmit = async () => {
     if (!capturedImage) return;
     
-    // Simulate premium verification flow
     setVerificationState('scanning');
     setFeedback('Scanning facial topography...');
     
-    await new Promise(r => setTimeout(r, 1200));
-    setVerificationState('extracting');
-    setFeedback('Extracting biometric vectors...');
-    
-    await new Promise(r => setTimeout(r, 1200));
-    setVerificationState('matching');
-    setFeedback('Matching against secure database...');
-    
-    await new Promise(r => setTimeout(r, 1500));
-    setVerificationState('success');
-    setFeedback('Identity Verified. Processing check-in...');
-    
-    await onCapture(capturedImage);
+    try {
+      const faceapi = await import('@vladmandic/face-api');
+      
+      // Ensure models are loaded
+      if (!faceapi.nets.tinyFaceDetector.isLoaded) {
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+          faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+          faceapi.nets.faceRecognitionNet.loadFromUri('/models')
+        ]);
+      }
+
+      setVerificationState('extracting');
+      setFeedback('Extracting biometric vectors...');
+
+      if (!canvasRef.current) throw new Error('Canvas not available');
+
+      // Create an image element from capturedImage to process
+      const img = new Image();
+      img.src = capturedImage;
+      await new Promise((resolve) => { img.onload = resolve; });
+
+      const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+      if (!detection) {
+        setVerificationState('idle');
+        setFeedback('No face detected or features unclear. Please retake.');
+        setCapturedImage(null);
+        return;
+      }
+
+      setFaceDescriptor(Array.from(detection.descriptor));
+
+      setVerificationState('matching');
+      setFeedback('Matching against secure database...');
+      
+      await new Promise(r => setTimeout(r, 800)); // Minimal delay for UI feedback
+      
+      setVerificationState('success');
+      setFeedback('Identity Verified. Processing check-in...');
+      
+      await onCapture(capturedImage, Array.from(detection.descriptor));
+    } catch (err) {
+      console.error(err);
+      setVerificationState('idle');
+      setFeedback('Biometric extraction failed. Please try again.');
+      setCapturedImage(null);
+    }
   };
 
   const isSimulating = verificationState !== 'idle' && verificationState !== 'success';

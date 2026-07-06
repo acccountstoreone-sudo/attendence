@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { isWithinGeofence } from '@/lib/geo';
+import { getEuclideanDistance } from '@/lib/biometric';
 import { z } from 'zod';
 
 const checkOutSchema = z.object({
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
-  face_verified: z.boolean().optional().default(true),
+  face_verified: z.boolean(),
+  faceDescriptor: z.array(z.number()).optional(),
+  facial_id: z.string().optional(),
+  is_offline_sync: z.boolean().optional().default(false),
   timestamp: z.string().datetime().optional(),
 });
 
@@ -17,14 +21,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const payload = checkOutSchema.parse(body);
 
-    if (!payload.face_verified) {
+    // 3. Biometric Verification Check
+    if (!payload.face_verified || !payload.faceDescriptor) {
       return NextResponse.json(
         {
           success: false,
           data: null,
           error: {
             code: 'BIOMETRIC_FAILED',
-            message: 'FaceIO biometric verification required for check-out.',
+            message: 'Biometric verification failed. Face descriptor missing.',
           },
           timestamp: new Date().toISOString(),
         },
@@ -33,6 +38,44 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient();
+
+    // 3b. Verify against stored face descriptor
+    const { data: profile } = await supabase.from('profiles').select('face_descriptor').eq('id', user.id).single();
+    
+    if (!profile || !profile.face_descriptor) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: 'BIOMETRIC_ENROLLMENT_MISSING',
+            message: 'No facial biometric data found for this employee. Please register your face first.',
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 403 }
+      );
+    }
+
+    try {
+      const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
+      if (distance > 0.6) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: 'BIOMETRIC_MISMATCH',
+              message: `Face verification failed. Distance: ${distance.toFixed(3)}. You do not match the registered employee.`,
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
+    } catch (err) {
+      return NextResponse.json({ success: false, data: null, error: { code: 'BIOMETRIC_ERROR', message: 'Error processing facial comparison.' } }, { status: 500 });
+    }
 
     // Find today's open attendance record
     const startOfDay = new Date();

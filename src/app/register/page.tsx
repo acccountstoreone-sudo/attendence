@@ -104,6 +104,7 @@ export default function RegisterPage() {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [faceDetected, setFaceDetected] = useState(false);
   const [faceMessage, setFaceMessage] = useState('Initializing Scanner...');
+  const [faceDescriptor, setFaceDescriptor] = useState<number[] | null>(null);
 
   // Load Face API Models when step changes to face_scan
   useEffect(() => {
@@ -111,7 +112,11 @@ export default function RegisterPage() {
       const loadModels = async () => {
         try {
           const faceapi = await import('@vladmandic/face-api');
-          await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+          await Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+            faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+            faceapi.nets.faceRecognitionNet.loadFromUri('/models')
+          ]);
           setModelsLoaded(true);
           setFaceMessage('Please center your face in the frame');
         } catch (e) {
@@ -290,17 +295,34 @@ export default function RegisterPage() {
     setStep('face_scan');
   };
 
-  const captureFace = useCallback(() => {
+  const captureFace = useCallback(async () => {
     setScanning(true);
-    
-    // Simulate a 3-second 3D scanning process
-    setTimeout(() => {
-      const imageSrc = webcamRef.current?.getScreenshot();
-      if (imageSrc) {
-        setFaceImage(imageSrc);
+    setFaceMessage('Extracting biometric vectors...');
+    try {
+      if (webcamRef.current && webcamRef.current.video) {
+        const video = webcamRef.current.video;
+        const faceapi = await import('@vladmandic/face-api');
+        
+        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+
+        if (detection) {
+          const imageSrc = webcamRef.current.getScreenshot();
+          if (imageSrc) setFaceImage(imageSrc);
+          setFaceDescriptor(Array.from(detection.descriptor));
+          setFaceMessage('Biometric enrollment successful!');
+        } else {
+          setFeedback({ type: 'error', message: 'Failed to extract facial features. Try again.' });
+          setFaceMessage('Please center your face in the frame');
+        }
       }
+    } catch (err) {
+      console.error(err);
+      setFeedback({ type: 'error', message: 'Biometric extraction failed.' });
+    } finally {
       setScanning(false);
-    }, 3000);
+    }
   }, [webcamRef]);
 
   const handleFinalSubmit = async () => {
@@ -310,8 +332,8 @@ export default function RegisterPage() {
       return;
     }
 
-    if (!faceImage) {
-      setFeedback({ type: 'error', message: 'Please complete the face scan.' });
+    if (!faceImage || !faceDescriptor) {
+      setFeedback({ type: 'error', message: 'Please complete the face scan properly.' });
       return;
     }
     
@@ -322,7 +344,12 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/kyc-submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nidFrontDataUrl: nidFront, nidBackDataUrl: nidBack, facePhotoDataUrl: faceImage }),
+        body: JSON.stringify({ 
+          nidFrontDataUrl: nidFront, 
+          nidBackDataUrl: nidBack, 
+          facePhotoDataUrl: faceImage,
+          faceDescriptor: faceDescriptor 
+        }),
       });
 
       const data = await res.json();
@@ -471,12 +498,16 @@ export default function RegisterPage() {
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Branch</label>
                   <div className="relative">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                    <select name="branchId" required value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: e.target.value })} className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#D2A02A] focus:outline-none text-white appearance-none">
-                      <option value="" disabled>Select your branch</option>
+                    <select name="branchId" required value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: e.target.value })} className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-3 pl-11 pr-10 text-sm focus:border-[#D2A02A] focus:outline-none text-white appearance-none">
+                      <option value="" disabled className="bg-[#061224] text-white">Select your branch</option>
                       {branches.map(b => (
-                        <option key={b.id} value={b.id}>{b.name}</option>
+                        <option key={b.id} value={b.id} className="bg-[#061224] text-white">{b.name}</option>
                       ))}
                     </select>
+                    {/* Custom chevron to indicate dropdown since appearance-none removes it */}
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#64748B]">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
                   </div>
                 </div>
                 <button type="submit" disabled={loading} className="w-full bg-[#D2A02A] hover:bg-[#C08F1E] text-[#040A15] font-bold py-3.5 rounded-xl mt-4 flex items-center justify-center gap-2">

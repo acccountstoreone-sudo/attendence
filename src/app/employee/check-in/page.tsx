@@ -70,8 +70,11 @@ export default function EmployeeCheckInPage() {
     loadData();
   }, [supabase]);
 
-  const handleBiometricSubmit = async (base64Image: string) => {
-    if (!locationState || !userProfile) return;
+  const handleBiometricSubmit = async (base64Image: string, faceDescriptor?: number[]) => {
+    if (!locationState || !userProfile || !faceDescriptor) {
+       setFeedback({ type: 'error', message: 'Missing location or biometric data. Please try again.' });
+       return;
+    }
     setSubmitting(true);
     setFeedback(null);
     try {
@@ -83,11 +86,13 @@ export default function EmployeeCheckInPage() {
               longitude: locationState.longitude,
               photo_url: base64Image, // In production, upload blob to bucket and pass URL
               face_verified: true,
+              faceDescriptor: faceDescriptor,
             }
           : {
               latitude: locationState.latitude,
               longitude: locationState.longitude,
               face_verified: true,
+              faceDescriptor: faceDescriptor,
             };
 
       const res = await fetch(endpoint, {

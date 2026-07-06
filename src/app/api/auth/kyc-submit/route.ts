@@ -36,10 +36,10 @@ async function uploadDataUrl(supabase: import('@supabase/supabase-js').SupabaseC
 
 export async function POST(request: Request) {
   try {
-    const { nid, nidFrontDataUrl, nidBackDataUrl, facePhotoDataUrl } = await request.json();
+    const { nid, nidFrontDataUrl, nidBackDataUrl, facePhotoDataUrl, faceDescriptor } = await request.json();
 
-    if (!nidFrontDataUrl || !nidBackDataUrl || !facePhotoDataUrl) {
-      return NextResponse.json({ error: 'NID Front copy, NID Back copy, and Face Photo are required.' }, { status: 400 });
+    if (!nidFrontDataUrl || !nidBackDataUrl || !facePhotoDataUrl || !faceDescriptor) {
+      return NextResponse.json({ error: 'NID Front copy, NID Back copy, Face Photo, and Biometric Data are required.' }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -64,6 +64,7 @@ export async function POST(request: Request) {
         kyc_status: 'pending',
         registration_step: 'pending_approval',
         face_enrolled: true,
+        face_descriptor: faceDescriptor,
         photo_url: photoUrl
       })
       .eq('id', user.id);
