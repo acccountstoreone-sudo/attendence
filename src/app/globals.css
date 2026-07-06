@@ -1,0 +1,192 @@
+@import "tailwindcss";
+
+:root {
+  --background: #040A15;
+  --foreground: #f3f4f6;
+  --card: #061224;
+  --card-foreground: #f3f4f6;
+  --popover: #061224;
+  --popover-foreground: #f3f4f6;
+  --primary: #D2A02A;
+  --primary-foreground: #040A15;
+  --secondary: #1E293B;
+  --secondary-foreground: #f3f4f6;
+  --muted: #0F172A;
+  --muted-foreground: #94a3b8;
+  --accent: #1E293B;
+  --accent-foreground: #D2A02A;
+  --destructive: #ef4444;
+  --destructive-foreground: #f3f4f6;
+  --border: #1E293B;
+  --input: #1E293B;
+  --ring: #D2A02A;
+  --radius: 0.75rem;
+
+  --emerald: #10b981;
+  --rose: #ef4444;
+  --amber: #f59e0b;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+
+  --color-emerald-accent: var(--emerald);
+  --color-rose-accent: var(--rose);
+  --color-amber-accent: var(--amber);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  min-height: 100vh;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Glassmorphism Styles */
+.glass-panel {
+  background: rgba(6, 18, 36, 0.65); /* #061224 with opacity */
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  border: 1px solid var(--border);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-panel-hover:hover {
+  transform: translateY(-2px);
+  border-color: rgba(210, 160, 42, 0.25); /* #D2A02A */
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.5),
+    0 0 1px 1px rgba(210, 160, 42, 0.15);
+}
+
+/* Floating Navigation sidebar glass styling */
+.glass-sidebar {
+  background: rgba(10, 10, 14, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border);
+}
+
+.light-mode .glass-sidebar {
+  background: rgba(255, 255, 255, 0.75);
+  border-right: 1px solid var(--border);
+}
+
+/* Luxury visual glows */
+.gold-glow {
+  box-shadow: 0 0 40px -10px rgba(210, 160, 42, 0.15);
+}
+
+.gold-glow-hover:hover {
+  box-shadow: 0 0 50px -5px rgba(210, 160, 42, 0.25);
+}
+
+.premium-export-btn {
+  background: linear-gradient(135deg, #0d6efd, #2563eb);
+  color: #fff;
+  padding: 0.35rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.premium-export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+.premium-export-btn:active {
+  transform: translateY(0);
+}
+
+.premium-gradient {
+  background: linear-gradient(135deg, #D2A02A 0%, #aa7c11 50%, #f3e5ab 100%);
+}
+
+.premium-text-gradient {
+  background: linear-gradient(135deg, #f3e5ab 0%, #D2A02A 50%, #f9f5e8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark-gradient {
+  background: linear-gradient(
+    180deg,
+    rgba(20, 20, 25, 0.9) 0%,
+    rgba(10, 10, 12, 0.95) 100%
+  );
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Shimmer animation for skeleton load */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.04) 20%,
+    rgba(255, 255, 255, 0.08) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 2s infinite;
+  content: "";
+}
+
+@keyframes scan {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(60px);
+  }
+}
