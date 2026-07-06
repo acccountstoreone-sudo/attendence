@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
 const createBranchSchema = z.object({
@@ -27,7 +28,12 @@ export async function GET(request: NextRequest) {
 
     if (isPublic) {
       // Public request (e.g. for registration dropdown)
-      query = supabase
+      // Must use service_role key to bypass RLS since unauthenticated users cannot read branches by default.
+      const adminSupabase = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      query = adminSupabase
         .from('branches')
         .select('id, name')
         .eq('is_active', true)
