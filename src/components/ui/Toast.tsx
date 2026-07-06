@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, AlertTriangle, AlertCircle, Info, X } from 'lucide-react';
 
-export type ToastType = 'success' | 'warning' | 'error' | 'info';
+export type ToastType = 'success' | 'warning' | 'error' | 'info' | 'alert';
 
 export interface ToastProps {
   id?: string;
@@ -36,6 +36,7 @@ export const Toast: React.FC<ToastProps> = ({
     warning: <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />,
     error: <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />,
     info: <Info className="w-5 h-5 text-blue-400 shrink-0" />,
+    alert: <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />,
   };
 
   const borders = {
@@ -43,6 +44,7 @@ export const Toast: React.FC<ToastProps> = ({
     warning: 'border-amber-500/40 bg-amber-950/90 text-amber-100 shadow-amber-900/20',
     error: 'border-rose-500/40 bg-rose-950/90 text-rose-100 shadow-rose-900/20',
     info: 'border-blue-500/40 bg-blue-950/90 text-blue-100 shadow-blue-900/20',
+    alert: 'border-rose-500/40 bg-rose-950/90 text-rose-100 shadow-rose-900/20',
   };
 
   return (

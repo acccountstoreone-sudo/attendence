@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Lock, Mail, Eye, EyeOff, AlertTriangle, Check, ShieldCheck, Fingerprint, ScanFace, MapPin, Orbit } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Abstract3DBackground from '@/components/Abstract3DBackground';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -284,5 +284,13 @@ export default function LoginPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#040A15] flex items-center justify-center text-white font-sans">Loading Portal...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }
