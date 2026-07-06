@@ -85,7 +85,7 @@ export default function EmployeeProfilePage() {
             View your personal information and account settings.
           </p>
         </div>
-        <Badge status={profile.is_active ? 'active' : 'suspended'}>
+        <Badge status={profile.is_active ? 'active' : 'inactive'}>
           {profile.is_active ? 'Account Active' : 'Account Suspended'}
         </Badge>
       </div>
