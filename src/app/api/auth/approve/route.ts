@@ -16,16 +16,12 @@ export async function POST(request: Request) {
     if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     if (action === 'approve') {
-      // Get manager's branch to assign to the new employee
-      const { data: bmProfile } = await supabase.from('profiles').select('branch_id').eq('id', currentUser.id).single();
-
       const { error } = await supabase
         .from('profiles')
         .update({ 
           registration_step: 'completed',
           kyc_status: 'verified',
-          is_active: true,
-          branch_id: bmProfile?.branch_id || null
+          is_active: true
         })
         .eq('id', userId);
 

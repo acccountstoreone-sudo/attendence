@@ -10,7 +10,9 @@ export interface ModalProps {
   title?: string;
   description?: string;
   children: React.ReactNode;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl';
+  hideHeader?: boolean;
+  noPadding?: boolean;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -20,6 +22,8 @@ export const Modal: React.FC<ModalProps> = ({
   description,
   children,
   maxWidth = 'md',
+  hideHeader = false,
+  noPadding = false,
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -47,6 +51,10 @@ export const Modal: React.FC<ModalProps> = ({
     lg: 'max-w-lg',
     xl: 'max-w-xl',
     '2xl': 'max-w-2xl',
+    '3xl': 'max-w-3xl',
+    '4xl': 'max-w-4xl',
+    '5xl': 'max-w-5xl',
+    '6xl': 'max-w-6xl',
   };
 
   return (
@@ -57,24 +65,27 @@ export const Modal: React.FC<ModalProps> = ({
       {/* Modal Dialog */}
       <div
         className={cn(
-          'relative w-full bg-[#061224] border border-[#1E293B] rounded-2xl shadow-2xl p-6 z-10 animate-in zoom-in-95 duration-200 text-slate-100',
+          'relative w-full bg-[#061224] border border-[#1E293B] rounded-2xl shadow-2xl z-10 animate-in zoom-in-95 duration-200 text-slate-100',
+          noPadding ? '' : 'p-6',
           maxWidthClasses[maxWidth]
         )}
       >
-        <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#1E293B]">
-          <div>
-            {title && <h3 className="text-lg font-bold text-white">{title}</h3>}
-            {description && <p className="text-xs text-slate-400 mt-0.5">{description}</p>}
+        {!hideHeader && (
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#1E293B]">
+            <div>
+              {title && <h3 className="text-lg font-bold text-white">{title}</h3>}
+              {description && <p className="text-xs text-slate-400 mt-0.5">{description}</p>}
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1E293B] transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1E293B] transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        )}
 
-        <div className="space-y-4">{children}</div>
+        <div className={noPadding ? '' : 'space-y-4'}>{children}</div>
       </div>
     </div>
   );

@@ -1,0 +1,235 @@
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Spinner } from '@/components/ui/Spinner';
+import {
+  Search,
+  CheckCircle2,
+  XCircle,
+  Eye,
+  EyeOff,
+  ShieldAlert,
+} from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface Employee {
+  id: string;
+  full_name: string;
+  email: string;
+  phone?: string;
+  role: 'employee' | 'branch_manager';
+  branch_id?: string;
+  branch_name?: string;
+  employee_id?: string;
+  is_active: boolean;
+  created_at: string;
+  registration_step?: string;
+  kyc_status?: string;
+}
+
+export default function StoreEmployeesPage() {
+  const supabase = createClient();
+  const [loading, setLoading] = useState(true);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showInactive, setShowInactive] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    // The API automatically filters by the branch manager's branch
+    const res = await fetch('/api/employees?include_inactive=true');
+    const json = await res.json();
+    if (json.success) {
+      const allEmps = json.data || [];
+      // Filter out branch managers if we only want to manage staff, or keep all
+      setEmployees(allEmps.filter((e: Employee) => e.role === 'employee'));
+    }
+    setLoading(false);
+  }, []);
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const toggleActive = async (emp: Employee) => {
+    setTogglingId(emp.id);
+    setFeedback(null);
+    try {
+      const res = await fetch(`/api/employees/${emp.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !emp.is_active }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error?.message || 'Failed to update employee status.');
+      }
+      setFeedback({
+        type: 'success',
+        text: `${emp.full_name} has been ${!emp.is_active ? 'restored' : 'suspended'} successfully.`,
+      });
+      await loadData();
+    } catch (err: unknown) {
+      setFeedback({ type: 'error', text: (err as Error).message || 'Failed to update status.' });
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const filteredEmployees = employees.filter((e) => {
+    const matchesSearch =
+      e.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      e.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesActive = showInactive ? !e.is_active : e.is_active;
+    return matchesSearch && matchesActive;
+  });
+
+  const activeCount = employees.filter((e) => e.is_active).length;
+  const inactiveCount = employees.filter((e) => !e.is_active).length;
+
+  return (
+    <div className="space-y-6 pb-12">
+      {/* Sleek Minimal Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1E293B] pb-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-100 tracking-tight">Store Employees</h1>
+          <p className="text-sm text-slate-400 mt-1">Manage staff accounts and operational access for this branch.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4 text-sm text-slate-400 bg-[#0A101C] border border-[#1E293B] px-4 py-2 rounded-xl">
+            <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>{activeCount} Active</span>
+            <div className="w-px h-4 bg-[#1E293B]"></div>
+            <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-rose-500"></div>{inactiveCount} Suspended</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Feedback Banner */}
+      <AnimatePresence>
+        {feedback && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className={`flex items-center gap-3 p-4 rounded-xl border text-sm font-medium ${
+              feedback.type === 'success'
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+            }`}
+          >
+            {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <XCircle className="w-5 h-5 shrink-0" />}
+            <span>{feedback.text}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Action Bar */}
+      <div className="flex flex-wrap gap-3 items-center justify-between bg-[#0A101C] p-3 rounded-xl border border-[#1E293B]">
+        <div className="relative w-full sm:w-80">
+          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+          <input
+            type="text"
+            placeholder="Search staff by name or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-transparent border border-[#1E293B] rounded-lg text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition-colors"
+          />
+        </div>
+
+        <button
+          onClick={() => setShowInactive(!showInactive)}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+            showInactive
+              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+              : 'text-slate-400 hover:text-slate-200 border border-transparent hover:bg-[#1E293B]/50'
+          }`}
+        >
+          {showInactive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+          {showInactive ? `Viewing Suspended Staff` : 'Show Suspended Staff'}
+        </button>
+      </div>
+
+      {/* Roster Table */}
+      <div className="bg-[#0A101C] border border-[#1E293B] rounded-xl overflow-hidden shadow-lg">
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <Spinner size="lg" />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-transparent text-slate-500 text-xs font-semibold uppercase border-b border-[#1E293B]">
+                  <th className="py-4 px-6">Staff Member</th>
+                  <th className="py-4 px-6">ID / Contact</th>
+                  <th className="py-4 px-6 text-center">Status</th>
+                  <th className="py-4 px-6 text-right">Access Control</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#1E293B]">
+                {filteredEmployees.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-16 text-center text-slate-500 text-sm">
+                      <ShieldAlert className="w-8 h-8 text-slate-700 mx-auto mb-3" />
+                      {showInactive ? 'No suspended employees found.' : 'No active employees found matching criteria.'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredEmployees.map((emp) => (
+                    <tr key={emp.id} className="hover:bg-[#1E293B]/20 transition-colors">
+                      <td className="py-4 px-6">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-medium text-sm shrink-0 border border-slate-700">
+                            {emp.full_name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-200 text-sm">{emp.full_name}</p>
+                            <p className="text-xs text-slate-500 mt-0.5">{emp.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <p className="text-xs font-mono text-slate-400 mb-0.5">
+                          {emp.employee_id || 'PENDING-ID'}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {emp.phone || 'No phone'}
+                        </p>
+                      </td>
+                      <td className="py-4 px-6 text-center">
+                        {emp.registration_step === 'pending_approval' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md border border-amber-500/20 text-[11px] font-semibold text-amber-500 bg-amber-500/5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            KYC PENDING
+                          </span>
+                        ) : (
+                          <Badge status={emp.is_active ? 'active' : 'inactive'} />
+                        )}
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className={`px-3 py-1.5 text-xs font-semibold rounded-lg ${emp.is_active ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-500/10' : 'text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10'}`}
+                          onClick={() => toggleActive(emp)}
+                          disabled={togglingId === emp.id || emp.registration_step === 'pending_approval'}
+                          isLoading={togglingId === emp.id}
+                        >
+                          {emp.is_active ? 'Suspend Access' : 'Restore Access'}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

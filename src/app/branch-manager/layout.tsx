@@ -30,11 +30,15 @@ export default function BranchManagerLayout({ children }: { children: React.Reac
         return;
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('id, full_name, role, branch_id, branches!profiles_branch_id_fkey(name)')
         .eq('id', user.id)
         .single();
+
+      if (error) {
+        console.error('Failed to fetch profile in branch manager layout:', error);
+      }
 
       if (!profile || (profile.role !== 'branch_manager' && profile.role !== 'admin')) {
         router.push('/login?error=unauthorized');

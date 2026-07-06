@@ -40,7 +40,6 @@ export default function ManualCorrectionsPage() {
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // B15 fix: Wrap loadCorrections in useCallback
   const loadCorrections = useCallback(async () => {
     setLoading(true);
     try {
@@ -91,114 +90,121 @@ export default function ManualCorrectionsPage() {
   const pendingCount = corrections.filter((c) => c.status === 'pending').length;
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-amber-950/20 to-slate-900 p-6 rounded-3xl border border-amber-500/20 shadow-2xl">
+    <div className="space-y-6 pb-12">
+      {/* Sleek Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1E293B] pb-6">
         <div>
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">Supervisor Action Required</span>
+          <div className="flex items-center space-x-2 mb-1">
             {pendingCount > 0 && (
-              <span className="px-2 py-0.5 bg-amber-600 text-white text-xs font-extrabold rounded-full animate-pulse">
-                {pendingCount} Pending
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-amber-500/20 text-[11px] font-semibold text-amber-500 bg-amber-500/5">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                {pendingCount} Pending Action{pendingCount !== 1 ? 's' : ''}
               </span>
             )}
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white mt-1">Manual Attendance Corrections</h1>
+          <h1 className="text-2xl font-semibold text-slate-100 tracking-tight">Manual Corrections</h1>
           <p className="text-sm text-slate-400 mt-1">
             Review and authorize staff requests for attendance timestamp adjustments.
           </p>
         </div>
       </div>
 
-      {/* B10 fix: Feedback Banner */}
+      {/* Feedback Banner */}
       <AnimatePresence mode="wait">
         {feedback && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className={`p-4 rounded-2xl border flex items-center space-x-3 shadow-lg ${
+            className={`p-4 rounded-xl border flex items-center space-x-3 shadow-lg ${
               feedback.type === 'success'
-                ? 'bg-emerald-950/80 border-emerald-500/30 text-emerald-300'
-                : 'bg-rose-950/80 border-rose-500/30 text-rose-300'
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
             }`}
           >
-            {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" /> : <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />}
+            {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <AlertTriangle className="w-5 h-5 shrink-0" />}
             <span className="text-sm font-semibold">{feedback.message}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Filters */}
-      <Card className="bg-slate-900 border-slate-800 p-4 flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+      {/* Action Bar */}
+      <div className="flex flex-wrap gap-3 items-center justify-between bg-[#0A101C] p-3 rounded-xl border border-[#1E293B]">
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Search staff name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full pl-9 pr-4 py-2 bg-transparent border border-[#1E293B] rounded-lg text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition-colors"
           />
         </div>
-        <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-bold">
+        <div className="flex bg-[#1E293B]/30 p-1 rounded-lg border border-[#1E293B]">
           {(['pending', 'approved', 'rejected', 'all'] as const).map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`px-3 py-1.5 rounded-lg transition-all capitalize ${filter === s ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all capitalize ${
+                filter === s
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
             >
               {s}
             </button>
           ))}
         </div>
-      </Card>
+      </div>
 
       {/* Corrections List */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Spinner size="lg" label="Loading Correction Requests..." />
+        <div className="flex items-center justify-center py-20 border border-[#1E293B] rounded-xl bg-[#040A15]">
+          <Spinner size="md" />
         </div>
       ) : filtered.length === 0 ? (
-        <Card className="p-16 text-center border-slate-800 border-dashed">
-          <UserCheck className="w-16 h-16 text-slate-700 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-slate-400">
-            {filter === 'pending' ? 'No Pending Requests — You\'re All Caught Up!' : `No ${filter} correction requests.`}
+        <div className="p-16 text-center border border-[#1E293B] bg-[#0A101C] rounded-xl">
+          <UserCheck className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+          <h3 className="text-sm font-medium text-slate-400">
+            {filter === 'pending' ? 'No pending requests. You are all caught up.' : `No ${filter} correction requests found.`}
           </h3>
-        </Card>
+        </div>
       ) : (
         <div className="space-y-3">
           {filtered.map((req) => (
-            <Card key={req.id} variant="elevated" className={`border-l-4 ${req.status === 'pending' ? 'border-l-amber-500' : req.status === 'approved' ? 'border-l-emerald-500' : 'border-l-rose-500'}`}>
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div key={req.id} className="bg-[#0A101C] border border-[#1E293B] p-4 rounded-xl shadow-sm hover:border-slate-700 transition-colors">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start space-x-4">
-                  <div className={`p-3 rounded-2xl shrink-0 ${req.status === 'pending' ? 'bg-amber-950/80 text-amber-400' : req.status === 'approved' ? 'bg-emerald-950/80 text-emerald-400' : 'bg-rose-950/80 text-rose-400'}`}>
-                    <Clock className="w-6 h-6" />
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${
+                    req.status === 'pending'
+                      ? 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+                      : req.status === 'approved'
+                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                      : 'bg-rose-500/10 border-rose-500/20 text-rose-500'
+                  }`}>
+                    <Clock className="w-5 h-5" />
                   </div>
 
                   <div>
                     <div className="flex items-center space-x-2 mb-1">
-                      <h4 className="font-bold text-white text-sm">{req.employee_name}</h4>
-                      <Badge
-                        status={req.status === 'pending' ? 'late' : req.status === 'approved' ? 'present' : 'absent'}
-                        variant="subtle"
-                      >
+                      <h4 className="font-semibold text-slate-200 text-sm">{req.employee_name}</h4>
+                      <Badge status={req.status === 'pending' ? 'late' : req.status === 'approved' ? 'present' : 'absent'} variant="subtle">
                         {req.status.toUpperCase()}
                       </Badge>
                     </div>
 
-                    <div className="text-xs text-slate-400 space-y-1">
+                    <div className="text-xs text-slate-400 space-y-1.5 mt-2">
                       <div className="flex items-center space-x-2">
                         <Calendar className="w-3.5 h-3.5 shrink-0 text-slate-500" />
-                        <span><strong className="text-slate-300">{req.date}</strong> — Correction Type: <strong className="text-amber-400 capitalize">{req.type.replace('_', ' ')}</strong></span>
+                        <span><strong className="text-slate-300 font-medium">{req.date}</strong> <span className="text-slate-600 px-1">•</span> <strong className="text-amber-500/90 capitalize">{req.type.replace('_', ' ')}</strong></span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Clock className="w-3.5 h-3.5 shrink-0 text-slate-500" />
-                        <span>Original: <strong className="text-slate-300">{req.original_time || '—'}</strong> → Requested: <strong className="text-blue-400">{req.requested_time}</strong></span>
+                        <span>Original: <strong className="text-slate-300 font-medium">{req.original_time || '—'}</strong> <span className="text-slate-600 px-1">→</span> Requested: <strong className="text-blue-400 font-medium">{req.requested_time}</strong></span>
                       </div>
                       <div className="flex items-start space-x-2">
                         <User className="w-3.5 h-3.5 shrink-0 text-slate-500 mt-0.5" />
-                        <span>Reason: <span className="text-slate-300 italic">&quot;{req.reason}&quot;</span></span>
+                        <span className="text-slate-400">Reason: <span className="italic text-slate-300">&quot;{req.reason}&quot;</span></span>
                       </div>
                     </div>
                   </div>
@@ -208,8 +214,9 @@ export default function ManualCorrectionsPage() {
                   <div className="flex items-center space-x-2 shrink-0">
                     <Button
                       size="sm"
-                      variant="danger"
-                      icon={<X className="w-4 h-4" />}
+                      variant="ghost"
+                      className="text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 px-3 py-1.5 h-auto text-xs font-semibold rounded-lg"
+                      icon={<X className="w-3.5 h-3.5" />}
                       onClick={() => handleReview(req.id, 'rejected')}
                       isLoading={processing}
                     >
@@ -218,8 +225,8 @@ export default function ManualCorrectionsPage() {
                     <Button
                       size="sm"
                       variant="primary"
-                      className="bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/20"
-                      icon={<CheckCircle2 className="w-4 h-4" />}
+                      className="bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(5,150,105,0.2)] px-3 py-1.5 h-auto text-xs font-semibold rounded-lg border-none"
+                      icon={<CheckCircle2 className="w-3.5 h-3.5" />}
                       onClick={() => handleReview(req.id, 'approved')}
                       isLoading={processing}
                     >
@@ -228,7 +235,7 @@ export default function ManualCorrectionsPage() {
                   </div>
                 )}
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}
@@ -241,17 +248,36 @@ export default function ManualCorrectionsPage() {
           title="Review Correction Request"
           description="Carefully review the employee's justification before authorizing this attendance amendment."
         >
-          <div className="space-y-3 text-sm text-slate-300">
-            <p><strong>Employee:</strong> {reviewModal.employee_name}</p>
-            <p><strong>Date:</strong> {reviewModal.date}</p>
-            <p><strong>Correction Type:</strong> {reviewModal.type.replace('_', ' ')}</p>
-            <p><strong>Requested Time:</strong> {reviewModal.requested_time}</p>
-            <p className="italic bg-slate-950/60 p-3 rounded-xl border border-slate-800">
-              <strong>Reason:</strong> &quot;{reviewModal.reason}&quot;
-            </p>
-            <div className="flex space-x-3 pt-2">
-              <Button variant="danger" className="flex-1" onClick={() => handleReview(reviewModal.id, 'rejected')} isLoading={processing}>Reject</Button>
-              <Button variant="primary" className="flex-1 bg-emerald-600 hover:bg-emerald-500" onClick={() => handleReview(reviewModal.id, 'approved')} isLoading={processing}>Approve</Button>
+          <div className="space-y-4 text-sm text-slate-300 mt-4">
+            <div className="grid grid-cols-2 gap-4">
+               <div>
+                 <p className="text-xs text-slate-500 mb-1">Employee</p>
+                 <p className="font-semibold text-slate-200">{reviewModal.employee_name}</p>
+               </div>
+               <div>
+                 <p className="text-xs text-slate-500 mb-1">Date</p>
+                 <p className="font-semibold text-slate-200">{reviewModal.date}</p>
+               </div>
+               <div>
+                 <p className="text-xs text-slate-500 mb-1">Type</p>
+                 <p className="font-semibold text-amber-500 capitalize">{reviewModal.type.replace('_', ' ')}</p>
+               </div>
+               <div>
+                 <p className="text-xs text-slate-500 mb-1">Requested Time</p>
+                 <p className="font-semibold text-blue-400">{reviewModal.requested_time}</p>
+               </div>
+            </div>
+            
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Provided Justification</p>
+              <div className="bg-[#040A15] p-3 rounded-lg border border-[#1E293B]">
+                <p className="italic text-slate-300">&quot;{reviewModal.reason}&quot;</p>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 pt-4 border-t border-[#1E293B]">
+              <Button variant="ghost" className="flex-1 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-[#1E293B]" onClick={() => handleReview(reviewModal.id, 'rejected')} isLoading={processing}>Reject Request</Button>
+              <Button variant="primary" className="flex-1 bg-emerald-600 hover:bg-emerald-500 border-none" onClick={() => handleReview(reviewModal.id, 'approved')} isLoading={processing}>Approve Correction</Button>
             </div>
           </div>
         </Modal>
@@ -259,3 +285,4 @@ export default function ManualCorrectionsPage() {
     </div>
   );
 }
+

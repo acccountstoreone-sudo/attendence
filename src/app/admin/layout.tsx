@@ -34,11 +34,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return;
       }
 
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
-        .select('id, full_name, role, branch_id, branches!profiles_branch_id_fkey(name)')
+        .select('id, full_name, role, branch_id')
         .eq('id', user.id)
         .single();
+
+      if (error) {
+        console.error('Failed to fetch profile in admin layout:', error);
+      }
 
       if (!profile || profile.role !== 'admin') {
         router.push('/login?error=unauthorized');
@@ -50,7 +54,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         full_name: profile.full_name,
         role: profile.role,
         branch_id: profile.branch_id,
-        branch_name: (profile as unknown as { branches?: { name?: string } }).branches?.name || 'Headquarters',
+        branch_name: 'Headquarters',
       });
       setLoading(false);
     }

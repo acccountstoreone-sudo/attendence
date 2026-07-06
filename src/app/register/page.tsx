@@ -51,8 +51,30 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
     otp: '',
-    nid: ''
+    nid: '',
+    branchId: ''
   });
+
+  // Branch Selection State
+  const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
+
+  // Fetch branches on mount
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const res = await fetch('/api/branches');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.data)) {
+            setBranches(data.data);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching branches:', err);
+      }
+    };
+    fetchBranches();
+  }, []);
 
   // Hydrate formData from localStorage on mount
   useEffect(() => {
@@ -162,6 +184,7 @@ export default function RegisterPage() {
         options: {
           data: {
             full_name: formData.fullName,
+            branch_id: formData.branchId,
           }
         }
       });
@@ -442,6 +465,18 @@ export default function RegisterPage() {
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
                     <input type="password" name="password" required value={formData.password} onChange={handleInputChange} className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#D2A02A] focus:outline-none text-white" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Branch</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                    <select name="branchId" required value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: e.target.value })} className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#D2A02A] focus:outline-none text-white appearance-none">
+                      <option value="" disabled>Select your branch</option>
+                      {branches.map(b => (
+                        <option key={b.id} value={b.id}>{b.name}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <button type="submit" disabled={loading} className="w-full bg-[#D2A02A] hover:bg-[#C08F1E] text-[#040A15] font-bold py-3.5 rounded-xl mt-4 flex items-center justify-center gap-2">
