@@ -147,12 +147,12 @@ export default function EmployeeDashboardPage() {
             </div>
           </div>
 
-          {/* B7 fix: Correct route to /employee/leave (singular) */}
+          {/* Fix: Correct route to /employee/leaves */}
           <Button
             size="sm"
             variant="outline"
             className="w-full mt-6 border-[#D2A02A]/30 text-[#D2A02A] hover:bg-[#D2A02A]/10"
-            onClick={() => router.push('/employee/leave')}
+            onClick={() => router.push('/employee/leaves')}
           >
             Request Leave
           </Button>
