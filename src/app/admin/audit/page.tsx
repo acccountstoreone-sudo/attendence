@@ -1,107 +1,131 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { ShieldAlert, Search, Filter, Download, Activity, AlertTriangle, ShieldCheck, UserMinus } from 'lucide-react';
+import { Spinner } from '@/components/ui/Spinner';
+import { ShieldAlert, Search, Filter, Download, Activity, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
 import Abstract3DBackground from '@/components/Abstract3DBackground';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
+import { createClient } from '@/lib/supabase/client';
 
 interface AuditLog {
   id: string;
-  timestamp: string;
-  actor: string;
+  created_at: string;
+  user_id: string;
   action: string;
-  details: string;
-  severity: 'info' | 'warning' | 'critical';
-  ip_address: string;
+  table_name?: string;
+  record_id?: string;
+  old_values?: Record<string, unknown>;
+  new_values?: Record<string, unknown>;
+  ip_address?: string;
+  actor_name?: string;
 }
 
-// Dummy data for the audit log
-const DUMMY_LOGS: AuditLog[] = [
-  {
-    id: 'LOG-001',
-    timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-    actor: 'System Admin',
-    action: 'Settings Updated',
-    details: 'Updated geofence radius to 50 meters globally.',
-    severity: 'info',
-    ip_address: '192.168.1.104'
-  },
-  {
-    id: 'LOG-002',
-    timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    actor: 'Sazzad Ali',
-    action: 'Face Mismatch Alert',
-    details: 'Failed biometric verification at Gulshan Branch. Confidence: 0.2',
-    severity: 'critical',
-    ip_address: '103.111.45.22'
-  },
-  {
-    id: 'LOG-003',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    actor: 'Branch Manager (Banani)',
-    action: 'Manual Override',
-    details: 'Manually marked employee E-1045 as Present.',
-    severity: 'warning',
-    ip_address: '10.0.0.45'
-  },
-  {
-    id: 'LOG-004',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    actor: 'System',
-    action: 'Database Backup',
-    details: 'Automated Supabase snapshot completed successfully.',
-    severity: 'info',
-    ip_address: 'Internal'
-  },
-  {
-    id: 'LOG-005',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    actor: 'Unknown',
-    action: 'Unauthorized Access Attempt',
-    details: 'Failed login attempt for Admin portal from unrecognized IP.',
-    severity: 'critical',
-    ip_address: '45.22.19.100'
+type Severity = 'info' | 'warning' | 'critical';
+
+const getSeverity = (action: string): Severity => {
+  const lower = action.toLowerCase();
+  if (lower.includes('manual') || lower.includes('override') || lower.includes('deactivat') || lower.includes('suspend')) return 'warning';
+  if (lower.includes('biometric') || lower.includes('mismatch') || lower.includes('unauthorized') || lower.includes('failed') || lower.includes('delete')) return 'critical';
+  return 'info';
+};
+
+const getSeverityIcon = (severity: Severity) => {
+  switch (severity) {
+    case 'critical': return <ShieldAlert className="w-5 h-5 text-rose-400" />;
+    case 'warning': return <AlertTriangle className="w-5 h-5 text-amber-400" />;
+    default: return <ShieldCheck className="w-5 h-5 text-emerald-400" />;
   }
-];
+};
+
+const getSeverityColor = (severity: Severity) => {
+  switch (severity) {
+    case 'critical': return 'bg-rose-500/10 border-rose-500/20 text-rose-400';
+    case 'warning': return 'bg-amber-500/10 border-amber-500/20 text-amber-400';
+    default: return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
+  }
+};
 
 export default function AdminAuditPage() {
+  const supabase = createClient();
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSeverity, setFilterSeverity] = useState('all');
 
-  const filteredLogs = DUMMY_LOGS.filter((log) => {
-    const matchesSearch = 
-      log.actor.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  // Bug 11 fix: Load real audit_logs data from Supabase
+  const fetchLogs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*, profiles!audit_logs_user_id_fkey(full_name)')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+
+      setLogs(
+        (data || []).map((log: Record<string, unknown>) => ({
+          id: String(log.id),
+          created_at: String(log.created_at),
+          user_id: String(log.user_id),
+          action: String(log.action),
+          table_name: log.table_name as string | undefined,
+          record_id: log.record_id as string | undefined,
+          old_values: log.old_values as Record<string, unknown> | undefined,
+          new_values: log.new_values as Record<string, unknown> | undefined,
+          ip_address: log.ip_address as string | undefined,
+          actor_name: (log.profiles as { full_name?: string } | null)?.full_name || 'System',
+        }))
+      );
+    } catch (err) {
+      console.error('Failed to fetch audit logs:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase]);
+
+  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+
+  const filteredLogs = logs.filter((log) => {
+    const severity = getSeverity(log.action);
+    const matchesSearch =
+      log.actor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.details.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSeverity = filterSeverity === 'all' || log.severity === filterSeverity;
+      log.table_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.ip_address?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSeverity = filterSeverity === 'all' || severity === filterSeverity;
     return matchesSearch && matchesSeverity;
   });
 
-  const getSeverityIcon = (severity: string) => {
-    switch (severity) {
-      case 'critical': return <ShieldAlert className="w-5 h-5 text-rose-400" />;
-      case 'warning': return <AlertTriangle className="w-5 h-5 text-amber-400" />;
-      case 'info': return <ShieldCheck className="w-5 h-5 text-emerald-400" />;
-      default: return <Activity className="w-5 h-5 text-slate-400" />;
-    }
-  };
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical': return 'bg-rose-500/10 border-rose-500/20 text-rose-400';
-      case 'warning': return 'bg-amber-500/10 border-amber-500/20 text-amber-400';
-      case 'info': return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
-      default: return 'bg-slate-500/10 border-slate-500/20 text-slate-400';
-    }
+  // Bug 8 fix: Export audit log as CSV
+  const handleExport = () => {
+    const headers = ['Timestamp', 'Actor', 'Action', 'Table', 'IP Address', 'Severity'];
+    const rows = filteredLogs.map((log) => [
+      new Date(log.created_at).toISOString(),
+      log.actor_name || 'System',
+      log.action,
+      log.table_name || '',
+      log.ip_address || '',
+      getSeverity(log.action),
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audit_log_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div className="space-y-8 pb-12">
       {/* Header Banner */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
@@ -123,7 +147,7 @@ export default function AdminAuditPage() {
             System Audit & Security Logs
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Immutable ledger of all administrative actions, system overrides, and security events.
+            Live ledger of all administrative actions, system overrides, and security events.
           </p>
         </div>
 
@@ -132,30 +156,40 @@ export default function AdminAuditPage() {
             size="sm"
             variant="outline"
             className="border-[#1E293B] bg-[#040A15]/50 backdrop-blur-md text-slate-300 hover:bg-[#1E293B] hover:text-white"
-            icon={<Download className="w-4 h-4" />}
+            icon={<RefreshCw className="w-4 h-4" />}
+            onClick={fetchLogs}
           >
-            Export Audit Trail
+            Refresh
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-[#1E293B] bg-[#040A15]/50 backdrop-blur-md text-slate-300 hover:bg-[#1E293B] hover:text-white"
+            icon={<Download className="w-4 h-4" />}
+            onClick={handleExport}
+          >
+            Export CSV
           </Button>
         </div>
       </motion.div>
 
       {/* Main Content */}
       <Card className="bg-[#061224] border-[#1E293B] p-0 overflow-hidden relative z-10 shadow-2xl">
-        
+
         {/* Toolbar */}
         <div className="p-4 border-b border-[#1E293B] bg-[#040A15]/80 flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative w-full md:w-96">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search actions, users, or details..."
+              placeholder="Search actions, users, tables..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-[#061224] border border-[#1E293B] rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#D2A02A] transition-colors shadow-inner shadow-[#000000]/50"
+              className="w-full pl-9 pr-4 py-2 bg-[#061224] border border-[#1E293B] rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#D2A02A] transition-colors"
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+          <div className="flex items-center gap-2 w-full md:w-auto">
             <Filter className="w-4 h-4 text-slate-500 shrink-0" />
             <select
               value={filterSeverity}
@@ -172,65 +206,80 @@ export default function AdminAuditPage() {
 
         {/* Audit List */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse whitespace-nowrap">
-            <thead>
-              <tr className="bg-[#040A15] border-b border-[#1E293B] text-[10px] uppercase tracking-widest text-slate-400 font-bold">
-                <th className="py-4 px-6 w-12">Event</th>
-                <th className="py-4 px-6">Timestamp & IP</th>
-                <th className="py-4 px-6">Actor</th>
-                <th className="py-4 px-6">Action Details</th>
-                <th className="py-4 px-6 text-right">Severity</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#1E293B]/50 text-sm">
-              <AnimatePresence>
-                {filteredLogs.length === 0 ? (
-                  <tr>
-                    <td colSpan={5}>
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-16 text-center text-slate-500 text-sm">
-                        <Activity className="w-8 h-8 mx-auto mb-3 text-slate-600 opacity-50" />
-                        No audit events found matching the criteria.
-                      </motion.div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredLogs.map((log) => (
-                    <motion.tr 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      key={log.id} 
-                      className="hover:bg-[#1E293B]/30 transition-colors group"
-                    >
-                      <td className="py-4 px-6">
-                        <div className="w-10 h-10 rounded-full bg-[#040A15] border border-[#1E293B] flex items-center justify-center shrink-0">
-                          {getSeverityIcon(log.severity)}
-                        </div>
+          {loading ? (
+            <div className="py-20 flex justify-center">
+              <Spinner size="lg" label="Loading audit logs..." />
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse whitespace-nowrap">
+              <thead>
+                <tr className="bg-[#040A15] border-b border-[#1E293B] text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                  <th className="py-4 px-6 w-12">Event</th>
+                  <th className="py-4 px-6">Timestamp & IP</th>
+                  <th className="py-4 px-6">Actor</th>
+                  <th className="py-4 px-6">Action Details</th>
+                  <th className="py-4 px-6 text-right">Severity</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#1E293B]/50 text-sm">
+                <AnimatePresence>
+                  {filteredLogs.length === 0 ? (
+                    <tr>
+                      <td colSpan={5}>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-16 text-center text-slate-500 text-sm">
+                          <Activity className="w-8 h-8 mx-auto mb-3 text-slate-600 opacity-50" />
+                          {logs.length === 0 ? 'No audit events recorded yet.' : 'No events match your filter criteria.'}
+                        </motion.div>
                       </td>
-                      <td className="py-4 px-6">
-                        <div className="flex flex-col font-mono text-slate-300">
-                          <span>{new Date(log.timestamp).toLocaleDateString()} {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
-                          <span className="text-xs text-slate-500 mt-0.5">IP: {log.ip_address}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <p className="font-bold text-white">{log.actor}</p>
-                      </td>
-                      <td className="py-4 px-6 whitespace-normal min-w-[300px]">
-                        <p className="font-bold text-[#D2A02A] text-xs uppercase tracking-wider mb-0.5">{log.action}</p>
-                        <p className="text-slate-400 text-sm leading-snug">{log.details}</p>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${getSeverityColor(log.severity)}`}>
-                          {log.severity}
-                        </span>
-                      </td>
-                    </motion.tr>
-                  ))
-                )}
-              </AnimatePresence>
-            </tbody>
-          </table>
+                    </tr>
+                  ) : (
+                    filteredLogs.map((log) => {
+                      const severity = getSeverity(log.action);
+                      return (
+                        <motion.tr
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          key={log.id}
+                          className="hover:bg-[#1E293B]/30 transition-colors group"
+                        >
+                          <td className="py-4 px-6">
+                            <div className="w-10 h-10 rounded-full bg-[#040A15] border border-[#1E293B] flex items-center justify-center shrink-0">
+                              {getSeverityIcon(severity)}
+                            </div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="flex flex-col font-mono text-slate-300">
+                              <span>{new Date(log.created_at).toLocaleDateString()} {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                              <span className="text-xs text-slate-500 mt-0.5">IP: {log.ip_address || 'Internal'}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <p className="font-bold text-white">{log.actor_name}</p>
+                            <p className="text-xs text-slate-500 font-mono mt-0.5">{log.user_id?.slice(0, 8)}...</p>
+                          </td>
+                          <td className="py-4 px-6 whitespace-normal min-w-[300px]">
+                            <p className="font-bold text-[#D2A02A] text-xs uppercase tracking-wider mb-0.5">{log.action}</p>
+                            {log.table_name && (
+                              <p className="text-slate-400 text-sm leading-snug">
+                                Table: <span className="font-mono text-slate-300">{log.table_name}</span>
+                                {log.record_id && <span className="text-slate-500"> · ID: {log.record_id.slice(0, 8)}...</span>}
+                              </p>
+                            )}
+                          </td>
+                          <td className="py-4 px-6 text-right">
+                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${getSeverityColor(severity)}`}>
+                              {severity}
+                            </span>
+                          </td>
+                        </motion.tr>
+                      );
+                    })
+                  )}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          )}
         </div>
       </Card>
     </div>

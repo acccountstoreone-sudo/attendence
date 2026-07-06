@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -11,7 +11,6 @@ import {
   MapPin,
   Users,
   Pencil,
-  Trash2,
   CheckCircle2,
   Building2,
   Phone,
@@ -20,10 +19,11 @@ import {
   Unlock,
   Search,
   Eye,
-  UserCheck,
+  XCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Branch {
   id: string;
@@ -46,8 +46,11 @@ export default function AdminBranchesPage() {
   const [loading, setLoading] = useState(true);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  // Bug 10 & 20 fix: Use state feedback instead of alert()
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const loadBranches = async () => {
+  const loadBranches = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('branches')
@@ -63,13 +66,14 @@ export default function AdminBranchesPage() {
       });
       setBranches(mapped);
     } else if (error) {
+      // Bug 20 fix: Replace alert() with state feedback
       console.error('Failed to load branches:', error);
-      alert(`Failed to load branches: ${error.message}`);
+      setFeedback({ type: 'error', text: `Failed to load branches: ${error.message}` });
     }
     setLoading(false);
-  };
+  }, [supabase]);
 
-  useEffect(() => { loadBranches(); }, []);
+  useEffect(() => { loadBranches(); }, [loadBranches]);
 
   // View Details -> Navigate to /admin/branches/[id]
   const openDetailsModal = (branch: Branch) => {
@@ -82,15 +86,28 @@ export default function AdminBranchesPage() {
   };
 
   const toggleActive = async (branch: Branch) => {
+    setTogglingId(branch.id);
+    setFeedback(null);
     try {
-      await fetch(`/api/branches/${branch.id}`, {
+      const res = await fetch(`/api/branches/${branch.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_active: !branch.is_active }),
       });
+      const json = await res.json();
+      // Bug 10 fix: Check API response for errors
+      if (!json.success) {
+        throw new Error(json.error?.message || 'Failed to update branch status.');
+      }
+      setFeedback({
+        type: 'success',
+        text: `${branch.name} has been ${!branch.is_active ? 'activated' : 'deactivated'} successfully.`,
+      });
       await loadBranches();
-    } catch (err) {
-      console.error('Toggle error:', err);
+    } catch (err: unknown) {
+      setFeedback({ type: 'error', text: (err as Error).message || 'Failed to update branch status.' });
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -103,7 +120,7 @@ export default function AdminBranchesPage() {
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-blue-950/30 to-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#061224] via-blue-950/20 to-[#061224] p-6 rounded-3xl border border-[#1E293B] shadow-2xl">
         <div>
           <div className="flex items-center space-x-2 text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">
             <Store className="w-4 h-4" />
@@ -124,6 +141,25 @@ export default function AdminBranchesPage() {
           Add New Branch
         </Button>
       </div>
+
+      {/* Feedback */}
+      <AnimatePresence>
+        {feedback && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className={`flex items-center gap-3 p-4 rounded-xl border text-sm font-medium ${
+              feedback.type === 'success'
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+            }`}
+          >
+            {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <XCircle className="w-5 h-5 shrink-0" />}
+            <span>{feedback.text}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Search */}
       <Card className="bg-slate-900 border-slate-800 p-4">
@@ -178,10 +214,13 @@ export default function AdminBranchesPage() {
                     </button>
                     <button
                       onClick={() => toggleActive(branch)}
-                      className={`p-2 rounded-lg transition-colors ${branch.is_active ? 'bg-slate-800 hover:bg-rose-900/50 hover:text-rose-400 text-slate-400' : 'bg-slate-800 hover:bg-emerald-900/50 hover:text-emerald-400 text-slate-400'}`}
+                      disabled={togglingId === branch.id}
+                      className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${branch.is_active ? 'bg-[#1E293B] hover:bg-rose-900/50 hover:text-rose-400 text-slate-400' : 'bg-[#1E293B] hover:bg-emerald-900/50 hover:text-emerald-400 text-slate-400'}`}
                       title={branch.is_active ? 'Deactivate' : 'Activate'}
                     >
-                      {branch.is_active ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                      {togglingId === branch.id
+                        ? <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin inline-block" />
+                        : branch.is_active ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>

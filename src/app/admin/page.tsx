@@ -327,7 +327,7 @@ export default function AdminDashboardPage() {
                   onlineCount={branch.present_today}
                   lateCount={branch.late_today}
                   alertCount={branch.alert_count}
-                  onClick={() => router.push(`/admin/branches?id=${branch.branch_id}`)}
+                  onClick={() => router.push(`/admin/branches/${branch.branch_id}`)}
                 />
               ))}
             </div>

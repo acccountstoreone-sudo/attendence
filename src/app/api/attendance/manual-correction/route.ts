@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole, handleApiError } from '@/lib/auth';
+import { requireRole, handleApiError, getSafeIpAddress } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
@@ -45,15 +45,20 @@ export async function POST(request: NextRequest) {
     // 3. Compute new overtime minutes if check_out_time is present
     let newOvertime = 0;
     if (payload.check_out_time) {
-      const { data: branch } = await supabase
-        .from('branches')
-        .select('name')
-        .eq('id', oldRecord.branch_id)
-        .single();
-      // Basic fallback calculation for manual override
+      // Bug 12 fix: Fetch actual shift end time from company profile instead of hardcoding 18:00
+      const { data: companyProfile } = await supabase
+        .from('company_profile')
+        .select('working_hours_end')
+        .limit(1)
+        .maybeSingle();
+
+      const shiftEndStr = companyProfile?.working_hours_end || '18:00';
+      const [shiftHour, shiftMin] = shiftEndStr.split(':').map(Number);
+
       const checkOutDate = new Date(payload.check_out_time);
-      if (checkOutDate.getHours() >= 18) {
-        newOvertime = Math.max(0, Math.floor((checkOutDate.getTime() - new Date(checkOutDate).setHours(18, 0, 0, 0)) / 60000));
+      const shiftEndMs = new Date(checkOutDate).setHours(shiftHour, shiftMin, 0, 0);
+      if (checkOutDate.getTime() > shiftEndMs) {
+        newOvertime = Math.max(0, Math.floor((checkOutDate.getTime() - shiftEndMs) / 60000));
       }
     }
 
@@ -96,7 +101,7 @@ export async function POST(request: NextRequest) {
         corrected_by: user.full_name,
         corrected_role: user.role,
       },
-      ip_address: request.headers.get('x-forwarded-for') || '127.0.0.1',
+      ip_address: getSafeIpAddress(request),
     });
 
     return NextResponse.json({

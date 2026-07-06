@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { z } from 'zod';
 
+// Bug 22 fix: Validate x-forwarded-for before trusting it to prevent spoofing in audit logs
+const IP_REGEX = /^(\d{1,3}\.){3}\d{1,3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+export function getSafeIpAddress(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (!forwarded) return 'Internal';
+  // Take only the first IP in case of proxy chain
+  const firstIp = forwarded.split(',')[0].trim();
+  return IP_REGEX.test(firstIp) ? firstIp : 'Unknown';
+}
+
 /**
  * Auth Security Guard (Spec P33).
  * Validates session cookie freshness, enforces role boundaries, and

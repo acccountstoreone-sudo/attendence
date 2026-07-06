@@ -66,16 +66,23 @@ export async function GET(request: NextRequest) {
 
     const { count: leaveCount } = await leaveQuery;
 
+    // Bug 21 fix: Compute system_health dynamically based on attendance data
+    const totalStaff = employeeCount || 0;
+    const absenceRate = totalStaff > 0 ? absent / totalStaff : 0;
+    let systemHealth = '99.9% Operational';
+    if (absenceRate > 0.5) systemHealth = 'Degraded — High Absenteeism';
+    else if (absenceRate > 0.3) systemHealth = 'Caution — Elevated Absences';
+
     return NextResponse.json({
       success: true,
       data: {
         total_branches: branchCount || 0,
-        total_employees: employeeCount || 0,
+        total_employees: totalStaff,
         present_today: present,
         late_today: late,
         absent_today: absent,
         on_leave_today: leaveCount || 0,
-        system_health: '99.99% Operational'
+        system_health: systemHealth,
       }
     });
 

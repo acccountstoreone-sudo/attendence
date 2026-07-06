@@ -63,9 +63,9 @@ export async function POST(request: NextRequest) {
       const endDate = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59).toISOString();
 
       const { data: logs } = await supabase
-        .from('attendance_logs')
+        .from('attendance_records')
         .select('status')
-        .eq('user_id', employee.id)
+        .eq('employee_id', employee.id)
         .gte('check_in_time', startDate)
         .lte('check_in_time', endDate);
 

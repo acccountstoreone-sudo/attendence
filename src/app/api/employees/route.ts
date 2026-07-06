@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRole, handleApiError } from '@/lib/auth';
+import { requireRole, handleApiError, getSafeIpAddress } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
@@ -25,12 +25,18 @@ export async function GET(request: NextRequest) {
     const limit = Number(searchParams.get('limit')) || 50;
     const page = Number(searchParams.get('page')) || 1;
     const offset = (page - 1) * limit;
+    // Bug 17 fix: Support fetching inactive employees for restoration
+    const includeInactive = searchParams.get('include_inactive') === 'true';
 
     const supabase = await createClient();
     let query = supabase
       .from('profiles')
-      .select('*, branches!profiles_branch_id_fkey(name, code)', { count: 'exact' })
-      .eq('is_active', true);
+      .select('*, branches!profiles_branch_id_fkey(name, code)', { count: 'exact' });
+
+    // Only filter to active by default; admin can request inactive employees too
+    if (!includeInactive) {
+      query = query.eq('is_active', true);
+    }
 
     // Branch Managers can ONLY see employees in their assigned store (Spec P22)
     if (user.role === 'branch_manager') {
@@ -84,14 +90,38 @@ export async function POST(request: NextRequest) {
       payload.branch_id = user.branch_id;
     }
 
+    // Use Service Role Key to create auth user (so they can actually log in)
+    const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+      throw new Error('INTERNAL: SUPABASE_SERVICE_ROLE_KEY is not configured. Contact system administrator.');
+    }
+    const adminClient = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceRoleKey,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    const { data: authData, error: authErr } = await adminClient.auth.admin.createUser({
+      email: payload.email,
+      password: payload.password || 'Anchor2026!',
+      email_confirm: true, // Auto-confirm so they can log in immediately
+    });
+
+    if (authErr || !authData.user) {
+      return NextResponse.json(
+        { success: false, data: null, error: { code: 'AUTH_CREATE_FAILED', message: authErr?.message || 'Failed to create auth account.' } },
+        { status: 400 }
+      );
+    }
+
     const supabase = await createClient();
 
-    // Note: In a production Supabase app, creating a user account requires calling supabase.auth.admin.createUser
-    // using the Service Role Key, or having the user sign up. Here we insert directly into profiles assuming
-    // either custom auth trigger or service role helper.
+    // Upsert the profile record with the real auth UUID
     const { data: newProfile, error: profErr } = await supabase
       .from('profiles')
-      .insert({
+      .upsert({
+        id: authData.user.id, // Use the auth user's UUID as the primary key
         email: payload.email,
         full_name: payload.full_name,
         role: payload.role,
@@ -117,7 +147,7 @@ export async function POST(request: NextRequest) {
       table_name: 'profiles',
       record_id: newProfile.id,
       new_values: { email: payload.email, full_name: payload.full_name, role: payload.role, branch_id: payload.branch_id },
-      ip_address: request.headers.get('x-forwarded-for') || '127.0.0.1',
+      ip_address: getSafeIpAddress(request),
     });
 
     return NextResponse.json(

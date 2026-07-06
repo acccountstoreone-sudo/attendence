@@ -1,143 +1,270 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
+import { useState, useCallback } from 'react';
+import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Label } from '@/components/ui/Label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
+import { Spinner } from '@/components/ui/Spinner';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  DollarSign,
+  Calendar,
+  Play,
+  Download,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  TrendingUp,
+  Users,
+} from 'lucide-react';
+
+// Bug 5 fix: Proper typed interfaces instead of any[]
+interface PayrollRecord {
+  user_id: string;
+  status: 'success' | 'error';
+  reason?: string;
+  data?: {
+    total_payable_days: number;
+    gross_salary: number;
+    deductions: number;
+    net_payable: number;
+  };
+}
 
 export default function AdminPayrollDashboard() {
   const [monthYear, setMonthYear] = useState('');
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<any[] | null>(null);
+  const [results, setResults] = useState<PayrollRecord[] | null>(null);
   const [error, setError] = useState('');
 
-  const handleGenerate = async () => {
+  const handleGenerate = useCallback(async () => {
     if (!monthYear) {
       setError('Please select a valid month.');
       return;
     }
-
     setLoading(true);
     setError('');
-    
+    setResults(null);
+
     try {
       const res = await fetch('/api/payroll/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ month_year: monthYear }),
       });
-
       const json = await res.json();
       if (json.success) {
-        setResults(json.data);
+        setResults(json.data as PayrollRecord[]);
       } else {
-        setError(json.error || 'Failed to generate payroll.');
+        setError(json.error?.message || json.error || 'Failed to generate payroll.');
       }
-    } catch (err) {
-      setError('Network error occurred.');
+    } catch {
+      setError('Network error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [monthYear]);
+
+  // Bug 8 fix: Export payroll as CSV
+  const handleExport = useCallback(() => {
+    if (!results) return;
+    const headers = ['Employee ID', 'Status', 'Payable Days', 'Gross Salary', 'Deductions', 'Net Payable', 'Reason'];
+    const rows = results.map((r) => [
+      r.user_id,
+      r.status,
+      r.data?.total_payable_days ?? '',
+      r.data?.gross_salary ?? '',
+      r.data?.deductions ?? '',
+      r.data?.net_payable ?? '',
+      r.reason ?? '',
+    ]);
+    const csv = [headers, ...rows]
+      .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `payroll_${monthYear}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [results, monthYear]);
+
+  const successCount = results?.filter((r) => r.status === 'success').length ?? 0;
+  const errorCount = results?.filter((r) => r.status === 'error').length ?? 0;
+  const totalNet = results
+    ?.filter((r) => r.status === 'success')
+    .reduce((acc, r) => acc + (r.data?.net_payable ?? 0), 0) ?? 0;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
-            Payroll Generation (Beta)
-          </h1>
-          <p className="text-muted-foreground mt-1">Compute monthly salary sheets based on attendance.</p>
-        </div>
-      </div>
-
-      <Card className="border-indigo-100 shadow-md">
-        <CardHeader className="bg-indigo-50/50 border-b border-indigo-100">
-          <CardTitle>Run Payroll Calculation</CardTitle>
-          <CardDescription>Select the target month. This will process all employees in your scope.</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="flex gap-4 items-end">
-            <div className="space-y-2 flex-1 max-w-sm">
-              <Label htmlFor="month">Month & Year (YYYY-MM)</Label>
-              <Input 
-                id="month" 
-                type="month" 
-                value={monthYear} 
-                onChange={(e) => setMonthYear(e.target.value)} 
-              />
-            </div>
-            <Button 
-              onClick={handleGenerate} 
-              disabled={loading || !monthYear}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
-            >
-              {loading ? 'Computing...' : 'Generate Payroll'}
-            </Button>
+    // Bug 13/14 fix: Removed all shadcn CSS variable classes (text-muted-foreground, bg-indigo-50, etc.)
+    // Now consistently uses the dark admin theme matching all other admin pages
+    <div className="space-y-8 pb-12">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#061224] p-6 rounded-3xl border border-[#1E293B] shadow-2xl relative overflow-hidden"
+      >
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#D2A02A_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
+        <div className="relative z-10 pointer-events-none">
+          <div className="flex items-center space-x-2 mb-1">
+            <DollarSign className="w-5 h-5 text-[#D2A02A]" />
+            <span className="px-3 py-1 rounded-full bg-[#D2A02A]/20 border border-[#D2A02A]/30 text-[#D2A02A] text-xs font-bold uppercase tracking-widest">
+              Finance
+            </span>
           </div>
-          {error && <p className="text-sm text-red-600 mt-4 font-medium">{error}</p>}
-        </CardContent>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Payroll Generation</h1>
+          <p className="text-sm text-slate-400 mt-1">Compute monthly salary sheets based on attendance records.</p>
+        </div>
+      </motion.div>
+
+      {/* Generator Card */}
+      <Card className="bg-[#061224] border-[#1E293B] shadow-2xl">
+        <div className="border-b border-[#1E293B] pb-4 mb-6">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-[#D2A02A]" />
+            Run Payroll Calculation
+          </h2>
+          <p className="text-sm text-slate-400 mt-1">Select the target month. This will process all employees in your scope.</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex-1 max-w-sm space-y-2">
+            <label htmlFor="month" className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+              Month & Year
+            </label>
+            <input
+              id="month"
+              type="month"
+              value={monthYear}
+              onChange={(e) => setMonthYear(e.target.value)}
+              className="w-full bg-[#040A15] border border-[#1E293B] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#D2A02A] transition-colors"
+            />
+          </div>
+          <Button
+            variant="primary"
+            onClick={handleGenerate}
+            disabled={loading || !monthYear}
+            icon={loading ? undefined : <Play className="w-4 h-4" />}
+            isLoading={loading}
+          >
+            {loading ? 'Computing...' : 'Generate Payroll'}
+          </Button>
+        </div>
+
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center gap-2 mt-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-sm font-medium"
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Card>
 
-      {results && (
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle>Generation Results</CardTitle>
-            <CardDescription>Generated {results.length} records for {monthYear}.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Employee ID</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Payable Days</TableHead>
-                  <TableHead className="text-right">Gross Salary</TableHead>
-                  <TableHead className="text-right">Deductions</TableHead>
-                  <TableHead className="text-right text-emerald-600">Net Payable</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {results.map((res, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell className="font-mono text-xs">{res.user_id.split('-')[0]}...</TableCell>
-                    <TableCell>
-                      {res.status === 'success' ? (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                          Success
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800" title={res.reason}>
-                          Error
-                        </span>
-                      )}
-                    </TableCell>
-                    {res.status === 'success' && res.data ? (
-                      <>
-                        <TableCell className="text-right">{res.data.total_payable_days}</TableCell>
-                        <TableCell className="text-right">৳{res.data.gross_salary.toLocaleString()}</TableCell>
-                        <TableCell className="text-right text-red-500">-৳{res.data.deductions.toLocaleString()}</TableCell>
-                        <TableCell className="text-right font-bold text-emerald-600">৳{res.data.net_payable.toLocaleString()}</TableCell>
-                      </>
-                    ) : (
-                      <TableCell colSpan={4} className="text-sm text-muted-foreground">{res.reason}</TableCell>
+      {/* Results */}
+      <AnimatePresence>
+        {results && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-5"
+          >
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: 'Total Processed', value: results.length, icon: <Users className="w-5 h-5 text-blue-400" />, color: 'text-white' },
+                { label: 'Successful', value: successCount, icon: <CheckCircle2 className="w-5 h-5 text-emerald-400" />, color: 'text-emerald-400' },
+                { label: 'Errors', value: errorCount, icon: <XCircle className="w-5 h-5 text-rose-400" />, color: 'text-rose-400' },
+                { label: 'Total Net Payable', value: `৳${totalNet.toLocaleString()}`, icon: <TrendingUp className="w-5 h-5 text-[#D2A02A]" />, color: 'text-[#D2A02A]' },
+              ].map((s) => (
+                <Card key={s.label} variant="glass" className="hover:-translate-y-0.5 transition-transform">
+                  <div className="flex items-center justify-between mb-2 text-slate-500">
+                    {s.icon}
+                  </div>
+                  <div className={`text-2xl font-extrabold tracking-tight ${s.color}`}>{s.value}</div>
+                  <p className="text-[10px] text-slate-500 mt-1 font-medium uppercase tracking-wider">{s.label}</p>
+                </Card>
+              ))}
+            </div>
+
+            {/* Table Card */}
+            <Card className="bg-[#061224] border-[#1E293B] p-0 overflow-hidden shadow-2xl">
+              <div className="flex items-center justify-between p-4 border-b border-[#1E293B]">
+                <div>
+                  <h2 className="font-bold text-white">Generation Results</h2>
+                  <p className="text-xs text-slate-400">{results.length} records for {monthYear}</p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  icon={<Download className="w-4 h-4" />}
+                  onClick={handleExport}
+                  className="border-[#1E293B] text-slate-300 hover:bg-[#1E293B] hover:text-white"
+                >
+                  Export CSV
+                </Button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#040A15] border-b border-[#1E293B] text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                      <th className="py-3 px-5">Employee ID</th>
+                      <th className="py-3 px-5">Status</th>
+                      <th className="py-3 px-5 text-right">Payable Days</th>
+                      <th className="py-3 px-5 text-right">Gross Salary</th>
+                      <th className="py-3 px-5 text-right">Deductions</th>
+                      <th className="py-3 px-5 text-right">Net Payable</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#1E293B]/50 text-sm">
+                    {results.map((res, idx) => (
+                      <tr key={idx} className="hover:bg-[#1E293B]/30 transition-colors">
+                        <td className="py-3 px-5 font-mono text-xs text-slate-400">
+                          {res.user_id.split('-')[0]}...
+                        </td>
+                        <td className="py-3 px-5">
+                          {res.status === 'success' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                              <CheckCircle2 className="w-3 h-3" /> Success
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-rose-500/10 border border-rose-500/20 text-rose-400" title={res.reason}>
+                              <XCircle className="w-3 h-3" /> Error
+                            </span>
+                          )}
+                        </td>
+                        {res.status === 'success' && res.data ? (
+                          <>
+                            <td className="py-3 px-5 text-right text-slate-300">{res.data.total_payable_days}</td>
+                            <td className="py-3 px-5 text-right text-slate-300">৳{res.data.gross_salary.toLocaleString()}</td>
+                            <td className="py-3 px-5 text-right text-rose-400">-৳{res.data.deductions.toLocaleString()}</td>
+                            <td className="py-3 px-5 text-right font-bold text-emerald-400">৳{res.data.net_payable.toLocaleString()}</td>
+                          </>
+                        ) : (
+                          <td colSpan={4} className="py-3 px-5 text-slate-500 text-xs italic">{res.reason}</td>
+                        )}
+                      </tr>
+                    ))}
+                    {results.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="text-center py-8 text-slate-500 text-sm">
+                          No employees found in your scope.
+                        </td>
+                      </tr>
                     )}
-                  </TableRow>
-                ))}
-                {results.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
-                      No employees found in your scope.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
