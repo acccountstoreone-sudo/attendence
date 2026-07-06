@@ -62,7 +62,7 @@ export default function RegisterPage() {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const res = await fetch('/api/branches');
+        const res = await fetch('/api/branches?public=true');
         if (res.ok) {
           const data = await res.json();
           if (data.success && Array.isArray(data.data)) {

@@ -16,20 +16,35 @@ const createBranchSchema = z.object({
   manager_id: z.string().uuid().optional().nullable(),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const user = await requireRole(['admin', 'branch_manager', 'employee']);
+    const { searchParams } = new URL(request.url);
+    const isPublic = searchParams.get('public') === 'true';
+
     const supabase = await createClient();
 
-    let query = supabase
-      .from('branches')
-      .select('*, profiles!branches_manager_id_fkey(full_name)')
-      .eq('is_active', true)
-      .order('name');
+    let query;
 
-    // Branch Managers and Employees see their assigned store; Admin sees all
-    if (user.role !== 'admin' && user.branch_id) {
-      query = query.eq('id', user.branch_id);
+    if (isPublic) {
+      // Public request (e.g. for registration dropdown)
+      query = supabase
+        .from('branches')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
+    } else {
+      // Authenticated request
+      const user = await requireRole(['admin', 'branch_manager', 'employee']);
+      query = supabase
+        .from('branches')
+        .select('*, profiles!branches_manager_id_fkey(full_name)')
+        .eq('is_active', true)
+        .order('name');
+
+      // Branch Managers and Employees see their assigned store; Admin sees all
+      if (user.role !== 'admin' && user.branch_id) {
+        query = query.eq('id', user.branch_id);
+      }
     }
 
     const { data: branches, error } = await query;
