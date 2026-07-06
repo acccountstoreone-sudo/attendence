@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -16,6 +16,7 @@ import {
   User,
   Search,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CorrectionRequest {
   id: string;
@@ -37,8 +38,10 @@ export default function ManualCorrectionsPage() {
   const [processing, setProcessing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  const loadCorrections = async () => {
+  // B15 fix: Wrap loadCorrections in useCallback
+  const loadCorrections = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/attendance/manual-correction');
@@ -49,12 +52,13 @@ export default function ManualCorrectionsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { loadCorrections(); }, []);
+  useEffect(() => { loadCorrections(); }, [loadCorrections]);
 
   const handleReview = async (id: string, action: 'approved' | 'rejected', reviewNote?: string) => {
     setProcessing(true);
+    setFeedback(null);
     try {
       const res = await fetch(`/api/attendance/manual-correction/${id}`, {
         method: 'PUT',
@@ -63,10 +67,15 @@ export default function ManualCorrectionsPage() {
       });
       if (res.ok) {
         setReviewModal(null);
+        setFeedback({ type: 'success', message: `Correction request ${action} successfully.` });
         await loadCorrections();
+      } else {
+        const json = await res.json();
+        setFeedback({ type: 'error', message: json.error?.message || `Failed to mark request as ${action}.` });
       }
     } catch (err) {
       console.error('Review error:', err);
+      setFeedback({ type: 'error', message: 'A network error occurred while processing the review.' });
     } finally {
       setProcessing(false);
     }
@@ -99,6 +108,25 @@ export default function ManualCorrectionsPage() {
           </p>
         </div>
       </div>
+
+      {/* B10 fix: Feedback Banner */}
+      <AnimatePresence mode="wait">
+        {feedback && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className={`p-4 rounded-2xl border flex items-center space-x-3 shadow-lg ${
+              feedback.type === 'success'
+                ? 'bg-emerald-950/80 border-emerald-500/30 text-emerald-300'
+                : 'bg-rose-950/80 border-rose-500/30 text-rose-300'
+            }`}
+          >
+            {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" /> : <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />}
+            <span className="text-sm font-semibold">{feedback.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Filters */}
       <Card className="bg-slate-900 border-slate-800 p-4 flex flex-wrap gap-3 items-center">

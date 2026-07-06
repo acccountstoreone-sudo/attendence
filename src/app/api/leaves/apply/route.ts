@@ -47,18 +47,35 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // 3. Calculate requested days (simplified: doesn't exclude holidays/weekends yet)
+    // 3. Calculate requested days
     const start = new Date(input.start_date);
     const end = new Date(input.end_date);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
+
+    // B17 fix: Validate date ordering and no past-date leaves
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (start < today) {
+      return NextResponse.json({
+        success: false,
+        error: 'Leave start date cannot be in the past.',
+      }, { status: 422 });
+    }
+    if (end < start) {
+      return NextResponse.json({
+        success: false,
+        error: 'End date must be on or after the start date.',
+      }, { status: 422 });
+    }
+
+    const diffTime = end.getTime() - start.getTime();
     const requestedDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
     const remaining = balance.allocated_days - balance.used_days;
 
     if (requestedDays > remaining) {
-      return NextResponse.json({ 
-        success: false, 
-        error: `Insufficient balance. Requested: ${requestedDays}, Remaining: ${remaining}` 
+      return NextResponse.json({
+        success: false,
+        error: `Insufficient balance. Requested: ${requestedDays}, Remaining: ${remaining}`,
       }, { status: 422 });
     }
 

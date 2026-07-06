@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { GpsIndicator } from '@/components/attendance/GpsIndicator';
 import { FaceCapture } from '@/components/attendance/FaceCapture';
 import { Card } from '@/components/ui/Card';
@@ -9,12 +9,14 @@ import { Spinner } from '@/components/ui/Spinner';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Clock, CheckCircle2, History, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function EmployeeCheckInPage() {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [userProfile, setUserProfile] = useState<{ id: string; branch_id?: string; branch_name?: string } | null>(null);
   
   // Geolocation state from GpsIndicator
@@ -54,16 +56,13 @@ export default function EmployeeCheckInPage() {
         });
       }
 
-      // Check if already checked in today
+      // B5 fix: /api/attendance/today returns an object, not an array
       const res = await fetch('/api/attendance/today');
       const json = await res.json();
-      if (json.success && json.data && json.data.length > 0) {
-        const myRec = json.data.find((r: { user_id: string }) => r.user_id === user.id);
-        if (myRec) {
-          setTodayRecord(myRec);
-          if (myRec.check_in_time && !myRec.check_out_time) {
-            setCheckType('out');
-          }
+      if (json.success && json.data && json.data.checked_in) {
+        setTodayRecord(json.data);
+        if (json.data.check_in_time && !json.data.check_out_time) {
+          setCheckType('out');
         }
       }
       setLoading(false);
@@ -74,6 +73,7 @@ export default function EmployeeCheckInPage() {
   const handleBiometricSubmit = async (base64Image: string) => {
     if (!locationState || !userProfile) return;
     setSubmitting(true);
+    setFeedback(null);
     try {
       const endpoint = checkType === 'in' ? '/api/attendance/check-in' : '/api/attendance/check-out';
       const payload =
@@ -82,10 +82,12 @@ export default function EmployeeCheckInPage() {
               latitude: locationState.latitude,
               longitude: locationState.longitude,
               photo_url: base64Image, // In production, upload blob to bucket and pass URL
+              face_verified: true,
             }
           : {
               latitude: locationState.latitude,
               longitude: locationState.longitude,
+              face_verified: true,
             };
 
       const res = await fetch(endpoint, {
@@ -96,14 +98,14 @@ export default function EmployeeCheckInPage() {
 
       const result = await res.json();
       if (result.success) {
-        alert(`Successfully Checked ${checkType === 'in' ? 'In' : 'Out'}!`);
-        router.push('/employee');
+        setFeedback({ type: 'success', message: `Successfully Checked ${checkType === 'in' ? 'In' : 'Out'}!` });
+        setTimeout(() => router.push('/employee'), 1500);
       } else {
-        alert(`Check-In Failed: ${result.error?.message || 'Geofence or verification error'}`);
+        setFeedback({ type: 'error', message: `Check-In Failed: ${result.error?.message || 'Geofence or verification error'}` });
       }
     } catch (err) {
       console.error('Submit error:', err);
-      alert('Network error occurred during submission.');
+      setFeedback({ type: 'error', message: 'Network error occurred during submission.' });
     } finally {
       setSubmitting(false);
     }
@@ -157,6 +159,25 @@ export default function EmployeeCheckInPage() {
           </button>
         </div>
       </div>
+
+      {/* B1 fix: Inline feedback message instead of alert() */}
+      <AnimatePresence mode="wait">
+        {feedback && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className={`p-4 rounded-2xl border flex items-center space-x-3 shadow-lg ${
+              feedback.type === 'success'
+                ? 'bg-emerald-950/80 border-emerald-500/30 text-emerald-300'
+                : 'bg-rose-950/80 border-rose-500/30 text-rose-300'
+            }`}
+          >
+            {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" /> : <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />}
+            <span className="text-sm font-semibold">{feedback.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Today's Status Banner */}
       {todayRecord && (

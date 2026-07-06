@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -34,15 +34,22 @@ interface StoreEmployee {
   check_out_time?: string;
 }
 
+interface PendingApproval {
+  id: string;
+  full_name: string;
+  email: string;
+  nid?: string;
+}
+
 export default function BranchManagerDashboardPage() {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [loading, setLoading] = useState(true);
   const [storeName, setStoreName] = useState('Anchor Fashion Store');
   const [employees, setEmployees] = useState<StoreEmployee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [pendingCorrections, setPendingCorrections] = useState(2); // simulated or fetched count
-  const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
+  const [pendingCorrections, setPendingCorrections] = useState(0);
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([]);
 
   const fetchStoreDashboard = useCallback(async () => {
     setLoading(true);
@@ -80,6 +87,14 @@ export default function BranchManagerDashboardPage() {
       const resAtt = await fetch('/api/attendance/today');
       const jsonAtt = await resAtt.json();
       const todayRecords = jsonAtt.success ? jsonAtt.data : [];
+
+      // B9 fix: Fetch real pending corrections count
+      const resCorr = await fetch('/api/attendance/manual-correction');
+      const jsonCorr = await resCorr.json();
+      if (jsonCorr.success && jsonCorr.data) {
+        const pendingCount = jsonCorr.data.filter((c: { status: string }) => c.status === 'pending').length;
+        setPendingCorrections(pendingCount);
+      }
 
       // Map employees with their current status today
       if (staffList) {
@@ -193,7 +208,7 @@ export default function BranchManagerDashboardPage() {
                <div key={emp.id} className="flex items-center justify-between bg-[#040A15]/80 p-3 rounded-xl border border-[#1E293B]">
                  <div>
                    <p className="text-white font-bold text-sm">{emp.full_name}</p>
-                   <p className="text-slate-400 text-xs">Email: {emp.email} | NID: {emp.nid}</p>
+                   <p className="text-slate-400 text-xs">Email: {emp.email} | NID: {emp.nid ? `****${emp.nid.slice(-4)}` : 'N/A'}</p>
                  </div>
                  <div className="flex gap-2">
                    <Button size="sm" variant="ghost" className="text-rose-400 hover:bg-rose-950/30" onClick={() => handleApprove(emp.id, 'reject')}>Reject</Button>

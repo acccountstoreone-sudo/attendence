@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser, requireRole, handleApiError } from '@/lib/auth';
+import { getCurrentUser, requireRole, handleApiError, getSafeIpAddress } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
@@ -111,7 +111,7 @@ export async function PUT(
       record_id: targetId,
       old_values: { role: oldProfile.role, branch_id: oldProfile.branch_id, is_active: oldProfile.is_active },
       new_values: payload,
-      ip_address: request.headers.get('x-forwarded-for') || '127.0.0.1',
+      ip_address: getSafeIpAddress(request),
     });
 
     return NextResponse.json({
@@ -153,7 +153,7 @@ export async function DELETE(
       record_id: targetId,
       old_values: { is_active: true },
       new_values: { is_active: false },
-      ip_address: request.headers.get('x-forwarded-for') || '127.0.0.1',
+      ip_address: getSafeIpAddress(request),
     });
 
     return NextResponse.json({

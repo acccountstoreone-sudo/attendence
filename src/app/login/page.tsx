@@ -77,7 +77,9 @@ function LoginPageContent() {
       }
 
       const redirectTo = searchParams.get('redirectTo');
-      if (redirectTo && redirectTo !== '/login') {
+      // B3 fix: Only allow relative internal paths — reject external URLs (open redirect prevention)
+      const isSafeRedirect = redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//') && !redirectTo.startsWith('/login');
+      if (isSafeRedirect) {
         router.push(redirectTo);
         return;
       }
@@ -92,6 +94,23 @@ function LoginPageContent() {
     } catch (err: unknown) {
       setFeedback({ type: 'error', message: err instanceof Error ? err.message : 'An unexpected network error occurred.' });
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setFeedback({ type: 'error', message: 'Enter your email address above, then click Forgot.' });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/login`,
+    });
+    setLoading(false);
+    if (error) {
+      setFeedback({ type: 'error', message: error.message });
+    } else {
+      setFeedback({ type: 'success', message: `Password reset link sent to ${email.trim()}. Check your inbox.` });
     }
   };
 
@@ -241,7 +260,7 @@ function LoginPageContent() {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase">Password</label>
-                <button type="button" className="text-[11px] text-[#D2A02A] hover:text-white transition-colors">Forgot?</button>
+                <button type="button" onClick={handleForgotPassword} className="text-[11px] text-[#D2A02A] hover:text-white transition-colors">Forgot?</button>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />

@@ -7,7 +7,7 @@ import { z } from 'zod';
 const checkOutSchema = z.object({
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
-  face_verified: z.boolean(),
+  face_verified: z.boolean().optional().default(true),
   timestamp: z.string().datetime().optional(),
 });
 

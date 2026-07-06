@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -11,10 +11,12 @@ import { createClient } from '@/lib/supabase/client';
 
 export default function EmployeeDashboardPage() {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<{ full_name: string; branch_name: string } | null>(null);
   const [todayRecord, setTodayRecord] = useState<{ check_in_time?: string; check_out_time?: string; status?: string } | null>(null);
+  // B6 fix: Store real leave balance
+  const [leaveBalance, setLeaveBalance] = useState<{ available: number; total: number }>({ available: 20, total: 20 });
 
   useEffect(() => {
     async function init() {
@@ -34,12 +36,27 @@ export default function EmployeeDashboardPage() {
         });
       }
 
+      // B5 fix: /api/attendance/today returns an object, not an array
       const res = await fetch('/api/attendance/today');
       const json = await res.json();
-      if (json.success && json.data && json.data.length > 0) {
-        const myRec = json.data.find((r: { user_id: string }) => r.user_id === user.id);
-        if (myRec) setTodayRecord(myRec);
+      if (json.success && json.data && json.data.checked_in) {
+        setTodayRecord(json.data);
       }
+
+      // B6 fix: Fetch real leave balance for current year
+      const currentYear = new Date().getFullYear();
+      const { data: balances } = await supabase
+        .from('leave_balances')
+        .select('allocated_days, used_days')
+        .eq('user_id', user.id)
+        .eq('year', currentYear);
+
+      if (balances && balances.length > 0) {
+        const totalAllocated = balances.reduce((acc, b) => acc + (b.allocated_days || 0), 0);
+        const totalUsed = balances.reduce((acc, b) => acc + (b.used_days || 0), 0);
+        setLeaveBalance({ available: Math.max(0, totalAllocated - totalUsed), total: totalAllocated });
+      }
+
       setLoading(false);
     }
     init();
@@ -125,16 +142,17 @@ export default function EmployeeDashboardPage() {
             </div>
             <p className="text-xs text-slate-400">Annual Paid Leave Allocation</p>
             <div className="mt-4 flex items-baseline space-x-2">
-              <span className="text-4xl font-extrabold text-[#D2A02A]">14</span>
-              <span className="text-sm font-bold text-slate-500">/ 20 Days Available</span>
+              <span className="text-4xl font-extrabold text-[#D2A02A]">{leaveBalance.available}</span>
+              <span className="text-sm font-bold text-slate-500">/ {leaveBalance.total} Days Available</span>
             </div>
           </div>
 
+          {/* B7 fix: Correct route to /employee/leave (singular) */}
           <Button
             size="sm"
             variant="outline"
             className="w-full mt-6 border-[#D2A02A]/30 text-[#D2A02A] hover:bg-[#D2A02A]/10"
-            onClick={() => router.push('/employee/leaves')}
+            onClick={() => router.push('/employee/leave')}
           >
             Request Leave
           </Button>

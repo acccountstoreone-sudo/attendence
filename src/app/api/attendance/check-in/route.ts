@@ -23,6 +23,10 @@ export async function POST(request: NextRequest) {
     const payload = checkInSchema.parse(body);
 
     // 3. Biometric Verification Check (Spec P35 & P19)
+    // B2 note: face_verified is currently client-reported. For production hardening,
+    // replace this boolean with a FaceIO session token and verify it server-side
+    // via: POST https://api.faceio.net/verify with your app secret key.
+    // The current check prevents accidental skips but does NOT prevent intentional bypass.
     if (!payload.face_verified) {
       return NextResponse.json(
         {
