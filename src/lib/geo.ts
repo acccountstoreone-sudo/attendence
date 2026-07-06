@@ -23,6 +23,8 @@ export function calculateDistanceMeters(
   return Math.round(R * c);
 }
 
+export const calculateDistance = calculateDistanceMeters;
+
 /**
  * Validates if an employee's coordinates are within the branch's geofence radius.
  */
