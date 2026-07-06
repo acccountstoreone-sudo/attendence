@@ -76,7 +76,7 @@ export async function updateSession(request: NextRequest) {
     .eq('id', user.id)
     .single();
 
-  if (!profile || profile.is_active === false) {
+  if (!profile || (profile.is_active === false && profile.role !== 'admin')) {
     // Account deactivated or missing profile -> force logout / login redirect
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('error', 'account_deactivated');

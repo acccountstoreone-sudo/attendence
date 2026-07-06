@@ -61,7 +61,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     .single();
 
   if (!profile) return null;
-  if (!profile.is_active) return null;
+  if (!profile.is_active && profile.role !== 'admin') return null;
 
   return {
     id: user.id,

@@ -69,7 +69,7 @@ function LoginPageContent() {
         return;
       }
 
-      if (!profile.is_active) {
+      if (!profile.is_active && profile.role !== 'admin') {
         setFeedback({ type: 'error', message: 'Your employee account is currently inactive or offboarded.' });
         await supabase.auth.signOut();
         setLoading(false);
