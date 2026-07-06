@@ -117,9 +117,9 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                 <div className="flex items-center justify-between p-3 rounded-xl bg-[#1E293B]/30 border border-[#1E293B]">
                   <span className="text-xs text-slate-300 font-medium">Document Scan</span>
                   {isMissingBoth ? (
-                    <Badge variant="danger" className="text-[10px]">Missing</Badge>
+                    <Badge status="absent" variant="solid" className="text-[10px]">Missing</Badge>
                   ) : (
-                    <Badge variant="warning" className="text-[10px]">Manual Review</Badge>
+                    <Badge status="late" variant="solid" className="text-[10px]">Manual Review</Badge>
                   )}
                 </div>
               </div>
