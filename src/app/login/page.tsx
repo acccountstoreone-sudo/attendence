@@ -21,9 +21,11 @@ function LoginPageContent() {
   useEffect(() => {
     const errorParam = searchParams.get('error');
     if (errorParam === 'account_deactivated') {
-      setFeedback({ type: 'error', message: 'Your account has been deactivated by Anchor Fashion HQ. Please contact HR.' });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFeedback({ type: 'error', message: 'Your account is pending approval or deactivated. Please contact your manager.' });
+      supabase.auth.signOut();
     }
-  }, [searchParams]);
+  }, [searchParams, supabase.auth]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,7 +178,7 @@ function LoginPageContent() {
               <span className="font-bold text-[#D2A02A]">AI Face ID & Geo-fencing</span>
             </h2>
             <p className="text-white leading-relaxed text-[13px] md:text-sm font-light opacity-90">
-              Anchor Fashion's advanced attendance grid exclusively verifies identities via 3D facial recognition, synchronized instantly with military-grade GPS positioning.
+              Anchor Fashion&apos;s advanced attendance grid exclusively verifies identities via 3D facial recognition, synchronized instantly with military-grade GPS positioning.
             </p>
           </motion.div>
         </div>

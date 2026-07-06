@@ -22,12 +22,19 @@ interface Branch {
   manager_id?: string;
 }
 
+interface BranchEmployee {
+  id: string;
+  role: string;
+  full_name: string;
+  email: string;
+}
+
 export default function BranchDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const supabase = createClient();
   const [branchId, setBranchId] = useState<string>('');
   const [branch, setBranch] = useState<Branch | null>(null);
-  const [employees, setEmployees] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<BranchEmployee[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
 
@@ -39,7 +46,7 @@ export default function BranchDetailsPage({ params }: { params: Promise<{ id: st
     });
   }, [params]);
 
-  const loadBranchData = async (id: string) => {
+  async function loadBranchData(id: string) {
     setLoading(true);
     const { data, error } = await supabase
       .from('branches')
@@ -56,7 +63,7 @@ export default function BranchDetailsPage({ params }: { params: Promise<{ id: st
     setLoading(false);
   };
 
-  const loadBranchEmployees = async (id: string) => {
+  async function loadBranchEmployees(id: string) {
     setLoadingEmployees(true);
     try {
       const res = await fetch(`/api/employees?branch_id=${id}`);

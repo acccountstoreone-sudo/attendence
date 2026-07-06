@@ -49,11 +49,11 @@ export async function updateSession(request: NextRequest) {
     if (user && pathname === '/login') {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, is_active')
         .eq('id', user.id)
         .single();
 
-      if (profile) {
+      if (profile && (profile.is_active || profile.role === 'admin')) {
         if (profile.role === 'admin') return NextResponse.redirect(new URL('/admin', request.url));
         if (profile.role === 'branch_manager') return NextResponse.redirect(new URL('/branch-manager', request.url));
         return NextResponse.redirect(new URL('/employee', request.url));

@@ -49,7 +49,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
       if (data) setBranches(data);
     };
     loadBranches();
-  }, []);
+  }, [supabase]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

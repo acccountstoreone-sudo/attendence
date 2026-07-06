@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
       const columns = Object.keys(exportData[0] || {});
       const rows = exportData.map(row => columns.map(col => String(row[col] ?? '')));
 
-      // @ts-ignore - jspdf-autotable adds autoTable to jsPDF instance
+      // @ts-expect-error - jspdf-autotable adds autoTable to jsPDF instance
       doc.autoTable({
         head: [columns],
         body: rows,

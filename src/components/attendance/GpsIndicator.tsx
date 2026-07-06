@@ -78,6 +78,7 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkPosition();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchLatitude, branchLongitude]);

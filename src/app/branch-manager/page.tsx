@@ -18,6 +18,7 @@ import {
   MapPin,
   Store,
   Building2,
+  FileText,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Abstract3DBackground from '@/components/Abstract3DBackground';
@@ -39,6 +40,8 @@ interface PendingApproval {
   full_name: string;
   email: string;
   nid?: string;
+  nid_front_url?: string;
+  nid_back_url?: string;
 }
 
 export default function BranchManagerDashboardPage() {
@@ -79,7 +82,7 @@ export default function BranchManagerDashboardPage() {
       // 2.5 Fetch pending approvals
       const { data: pendingList } = await supabase
         .from('profiles')
-        .select('id, full_name, email, nid')
+        .select('id, full_name, email, nid, nid_front_url, nid_back_url')
         .eq('registration_step', 'pending_approval');
       if (pendingList) setPendingApprovals(pendingList);
 
@@ -120,6 +123,7 @@ export default function BranchManagerDashboardPage() {
   }, [supabase]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStoreDashboard();
   }, [fetchStoreDashboard]);
 
@@ -205,12 +209,31 @@ export default function BranchManagerDashboardPage() {
           </div>
           <div className="space-y-3 relative z-10">
              {pendingApprovals.map(emp => (
-               <div key={emp.id} className="flex items-center justify-between bg-[#040A15]/80 p-3 rounded-xl border border-[#1E293B]">
+               <div key={emp.id} className="flex flex-col md:flex-row md:items-center justify-between bg-[#040A15]/80 p-3.5 rounded-xl border border-[#1E293B] gap-3">
                  <div>
                    <p className="text-white font-bold text-sm">{emp.full_name}</p>
-                   <p className="text-slate-400 text-xs">Email: {emp.email} | NID: {emp.nid ? `****${emp.nid.slice(-4)}` : 'N/A'}</p>
+                   <p className="text-slate-400 text-xs mt-0.5">Email: {emp.email}</p>
+                   <div className="flex flex-wrap items-center gap-2 mt-2">
+                     {emp.nid_front_url ? (
+                       <a href={emp.nid_front_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] bg-[#1E293B] hover:bg-[#D2A02A]/20 text-[#D2A02A] px-2.5 py-1 rounded-md border border-[#D2A02A]/30 transition-colors">
+                         <FileText className="w-3.5 h-3.5" /> View NID Front
+                       </a>
+                     ) : (
+                       <span className="text-[11px] text-slate-500 bg-[#1E293B]/50 px-2.5 py-1 rounded-md">No NID Front</span>
+                     )}
+                     {emp.nid_back_url ? (
+                       <a href={emp.nid_back_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] bg-[#1E293B] hover:bg-[#D2A02A]/20 text-[#D2A02A] px-2.5 py-1 rounded-md border border-[#D2A02A]/30 transition-colors">
+                         <FileText className="w-3.5 h-3.5" /> View NID Back
+                       </a>
+                     ) : (
+                       <span className="text-[11px] text-slate-500 bg-[#1E293B]/50 px-2.5 py-1 rounded-md">No NID Back</span>
+                     )}
+                     {emp.nid && !emp.nid.startsWith('doc_') && (
+                       <span className="text-[11px] text-slate-400">| NID: ****{emp.nid.slice(-4)}</span>
+                     )}
+                   </div>
                  </div>
-                 <div className="flex gap-2">
+                 <div className="flex gap-2 self-end md:self-center">
                    <Button size="sm" variant="ghost" className="text-rose-400 hover:bg-rose-950/30" onClick={() => handleApprove(emp.id, 'reject')}>Reject</Button>
                    <Button size="sm" variant="primary" className="bg-[#D2A02A] hover:bg-[#C08F1E] text-[#040A15] font-bold border-none" onClick={() => handleApprove(emp.id, 'approve')}>Approve & Enroll</Button>
                  </div>

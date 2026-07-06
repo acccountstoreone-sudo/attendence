@@ -1182,3 +1182,17 @@ CREATE POLICY "BM all access to employee shifts for own branch" ON public.employ
   user_id IN (SELECT id FROM public.profiles WHERE branch_id = public.user_branch_id())
 );
 COMMIT;
+- -   F i x   h a n d l e _ n e w _ u s e r   t r i g g e r   t o   r e s p e c t   t h e   r o l e   p r o v i d e d   i n   r a w _ u s e r _ m e t a _ d a t a  
+ C R E A T E   O R   R E P L A C E   F U N C T I O N   p u b l i c . h a n d l e _ n e w _ u s e r ( )  
+ R E T U R N S   T R I G G E R   A S   $ $  
+ B E G I N  
+     I N S E R T   I N T O   p u b l i c . p r o f i l e s   ( i d ,   f u l l _ n a m e ,   r o l e )  
+     V A L U E S   (  
+         N E W . i d ,  
+         C O A L E S C E ( N E W . r a w _ u s e r _ m e t a _ d a t a - > > ' f u l l _ n a m e ' ,   N E W . e m a i l ) ,  
+         C O A L E S C E ( ( N E W . r a w _ u s e r _ m e t a _ d a t a - > > ' r o l e ' ) : : p u b l i c . u s e r _ r o l e ,   ' e m p l o y e e ' : : p u b l i c . u s e r _ r o l e )  
+     ) ;  
+     R E T U R N   N E W ;  
+ E N D ;  
+ $ $   L A N G U A G E   p l p g s q l   S E C U R I T Y   D E F I N E R ;  
+ 

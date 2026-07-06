@@ -58,7 +58,7 @@ export default function AdminReportsPage() {
 
   const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - i);
 
-  const fetchReport = useCallback(async () => {
+  const fetchReport = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -77,7 +77,7 @@ export default function AdminReportsPage() {
       setLoading(false);
       setHasLoaded(true);
     }
-  }, [filter]);
+  };
 
   const handleExport = async (format: 'pdf' | 'excel') => {
     setExporting(format);

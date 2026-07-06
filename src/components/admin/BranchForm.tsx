@@ -62,7 +62,7 @@ export function BranchForm({ initialData }: BranchFormProps) {
            const errData = await res.json().catch(() => null);
            let msg = errData?.error?.message || errData?.message || 'Update failed';
            if (errData?.error?.details) {
-             msg += '\n' + errData.error.details.map((d: any) => `- ${d.path}: ${d.message}`).join('\n');
+             msg += '\n' + errData.error.details.map((d: { path: string; message: string }) => `- ${d.path}: ${d.message}`).join('\n');
            }
            throw new Error(msg);
         }
@@ -76,7 +76,7 @@ export function BranchForm({ initialData }: BranchFormProps) {
            const errData = await res.json().catch(() => null);
            let msg = errData?.error?.message || errData?.message || 'Create failed';
            if (errData?.error?.details) {
-             msg += '\n' + errData.error.details.map((d: any) => `- ${d.path}: ${d.message}`).join('\n');
+             msg += '\n' + errData.error.details.map((d: { path: string; message: string }) => `- ${d.path}: ${d.message}`).join('\n');
            }
            throw new Error(msg);
         }
@@ -84,9 +84,9 @@ export function BranchForm({ initialData }: BranchFormProps) {
 
       router.push('/admin/branches');
       router.refresh();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Save error:', err);
-      alert(`Failed to save branch: ${err.message}`);
+      alert(`Failed to save branch: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setSaving(false);
     }

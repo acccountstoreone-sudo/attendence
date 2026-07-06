@@ -47,11 +47,13 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     startCamera();
+    const currentVideoRef = videoRef.current;
     return () => {
       // Stop camera tracks on unmount
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
+      if (currentVideoRef && currentVideoRef.srcObject) {
+        const stream = currentVideoRef.srcObject as MediaStream;
         stream.getTracks().forEach((t) => t.stop());
       }
     };

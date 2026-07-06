@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Lock, Mail, User, Phone, IdCard, AlertTriangle, Check, ShieldCheck, Fingerprint, ScanFace, MapPin, Orbit, Camera, ArrowRight, RefreshCw } from 'lucide-react';
+import { Lock, Mail, User, Phone, IdCard, AlertTriangle, Check, ShieldCheck, Fingerprint, ScanFace, MapPin, Orbit, Camera, ArrowRight, RefreshCw, Upload, FileText, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Abstract3DBackground from '@/components/Abstract3DBackground';
 import Webcam from 'react-webcam';
@@ -17,6 +17,10 @@ export default function RegisterPage() {
   const [step, setStep] = useState<Step>('basic_info');
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [nidFront, setNidFront] = useState<string | null>(null);
+  const [nidBack, setNidBack] = useState<string | null>(null);
+  const [nidFrontName, setNidFrontName] = useState<string>('');
+  const [nidBackName, setNidBackName] = useState<string>('');
 
   // Sync step from URL on mount
   useEffect(() => {
@@ -24,6 +28,7 @@ export default function RegisterPage() {
       const params = new URLSearchParams(window.location.search);
       const urlStep = params.get('step') as Step;
       if (urlStep && ['basic_info', 'otp', 'kyc', 'face_scan', 'pending'].includes(urlStep)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setStep(urlStep);
       }
     }
@@ -55,6 +60,7 @@ export default function RegisterPage() {
       const saved = localStorage.getItem('anchor_register_form');
       if (saved) {
         try {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setFormData(JSON.parse(saved));
         } catch (e) {}
       }
@@ -169,15 +175,21 @@ export default function RegisterPage() {
         body: JSON.stringify({ email: formData.email }),
       });
 
-      const otpRes = await res.json();
-      if (!res.ok) throw new Error(otpRes.error);
+      let otpRes;
+      try {
+        otpRes = await res.json();
+      } catch (parseErr) {
+        throw new Error(`Server returned an invalid response (${res.status} ${res.statusText}). Please check server logs.`);
+      }
+
+      if (!res.ok) throw new Error(otpRes?.error || 'Failed to send OTP.');
 
       setFeedback({ type: 'success', message: 'Verification code sent to your email.' });
       setStep('otp');
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Registration Error:', err);
-      const msg = err.message ? err.message : JSON.stringify(err);
+      const msg = err instanceof Error ? err.message : JSON.stringify(err);
       setFeedback({ type: 'error', message: typeof msg === 'object' ? JSON.stringify(msg) : msg });
     } finally {
       setLoading(false);
@@ -202,17 +214,56 @@ export default function RegisterPage() {
       setFeedback({ type: 'success', message: 'Email verified successfully.' });
       setStep('kyc');
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('OTP Verify Error:', err);
-      const msg = err.message ? err.message : JSON.stringify(err);
+      const msg = err instanceof Error ? err.message : JSON.stringify(err);
       setFeedback({ type: 'error', message: typeof msg === 'object' ? JSON.stringify(msg) : msg });
     } finally {
       setLoading(false);
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
+    setFeedback(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Max size 5MB (Spec requirement: max size 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setFeedback({ type: 'error', message: `File size (${(file.size / (1024 * 1024)).toFixed(2)}MB) exceeds the 5MB limit. Please upload a smaller file.` });
+      e.target.value = '';
+      return;
+    }
+
+    // Must be Image or PDF (no text)
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      setFeedback({ type: 'error', message: 'Invalid format. Only Image (PNG/JPG/WEBP) or PDF documents are permitted.' });
+      e.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        if (side === 'front') {
+          setNidFront(reader.result);
+          setNidFrontName(file.name);
+        } else {
+          setNidBack(reader.result);
+          setNidBackName(file.name);
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleKycSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!nidFront || !nidBack) {
+      setFeedback({ type: 'error', message: 'Please upload both NID Front Side and NID Back Side copies.' });
+      return;
+    }
+    setFeedback(null);
     setStep('face_scan');
   };
 
@@ -230,8 +281,8 @@ export default function RegisterPage() {
   }, [webcamRef]);
 
   const handleFinalSubmit = async () => {
-    if (!formData.nid || formData.nid.trim() === '') {
-      setFeedback({ type: 'error', message: 'NID is missing due to a page refresh. Please re-enter your NID.' });
+    if (!nidFront || !nidBack) {
+      setFeedback({ type: 'error', message: 'NID document copies are missing due to a page refresh. Please re-upload them.' });
       setStep('kyc');
       return;
     }
@@ -248,7 +299,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/kyc-submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nid: formData.nid, facePhotoDataUrl: faceImage }),
+        body: JSON.stringify({ nidFrontDataUrl: nidFront, nidBackDataUrl: nidBack, facePhotoDataUrl: faceImage }),
       });
 
       const data = await res.json();
@@ -258,9 +309,9 @@ export default function RegisterPage() {
       localStorage.removeItem('anchor_register_form');
       setStep('pending');
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('KYC Submit Error:', err);
-      const msg = err.message ? err.message : JSON.stringify(err);
+      const msg = err instanceof Error ? err.message : JSON.stringify(err);
       setFeedback({ type: 'error', message: typeof msg === 'object' ? JSON.stringify(msg) : msg });
     } finally {
       setLoading(false);
@@ -412,17 +463,73 @@ export default function RegisterPage() {
               </form>
             )}
 
-            {/* STEP 3: KYC */}
+            {/* STEP 3: KYC Document Upload */}
             {step === 'kyc' && (
               <form onSubmit={handleKycSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">National ID Number</label>
-                  <div className="relative">
-                    <IdCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                    <input type="text" name="nid" required value={formData.nid} onChange={handleInputChange} placeholder="e.g. 1990458923012" className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#D2A02A] focus:outline-none text-white" />
+                <div className="bg-[#061224] border border-[#1E293B] p-4 rounded-xl text-xs text-slate-300 leading-relaxed">
+                  <p className="font-bold text-[#D2A02A] mb-1">Government Identity Verification</p>
+                  <p>Please upload clear copies of both the Front and Back sides of your National ID (NID). Accepted formats: Image (JPG, PNG) or PDF. Maximum size: 5MB per file.</p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Front Copy */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-2">NID Front Side Copy *</label>
+                    <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${nidFront ? 'border-emerald-500/50 bg-emerald-950/20' : 'border-[#1E293B] hover:border-[#D2A02A]/50 bg-[#040A15]/50'}`}>
+                      <input
+                        type="file"
+                        required={!nidFront}
+                        accept="image/*,application/pdf"
+                        onChange={(e) => handleFileUpload(e, 'front')}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      />
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-2.5 rounded-lg ${nidFront ? 'bg-emerald-500/20 text-emerald-400' : 'bg-[#1E293B] text-slate-400'}`}>
+                          {nidFront ? <Check className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-white truncate">{nidFront ? nidFrontName : 'Click or drag to upload NID Front'}</p>
+                          <p className="text-[11px] text-slate-400">{nidFront ? 'File uploaded and ready' : 'Image or PDF (Max 5MB)'}</p>
+                        </div>
+                        {nidFront && (
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setNidFront(null); setNidFrontName(''); }} className="p-1.5 hover:bg-rose-950/40 text-rose-400 rounded-lg relative z-20">
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Back Copy */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-2">NID Back Side Copy *</label>
+                    <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${nidBack ? 'border-emerald-500/50 bg-emerald-950/20' : 'border-[#1E293B] hover:border-[#D2A02A]/50 bg-[#040A15]/50'}`}>
+                      <input
+                        type="file"
+                        required={!nidBack}
+                        accept="image/*,application/pdf"
+                        onChange={(e) => handleFileUpload(e, 'back')}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      />
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-2.5 rounded-lg ${nidBack ? 'bg-emerald-500/20 text-emerald-400' : 'bg-[#1E293B] text-slate-400'}`}>
+                          {nidBack ? <Check className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-white truncate">{nidBack ? nidBackName : 'Click or drag to upload NID Back'}</p>
+                          <p className="text-[11px] text-slate-400">{nidBack ? 'File uploaded and ready' : 'Image or PDF (Max 5MB)'}</p>
+                        </div>
+                        {nidBack && (
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setNidBack(null); setNidBackName(''); }} className="p-1.5 hover:bg-rose-950/40 text-rose-400 rounded-lg relative z-20">
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <button type="submit" className="w-full bg-[#D2A02A] hover:bg-[#C08F1E] text-[#040A15] font-bold py-3.5 rounded-xl flex items-center justify-center gap-2">
+
+                <button type="submit" disabled={!nidFront || !nidBack} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all ${(!nidFront || !nidBack) ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-[#D2A02A] hover:bg-[#C08F1E] text-[#040A15] shadow-lg shadow-[#D2A02A]/20'}`}>
                   Proceed to Biometrics <ArrowRight className="w-4 h-4" />
                 </button>
               </form>

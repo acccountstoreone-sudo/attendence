@@ -37,6 +37,10 @@ interface Employee {
   employee_id?: string;
   is_active: boolean;
   created_at: string;
+  registration_step?: string;
+  nid_front_url?: string;
+  nid_back_url?: string;
+  nid?: string;
 }
 
 interface Branch {
@@ -71,6 +75,7 @@ export default function AdminEmployeesPage() {
     setLoading(false);
   }, [supabase]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadData(); }, [loadData]);
 
   const openAddModal = () => router.push('/admin/employees/new');
@@ -269,7 +274,17 @@ export default function AdminEmployeesPage() {
                         {emp.employee_id || '—'}
                       </td>
                       <td className="py-4 px-5 text-center">
-                        <Badge status={emp.is_active ? 'active' : 'inactive'} />
+                        {emp.registration_step === 'pending_approval' ? (
+                          <div className="flex flex-col items-center">
+                            <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider mb-1">Pending KYC</span>
+                            <div className="flex gap-1 mt-1">
+                              {emp.nid_front_url && <a href={emp.nid_front_url} target="_blank" rel="noreferrer" className="text-[10px] text-blue-400 hover:underline">Front</a>}
+                              {emp.nid_back_url && <a href={emp.nid_back_url} target="_blank" rel="noreferrer" className="text-[10px] text-blue-400 hover:underline">Back</a>}
+                            </div>
+                          </div>
+                        ) : (
+                          <Badge status={emp.is_active ? 'active' : 'inactive'} />
+                        )}
                       </td>
                       <td className="py-4 px-5 text-right">
                         <div className="flex items-center justify-end space-x-1">

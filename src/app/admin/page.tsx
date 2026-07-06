@@ -76,7 +76,7 @@ export default function AdminDashboardPage() {
           const jsonComp = await resComp.json();
           if (jsonComp.success) setSummary(jsonComp.data);
         }
-      } catch (e) { console.error('Failed fetching company summary', e); }
+      } catch (e) { console.warn('Failed fetching company summary:', (e as Error).message); }
 
       // 2. Fetch Branches Summary
       try {
@@ -85,7 +85,7 @@ export default function AdminDashboardPage() {
           const jsonBranch = await resBranch.json();
           if (jsonBranch.success) setBranches(jsonBranch.data || []);
         }
-      } catch (e) { console.error('Failed fetching branch summary', e); }
+      } catch (e) { console.warn('Failed fetching branch summary:', (e as Error).message); }
 
       // 3. Fetch Live Attendance Today
       try {
@@ -116,15 +116,16 @@ export default function AdminDashboardPage() {
             setLiveFeed(records);
           }
         }
-      } catch (e) { console.error('Failed fetching live attendance', e); }
+      } catch (e) { console.warn('Failed fetching live attendance:', (e as Error).message); }
     } catch (err) {
-      console.error('Failed to load dashboard data:', err);
+      console.warn('Failed to load dashboard data:', (err as Error).message);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchDashboardData();
     // Poll every 30 seconds for live feed updates
     const interval = setInterval(fetchDashboardData, 30000);

@@ -54,6 +54,7 @@ export default function ManualCorrectionsPage() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadCorrections(); }, [loadCorrections]);
 
   const handleReview = async (id: string, action: 'approved' | 'rejected', reviewNote?: string) => {

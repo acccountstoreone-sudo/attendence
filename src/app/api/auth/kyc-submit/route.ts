@@ -1,12 +1,45 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+async function uploadDataUrl(supabase: import('@supabase/supabase-js').SupabaseClient, dataUrl: string, pathPrefix: string, userId: string) {
+  const matches = dataUrl.match(/^data:(.+);base64,(.+)$/);
+  if (!matches) {
+    // Fallback if regex doesn't match standard data url prefix
+    const base64Data = dataUrl.replace(/^data:.*;base64,/, "");
+    const buffer = Buffer.from(base64Data, 'base64');
+    const fileName = `${userId}/${pathPrefix}_${Date.now()}.jpg`;
+    const { error } = await supabase.storage.from('avatars').upload(fileName, buffer, { contentType: 'image/jpeg', upsert: true });
+    if (error) throw error;
+    return supabase.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
+  }
+
+  const contentType = matches[1];
+  const base64Data = matches[2];
+  const buffer = Buffer.from(base64Data, 'base64');
+  
+  const ext = contentType === 'application/pdf' ? 'pdf' : contentType.split('/')[1] || 'jpg';
+  const fileName = `${userId}/${pathPrefix}_${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase
+    .storage
+    .from('avatars')
+    .upload(fileName, buffer, {
+      contentType: contentType,
+      upsert: true
+    });
+
+  if (uploadError) throw uploadError;
+
+  const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+  return publicUrlData.publicUrl;
+}
+
 export async function POST(request: Request) {
   try {
-    const { nid, facePhotoDataUrl } = await request.json();
+    const { nid, nidFrontDataUrl, nidBackDataUrl, facePhotoDataUrl } = await request.json();
 
-    if (!nid || !facePhotoDataUrl) {
-      return NextResponse.json({ error: 'NID and Face Photo are required' }, { status: 400 });
+    if (!nidFrontDataUrl || !nidBackDataUrl || !facePhotoDataUrl) {
+      return NextResponse.json({ error: 'NID Front copy, NID Back copy, and Face Photo are required.' }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -16,34 +49,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized. Please login again.' }, { status: 401 });
     }
 
-    // Decode base64 image
-    const base64Data = facePhotoDataUrl.replace(/^data:image\/\w+;base64,/, "");
-    const buffer = Buffer.from(base64Data, 'base64');
-    const fileName = `${user.id}/kyc_face_${Date.now()}.jpg`;
+    // Upload NID Front, NID Back, and Face Photo to Supabase Storage
+    const frontUrl = await uploadDataUrl(supabase, nidFrontDataUrl, 'nid_front', user.id);
+    const backUrl = await uploadDataUrl(supabase, nidBackDataUrl, 'nid_back', user.id);
+    const photoUrl = await uploadDataUrl(supabase, facePhotoDataUrl, 'kyc_face', user.id);
 
-    // Upload to Supabase Storage (avatars bucket)
-    const { data: uploadData, error: uploadError } = await supabase
-      .storage
-      .from('avatars')
-      .upload(fileName, buffer, {
-        contentType: 'image/jpeg',
-        upsert: true
-      });
-
-    if (uploadError) {
-      console.error('Storage Upload Error:', uploadError);
-      return NextResponse.json({ error: 'Failed to upload photo to Supabase Storage.' }, { status: 500 });
-    }
-
-    // Get the public URL for the uploaded photo
-    const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
-    const photoUrl = publicUrlData.publicUrl;
-
-    // Update the profile status with the real photo_url
+    // Update the profile status with document URLs and face photo
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ 
-        nid: nid,
+        nid: nid || `doc_${user.id.slice(0, 8)}`, // Fallback for UNIQUE nid constraint since text input is removed
+        nid_front_url: frontUrl,
+        nid_back_url: backUrl,
         kyc_status: 'pending',
         registration_step: 'pending_approval',
         face_enrolled: true,
@@ -53,12 +70,14 @@ export async function POST(request: Request) {
 
     if (profileError) {
        console.error('KYC Update Error:', profileError);
-       return NextResponse.json({ error: 'Failed to save KYC data. NID might already be in use.' }, { status: 400 });
+       return NextResponse.json({ error: 'Failed to save KYC documents. Please try again.' }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, message: 'KYC & Face Verification Submitted. Waiting for approval.' });
+    return NextResponse.json({ success: true, message: 'KYC Documents & Biometric Face Verification Submitted. Waiting for approval.' });
 
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+  } catch (error: unknown) {
+    console.error('KYC Submit Error:', error);
+    const msg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: msg || 'Internal server error during document upload.' }, { status: 500 });
   }
 }

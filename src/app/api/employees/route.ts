@@ -117,8 +117,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
+    const isEmployeeActive = payload.role === 'admin' || !!payload.branch_id;
+
     // Upsert the profile record with the real auth UUID
-    const { data: newProfile, error: profErr } = await supabase
+    const { data: newProfile, error: profErr } = await adminClient
       .from('profiles')
       .upsert({
         id: authData.user.id, // Use the auth user's UUID as the primary key
@@ -129,7 +131,7 @@ export async function POST(request: NextRequest) {
         phone: payload.phone || null,
         photo_url: payload.photo_url || null,
         facial_id: payload.facial_id || null,
-        is_active: true,
+        is_active: isEmployeeActive,
       })
       .select()
       .single();

@@ -70,7 +70,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, message: 'OTP sent successfully' });
 
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: msg || 'Internal server error' }, { status: 500 });
   }
 }

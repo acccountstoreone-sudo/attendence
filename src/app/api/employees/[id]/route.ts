@@ -82,18 +82,38 @@ export async function PUT(
     }
 
     if (user.role === 'branch_manager') {
-      if (oldProfile.branch_id !== user.branch_id) {
+      if (oldProfile.branch_id !== user.branch_id && oldProfile.branch_id !== null) {
         throw new Error('FORBIDDEN: Cannot modify employees of another store.');
       }
       if (payload.role === 'admin' || oldProfile.role === 'admin') {
         throw new Error('FORBIDDEN: Branch Managers cannot modify Admin accounts or promote staff to Admin.');
       }
-      if (payload.branch_id && payload.branch_id !== user.branch_id) {
-        throw new Error('FORBIDDEN: Cannot transfer employees to another store.');
+      if (payload.branch_id !== undefined && payload.branch_id !== user.branch_id) {
+        throw new Error('FORBIDDEN: Cannot transfer employees to another store or unassign them.');
       }
     }
 
-    const { data: updatedProfile, error: updateErr } = await supabase
+    // Check database constraint logic (chk_role_branch): Active employees MUST have a branch assigned
+    const newRole = payload.role ?? oldProfile.role;
+    const newBranchId = payload.branch_id !== undefined ? payload.branch_id : oldProfile.branch_id;
+    const newIsActive = payload.is_active !== undefined ? payload.is_active : oldProfile.is_active;
+
+    if (newIsActive && newRole !== 'admin' && !newBranchId) {
+      throw new Error('VALIDATION_ERROR: Cannot activate an employee without assigning them to a store/branch first.');
+    }
+
+    const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+      throw new Error('INTERNAL: SUPABASE_SERVICE_ROLE_KEY is not configured.');
+    }
+    const adminClient = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceRoleKey,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    const { data: updatedProfile, error: updateErr } = await adminClient
       .from('profiles')
       .update(payload)
       .eq('id', targetId)

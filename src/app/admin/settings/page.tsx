@@ -53,6 +53,7 @@ export default function AdminSettingsPage() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadSettings(); }, [loadSettings]);
 
   // Bug 9 fix: Actually save to the real API

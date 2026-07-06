@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get leaves today
-    let leaveQuery = supabase
+    const leaveQuery = supabase
       .from('leave_requests')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'approved')

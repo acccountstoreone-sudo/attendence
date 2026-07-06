@@ -88,6 +88,7 @@ export default function AdminAuditPage() {
     }
   }, [supabase]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
   const filteredLogs = logs.filter((log) => {
