@@ -108,11 +108,11 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
                   <span className="text-xs text-slate-300 font-medium">Liveness Check</span>
-                  <Badge variant="success" className="text-[10px]">Passed</Badge>
+                  <Badge status="present" variant="solid" className="text-[10px]">Passed</Badge>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/20">
                   <span className="text-xs text-slate-300 font-medium">Face Enrollment</span>
-                  <Badge variant="success" className="text-[10px]">Passed</Badge>
+                  <Badge status="present" variant="solid" className="text-[10px]">Captured</Badge>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-xl bg-[#1E293B]/30 border border-[#1E293B]">
                   <span className="text-xs text-slate-300 font-medium">Document Scan</span>
