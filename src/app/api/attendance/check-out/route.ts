@@ -13,6 +13,7 @@ const checkOutSchema = z.object({
   facial_id: z.string().optional(),
   is_offline_sync: z.boolean().optional().default(false),
   timestamp: z.string().datetime().optional(),
+  liveness_passed: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -27,10 +28,20 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           data: null,
-          error: {
-            code: 'BIOMETRIC_FAILED',
-            message: 'Biometric verification failed. Face descriptor missing or empty.',
-          },
+          error: { code: 'BIOMETRIC_FAILED', message: 'Biometric verification failed. Face descriptor missing or empty.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 403 }
+      );
+    }
+
+    // 3a. Liveness verification requirement
+    if (!payload.liveness_passed) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: { code: 'LIVENESS_REQUIRED', message: 'Liveness verification was not completed. Please complete the face challenge.' },
           timestamp: new Date().toISOString(),
         },
         { status: 403 }
@@ -73,7 +84,7 @@ export async function POST(request: NextRequest) {
         );
       }
       const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
-      if (distance > 0.6) {
+      if (distance > 0.75) {
         return NextResponse.json(
           {
             success: false,

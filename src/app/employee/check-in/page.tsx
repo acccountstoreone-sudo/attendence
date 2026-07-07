@@ -1,253 +1,321 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { GpsIndicator } from '@/components/attendance/GpsIndicator';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FaceCapture } from '@/components/attendance/FaceCapture';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
 import { createClient } from '@/lib/supabase/client';
+import { calculateDistance } from '@/lib/geo';
 import { useRouter } from 'next/navigation';
-import { Clock, CheckCircle2, History, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function EmployeeCheckInPage() {
-  const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [userProfile, setUserProfile] = useState<{ id: string; branch_id?: string; branch_name?: string; branch_lat?: number; branch_lng?: number; branch_radius?: number } | null>(null);
-  
-  // Geolocation state from GpsIndicator
-  const [locationState, setLocationState] = useState<{
-    latitude: number;
-    longitude: number;
-    isWithinGeofence: boolean;
-    distance: number;
-  } | null>(null);
+// ─────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────
+type GpsStatus = 'locating' | 'inside' | 'approaching' | 'outside' | 'error';
 
-  // Today's status
+interface BranchProfile {
+  id: string;
+  branch_id?: string;
+  branch_name?: string;
+  branch_lat?: number;
+  branch_lng?: number;
+  branch_radius?: number;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Custom GPS Hook
+// ─────────────────────────────────────────────────────────────
+function useGPS(branch: BranchProfile | null) {
+  const [status, setStatus]     = useState<GpsStatus>('locating');
+  const [distance, setDistance] = useState<number | null>(null);
+  const [coords, setCoords]     = useState<{ lat: number; lng: number } | null>(null);
+
+  const check = useCallback(() => {
+    if (!branch?.branch_lat || !branch?.branch_lng) return;
+    setStatus('locating');
+
+    if (!navigator.geolocation) { setStatus('error'); return; }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const d = Math.round(calculateDistance(latitude, longitude, branch.branch_lat!, branch.branch_lng!));
+        const r = branch.branch_radius ?? 100;
+        setCoords({ lat: latitude, lng: longitude });
+        setDistance(d);
+        setStatus(d <= r ? 'inside' : d <= r * 1.5 ? 'approaching' : 'outside');
+      },
+      () => setStatus('error'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, [branch]);
+
+  useEffect(() => { check(); }, [check]);
+
+  return {
+    status,
+    distance,
+    coords,
+    refresh: check,
+    verified: status === 'inside',
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// Live Clock
+// ─────────────────────────────────────────────────────────────
+function useLiveClock() {
+  const [time, setTime] = useState(() =>
+    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  );
+  useEffect(() => {
+    const id = setInterval(() =>
+      setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })),
+      1000
+    );
+    return () => clearInterval(id);
+  }, []);
+  return time;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Page Component
+// ─────────────────────────────────────────────────────────────
+export default function EmployeeCheckInPage() {
+  const router   = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+  const time     = useLiveClock();
+
+  const [loading, setLoading]       = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [profile, setProfile]       = useState<BranchProfile | null>(null);
+  const [checkType, setCheckType]   = useState<'in' | 'out'>('in');
   const [todayRecord, setTodayRecord] = useState<{
-    id?: string;
     check_in_time?: string;
     check_out_time?: string;
     status?: string;
   } | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const [checkType, setCheckType] = useState<'in' | 'out'>('in');
+  const gps = useGPS(profile);
 
+  // ── Load profile + today's record ──────────────────────
   useEffect(() => {
     async function loadData() {
       const { data: { user } } = await supabase.auth.getUser();
-      // Bug 7 fix: Redirect to login and stop spinner if session is expired/missing
-      if (!user) {
-        setLoading(false);
-        router.push('/login');
-        return;
-      }
+      if (!user) { router.push('/login'); return; }
 
       const { data: prof } = await supabase
         .from('profiles')
-        .select('id, branch_id, branches!profiles_branch_id_fkey(name)')
+        .select('id, branch_id, branches(name)')
         .eq('id', user.id)
         .single();
 
       if (prof) {
-        const branchData: { id: string; branch_id?: string; branch_name?: string; branch_lat?: number; branch_lng?: number; branch_radius?: number } = {
+        const p: BranchProfile = {
           id: prof.id,
-          branch_id: prof.branch_id,
-          branch_name: (prof as unknown as { branches?: { name?: string } }).branches?.name || 'Anchor Store',
+          branch_id: prof.branch_id ?? undefined,
+          branch_name: (prof as unknown as { branches?: { name?: string } }).branches?.name ?? 'Store',
         };
 
-        // Fetch real branch coordinates for geofencing
         if (prof.branch_id) {
-          const supabaseInner = supabase;
-          const { data: branch } = await supabaseInner
+          const { data: branch } = await supabase
             .from('branches')
             .select('latitude, longitude, geofence_radius_meters')
             .eq('id', prof.branch_id)
             .single();
           if (branch) {
-            branchData.branch_lat = branch.latitude ? Number(branch.latitude) : undefined;
-            branchData.branch_lng = branch.longitude ? Number(branch.longitude) : undefined;
-            branchData.branch_radius = branch.geofence_radius_meters || 100;
+            p.branch_lat    = branch.latitude    ? Number(branch.latitude)    : undefined;
+            p.branch_lng    = branch.longitude   ? Number(branch.longitude)   : undefined;
+            p.branch_radius = branch.geofence_radius_meters ?? 100;
           }
         }
 
-        setUserProfile(branchData);
+        setProfile(p);
       }
 
-      // B5 fix: /api/attendance/today returns an object, not an array
       try {
         const res = await fetch('/api/attendance/today');
         if (res.ok) {
           const json = await res.json();
-          if (json.success && json.data && json.data.checked_in) {
+          if (json.success && json.data?.checked_in) {
             setTodayRecord(json.data);
-            if (json.data.check_in_time && !json.data.check_out_time) {
-              setCheckType('out');
-            }
+            if (json.data.check_in_time && !json.data.check_out_time) setCheckType('out');
           }
         }
-      } catch {
-        // Non-critical: dashboard still works without today's status
-      }
+      } catch { /* non-critical */ }
+
       setLoading(false);
     }
     loadData();
-  }, [supabase]);
+  }, [supabase, router]);
 
-  const handleBiometricSubmit = async (base64Image: string, faceDescriptor?: number[]) => {
-    if (!locationState || !userProfile || !faceDescriptor) {
-       setFeedback({ type: 'error', message: 'Missing location or biometric data. Please try again.' });
-       return;
-    }
+  // ── API submission ──────────────────────────────────────
+  // This function throws on failure so FaceCapture can handle it.
+  const handleBiometricSubmit = useCallback(async (base64Image: string, faceDescriptor: number[]) => {
+    if (!gps.coords) throw new Error('GPS coordinates unavailable. Please retry.');
     setSubmitting(true);
-    setFeedback(null);
-    try {
-      const endpoint = checkType === 'in' ? '/api/attendance/check-in' : '/api/attendance/check-out';
-      const payload =
-        checkType === 'in'
-          ? {
-              latitude: locationState.latitude,
-              longitude: locationState.longitude,
-              photo_url: base64Image, // In production, upload blob to bucket and pass URL
-              face_verified: true,
-              faceDescriptor: faceDescriptor,
-            }
-          : {
-              latitude: locationState.latitude,
-              longitude: locationState.longitude,
-              face_verified: true,
-              faceDescriptor: faceDescriptor,
-            };
+    setSubmitError(null);
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+    const endpoint = checkType === 'in' ? '/api/attendance/check-in' : '/api/attendance/check-out';
+    const payload  = checkType === 'in'
+      ? {
+          latitude: gps.coords.lat,
+          longitude: gps.coords.lng,
+          photo_url: base64Image,
+          face_verified: true,
+          faceDescriptor,
+          liveness_passed: true,
+        }
+      : {
+          latitude: gps.coords.lat,
+          longitude: gps.coords.lng,
+          face_verified: true,
+          faceDescriptor,
+          liveness_passed: true,
+        };
 
-      const result = await res.json();
-      if (result.success) {
-        setFeedback({ type: 'success', message: `Successfully Checked ${checkType === 'in' ? 'In' : 'Out'}!` });
-        setTimeout(() => router.push('/employee'), 1500);
-      } else {
-        // Bug 3 fix: Use checkType to correctly say "Check-In" or "Check-Out" in error message
-        setFeedback({ type: 'error', message: `Check-${checkType === 'in' ? 'In' : 'Out'} Failed: ${result.error?.message || 'Geofence or verification error'}` });
-      }
-    } catch (err) {
-      console.error('Submit error:', err);
-      setFeedback({ type: 'error', message: 'Network error occurred during submission.' });
-    } finally {
-      setSubmitting(false);
+    const res    = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const result = await res.json();
+
+    setSubmitting(false);
+
+    if (!result.success) {
+      throw new Error(result.error?.message ?? `Check-${checkType === 'in' ? 'In' : 'Out'} failed`);
     }
-  };
 
+    // Redirect to dashboard after short delay
+    setTimeout(() => router.push('/employee'), 2200);
+  }, [gps.coords, checkType, router]);
+
+  // ─────────────────────────────────────────────────────────
+  // Render: Loading screen
+  // ─────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-[600px] flex items-center justify-center">
-        <Spinner size="lg" label="Initializing Biometric & GPS Modules..." />
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#020810]">
+        <Spinner size="lg" label="Initializing Biometric System..." />
       </div>
     );
   }
 
+  // ─────────────────────────────────────────────────────────
+  // Render: Full-screen check-in
+  // ─────────────────────────────────────────────────────────
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-12">
-      {/* Top Header */}
-      <div className="flex items-center justify-between bg-[#061224] p-6 rounded-3xl border border-[#1E293B] shadow-xl">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => router.push('/employee')}
-            className="p-2.5 rounded-2xl bg-[#040A15]/80 hover:bg-[#1E293B] text-slate-300 hover:text-[#D2A02A] transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <div className="flex items-center space-x-2">
-              <Badge status="active">Biometric + GPS Active</Badge>
-              <span className="text-xs text-slate-400 font-medium">{userProfile?.branch_name}</span>
-            </div>
-            <h1 className="text-2xl font-extrabold text-white mt-1">Shift Attendance Check-In</h1>
-          </div>
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#020810]" style={{ fontFamily: 'Inter, sans-serif' }}>
+
+      {/* ── Top Navigation Bar ── */}
+      <div className="flex-none flex items-center justify-between px-4 pt-4 pb-3 bg-gradient-to-b from-[#020810]/90 to-transparent z-40 backdrop-blur-sm" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+        <button
+          onClick={() => router.push('/employee')}
+          className="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-all active:scale-95"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+
+        <div className="flex flex-col items-center">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400">
+            Biometric Attendance
+          </span>
+          <span className="text-white font-extrabold text-sm">{profile?.branch_name}</span>
         </div>
 
-        {/* Check Type Toggle */}
-        <div className="flex bg-[#040A15] p-1 rounded-2xl border border-[#1E293B]">
-          <button
-            onClick={() => setCheckType('in')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              checkType === 'in' ? 'bg-[#D2A02A] text-[#040A15] shadow-md' : 'text-slate-400 hover:text-[#D2A02A]'
-            }`}
-          >
-            Check In
-          </button>
-          <button
-            onClick={() => setCheckType('out')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              checkType === 'out' ? 'bg-[#D2A02A] text-[#040A15] shadow-md' : 'text-slate-400 hover:text-[#D2A02A]'
-            }`}
-          >
-            Check Out
-          </button>
+        {/* Live Clock */}
+        <div className="flex items-center space-x-1.5 bg-white/5 border border-white/10 rounded-2xl px-3 py-2">
+          <Clock className="w-3.5 h-3.5 text-blue-400" />
+          <span className="text-white font-bold text-xs tabular-nums">{time}</span>
         </div>
       </div>
 
-      {/* B1 fix: Inline feedback message instead of alert() */}
-      <AnimatePresence mode="wait">
-        {feedback && (
+      {/* ── Today's Status Banner (if already checked in) ── */}
+      <AnimatePresence>
+        {todayRecord && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className={`p-4 rounded-2xl border flex items-center space-x-3 shadow-lg ${
-              feedback.type === 'success'
-                ? 'bg-emerald-950/80 border-emerald-500/30 text-emerald-300'
-                : 'bg-rose-950/80 border-rose-500/30 text-rose-300'
-            }`}
+            initial={{ opacity:0, y:-10 }}
+            animate={{ opacity:1, y:0 }}
+            className="flex-none mx-4 mb-0 flex items-center justify-between bg-blue-950/80 backdrop-blur-xl border border-blue-500/30 rounded-2xl px-4 py-2.5 z-30"
           >
-            {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" /> : <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />}
-            <span className="text-sm font-semibold">{feedback.message}</span>
+            <div className="flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+              <div>
+                <p className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">Today's Record</p>
+                <p className="text-white text-xs font-semibold">
+                  In: <span className="text-blue-300">{todayRecord.check_in_time ? new Date(todayRecord.check_in_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—'}</span>
+                  {todayRecord.check_out_time && <> · Out: <span className="text-slate-400">{new Date(todayRecord.check_out_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></>}
+                </p>
+              </div>
+            </div>
+
+            {/* Check-in / Check-out Toggle */}
+            <div className="flex bg-[#040A15] p-0.5 rounded-xl border border-slate-800">
+              {(['in','out'] as const).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setCheckType(t)}
+                  className={`px-3 py-1.5 rounded-[10px] text-[11px] font-bold transition-all ${
+                    checkType === t
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {t === 'in' ? 'Check In' : 'Check Out'}
+                </button>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Today's Status Banner */}
-      {todayRecord && (
-        <Card className="bg-[#061224] border-[#D2A02A]/20 p-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <CheckCircle2 className="w-6 h-6 text-[#D2A02A] shrink-0" />
-            <div>
-              <p className="text-sm font-bold text-white">Today&apos;s Attendance Recorded</p>
-              <p className="text-xs text-slate-300">
-                Check-In: <strong className="text-[#D2A02A]">{todayRecord.check_in_time ? new Date(todayRecord.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</strong>
-                {todayRecord.check_out_time && (
-                  <> | Check-Out: <strong className="text-[#D2A02A]/70">{new Date(todayRecord.check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></>
-                )}
-              </p>
-            </div>
+      {/* ── Check-in/out toggle when no record exists ── */}
+      {!todayRecord && (
+        <div className="flex-none flex justify-center px-4 z-30">
+          <div className="flex bg-[#040A15]/80 backdrop-blur-xl p-0.5 rounded-2xl border border-slate-800/80">
+            {(['in','out'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setCheckType(t)}
+                className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${
+                  checkType === t
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {t === 'in' ? '▶ Check In' : '■ Check Out'}
+              </button>
+            ))}
           </div>
-          <Badge status={todayRecord.status as 'present' | 'late' | 'absent'} />
-        </Card>
+        </div>
       )}
 
-      {/* GPS Geofence Module (Spec P29) */}
-      <GpsIndicator
-        branchName={userProfile?.branch_name}
-        branchLatitude={userProfile?.branch_lat}
-        branchLongitude={userProfile?.branch_lng}
-        geofenceRadius={userProfile?.branch_radius ?? 100}
-        onLocationVerified={(coords) => setLocationState(coords)}
-      />
+      {/* ── FaceCapture fills remaining space ── */}
+      <div className="flex-1 relative min-h-0 mt-2">
+        <FaceCapture
+          onCapture={handleBiometricSubmit}
+          gpsVerified={gps.verified}
+          gpsStatus={gps.status}
+          gpsDistance={gps.distance}
+          gpsRefresh={gps.refresh}
+          branchName={profile?.branch_name}
+          isLoading={submitting}
+          checkType={checkType}
+        />
+      </div>
 
-      {/* Biometric Camera Module (Spec P28) */}
-      <FaceCapture
-        onCapture={handleBiometricSubmit}
-        isGpsVerified={locationState?.isWithinGeofence ?? false}
-        gpsDistance={locationState?.distance}
-        isLoading={submitting}
-      />
+      {/* ── Error Banner (for API errors) ── */}
+      <AnimatePresence>
+        {submitError && (
+          <motion.div
+            initial={{ opacity:0, y:10 }}
+            animate={{ opacity:1, y:0 }}
+            exit={{ opacity:0 }}
+            className="flex-none mx-4 mb-4 p-3 rounded-2xl bg-rose-950/90 border border-rose-500/30 backdrop-blur-xl text-rose-200 text-xs font-semibold text-center z-40"
+          >
+            {submitError}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

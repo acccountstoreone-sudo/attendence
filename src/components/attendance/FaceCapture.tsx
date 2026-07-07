@@ -1,326 +1,662 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
-import { Card } from '@/components/ui/Card';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Camera, CheckCircle2, AlertCircle, RefreshCw, ShieldCheck, ScanFace } from 'lucide-react';
+import {
+  CheckCircle2, AlertCircle, Eye, Smile,
+  ArrowLeftRight, MapPin, RefreshCw,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// ─────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────
+
 export interface FaceCaptureProps {
-  onCapture: (base64Image: string, faceDescriptor?: number[]) => Promise<void>;
-  isGpsVerified: boolean;
-  gpsDistance?: number | null;
+  /** Called on successful liveness + capture. Throws on API failure. */
+  onCapture: (image: string, descriptor: number[]) => Promise<void>;
+  gpsVerified: boolean;
+  gpsStatus: 'locating' | 'inside' | 'approaching' | 'outside' | 'error';
+  gpsDistance: number | null;
+  gpsRefresh: () => void;
+  branchName?: string;
   isLoading?: boolean;
+  checkType?: 'in' | 'out';
 }
 
-type VerificationState = 'idle' | 'scanning' | 'extracting' | 'matching' | 'success';
+type Challenge = 'blink' | 'smile' | 'turn_right';
+type Phase =
+  | 'init'           // starting up
+  | 'loading'        // loading face-api models
+  | 'wait_gps'       // models ready, GPS not verified
+  | 'challenge'      // running a liveness challenge
+  | 'between'        // brief gap between challenge 1 and 2
+  | 'motion'         // anti-spoofing motion entropy check
+  | 'extract'        // extracting face descriptor
+  | 'submit'         // calling onCapture()
+  | 'success'        // done!
+  | 'cam_err';       // camera permission denied
+
+// ─────────────────────────────────────────────────────────
+// Utilities
+// ─────────────────────────────────────────────────────────
+
+function d2(a: {x:number;y:number}, b: {x:number;y:number}): number {
+  return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2);
+}
+
+/** Eye Aspect Ratio (s = first index of 6 eye landmarks) */
+function ear(pts: {x:number;y:number}[], s: number): number {
+  const h = d2(pts[s], pts[s+3]);
+  return h < 1 ? 1 : (d2(pts[s+1], pts[s+5]) + d2(pts[s+2], pts[s+4])) / (2*h);
+}
+
+/** Returns true if the current face landmarks satisfy the given challenge */
+function isMet(pts: {x:number;y:number}[], ch: Challenge): boolean {
+  if (ch === 'blink')
+    return (ear(pts,36) + ear(pts,42)) / 2 < 0.22;
+  if (ch === 'smile')
+    return d2(pts[48], pts[54]) / Math.max(d2(pts[0], pts[16]), 1) > 0.44;
+  // turn_right: nose tip shifted right of face center
+  return (pts[30].x - (pts[0].x + pts[16].x)/2) / Math.max(d2(pts[0], pts[16]), 1) > 0.10;
+}
+
+/** Capture a tiny frame for motion entropy comparison */
+async function sampleFrame(v: HTMLVideoElement, sz=52): Promise<Uint8ClampedArray> {
+  const c = document.createElement('canvas');
+  c.width = sz; c.height = sz;
+  c.getContext('2d')!.drawImage(v, 0, 0, sz, sz);
+  return c.getContext('2d')!.getImageData(0, 0, sz, sz).data;
+}
+
+/** Average absolute pixel difference between two frames (red channel only) */
+function motionScore(a: Uint8ClampedArray, b: Uint8ClampedArray): number {
+  let s = 0;
+  for (let i=0; i<a.length; i+=4) s += Math.abs(a[i]-b[i]);
+  return s / (a.length/4);
+}
+
+/** Speak via Web Speech API – non-blocking, safe */
+function say(text: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.speechSynthesis?.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.92; u.volume = 1;
+    window.speechSynthesis?.speak(u);
+  } catch { /* ignore */ }
+}
+
+/** Pick 2 random unique challenges */
+function pickTwo(): [Challenge, Challenge] {
+  const all: Challenge[] = ['blink', 'smile', 'turn_right'];
+  all.sort(() => Math.random() - 0.5);
+  return [all[0], all[1]];
+}
+
+const CONF: Record<Challenge, {
+  label: string; spoken: string;
+  icon: React.ReactNode; color: string;
+}> = {
+  blink:      { label: 'Slowly blink your eyes',     spoken: 'Please slowly blink your eyes',        icon: <Eye className="w-8 h-8"/>,            color: '#60A5FA' },
+  smile:      { label: 'Smile naturally',             spoken: 'Please smile naturally',               icon: <Smile className="w-8 h-8"/>,          color: '#FBBF24' },
+  turn_right: { label: 'Turn head slightly to right', spoken: 'Please turn your head to the right',   icon: <ArrowLeftRight className="w-8 h-8"/>, color: '#A78BFA' },
+};
+
+// ─────────────────────────────────────────────────────────
+// Component
+// ─────────────────────────────────────────────────────────
 
 export const FaceCapture: React.FC<FaceCaptureProps> = ({
-  onCapture,
-  isGpsVerified,
-  gpsDistance,
-  isLoading = false,
+  onCapture, gpsVerified, gpsStatus, gpsDistance, gpsRefresh,
+  branchName, isLoading=false, checkType='in'
 }) => {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // ── Refs (mutable, no re-render needed) ──────────────
+  const videoRef   = useRef<HTMLVideoElement|null>(null);
+  const canvasRef  = useRef<HTMLCanvasElement|null>(null);
+  const faRef      = useRef<typeof import('@vladmandic/face-api')|null>(null);
+  const timerRef   = useRef<ReturnType<typeof setInterval>|null>(null);
+  const okCntRef   = useRef(0);
+  const chsRef     = useRef<[Challenge,Challenge]>(['blink','smile']);
+  const chIdxRef   = useRef<0|1>(0);
+  const phRef      = useRef<Phase>('init');
+  const mountedRef = useRef(true);
 
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [cameraError, setCameraError] = useState<string>('');
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [faceDescriptor, setFaceDescriptor] = useState<number[] | null>(null);
-  const [verificationState, setVerificationState] = useState<VerificationState>('idle');
-  const [feedback, setFeedback] = useState<string>('Align your face within the biometric frame');
+  // ── State (triggers re-renders) ──────────────────────
+  const [phase, _setPhase]  = useState<Phase>('init');
+  const [progress, setPr]   = useState(0);
+  const [msg, setMsg]       = useState('Initializing...');
+  const [msgType, setMT]    = useState<'info'|'success'|'error'|'warn'>('info');
+  const [camErr, setCamErr] = useState('');
+  const [hasCam, setHasCam] = useState<boolean|null>(null);
+  // Track challenge index for rendering (ref alone doesn't trigger re-render)
+  const [chIdx, setChIdx]   = useState<0|1>(0);
 
-  const startCamera = async () => {
-    setHasPermission(null);
-    setCameraError('');
-    try {
-      // Bug 1 fix: Stop any existing tracks before requesting a new stream to prevent leaks on retry
-      if (videoRef.current && videoRef.current.srcObject) {
-        (videoRef.current.srcObject as MediaStream).getTracks().forEach((t) => t.stop());
-        videoRef.current.srcObject = null;
-      }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 640 }, height: { ideal: 640 }, facingMode: 'user' },
-        audio: false,
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setHasPermission(true);
-        setFeedback('Position face centered within the frame');
-      }
-    } catch (err: unknown) {
-      console.error('Camera access error:', err);
-      setHasPermission(false);
-      setCameraError('Camera permission denied or device not found. Please allow camera access in browser settings.');
-    }
-  };
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    startCamera();
-    // Bug 1 fix: Use ref.current in cleanup so we always stop the latest stream, not the one captured at mount
-    return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        (videoRef.current.srcObject as MediaStream).getTracks().forEach((t) => t.stop());
-        videoRef.current.srcObject = null;
-      }
-    };
+  // Synced phase setter keeps ref + state in sync
+  const setPhase = useCallback((p: Phase) => {
+    if (!mountedRef.current) return;
+    phRef.current = p;
+    _setPhase(p);
   }, []);
 
-  const handleTakeSnapshot = () => {
-    if (!videoRef.current || !canvasRef.current) return;
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 640;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  // Announce + speak
+  const announce = useCallback((text: string, type: 'info'|'success'|'error'|'warn'='info') => {
+    if (!mountedRef.current) return;
+    setMsg(text); setMT(type); say(text);
+  }, []);
 
-    // Draw video frame to canvas
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-    setCapturedImage(dataUrl);
-    setFeedback('Biometric capture ready for verification!');
-  };
+  const stopLoop = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+  }, []);
 
-  const handleRetake = () => {
-    setCapturedImage(null);
-    setVerificationState('idle');
-    setFeedback('Align your face within the biometric frame');
-    // Restart camera in case the track was paused/ended (e.g., tab was backgrounded)
-    startCamera();
-  };
-
-  const handleConfirmSubmit = async () => {
-    if (!capturedImage) return;
-    
-    setVerificationState('scanning');
-    setFeedback('Scanning facial topography...');
-    
+  // ── Camera ───────────────────────────────────────────
+  const startCam = useCallback(async (): Promise<boolean> => {
     try {
-      const faceapi = await import('@vladmandic/face-api');
-      
-      // Ensure models are loaded
-      if (!faceapi.nets.tinyFaceDetector.isLoaded) {
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-          faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
-          faceapi.nets.faceRecognitionNet.loadFromUri('/models')
-        ]);
+      if (videoRef.current?.srcObject)
+        (videoRef.current.srcObject as MediaStream).getTracks().forEach(t=>t.stop());
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode:'user', width:{ideal:640}, height:{ideal:640} }, audio:false,
+      });
+      if (videoRef.current && mountedRef.current) {
+        videoRef.current.srcObject = stream;
+        setHasCam(true);
       }
+      return true;
+    } catch {
+      setHasCam(false);
+      setCamErr('Camera access denied. Please allow camera permissions in your browser settings, then tap "Try Again".');
+      setPhase('cam_err');
+      return false;
+    }
+  }, [setPhase]);
 
-      setVerificationState('extracting');
-      setFeedback('Extracting biometric vectors...');
+  // ── Model loading ────────────────────────────────────
+  const loadModels = useCallback(async () => {
+    setPhase('loading');
+    setPr(5);
+    try {
+      const fa = await import('@vladmandic/face-api');
+      await Promise.all([
+        fa.nets.tinyFaceDetector.loadFromUri('/models').then(()=>{ if(mountedRef.current) setPr(p=>p+30); }),
+        fa.nets.faceLandmark68Net.loadFromUri('/models').then(()=>{ if(mountedRef.current) setPr(p=>p+30); }),
+        fa.nets.faceRecognitionNet.loadFromUri('/models').then(()=>{ if(mountedRef.current) setPr(p=>p+35); }),
+      ]);
+      faRef.current = fa;
+      setPr(100);
+      return fa;
+    } catch {
+      announce('Failed to load biometric system. Please refresh.','error');
+      return null;
+    }
+  }, [setPhase, announce]);
 
-      // Bug 2 fix: Removed dead canvasRef check — face-api processes the img element directly, not the canvas
-      // Create an image element from capturedImage to process
-      const img = new Image();
-      img.src = capturedImage;
-      await new Promise((resolve) => { img.onload = resolve; });
+  // ── Liveness loop ────────────────────────────────────
+  const startLiveness = useCallback(() => {
+    stopLoop();
+    const challenges = pickTwo();
+    chsRef.current   = challenges;
+    chIdxRef.current = 0;
+    okCntRef.current = 0;
+    setChIdx(0);
 
-      const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceDescriptor();
+    setPhase('challenge');
+    announce(CONF[challenges[0]].spoken, 'info');
 
-      if (!detection) {
-        setVerificationState('idle');
-        setFeedback('No face detected or features unclear. Please retake.');
-        setCapturedImage(null);
+    timerRef.current = setInterval(async () => {
+      const fa  = faRef.current;
+      const v   = videoRef.current;
+      const ph  = phRef.current;
+      if (!fa || !v || v.readyState < 3) return;
+      // Only run during active challenge phase
+      if (ph !== 'challenge') return;
+
+      try {
+        const det = await fa
+          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.75 }))
+          .withFaceLandmarks();
+
+        if (!det) {
+          if (mountedRef.current) setMsg('No face detected. Look directly at the camera.');
+          say('No face detected. Look at the camera.');
+          return;
+        }
+
+        // Anti-spoofing: face area must be at least 8% of frame
+        const { width:fw, height:fh } = det.detection.box;
+        const frameArea = (v.videoWidth||640) * (v.videoHeight||640);
+        if ((fw*fh)/frameArea < 0.08) {
+          if (mountedRef.current) setMsg('Move closer to the camera.');
+          return;
+        }
+
+        const idx = chIdxRef.current;
+        const ch  = chsRef.current[idx];
+        const pts = det.landmarks.positions as {x:number;y:number}[];
+
+        if (isMet(pts, ch)) {
+          okCntRef.current++;
+          if (okCntRef.current >= 3) {
+            // Challenge passed
+            okCntRef.current = 0;
+
+            if (idx === 0) {
+              // Move to challenge 2
+              chIdxRef.current = 1;
+              setChIdx(1);
+              phRef.current = 'between';
+              _setPhase('between');
+              const next = chsRef.current[1];
+              say(`Well done! Now, ${CONF[next].spoken.toLowerCase()}`);
+              if (mountedRef.current) setMsg(`✓ Done! Now: ${CONF[next].label}`);
+
+              setTimeout(() => {
+                if (!mountedRef.current) return;
+                phRef.current = 'challenge';
+                _setPhase('challenge');
+                announce(CONF[next].spoken, 'info');
+              }, 1600);
+            } else {
+              // Both challenges passed → motion check
+              stopLoop();
+              setPhase('motion');
+            }
+          }
+        } else {
+          okCntRef.current = 0;
+          if (mountedRef.current) setMsg(CONF[ch].label);
+        }
+      } catch { /* silently continue */ }
+    }, 280);
+  }, [stopLoop, setPhase, announce]);
+
+  // ── Anti-spoofing + capture + extract ───────────────
+  const runCapture = useCallback(async () => {
+    const fa = faRef.current;
+    const v  = videoRef.current;
+    const c  = canvasRef.current;
+    if (!fa || !v || !c) return;
+
+    announce('Anti-spoofing check...', 'info');
+
+    try {
+      // 1. Motion entropy: compare 2 frames 750ms apart
+      const f1 = await sampleFrame(v);
+      await new Promise(r => setTimeout(r, 750));
+      const f2 = await sampleFrame(v);
+      const score = motionScore(f1, f2);
+
+      if (score < 1.8) {
+        // Near-zero motion = static photo attempt
+        announce('Static image detected! Please use a live camera.', 'error');
+        setTimeout(() => { if (mountedRef.current) startLiveness(); }, 2500);
         return;
       }
 
-      setFaceDescriptor(Array.from(detection.descriptor));
+      // 2. Capture full-res frame
+      c.width  = v.videoWidth  || 640;
+      c.height = v.videoHeight || 640;
+      const ctx = c.getContext('2d');
+      if (!ctx) return;
+      ctx.drawImage(v, 0, 0);
+      const dataUrl = c.toDataURL('image/jpeg', 0.92);
 
-      setVerificationState('matching');
-      setFeedback('Matching against secure database...');
-      
-      await new Promise(r => setTimeout(r, 800)); // Minimal delay for UI feedback
-      
-      setVerificationState('success');
-      setFeedback('Identity Verified. Processing check-in...');
-      
-      await onCapture(capturedImage, Array.from(detection.descriptor));
-    } catch (err) {
-      console.error(err);
-      setVerificationState('idle');
-      setFeedback('Biometric extraction failed. Please try again.');
-      setCapturedImage(null);
+      // 3. Extract face descriptor
+      setPhase('extract');
+      announce('Analyzing biometric signature...', 'info');
+
+      const img = new Image(); img.src = dataUrl;
+      await new Promise<void>(r => { img.onload = () => r(); });
+
+      const result = await fa
+        .detectSingleFace(img, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.75 }))
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+      if (!result) {
+        announce('Face not clear. Restarting verification.', 'error');
+        setTimeout(() => { if (mountedRef.current) startLiveness(); }, 2000);
+        return;
+      }
+
+      // 4. Single face check (anti-spoofing: no group photos)
+      const allFaces = await fa.detectAllFaces(img, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }));
+      if (allFaces.length > 1) {
+        announce('Multiple faces detected. Please be alone in front of the camera.', 'error');
+        setTimeout(() => { if (mountedRef.current) startLiveness(); }, 2500);
+        return;
+      }
+
+      // 5. Submit to parent
+      setPhase('submit');
+      announce('Matching your identity. Please wait.', 'info');
+      await onCapture(dataUrl, Array.from(result.descriptor));
+
+      // 6. Success
+      setPhase('success');
+      announce(`Identity confirmed. Check-${checkType} recorded successfully.`, 'success');
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : 'Verification failed. Please try again.';
+      announce(errMsg, 'error');
+      setTimeout(() => { if (mountedRef.current) startLiveness(); }, 3000);
     }
-  };
+  }, [announce, setPhase, startLiveness, onCapture, checkType]);
 
-  const isSimulating = verificationState !== 'idle' && verificationState !== 'success';
+  // ── Phase side-effects ───────────────────────────────
+  useEffect(() => {
+    if (phase === 'motion') runCapture();
+  }, [phase, runCapture]);
 
+  // When GPS becomes verified while waiting, start liveness
+  useEffect(() => {
+    if (gpsVerified && phRef.current === 'wait_gps') {
+      announce('Location verified! Starting face verification.', 'success');
+      setTimeout(() => { if (mountedRef.current) startLiveness(); }, 1000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gpsVerified]);
+
+  // ── Mount / Unmount ──────────────────────────────────
+  useEffect(() => {
+    mountedRef.current = true;
+
+    async function init() {
+      const camOk = await startCam();
+      if (!camOk) return;
+
+      const fa = await loadModels();
+      if (!fa) return;
+
+      if (gpsVerified) {
+        announce('Starting verification. Follow the on-screen instructions.', 'info');
+        setTimeout(() => { if (mountedRef.current) startLiveness(); }, 800);
+      } else {
+        setPhase('wait_gps');
+        announce('Please enable location services to continue.', 'warn');
+      }
+    }
+
+    init();
+
+    return () => {
+      mountedRef.current = false;
+      stopLoop();
+      if (videoRef.current?.srcObject) {
+        (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Derived state for rendering ──────────────────────
+  const gpsOk         = gpsStatus === 'inside';
+  const isProcessing  = ['motion','extract','submit'].includes(phase);
+  const isRunning     = ['challenge','between'].includes(phase);
+  const currentChConf = (isRunning || phase==='between') ? CONF[chsRef.current[chIdx]] : null;
+
+  // ─────────────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────────────
   return (
-    <Card className="bg-[#061224] border-[#1E293B] p-6 flex flex-col items-center max-w-md mx-auto shadow-2xl relative overflow-hidden">
-      {/* Decorative Background Grid */}
-      <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#1E293B_1px,transparent_1px),linear-gradient(to_bottom,#1E293B_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
-      
-      <div className="flex items-center space-x-2 text-blue-400 mb-6 self-start relative z-10">
-        <ScanFace className="w-5 h-5" />
-        <h3 className="text-base font-bold text-white tracking-wide">Biometric Identity Check</h3>
-      </div>
+    <div className="relative w-full h-full overflow-hidden bg-[#020810]">
+      {/* Live camera — fills entire area */}
+      <video
+        ref={videoRef}
+        autoPlay playsInline muted
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ transform: 'scaleX(-1)' }}
+      />
 
-      {/* Video / Snapshot Display Frame - Binance Style Premium UI */}
-      <div className="relative w-full max-w-[280px] aspect-[3/4] mx-auto rounded-[2rem] overflow-hidden border-2 border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-[#040A15] flex items-center justify-center my-2 z-10">
-        {!capturedImage ? (
-          <>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="absolute inset-0 w-full h-full object-cover transform -scale-x-100"
-            />
-            {/* Frosted Glass Overlay with Oval Cutout */}
-            <div 
-              className="absolute inset-0 backdrop-blur-md bg-[#061224]/70 pointer-events-none"
-              style={{
-                maskImage: 'radial-gradient(ellipse 110px 150px at center, transparent 99%, black 100%)',
-                WebkitMaskImage: 'radial-gradient(ellipse 110px 150px at center, transparent 99%, black 100%)'
-              }}
-            />
-            
-            {/* Glowing Border around the Cutout */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[300px] rounded-[110px/150px] border-2 border-blue-500/30 pointer-events-none shadow-[inset_0_0_20px_rgba(59,130,246,0.2)]" />
-            
-            {/* Pulsing Guide Outline */}
-            <motion.div 
-              animate={{ opacity: [0.2, 0.6, 0.2], scale: [0.98, 1.02, 0.98] }}
-              transition={{ repeat: Infinity, duration: 2.5 }}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[300px] rounded-[110px/150px] border-2 border-emerald-400/80 pointer-events-none"
-            />
+      {/* Radial dark vignette overlay with transparent oval in center */}
+      {phase !== 'cam_err' && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse 42% 54% at 50% 40%, transparent 100%, rgba(2,8,16,0.88) 100%)',
+          }}
+        />
+      )}
 
-            {/* Corner Bracket Accents */}
-            <div className="absolute top-8 left-8 w-6 h-6 border-t-2 border-l-2 border-blue-400/50 rounded-tl-xl" />
-            <div className="absolute top-8 right-8 w-6 h-6 border-t-2 border-r-2 border-blue-400/50 rounded-tr-xl" />
-            <div className="absolute bottom-8 left-8 w-6 h-6 border-b-2 border-l-2 border-blue-400/50 rounded-bl-xl" />
-            <div className="absolute bottom-8 right-8 w-6 h-6 border-b-2 border-r-2 border-blue-400/50 rounded-br-xl" />
-          </>
-        ) : (
-          <div className="relative w-full h-full">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={capturedImage} alt="Captured face" className="absolute inset-0 w-full h-full object-cover transform -scale-x-100 filter brightness-110 contrast-125" />
-            
-            {/* Apply same frosted mask to captured image */}
-            <div 
-              className="absolute inset-0 backdrop-blur-md bg-[#061224]/70 pointer-events-none z-10"
-              style={{
-                maskImage: 'radial-gradient(ellipse 110px 150px at center, transparent 99%, black 100%)',
-                WebkitMaskImage: 'radial-gradient(ellipse 110px 150px at center, transparent 99%, black 100%)'
-              }}
-            />
-            
-            {/* Verification Scanning Overlay Animations */}
-            <AnimatePresence>
-              {isSimulating && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[300px] rounded-[110px/150px] overflow-hidden z-20 pointer-events-none">
-                  <motion.div
-                    initial={{ top: '-10%' }}
-                    animate={{ top: '110%' }}
-                    transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                    className="absolute left-0 w-full h-1 bg-emerald-400 shadow-[0_0_20px_4px_rgba(52,211,153,1)] z-20"
-                  />
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.15 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-blue-500 mix-blend-overlay z-10"
-                  />
-                </div>
-              )}
-              {verificationState === 'success' && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="absolute inset-0 bg-emerald-950/80 backdrop-blur-sm flex flex-col items-center justify-center z-30"
-                >
-                  <CheckCircle2 className="w-20 h-20 text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)] mb-3" />
-                  <span className="text-emerald-50 font-bold text-lg tracking-wide uppercase">Identity Verified</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
+      {/* === GPS Status Pill (floating top) === */}
+      <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 pt-4 pb-2 pointer-events-none" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold backdrop-blur-xl border pointer-events-auto
+            ${gpsOk
+              ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300'
+              : gpsStatus === 'locating'
+                ? 'bg-slate-900/80 border-slate-600/40 text-slate-300 animate-pulse'
+                : 'bg-rose-950/80 border-rose-500/40 text-rose-300'
+            }`}
+        >
+          <MapPin className="w-3 h-3" />
+          <span>
+            {gpsOk ? `✓ Inside Zone`
+              : gpsStatus === 'locating'  ? 'Locating...'
+              : gpsStatus === 'error'     ? 'GPS Error — tap to retry'
+              : `${gpsDistance ?? '—'}m away from ${branchName ?? 'store'}`}
+          </span>
+          {(gpsStatus === 'error' || !gpsOk) && (
+            <button onClick={gpsRefresh} className="ml-0.5">
+              <RefreshCw className="w-3 h-3" />
+            </button>
+          )}
+        </motion.div>
 
-        {/* Camera Error State */}
-        {hasPermission === false && (
-          <div className="absolute inset-0 bg-[#040A15]/95 flex flex-col items-center justify-center p-6 text-center z-40 backdrop-blur-md">
-            <AlertCircle className="w-12 h-12 text-rose-500 mb-3 drop-shadow-[0_0_10px_rgba(244,63,94,0.4)]" />
-            <p className="text-xs text-rose-200 font-medium leading-relaxed">{cameraError}</p>
-            <Button size="sm" variant="outline" className="mt-5 border-rose-500/30 hover:bg-rose-950/30 text-rose-300" onClick={startCamera}>
-              Retry Camera Connection
-            </Button>
-          </div>
+        {branchName && (
+          <span className="text-[10px] text-slate-400 font-medium backdrop-blur-sm bg-black/30 px-2.5 py-1 rounded-full">
+            {branchName}
+          </span>
         )}
       </div>
 
-      {/* Live Feedback Banner */}
-      <motion.div 
-        key={feedback}
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`mt-6 px-4 py-3 rounded-xl border w-full text-center relative z-10 ${
-          verificationState === 'success' 
-            ? 'bg-emerald-950/50 border-emerald-500/30 text-emerald-300'
-            : isSimulating
-              ? 'bg-[#D2A02A]/10 border-[#D2A02A]/30 text-[#D2A02A] animate-pulse'
-              : 'bg-[#040A15] border-[#1E293B] text-slate-300'
-        }`}
-      >
-        <p className="text-sm font-bold tracking-wide">{feedback}</p>
-      </motion.div>
-
-      {/* GPS Warning if Outside Geofence */}
-      {!isGpsVerified && (
-        <div className="mt-3 p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs text-center w-full flex items-center justify-center space-x-2 relative z-10">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>Check-in disabled: You must be inside the store geofence ({gpsDistance ?? '?'}m away).</span>
+      {/* === Oval Face Guide === */}
+      {(isRunning || phase === 'wait_gps') && (
+        <div
+          className="absolute pointer-events-none z-10"
+          style={{
+            top: '50%', left: '50%',
+            transform: 'translate(-50%, -58%)',
+            width: 'min(56vw, 220px)',
+            height: 'min(75vw, 295px)',
+          }}
+        >
+          {/* Static inner border */}
+          <div
+            className="absolute inset-0 rounded-[50%]"
+            style={{ border: `1.5px solid ${currentChConf?.color ?? '#34D399'}30` }}
+          />
+          {/* Pulsing outer guide */}
+          <motion.div
+            animate={{ opacity: [0.25, 0.75, 0.25], scale: [0.97, 1.03, 0.97] }}
+            transition={{ repeat: Infinity, duration: 2.4 }}
+            className="absolute inset-0 rounded-[50%]"
+            style={{ border: `2.5px solid ${currentChConf?.color ?? '#34D399'}`, boxShadow: `0 0 18px ${currentChConf?.color ?? '#34D399'}40` }}
+          />
+          {/* Corner brackets */}
+          {['tl','tr','bl','br'].map(pos => (
+            <div key={pos} className={`absolute w-5 h-5 border-[#60A5FA]/50 
+              ${pos==='tl' ? 'top-3 left-3 border-t-2 border-l-2 rounded-tl-lg'
+              : pos==='tr' ? 'top-3 right-3 border-t-2 border-r-2 rounded-tr-lg'
+              : pos==='bl' ? 'bottom-3 left-3 border-b-2 border-l-2 rounded-bl-lg'
+                           : 'bottom-3 right-3 border-b-2 border-r-2 rounded-br-lg'}`}
+            />
+          ))}
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="mt-6 flex items-center space-x-3 w-full relative z-10">
-        {!capturedImage ? (
-          <Button
-            variant="primary"
-            size="lg"
-            className="w-full bg-[#D2A02A] text-[#040A15] hover:bg-[#C08F1E] font-bold border-none shadow-xl shadow-[#D2A02A]/20"
-            disabled={!hasPermission || !isGpsVerified || isLoading}
-            onClick={handleTakeSnapshot}
-            icon={<Camera className="w-5 h-5 text-[#040A15]" />}
-          >
-            Capture Face
+      {/* === Model Loading Overlay === */}
+      {phase === 'loading' && (
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#020810]/80 backdrop-blur-sm">
+          <div className="w-52 h-1.5 bg-slate-800 rounded-full overflow-hidden shadow-inner">
+            <motion.div
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.35 }}
+              className="h-full bg-gradient-to-r from-blue-500 via-emerald-400 to-blue-400 rounded-full"
+            />
+          </div>
+          <p className="text-slate-300 text-sm font-semibold mt-4">Loading Biometric Engine</p>
+          <p className="text-slate-500 text-xs mt-1">{progress}% — models may be cached after first load</p>
+        </div>
+      )}
+
+      {/* === Camera Error Overlay === */}
+      {phase === 'cam_err' && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#020810]/96 backdrop-blur-md p-8 text-center">
+          <motion.div initial={{ scale:0.8 }} animate={{ scale:1 }}>
+            <AlertCircle className="w-16 h-16 text-rose-500 mb-4 drop-shadow-[0_0_16px_rgba(244,63,94,0.5)]" />
+          </motion.div>
+          <p className="text-white font-extrabold text-xl mb-2">Camera Required</p>
+          <p className="text-rose-200/80 text-sm leading-relaxed mb-6 max-w-xs">{camErr}</p>
+          <Button variant="outline" onClick={startCam} icon={<RefreshCw className="w-4 h-4" />}>
+            Try Again
           </Button>
-        ) : (
-          <>
-            <Button
-              variant="outline"
-              size="md"
-              className="flex-1 border-[#1E293B] text-slate-300 hover:bg-[#1E293B]"
-              disabled={isLoading || isSimulating || verificationState === 'success'}
-              onClick={handleRetake}
-              icon={<RefreshCw className="w-4 h-4" />}
+        </div>
+      )}
+
+      {/* === Bottom Challenge / Status UI === */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 flex flex-col items-center px-4 pb-8 bg-gradient-to-t from-[#020810]/95 via-[#020810]/60 to-transparent" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
+
+        {/* GPS out-of-zone warning */}
+        {!gpsOk && phase !== 'loading' && phase !== 'cam_err' && phase !== 'success' && (
+          <motion.div
+            initial={{ opacity:0, y:8 }}
+            animate={{ opacity:1, y:0 }}
+            className="w-full max-w-sm mb-3 flex items-start space-x-2.5 bg-rose-950/90 border border-rose-500/40 backdrop-blur-xl px-4 py-3 rounded-2xl"
+          >
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <span className="text-rose-200 text-xs font-semibold leading-snug">
+              {gpsStatus === 'error'
+                ? 'GPS unavailable. Please enable location access to check in.'
+                : gpsStatus === 'locating'
+                  ? 'Detecting your location...'
+                  : `You are ${gpsDistance}m from ${branchName}. Move inside the store.`}
+            </span>
+          </motion.div>
+        )}
+
+        {/* Challenge progress dots */}
+        {isRunning && (
+          <div className="flex space-x-2 mb-4">
+            <motion.div
+              animate={{ scale: chIdx === 0 ? [1,1.3,1] : 1 }}
+              transition={{ repeat: chIdx===0 ? Infinity : 0, duration: 1.2 }}
+              className={`w-2.5 h-2.5 rounded-full ${chIdx === 0 ? 'bg-emerald-400' : 'bg-slate-600'}`}
+            />
+            <motion.div
+              animate={{ scale: chIdx === 1 ? [1,1.3,1] : 1 }}
+              transition={{ repeat: chIdx===1 ? Infinity : 0, duration: 1.2 }}
+              className={`w-2.5 h-2.5 rounded-full ${chIdx === 1 ? 'bg-blue-400' : 'bg-slate-600'}`}
+            />
+          </div>
+        )}
+
+        {/* Challenge instruction card */}
+        <AnimatePresence mode="wait">
+          {isRunning && currentChConf && (
+            <motion.div
+              key={`ch-${chIdx}`}
+              initial={{ opacity:0, y:16, scale:0.95 }}
+              animate={{ opacity:1, y:0, scale:1 }}
+              exit={{ opacity:0, scale:0.92 }}
+              transition={{ type:'spring', damping:20 }}
+              className="w-full max-w-sm flex items-center space-x-4 bg-[#061224]/90 backdrop-blur-2xl rounded-3xl px-5 py-4 mb-4 shadow-2xl"
+              style={{ borderWidth:1.5, borderStyle:'solid', borderColor: `${currentChConf.color}40` }}
             >
-              Retake
-            </Button>
-            <Button
-              variant="secondary"
-              size="md"
-              className="flex-1 bg-[#D2A02A] text-[#040A15] hover:bg-[#C08F1E] shadow-lg shadow-[#D2A02A]/20"
-              disabled={!isGpsVerified || isLoading || isSimulating || verificationState === 'success'}
-              isLoading={isLoading || isSimulating}
-              onClick={handleConfirmSubmit}
-              icon={!isSimulating && <ShieldCheck className="w-5 h-5" />}
+              <div className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: `${currentChConf.color}18` }}>
+                <span style={{ color: currentChConf.color }}>{currentChConf.icon}</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-0.5">
+                  Step {chIdx + 1} of 2 — Liveness Check
+                </p>
+                <p className="text-white font-bold text-sm leading-snug">{currentChConf.label}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Processing state */}
+        {isProcessing && (
+          <motion.div
+            initial={{ opacity:0, y:10 }}
+            animate={{ opacity:1, y:0 }}
+            className="w-full max-w-sm flex items-center space-x-3 bg-blue-950/90 backdrop-blur-xl border border-blue-500/30 rounded-2xl px-5 py-3.5 mb-4"
+          >
+            <motion.div
+              animate={{ rotate:360 }}
+              transition={{ repeat:Infinity, duration:1, ease:'linear' }}
+              className="w-5 h-5 border-2 border-blue-400/30 border-t-blue-400 rounded-full shrink-0"
+            />
+            <p className="text-blue-100 font-semibold text-sm">{msg}</p>
+          </motion.div>
+        )}
+
+        {/* General status message */}
+        {!isProcessing && !isRunning && phase !== 'success' && phase !== 'cam_err' && phase !== 'loading' && (
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={msg}
+              initial={{ opacity:0, y:4 }}
+              animate={{ opacity:1, y:0 }}
+              className={`w-full max-w-sm text-center text-xs font-semibold px-4 py-2.5 rounded-xl mb-3 border
+                ${msgType==='error'   ? 'bg-rose-950/80 border-rose-500/30 text-rose-200'
+                : msgType==='success' ? 'bg-emerald-950/80 border-emerald-500/30 text-emerald-200'
+                : msgType==='warn'    ? 'bg-amber-950/80 border-amber-500/30 text-amber-200'
+                : 'bg-slate-900/70 border-slate-700/30 text-slate-300'}`}
             >
-              {isSimulating ? 'Verifying...' : 'Verify & Submit'}
-            </Button>
-          </>
+              {msg}
+            </motion.p>
+          </AnimatePresence>
+        )}
+
+        {/* Live status hint during challenge */}
+        {isRunning && (
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={msg}
+              initial={{ opacity:0 }}
+              animate={{ opacity:1 }}
+              className="text-slate-400 text-xs text-center mb-4 px-4"
+            >
+              {msg}
+            </motion.p>
+          </AnimatePresence>
+        )}
+
+        {/* === Success State === */}
+        {phase === 'success' && (
+          <motion.div
+            initial={{ opacity:0, scale:0.85 }}
+            animate={{ opacity:1, scale:1 }}
+            transition={{ type:'spring', damping:16 }}
+            className="w-full max-w-sm flex flex-col items-center space-y-3 py-4"
+          >
+            <div className="relative">
+              <motion.div
+                animate={{ scale:[1, 1.15, 1] }}
+                transition={{ repeat:Infinity, duration:2 }}
+                className="absolute inset-0 rounded-full bg-emerald-500/20"
+              />
+              <CheckCircle2 className="w-20 h-20 text-emerald-400 relative drop-shadow-[0_0_24px_rgba(52,211,153,0.7)]" />
+            </div>
+            <p className="text-emerald-200 font-extrabold text-xl tracking-tight">Identity Verified</p>
+            <p className="text-slate-400 text-sm text-center">
+              Check-{checkType === 'in' ? 'In' : 'Out'} recorded. Redirecting...
+            </p>
+          </motion.div>
+        )}
+
+        {/* Security badge */}
+        {!['cam_err','loading','success'].includes(phase) && (
+          <p className="text-slate-600 text-[10px] text-center mt-2 font-medium">
+            🔒 End-to-end biometric • Anti-spoofing active • GPS verified
+          </p>
         )}
       </div>
 
-      {/* Hidden Canvas for capture */}
+      {/* Hidden canvas for snapshot */}
       <canvas ref={canvasRef} className="hidden" />
-    </Card>
+    </div>
   );
 };
