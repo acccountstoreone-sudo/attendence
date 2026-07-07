@@ -206,8 +206,17 @@ export default function EmployeeCheckInPage() {
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#020810]" style={{ fontFamily: 'Inter, sans-serif' }}>
 
-      {/* ── Top Navigation Bar ── */}
-      <div className="flex-none flex items-center justify-between px-4 pt-4 pb-3 bg-gradient-to-b from-[#020810]/95 to-transparent z-40 backdrop-blur-md" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+      {/* ── Minimal Floating Back Button for Mobile View (since top bar is hidden) ── */}
+      <button
+        onClick={() => router.push('/employee')}
+        className="sm:hidden absolute top-3.5 left-3.5 z-50 p-2.5 rounded-full bg-[#0A1628]/90 hover:bg-[#0A1628] border border-white/20 text-white backdrop-blur-xl shadow-2xl active:scale-95"
+        style={{ top: 'max(0.8rem, env(safe-area-inset-top))' }}
+      >
+        <ArrowLeft className="w-5 h-5" />
+      </button>
+
+      {/* ── Top Navigation Bar (Hidden on Mobile as requested) ── */}
+      <div className="flex-none hidden sm:flex items-center justify-between px-4 pt-4 pb-3 bg-gradient-to-b from-[#020810]/95 to-transparent z-40 backdrop-blur-md" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
         <button
           onClick={() => router.push('/employee')}
           className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 text-white transition-all active:scale-95 shadow-lg"
@@ -235,12 +244,12 @@ export default function EmployeeCheckInPage() {
           <motion.div
             initial={{ opacity:0, y:-10 }}
             animate={{ opacity:1, y:0 }}
-            className="flex-none mx-4 mb-1 flex items-center justify-between bg-[#0A1628]/95 backdrop-blur-2xl border border-white/20 rounded-2xl px-4 py-3 z-30 shadow-2xl"
+            className="flex-none mx-4 mb-1 mt-14 sm:mt-0 flex items-center justify-between bg-[#0A1628]/95 backdrop-blur-2xl border border-white/20 rounded-2xl px-4 py-3 z-30 shadow-2xl"
           >
             <div className="flex items-center space-x-2.5">
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
               <div>
-                <p className="text-[10px] sm:text-xs font-extrabold text-blue-300 uppercase tracking-widest">Today's Record</p>
+                <p className="text-[10px] sm:text-xs font-extrabold text-blue-300 uppercase tracking-widest">Today&apos;s Record</p>
                 <p className="text-white text-xs sm:text-sm font-extrabold">
                   In: <span className="text-emerald-300">{todayRecord.check_in_time ? new Date(todayRecord.check_in_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—'}</span>
                   {todayRecord.check_out_time && <> · Out: <span className="text-slate-300">{new Date(todayRecord.check_out_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></>}
@@ -270,7 +279,7 @@ export default function EmployeeCheckInPage() {
 
       {/* ── Check-in/out toggle when no record exists ── */}
       {!todayRecord && (
-        <div className="flex-none flex justify-center px-4 z-30 mb-1">
+        <div className="flex-none flex justify-center px-4 z-30 mb-1 mt-14 sm:mt-0">
           <div className="flex bg-[#0A1628]/95 backdrop-blur-2xl p-1 rounded-2xl border border-white/20 shadow-2xl">
             {(['in','out'] as const).map(t => (
               <button
