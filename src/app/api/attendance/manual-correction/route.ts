@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
     const formattedData = (requests || []).map(req => ({
       id: req.id,
       user_id: req.employee_id,
-      employee_name: (req.profiles as any)?.full_name || 'Unknown',
+      employee_name: (req.profiles as unknown as { full_name?: string })?.full_name || 'Unknown',
       date: req.date,
       type: req.type,
       original_time: req.original_time,

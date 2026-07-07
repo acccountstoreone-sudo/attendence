@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -11,10 +11,8 @@ import {
   Download,
   Filter,
   Calendar,
-  Building2,
   BarChart3,
   RefreshCw,
-  Search,
   ChevronDown,
   TrendingUp,
   TrendingDown,
@@ -35,20 +33,17 @@ interface BranchReportRow {
 interface FilterState {
   month: number;
   year: number;
-  branchId: string;
 }
 
-export default function AdminReportsPage() {
+export default function BranchManagerReportsPage() {
   const currentDate = new Date();
   const [filter, setFilter] = useState<FilterState>({
     month: currentDate.getMonth() + 1,
     year: currentDate.getFullYear(),
-    branchId: '',
   });
   const [reportData, setReportData] = useState<BranchReportRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState<'pdf' | 'excel' | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [hasLoaded, setHasLoaded] = useState(false);
 
   const months = [
@@ -64,7 +59,6 @@ export default function AdminReportsPage() {
       const params = new URLSearchParams({
         month: String(filter.month),
         year: String(filter.year),
-        ...(filter.branchId ? { branch_id: filter.branchId } : {}),
       });
       const res = await fetch(`/api/reports/branch-summary?${params}`);
       const json = await res.json();
@@ -86,7 +80,6 @@ export default function AdminReportsPage() {
         month: String(filter.month),
         year: String(filter.year),
         format,
-        ...(filter.branchId ? { branch_id: filter.branchId } : {}),
       });
       const res = await fetch(`/api/reports/export?${params}`);
       if (!res.ok) throw new Error('Export failed');
@@ -95,7 +88,7 @@ export default function AdminReportsPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `AnchorFashion_Attendance_${months[filter.month - 1]}_${filter.year}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      a.download = `Attendance_${months[filter.month - 1]}_${filter.year}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -108,16 +101,7 @@ export default function AdminReportsPage() {
     }
   };
 
-  const filtered = reportData.filter(
-    (r) =>
-      (r.branch_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (r.branch_code || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const avgAttendance =
-    reportData.length > 0
-      ? Math.round(reportData.reduce((s, r) => s + r.attendance_rate, 0) / reportData.length)
-      : 0;
+  const storeData = reportData[0];
 
   return (
     <div className="space-y-8 pb-12">
@@ -126,13 +110,13 @@ export default function AdminReportsPage() {
         <div>
           <div className="flex items-center space-x-2 text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">
             <BarChart3 className="w-4 h-4" />
-            <span>HR Reporting Suite</span>
+            <span>Store Reporting Suite</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-            Payroll & Attendance Reports
+            Store Attendance Reports
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Generate monthly branch-wise attendance summaries for payroll finalization.
+            Generate monthly attendance summaries for your store.
           </p>
         </div>
 
@@ -161,7 +145,7 @@ export default function AdminReportsPage() {
         </div>
       </div>
 
-      {/* Filter Bar (Spec P30) */}
+      {/* Filter Bar */}
       <Card className="bg-slate-900 border-slate-800 p-4">
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex flex-col space-y-1 min-w-[160px]">
@@ -198,22 +182,6 @@ export default function AdminReportsPage() {
             </div>
           </div>
 
-          <div className="flex flex-col space-y-1 min-w-[200px]">
-            <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-              <Building2 className="w-3 h-3 inline mr-1" />Branch Filter
-            </label>
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                placeholder="Filter by branch..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
-              />
-            </div>
-          </div>
-
           <Button
             variant="primary"
             size="md"
@@ -238,19 +206,15 @@ export default function AdminReportsPage() {
       </Card>
 
       {/* Summary KPI Tiles */}
-      {hasLoaded && reportData.length > 0 && (
+      {hasLoaded && storeData && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
-            <p className="text-xs font-bold uppercase text-slate-400">Branches Reported</p>
-            <p className="text-2xl font-extrabold text-white mt-1">{reportData.length}</p>
-          </Card>
-          <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
-            <p className="text-xs font-bold uppercase text-slate-400">Company Avg Attendance</p>
+            <p className="text-xs font-bold uppercase text-slate-400">Attendance Rate</p>
             <div className="flex items-center space-x-2 mt-1">
-              <p className={`text-2xl font-extrabold ${avgAttendance >= 90 ? 'text-emerald-400' : avgAttendance >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
-                {avgAttendance}%
+              <p className={`text-2xl font-extrabold ${storeData.attendance_rate >= 90 ? 'text-emerald-400' : storeData.attendance_rate >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
+                {storeData.attendance_rate.toFixed(1)}%
               </p>
-              {avgAttendance >= 90 ? (
+              {storeData.attendance_rate >= 90 ? (
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
               ) : (
                 <TrendingDown className="w-5 h-5 text-rose-400" />
@@ -258,21 +222,30 @@ export default function AdminReportsPage() {
             </div>
           </Card>
           <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
-            <p className="text-xs font-bold uppercase text-slate-400">Best Performing Store</p>
-            <p className="text-sm font-extrabold text-emerald-400 mt-1 truncate">
-              {reportData.reduce((best, r) => r.attendance_rate > best.attendance_rate ? r : best, reportData[0])?.branch_name || '—'}
-            </p>
+            <p className="text-xs font-bold uppercase text-slate-400">Punctuality Rate</p>
+            <div className="flex items-center space-x-2 mt-1">
+              <p className={`text-2xl font-extrabold ${storeData.punctuality_rate >= 85 ? 'text-emerald-400' : storeData.punctuality_rate >= 70 ? 'text-amber-400' : 'text-rose-400'}`}>
+                {storeData.punctuality_rate.toFixed(1)}%
+              </p>
+              {storeData.punctuality_rate >= 85 ? (
+                <TrendingUp className="w-5 h-5 text-emerald-400" />
+              ) : (
+                <TrendingDown className="w-5 h-5 text-rose-400" />
+              )}
+            </div>
           </Card>
           <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
-            <p className="text-xs font-bold uppercase text-slate-400">Needs Attention</p>
-            <p className="text-sm font-extrabold text-rose-400 mt-1 truncate">
-              {reportData.reduce((worst, r) => r.attendance_rate < worst.attendance_rate ? r : worst, reportData[0])?.branch_name || '—'}
-            </p>
+            <p className="text-xs font-bold uppercase text-slate-400">Total Absences</p>
+            <p className="text-2xl font-extrabold text-rose-400 mt-1">{storeData.absent_days}</p>
+          </Card>
+          <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
+            <p className="text-xs font-bold uppercase text-slate-400">Late Arrivals</p>
+            <p className="text-2xl font-extrabold text-amber-400 mt-1">{storeData.late_days}</p>
           </Card>
         </div>
       )}
 
-      {/* Branch-wise Data Table (Spec P30) */}
+      {/* Store Data Table */}
       {!hasLoaded ? (
         <Card className="p-16 text-center border-slate-800 border-dashed">
           <BarChart3 className="w-16 h-16 text-slate-700 mx-auto mb-4" />
@@ -283,9 +256,9 @@ export default function AdminReportsPage() {
         </Card>
       ) : loading ? (
         <div className="flex items-center justify-center py-20">
-          <Spinner size="lg" label="Fetching Branch Attendance Data..." />
+          <Spinner size="lg" label="Fetching Store Attendance Data..." />
         </div>
-      ) : filtered.length === 0 ? (
+      ) : !storeData ? (
         <Card className="p-12 text-center border-slate-800">
           <p className="text-slate-400 font-semibold">No report data found for selected period.</p>
         </Card>
@@ -307,45 +280,44 @@ export default function AdminReportsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                {filtered.map((row) => (
-                  <tr key={row.branch_id} className="hover:bg-slate-900/40 transition-colors">
+                  <tr className="hover:bg-slate-900/40 transition-colors">
                     <td className="py-4 px-5">
                       <div>
                         <span className="text-xs font-extrabold text-blue-400 bg-blue-950/60 border border-blue-800/60 px-2 py-0.5 rounded-md mr-2">
-                          {row.branch_code}
+                          {storeData.branch_code}
                         </span>
-                        <span className="font-bold text-white">{row.branch_name}</span>
+                        <span className="font-bold text-white">{storeData.branch_name}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-5 text-center text-slate-300 font-semibold">{row.total_days}</td>
-                    <td className="py-4 px-5 text-center font-bold text-emerald-400">{row.present_days}</td>
-                    <td className="py-4 px-5 text-center font-bold text-amber-400">{row.late_days}</td>
-                    <td className="py-4 px-5 text-center font-bold text-rose-400">{row.absent_days}</td>
+                    <td className="py-4 px-5 text-center text-slate-300 font-semibold">{storeData.total_days}</td>
+                    <td className="py-4 px-5 text-center font-bold text-emerald-400">{storeData.present_days}</td>
+                    <td className="py-4 px-5 text-center font-bold text-amber-400">{storeData.late_days}</td>
+                    <td className="py-4 px-5 text-center font-bold text-rose-400">{storeData.absent_days}</td>
                     <td className="py-4 px-5 text-center">
                       <div className="flex flex-col items-center">
-                        <span className={`text-lg font-extrabold ${row.attendance_rate >= 90 ? 'text-emerald-400' : row.attendance_rate >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
-                          {row.attendance_rate.toFixed(1)}%
+                        <span className={`text-lg font-extrabold ${storeData.attendance_rate >= 90 ? 'text-emerald-400' : storeData.attendance_rate >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
+                          {storeData.attendance_rate.toFixed(1)}%
                         </span>
                         {/* Mini Progress Bar */}
                         <div className="w-20 h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
                           <div
-                            className={`h-full rounded-full ${row.attendance_rate >= 90 ? 'bg-emerald-500' : row.attendance_rate >= 75 ? 'bg-amber-500' : 'bg-rose-500'}`}
-                            style={{ width: `${row.attendance_rate}%` }}
+                            className={`h-full rounded-full ${storeData.attendance_rate >= 90 ? 'bg-emerald-500' : storeData.attendance_rate >= 75 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                            style={{ width: `${storeData.attendance_rate}%` }}
                           />
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-5 text-center">
-                      <span className={`font-bold ${row.punctuality_rate >= 85 ? 'text-emerald-400' : row.punctuality_rate >= 70 ? 'text-amber-400' : 'text-rose-400'}`}>
-                        {row.punctuality_rate.toFixed(1)}%
+                      <span className={`font-bold ${storeData.punctuality_rate >= 85 ? 'text-emerald-400' : storeData.punctuality_rate >= 70 ? 'text-amber-400' : 'text-rose-400'}`}>
+                        {storeData.punctuality_rate.toFixed(1)}%
                       </span>
                     </td>
                     <td className="py-4 px-5 text-center">
                       <Badge
-                        status={row.attendance_rate >= 90 ? 'present' : row.attendance_rate >= 75 ? 'late' : 'absent'}
+                        status={storeData.attendance_rate >= 90 ? 'present' : storeData.attendance_rate >= 75 ? 'late' : 'absent'}
                         variant="subtle"
                       >
-                        {row.attendance_rate >= 90 ? 'Excellent' : row.attendance_rate >= 75 ? 'Acceptable' : 'Critical'}
+                        {storeData.attendance_rate >= 90 ? 'Excellent' : storeData.attendance_rate >= 75 ? 'Acceptable' : 'Critical'}
                       </Badge>
                     </td>
                     <td className="py-4 px-5 text-right">
@@ -355,7 +327,7 @@ export default function AdminReportsPage() {
                         icon={<Download className="w-3.5 h-3.5" />}
                         onClick={() =>
                           window.open(
-                            `/api/reports/export?branch_id=${row.branch_id}&month=${filter.month}&year=${filter.year}&format=excel`,
+                            `/api/reports/export?branch_id=${storeData.branch_id}&month=${filter.month}&year=${filter.year}&format=excel`,
                             '_blank'
                           )
                         }
@@ -364,7 +336,6 @@ export default function AdminReportsPage() {
                       </Button>
                     </td>
                   </tr>
-                ))}
               </tbody>
             </table>
           </div>

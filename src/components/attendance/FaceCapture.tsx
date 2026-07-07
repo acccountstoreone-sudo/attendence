@@ -156,13 +156,13 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       {/* Decorative Background Grid */}
       <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#1E293B_1px,transparent_1px),linear-gradient(to_bottom,#1E293B_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
       
-      <div className="flex items-center space-x-2 text-[#D2A02A] mb-6 self-start relative z-10">
+      <div className="flex items-center space-x-2 text-blue-400 mb-6 self-start relative z-10">
         <ScanFace className="w-5 h-5" />
-        <h3 className="text-base font-bold text-white">Biometric Face Verification</h3>
+        <h3 className="text-base font-bold text-white tracking-wide">Biometric Identity Check</h3>
       </div>
 
-      {/* Video / Snapshot Display Frame */}
-      <div className="relative w-72 h-72 rounded-full overflow-hidden border-4 border-[#D2A02A]/50 shadow-2xl shadow-[#D2A02A]/20 bg-[#040A15] flex items-center justify-center my-2 z-10">
+      {/* Video / Snapshot Display Frame - Binance Style Premium UI */}
+      <div className="relative w-full max-w-[280px] aspect-[3/4] mx-auto rounded-[2rem] overflow-hidden border-2 border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-[#040A15] flex items-center justify-center my-2 z-10">
         {!capturedImage ? (
           <>
             <video
@@ -170,46 +170,73 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               autoPlay
               playsInline
               muted
-              className="w-full h-full object-cover transform -scale-x-100"
+              className="absolute inset-0 w-full h-full object-cover transform -scale-x-100"
             />
-            {/* Oval Face Guide Overlay */}
-            <div className="absolute inset-0 border-2 border-dashed border-white/40 rounded-full pointer-events-none m-6" />
+            {/* Frosted Glass Overlay with Oval Cutout */}
+            <div 
+              className="absolute inset-0 backdrop-blur-md bg-[#061224]/70 pointer-events-none"
+              style={{
+                maskImage: 'radial-gradient(ellipse 110px 150px at center, transparent 99%, black 100%)',
+                WebkitMaskImage: 'radial-gradient(ellipse 110px 150px at center, transparent 99%, black 100%)'
+              }}
+            />
+            
+            {/* Glowing Border around the Cutout */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[300px] rounded-[110px/150px] border-2 border-blue-500/30 pointer-events-none shadow-[inset_0_0_20px_rgba(59,130,246,0.2)]" />
+            
+            {/* Pulsing Guide Outline */}
             <motion.div 
-              animate={{ opacity: [0.3, 0.6, 0.3] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="absolute inset-0 border-[4px] border-[#D2A02A]/30 rounded-full pointer-events-none"
+              animate={{ opacity: [0.2, 0.6, 0.2], scale: [0.98, 1.02, 0.98] }}
+              transition={{ repeat: Infinity, duration: 2.5 }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[300px] rounded-[110px/150px] border-2 border-emerald-400/80 pointer-events-none"
             />
+
+            {/* Corner Bracket Accents */}
+            <div className="absolute top-8 left-8 w-6 h-6 border-t-2 border-l-2 border-blue-400/50 rounded-tl-xl" />
+            <div className="absolute top-8 right-8 w-6 h-6 border-t-2 border-r-2 border-blue-400/50 rounded-tr-xl" />
+            <div className="absolute bottom-8 left-8 w-6 h-6 border-b-2 border-l-2 border-blue-400/50 rounded-bl-xl" />
+            <div className="absolute bottom-8 right-8 w-6 h-6 border-b-2 border-r-2 border-blue-400/50 rounded-br-xl" />
           </>
         ) : (
           <div className="relative w-full h-full">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={capturedImage} alt="Captured face" className="w-full h-full object-cover transform -scale-x-100 filter brightness-110 contrast-125" />
+            <img src={capturedImage} alt="Captured face" className="absolute inset-0 w-full h-full object-cover transform -scale-x-100 filter brightness-110 contrast-125" />
+            
+            {/* Apply same frosted mask to captured image */}
+            <div 
+              className="absolute inset-0 backdrop-blur-md bg-[#061224]/70 pointer-events-none z-10"
+              style={{
+                maskImage: 'radial-gradient(ellipse 110px 150px at center, transparent 99%, black 100%)',
+                WebkitMaskImage: 'radial-gradient(ellipse 110px 150px at center, transparent 99%, black 100%)'
+              }}
+            />
             
             {/* Verification Scanning Overlay Animations */}
             <AnimatePresence>
               {isSimulating && (
-                <>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[300px] rounded-[110px/150px] overflow-hidden z-20 pointer-events-none">
                   <motion.div
                     initial={{ top: '-10%' }}
                     animate={{ top: '110%' }}
                     transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                    className="absolute left-0 w-full h-2 bg-[#D2A02A] shadow-[0_0_20px_5px_rgba(210,160,42,0.8)] z-20"
+                    className="absolute left-0 w-full h-1 bg-emerald-400 shadow-[0_0_20px_4px_rgba(52,211,153,1)] z-20"
                   />
                   <motion.div 
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.2 }}
+                    animate={{ opacity: 0.15 }}
                     exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-[#D2A02A] mix-blend-overlay z-10"
+                    className="absolute inset-0 bg-blue-500 mix-blend-overlay z-10"
                   />
-                </>
+                </div>
               )}
               {verificationState === 'success' && (
                 <motion.div 
-                  initial={{ opacity: 0, scale: 0.8 }}
+                  initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="absolute inset-0 bg-emerald-500/20 backdrop-blur-[2px] flex items-center justify-center z-20"
+                  className="absolute inset-0 bg-emerald-950/80 backdrop-blur-sm flex flex-col items-center justify-center z-30"
                 >
-                  <CheckCircle2 className="w-24 h-24 text-emerald-400 drop-shadow-lg" />
+                  <CheckCircle2 className="w-20 h-20 text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)] mb-3" />
+                  <span className="text-emerald-50 font-bold text-lg tracking-wide uppercase">Identity Verified</span>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -218,11 +245,11 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
         {/* Camera Error State */}
         {hasPermission === false && (
-          <div className="absolute inset-0 bg-[#040A15]/90 flex flex-col items-center justify-center p-6 text-center z-20">
-            <AlertCircle className="w-10 h-10 text-rose-500 mb-2" />
-            <p className="text-xs text-rose-300 font-bold">{cameraError}</p>
-            <Button size="sm" variant="outline" className="mt-4 border-[#1E293B] hover:bg-[#1E293B]" onClick={startCamera}>
-              Retry Camera
+          <div className="absolute inset-0 bg-[#040A15]/95 flex flex-col items-center justify-center p-6 text-center z-40 backdrop-blur-md">
+            <AlertCircle className="w-12 h-12 text-rose-500 mb-3 drop-shadow-[0_0_10px_rgba(244,63,94,0.4)]" />
+            <p className="text-xs text-rose-200 font-medium leading-relaxed">{cameraError}</p>
+            <Button size="sm" variant="outline" className="mt-5 border-rose-500/30 hover:bg-rose-950/30 text-rose-300" onClick={startCamera}>
+              Retry Camera Connection
             </Button>
           </div>
         )}

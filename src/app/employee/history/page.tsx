@@ -163,8 +163,12 @@ export default function EmployeeHistoryPage() {
       setTimeout(() => {
         setIsCorrectionModalOpen(false);
       }, 2500);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred');
+      }
     } finally {
       setIsSubmitting(false);
     }

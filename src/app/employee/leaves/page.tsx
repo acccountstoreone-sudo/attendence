@@ -64,9 +64,14 @@ export default function EmployeeLeavePage() {
     }
   }, [supabase]);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
-    loadBalances();
+    let isMounted = true;
+    const init = async () => {
+      await loadBalances();
+      if (isMounted) setLoading(false);
+    };
+    init();
+    return () => { isMounted = false; };
   }, [loadBalances]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,8 +105,12 @@ export default function EmployeeLeavePage() {
           : typeof json.error === 'string' ? json.error : 'Failed to submit leave application.';
         setFeedback({ type: 'error', message: errorMessage });
       }
-    } catch (err) {
-      setFeedback({ type: 'error', message: 'A network error occurred. Please try again.' });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setFeedback({ type: 'error', message: err.message });
+      } else {
+        setFeedback({ type: 'error', message: 'An unexpected error occurred' });
+      }
     } finally {
       setSubmitting(false);
     }

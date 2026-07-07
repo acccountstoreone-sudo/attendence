@@ -31,43 +31,33 @@ export default function AdminAttendancePage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
 
-  // Bug 7 fix: Fetch historical records by selected date directly from Supabase
+  // Bug 7 fix: Fetch historical records by selected date using API for proper branch scoping
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
     try {
-      const [year, month, day] = selectedDate.split('-').map(Number);
-      const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
-      const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+      const res = await fetch(`/api/attendance/history?date=${selectedDate}&limit=200`);
+      const json = await res.json();
+      
+      if (!res.ok || !json.success) {
+        throw new Error(json.error?.message || json.error || 'Failed to fetch attendance');
+      }
 
-      const { data, error } = await supabase
-        .from('attendance_records')
-        .select('id, employee_id, check_in_time, check_out_time, status, profiles!attendance_records_employee_id_fkey(full_name, branches!profiles_branch_id_fkey(name))')
-        .gte('check_in_time', startOfDay.toISOString())
-        .lte('check_in_time', endOfDay.toISOString())
-        .order('check_in_time', { ascending: false })
-        .limit(200);
-
-      if (error) throw error;
-
-      const formatted: AttendanceRecord[] = (data || []).map((item: Record<string, unknown>) => {
-        const profile = item.profiles as { full_name?: string; branches?: { name?: string } } | null;
-        return {
-          id: String(item.id),
-          user_id: String(item.employee_id),
-          full_name: profile?.full_name || 'Unknown Employee',
-          branch_name: profile?.branches?.name || 'Headquarters',
-          status: String(item.status || 'present'),
-          check_in_time: item.check_in_time as string | null,
-          check_out_time: item.check_out_time as string | null,
-        };
-      });
+      const formatted: AttendanceRecord[] = (json.data || []).map((item: any) => ({
+        id: String(item.id),
+        user_id: String(item.employee_id),
+        full_name: item.profiles?.full_name || 'Unknown Employee',
+        branch_name: item.branches?.name || 'Headquarters',
+        status: String(item.status || 'present'),
+        check_in_time: item.check_in_time as string | null,
+        check_out_time: item.check_out_time as string | null,
+      }));
       setRecords(formatted);
     } catch (e) {
       console.error('Failed fetching attendance', e);
     } finally {
       setLoading(false);
     }
-  }, [selectedDate, supabase]);
+  }, [selectedDate]);
 
   // eslint-disable-next-line
   useEffect(() => { fetchAttendance(); }, [fetchAttendance]);

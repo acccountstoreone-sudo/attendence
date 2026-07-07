@@ -52,11 +52,11 @@ export async function PUT(
 
     // Apply the correction if approved
     if (status === 'approved') {
-      let recordId = correctionRequest.record_id;
+      const recordId = correctionRequest.record_id;
 
       if (recordId) {
         // Update existing record
-        const updateData: any = { is_manual_override: true, override_reason: correctionRequest.reason };
+        const updateData: Record<string, string | boolean> = { is_manual_override: true, override_reason: correctionRequest.reason };
         if (correctionRequest.type === 'check_in') {
           updateData.check_in_time = correctionRequest.requested_time;
         } else {
@@ -69,7 +69,7 @@ export async function PUT(
           .eq('id', recordId);
       } else {
         // Create new record
-        const insertData: any = {
+        const insertData: Record<string, string | boolean> = {
           employee_id: correctionRequest.employee_id,
           branch_id: correctionRequest.branch_id,
           date: correctionRequest.date,

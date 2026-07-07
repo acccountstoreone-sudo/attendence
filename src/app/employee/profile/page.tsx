@@ -47,12 +47,12 @@ export default function EmployeeProfilePage() {
 
         const { data: prof, error: profileError } = await supabase
           .from('profiles')
-          .select('id, employee_id, full_name, email, phone, role, is_active, created_at, branches!profiles_branch_id_fkey(name)')
+          .select('id, employee_id, full_name, email, phone, role, is_active, created_at, branches(name)')
           .eq('id', user.id)
           .single();
 
         if (profileError) {
-          throw new Error('Failed to load profile data.');
+          throw new Error(`Failed to load profile data: ${profileError.message}`);
         }
 
         if (prof) {
@@ -68,9 +68,13 @@ export default function EmployeeProfilePage() {
             branch_name: (prof as unknown as { branches?: { name?: string } }).branches?.name || 'Headquarters',
           });
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error loading profile:', err);
-        setError(err.message || 'An unexpected error occurred.');
+        if (err instanceof Error) {
+          setError(err.message || 'An unexpected error occurred.');
+        } else {
+          setError('An unexpected error occurred.');
+        }
       } finally {
         setLoading(false);
       }
