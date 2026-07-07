@@ -70,4 +70,10 @@ BEGIN
         RETURN NEW;
     END IF;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Allow authenticated users (and triggers) to insert into audit_logs without RLS violation
+DROP POLICY IF EXISTS "Audit Logs INSERT policy" ON public.audit_logs;
+CREATE POLICY "Audit Logs INSERT policy" ON public.audit_logs FOR INSERT
+    TO authenticated
+    WITH CHECK (true);
