@@ -45,29 +45,41 @@ export default function EmployeeProfilePage() {
           return;
         }
 
+        // Use select('*') so it never fails if a column like 'email' hasn't been migrated yet
         const { data: prof, error: profileError } = await supabase
           .from('profiles')
-          .select('id, employee_id, full_name, email, phone, role, is_active, created_at, branches(name)')
+          .select('*')
           .eq('id', user.id)
           .single();
 
-        if (profileError) {
+        if (profileError && !prof) {
           throw new Error(`Failed to load profile data: ${profileError.message}`);
         }
 
-        if (prof) {
-          setProfile({
-            id: prof.id,
-            employee_id: prof.employee_id,
-            full_name: prof.full_name,
-            email: prof.email ?? null,
-            phone: prof.phone,
-            role: prof.role,
-            is_active: prof.is_active,
-            created_at: prof.created_at,
-            branch_name: (prof as unknown as { branches?: { name?: string } }).branches?.name || 'Headquarters',
-          });
+        let branchName = 'Headquarters';
+        if (prof?.branch_id) {
+          const { data: bData } = await supabase
+            .from('branches')
+            .select('name')
+            .eq('id', prof.branch_id)
+            .single();
+          if (bData?.name) branchName = bData.name;
         }
+
+        const fullName = prof?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Employee';
+        const role = prof?.role || user.user_metadata?.role || 'employee';
+
+        setProfile({
+          id: user.id,
+          employee_id: prof?.employee_id ?? null,
+          full_name: fullName,
+          email: prof?.email ?? user.email ?? null,
+          phone: prof?.phone ?? user.phone ?? null,
+          role: role,
+          is_active: prof?.is_active ?? true,
+          created_at: prof?.created_at ?? user.created_at ?? new Date().toISOString(),
+          branch_name: branchName,
+        });
       } catch (err: unknown) {
         console.error('Error loading profile:', err);
         if (err instanceof Error) {
@@ -90,19 +102,17 @@ export default function EmployeeProfilePage() {
     );
   }
 
-  if (error) {
+  if (error || !profile) {
     return (
       <div className="min-h-[600px] flex flex-col items-center justify-center text-center space-y-4">
         <div className="text-rose-500 font-semibold text-lg">Failed to load profile</div>
-        <p className="text-slate-400 text-sm max-w-md">{error}</p>
+        <p className="text-slate-400 text-sm max-w-md">{error || 'Could not retrieve employee profile records.'}</p>
         <Button onClick={() => window.location.reload()} variant="outline">
           Retry
         </Button>
       </div>
     );
   }
-
-  if (!profile) return null;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
