@@ -397,132 +397,157 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   // Render
   // ─────────────────────────────────────────────────────
   return (
-    <div className="relative w-full h-full overflow-hidden bg-[#020810]">
-      {/* Live camera — fills entire area */}
-      <video
-        ref={videoRef}
-        autoPlay playsInline muted
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{ transform: 'scaleX(-1)' }}
-      />
+    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden bg-gradient-to-b from-[#020810] via-[#040D1A] to-[#020810] select-none">
+      
+      {/* Subtle background ambient glow */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-blue-600/10 rounded-full blur-[90px] pointer-events-none" />
+      <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-emerald-600/10 rounded-full blur-[80px] pointer-events-none" />
 
-      {/* Radial dark vignette overlay with transparent oval in center */}
-      {phase !== 'cam_err' && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse 42% 54% at 50% 40%, transparent 100%, rgba(2,8,16,0.88) 100%)',
-          }}
-        />
-      )}
-
-      {/* === GPS Status Pill (floating top) === */}
-      <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 pt-4 pb-2 pointer-events-none" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+      {/* === GPS Status Pill === */}
+      <div className="flex-none w-full flex items-center justify-center pt-2 pb-1 z-30 pointer-events-none">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold backdrop-blur-xl border pointer-events-auto
+          className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold backdrop-blur-xl border pointer-events-auto shadow-lg
             ${gpsOk
-              ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300'
+              ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300 shadow-emerald-950/50'
               : gpsStatus === 'locating'
                 ? 'bg-slate-900/80 border-slate-600/40 text-slate-300 animate-pulse'
-                : 'bg-rose-950/80 border-rose-500/40 text-rose-300'
+                : 'bg-rose-950/80 border-rose-500/40 text-rose-300 shadow-rose-950/50'
             }`}
         >
-          <MapPin className="w-3 h-3" />
+          <MapPin className="w-3.5 h-3.5" />
           <span>
-            {gpsOk ? `✓ Inside Zone`
-              : gpsStatus === 'locating'  ? 'Locating...'
+            {gpsOk ? `✓ Inside Zone (${branchName ?? 'Store'})`
+              : gpsStatus === 'locating'  ? 'Locating Store...'
               : gpsStatus === 'error'     ? 'GPS Error — tap to retry'
               : `${gpsDistance ?? '—'}m away from ${branchName ?? 'store'}`}
           </span>
           {(gpsStatus === 'error' || !gpsOk) && (
-            <button onClick={gpsRefresh} className="ml-0.5">
+            <button onClick={gpsRefresh} className="ml-1 p-0.5 hover:bg-white/10 rounded-full transition-colors">
               <RefreshCw className="w-3 h-3" />
             </button>
           )}
         </motion.div>
+      </div>
 
-        {branchName && (
-          <span className="text-[10px] text-slate-400 font-medium backdrop-blur-sm bg-black/30 px-2.5 py-1 rounded-full">
-            {branchName}
-          </span>
+      {/* === Center Biometric Pod (Sleek Rounded Oval/Pill) === */}
+      <div className="flex-1 flex flex-col items-center justify-center my-auto z-20 w-full px-4">
+        
+        {/* The Rounded Camera Box */}
+        <div className="relative w-[260px] h-[340px] sm:w-[290px] sm:h-[380px] rounded-[130px] sm:rounded-[145px] p-1.5 transition-all duration-500 shadow-2xl flex items-center justify-center"
+          style={{
+            background: phase === 'success' ? 'linear-gradient(135deg, #10B981, #059669)'
+                      : phase === 'cam_err' ? 'linear-gradient(135deg, #F43F5E, #E11D48)'
+                      : isRunning && currentChConf ? `linear-gradient(135deg, ${currentChConf.color}, #3B82F6)`
+                      : 'linear-gradient(135deg, #3B82F6, #10B981)',
+            boxShadow: phase === 'success' ? '0 0 45px rgba(16, 185, 129, 0.4)'
+                     : isRunning && currentChConf ? `0 0 40px ${currentChConf.color}40`
+                     : '0 0 35px rgba(59, 130, 246, 0.25)'
+          }}
+        >
+          {/* Inner dark bezel */}
+          <div className="relative w-full h-full rounded-[124px] sm:rounded-[139px] overflow-hidden bg-[#040A15] shadow-inner">
+            
+            {/* Live camera feed inside the rounded bezel */}
+            <video
+              ref={videoRef}
+              autoPlay playsInline muted
+              className="w-full h-full object-cover"
+              style={{ transform: 'scaleX(-1)' }}
+            />
+
+            {/* Scanning Laser Line */}
+            {(isRunning || isProcessing) && (
+              <motion.div
+                animate={{ top: ['0%', '100%', '0%'] }}
+                transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
+                className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_15px_#60A5FA] z-20 pointer-events-none"
+              />
+            )}
+
+            {/* Corner brackets inside pod for high-tech look */}
+            {['tl','tr','bl','br'].map(pos => (
+              <div key={pos} className={`absolute w-6 h-6 border-white/60 z-10 pointer-events-none
+                ${pos==='tl' ? 'top-6 left-6 border-t-2 border-l-2 rounded-tl-xl'
+                : pos==='tr' ? 'top-6 right-6 border-t-2 border-r-2 rounded-tr-xl'
+                : pos==='bl' ? 'bottom-6 left-6 border-b-2 border-l-2 rounded-bl-xl'
+                             : 'bottom-6 right-6 border-b-2 border-r-2 rounded-br-xl'}`}
+              />
+            ))}
+
+            {/* Success Overlay inside Pod */}
+            {phase === 'success' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="absolute inset-0 bg-emerald-950/80 backdrop-blur-sm flex flex-col items-center justify-center z-30"
+              >
+                <motion.div
+                  initial={{ scale: 0.5 }}
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <CheckCircle2 className="w-20 h-20 text-emerald-400 drop-shadow-[0_0_20px_rgba(52,211,153,0.8)]" />
+                </motion.div>
+                <p className="text-white font-extrabold text-lg mt-3 tracking-tight">Verified!</p>
+              </motion.div>
+            )}
+
+            {/* Model Loading Overlay inside Pod */}
+            {phase === 'loading' && (
+              <div className="absolute inset-0 bg-[#020810]/90 backdrop-blur-md flex flex-col items-center justify-center z-30 p-6 text-center">
+                <div className="w-36 h-1.5 bg-slate-800 rounded-full overflow-hidden shadow-inner mb-3">
+                  <motion.div
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.35 }}
+                    className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full"
+                  />
+                </div>
+                <p className="text-slate-200 text-xs font-bold">Loading Biometrics</p>
+                <p className="text-slate-500 text-[10px] mt-0.5">{progress}%</p>
+              </div>
+            )}
+
+            {/* Camera Error Overlay inside Pod */}
+            {phase === 'cam_err' && (
+              <div className="absolute inset-0 bg-[#020810]/95 backdrop-blur-md flex flex-col items-center justify-center z-30 p-6 text-center">
+                <AlertCircle className="w-12 h-12 text-rose-500 mb-2 drop-shadow-[0_0_12px_rgba(244,63,94,0.5)]" />
+                <p className="text-white font-bold text-sm mb-1">Camera Off</p>
+                <Button size="sm" variant="outline" onClick={startCam} icon={<RefreshCw className="w-3.5 h-3.5" />}>
+                  Retry
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Challenge Progress Dots Below Pod */}
+        {isRunning && (
+          <div className="flex space-x-2.5 mt-5">
+            <motion.div
+              animate={{ scale: chIdx === 0 ? [1,1.3,1] : 1 }}
+              transition={{ repeat: chIdx===0 ? Infinity : 0, duration: 1.2 }}
+              className={`w-2.5 h-2.5 rounded-full ${chIdx === 0 ? 'bg-emerald-400 shadow-[0_0_8px_#34D399]' : 'bg-slate-700'}`}
+            />
+            <motion.div
+              animate={{ scale: chIdx === 1 ? [1,1.3,1] : 1 }}
+              transition={{ repeat: chIdx===1 ? Infinity : 0, duration: 1.2 }}
+              className={`w-2.5 h-2.5 rounded-full ${chIdx === 1 ? 'bg-blue-400 shadow-[0_0_8px_#60A5FA]' : 'bg-slate-700'}`}
+            />
+          </div>
         )}
       </div>
 
-      {/* === Oval Face Guide === */}
-      {(isRunning || phase === 'wait_gps') && (
-        <div
-          className="absolute pointer-events-none z-10"
-          style={{
-            top: '50%', left: '50%',
-            transform: 'translate(-50%, -58%)',
-            width: 'min(56vw, 220px)',
-            height: 'min(75vw, 295px)',
-          }}
-        >
-          {/* Static inner border */}
-          <div
-            className="absolute inset-0 rounded-[50%]"
-            style={{ border: `1.5px solid ${currentChConf?.color ?? '#34D399'}30` }}
-          />
-          {/* Pulsing outer guide */}
-          <motion.div
-            animate={{ opacity: [0.25, 0.75, 0.25], scale: [0.97, 1.03, 0.97] }}
-            transition={{ repeat: Infinity, duration: 2.4 }}
-            className="absolute inset-0 rounded-[50%]"
-            style={{ border: `2.5px solid ${currentChConf?.color ?? '#34D399'}`, boxShadow: `0 0 18px ${currentChConf?.color ?? '#34D399'}40` }}
-          />
-          {/* Corner brackets */}
-          {['tl','tr','bl','br'].map(pos => (
-            <div key={pos} className={`absolute w-5 h-5 border-[#60A5FA]/50 
-              ${pos==='tl' ? 'top-3 left-3 border-t-2 border-l-2 rounded-tl-lg'
-              : pos==='tr' ? 'top-3 right-3 border-t-2 border-r-2 rounded-tr-lg'
-              : pos==='bl' ? 'bottom-3 left-3 border-b-2 border-l-2 rounded-bl-lg'
-                           : 'bottom-3 right-3 border-b-2 border-r-2 rounded-br-lg'}`}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* === Model Loading Overlay === */}
-      {phase === 'loading' && (
-        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#020810]/80 backdrop-blur-sm">
-          <div className="w-52 h-1.5 bg-slate-800 rounded-full overflow-hidden shadow-inner">
-            <motion.div
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.35 }}
-              className="h-full bg-gradient-to-r from-blue-500 via-emerald-400 to-blue-400 rounded-full"
-            />
-          </div>
-          <p className="text-slate-300 text-sm font-semibold mt-4">Loading Biometric Engine</p>
-          <p className="text-slate-500 text-xs mt-1">{progress}% — models may be cached after first load</p>
-        </div>
-      )}
-
-      {/* === Camera Error Overlay === */}
-      {phase === 'cam_err' && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#020810]/96 backdrop-blur-md p-8 text-center">
-          <motion.div initial={{ scale:0.8 }} animate={{ scale:1 }}>
-            <AlertCircle className="w-16 h-16 text-rose-500 mb-4 drop-shadow-[0_0_16px_rgba(244,63,94,0.5)]" />
-          </motion.div>
-          <p className="text-white font-extrabold text-xl mb-2">Camera Required</p>
-          <p className="text-rose-200/80 text-sm leading-relaxed mb-6 max-w-xs">{camErr}</p>
-          <Button variant="outline" onClick={startCam} icon={<RefreshCw className="w-4 h-4" />}>
-            Try Again
-          </Button>
-        </div>
-      )}
-
       {/* === Bottom Challenge / Status UI === */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 flex flex-col items-center px-4 pb-8 bg-gradient-to-t from-[#020810]/95 via-[#020810]/60 to-transparent" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
+      <div className="flex-none w-full flex flex-col items-center z-30 pb-4 px-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
 
         {/* GPS out-of-zone warning */}
         {!gpsOk && phase !== 'loading' && phase !== 'cam_err' && phase !== 'success' && (
           <motion.div
             initial={{ opacity:0, y:8 }}
             animate={{ opacity:1, y:0 }}
-            className="w-full max-w-sm mb-3 flex items-start space-x-2.5 bg-rose-950/90 border border-rose-500/40 backdrop-blur-xl px-4 py-3 rounded-2xl"
+            className="w-full max-w-sm mb-3 flex items-start space-x-2.5 bg-rose-950/90 border border-rose-500/40 backdrop-blur-xl px-4 py-3 rounded-2xl shadow-xl"
           >
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
             <span className="text-rose-200 text-xs font-semibold leading-snug">
@@ -535,22 +560,6 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           </motion.div>
         )}
 
-        {/* Challenge progress dots */}
-        {isRunning && (
-          <div className="flex space-x-2 mb-4">
-            <motion.div
-              animate={{ scale: chIdx === 0 ? [1,1.3,1] : 1 }}
-              transition={{ repeat: chIdx===0 ? Infinity : 0, duration: 1.2 }}
-              className={`w-2.5 h-2.5 rounded-full ${chIdx === 0 ? 'bg-emerald-400' : 'bg-slate-600'}`}
-            />
-            <motion.div
-              animate={{ scale: chIdx === 1 ? [1,1.3,1] : 1 }}
-              transition={{ repeat: chIdx===1 ? Infinity : 0, duration: 1.2 }}
-              className={`w-2.5 h-2.5 rounded-full ${chIdx === 1 ? 'bg-blue-400' : 'bg-slate-600'}`}
-            />
-          </div>
-        )}
-
         {/* Challenge instruction card */}
         <AnimatePresence mode="wait">
           {isRunning && currentChConf && (
@@ -560,15 +569,15 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               animate={{ opacity:1, y:0, scale:1 }}
               exit={{ opacity:0, scale:0.92 }}
               transition={{ type:'spring', damping:20 }}
-              className="w-full max-w-sm flex items-center space-x-4 bg-[#061224]/90 backdrop-blur-2xl rounded-3xl px-5 py-4 mb-4 shadow-2xl"
-              style={{ borderWidth:1.5, borderStyle:'solid', borderColor: `${currentChConf.color}40` }}
+              className="w-full max-w-sm flex items-center space-x-4 bg-[#061224]/95 backdrop-blur-2xl rounded-3xl px-5 py-4 mb-2 shadow-2xl"
+              style={{ borderWidth:1.5, borderStyle:'solid', borderColor: `${currentChConf.color}50` }}
             >
-              <div className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: `${currentChConf.color}18` }}>
+              <div className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: `${currentChConf.color}20` }}>
                 <span style={{ color: currentChConf.color }}>{currentChConf.icon}</span>
               </div>
               <div className="flex-1">
                 <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-0.5">
-                  Step {chIdx + 1} of 2 — Liveness Check
+                  Step {chIdx + 1} of 2 — Live Verification
                 </p>
                 <p className="text-white font-bold text-sm leading-snug">{currentChConf.label}</p>
               </div>
@@ -581,7 +590,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           <motion.div
             initial={{ opacity:0, y:10 }}
             animate={{ opacity:1, y:0 }}
-            className="w-full max-w-sm flex items-center space-x-3 bg-blue-950/90 backdrop-blur-xl border border-blue-500/30 rounded-2xl px-5 py-3.5 mb-4"
+            className="w-full max-w-sm flex items-center space-x-3 bg-blue-950/90 backdrop-blur-xl border border-blue-500/30 rounded-2xl px-5 py-3.5 mb-2 shadow-xl"
           >
             <motion.div
               animate={{ rotate:360 }}
@@ -599,58 +608,23 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               key={msg}
               initial={{ opacity:0, y:4 }}
               animate={{ opacity:1, y:0 }}
-              className={`w-full max-w-sm text-center text-xs font-semibold px-4 py-2.5 rounded-xl mb-3 border
-                ${msgType==='error'   ? 'bg-rose-950/80 border-rose-500/30 text-rose-200'
-                : msgType==='success' ? 'bg-emerald-950/80 border-emerald-500/30 text-emerald-200'
-                : msgType==='warn'    ? 'bg-amber-950/80 border-amber-500/30 text-amber-200'
-                : 'bg-slate-900/70 border-slate-700/30 text-slate-300'}`}
+              className={`w-full max-w-sm text-center text-xs font-semibold px-4 py-3 rounded-2xl mb-2 border shadow-lg
+                ${msgType==='error'   ? 'bg-rose-950/90 border-rose-500/40 text-rose-200 shadow-rose-950/50'
+                : msgType==='success' ? 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200 shadow-emerald-950/50'
+                : msgType==='warn'    ? 'bg-amber-950/90 border-amber-500/40 text-amber-200 shadow-amber-950/50'
+                : 'bg-slate-900/80 border-slate-700/40 text-slate-300'}`}
             >
               {msg}
             </motion.p>
           </AnimatePresence>
-        )}
-
-        {/* Live status hint during challenge */}
-        {isRunning && (
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={msg}
-              initial={{ opacity:0 }}
-              animate={{ opacity:1 }}
-              className="text-slate-400 text-xs text-center mb-4 px-4"
-            >
-              {msg}
-            </motion.p>
-          </AnimatePresence>
-        )}
-
-        {/* === Success State === */}
-        {phase === 'success' && (
-          <motion.div
-            initial={{ opacity:0, scale:0.85 }}
-            animate={{ opacity:1, scale:1 }}
-            transition={{ type:'spring', damping:16 }}
-            className="w-full max-w-sm flex flex-col items-center space-y-3 py-4"
-          >
-            <div className="relative">
-              <motion.div
-                animate={{ scale:[1, 1.15, 1] }}
-                transition={{ repeat:Infinity, duration:2 }}
-                className="absolute inset-0 rounded-full bg-emerald-500/20"
-              />
-              <CheckCircle2 className="w-20 h-20 text-emerald-400 relative drop-shadow-[0_0_24px_rgba(52,211,153,0.7)]" />
-            </div>
-            <p className="text-emerald-200 font-extrabold text-xl tracking-tight">Identity Verified</p>
-            <p className="text-slate-400 text-sm text-center">
-              Check-{checkType === 'in' ? 'In' : 'Out'} recorded. Redirecting...
-            </p>
-          </motion.div>
         )}
 
         {/* Security badge */}
         {!['cam_err','loading','success'].includes(phase) && (
-          <p className="text-slate-600 text-[10px] text-center mt-2 font-medium">
-            🔒 End-to-end biometric • Anti-spoofing active • GPS verified
+          <p className="text-slate-500 text-[11px] text-center mt-1 font-medium flex items-center justify-center space-x-1.5">
+            <span>🔒 End-to-end Biometric</span>
+            <span>•</span>
+            <span>Anti-Spoofing Active</span>
           </p>
         )}
       </div>
