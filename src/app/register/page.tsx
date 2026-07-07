@@ -181,6 +181,12 @@ export default function RegisterPage() {
     setLoading(true);
     setFeedback(null);
 
+    if (formData.password !== formData.confirmPassword) {
+      setFeedback({ type: 'error', message: 'Passwords do not match.' });
+      setLoading(false);
+      return;
+    }
+
     try {
       // 1. Sign up user via Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -194,7 +200,14 @@ export default function RegisterPage() {
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          // If already registered, gracefully proceed to send OTP so they can resume onboarding.
+          console.log('User already registered. Proceeding to send OTP...');
+        } else {
+          throw authError;
+        }
+      }
 
       // 2. Trigger OTP API
       const res = await fetch('/api/auth/send-otp', {
@@ -287,6 +300,10 @@ export default function RegisterPage() {
 
   const handleKycSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.nid) {
+      setFeedback({ type: 'error', message: 'Please enter your National ID Number.' });
+      return;
+    }
     if (!nidFront || !nidBack) {
       setFeedback({ type: 'error', message: 'Please upload both NID Front Side and NID Back Side copies.' });
       return;
@@ -345,6 +362,7 @@ export default function RegisterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
+          nid: formData.nid,
           nidFrontDataUrl: nidFront, 
           nidBackDataUrl: nidBack, 
           facePhotoDataUrl: faceImage,
@@ -495,6 +513,13 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <div>
+                  <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Confirm Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                    <input type="password" name="confirmPassword" required value={formData.confirmPassword} onChange={handleInputChange} className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#D2A02A] focus:outline-none text-white" />
+                  </div>
+                </div>
+                <div>
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Branch</label>
                   <div className="relative">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
@@ -535,6 +560,14 @@ export default function RegisterPage() {
                 <div className="bg-[#061224] border border-[#1E293B] p-4 rounded-xl text-xs text-slate-300 leading-relaxed">
                   <p className="font-bold text-[#D2A02A] mb-1">Government Identity Verification</p>
                   <p>Please upload clear copies of both the Front and Back sides of your National ID (NID). Accepted formats: Image (JPG, PNG) or PDF. Maximum size: 5MB per file.</p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">National ID Number (NID) *</label>
+                  <div className="relative">
+                    <IdCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                    <input type="text" name="nid" required value={formData.nid} onChange={handleInputChange} placeholder="e.g. 1990123456789" className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#D2A02A] focus:outline-none text-white" />
+                  </div>
                 </div>
 
                 <div className="space-y-4">

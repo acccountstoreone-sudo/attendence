@@ -58,7 +58,7 @@ export default function EmployeeHistoryPage() {
   }, [page, supabase]);
 
   const filtered = searchDate
-    ? records.filter((r) => r.date?.includes(searchDate))
+    ? records.filter((r) => r.check_in_time?.includes(searchDate))
     : records;
 
   return (
@@ -139,7 +139,7 @@ export default function EmployeeHistoryPage() {
                             <Calendar className="w-4 h-4 text-slate-500 shrink-0" />
                             <div>
                               <p className="font-bold text-white text-sm">
-                                {new Date(rec.date).toLocaleDateString('en-BD', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                                {rec.check_in_time ? new Date(rec.check_in_time).toLocaleDateString('en-BD', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown Date'}
                               </p>
                             </div>
                           </div>

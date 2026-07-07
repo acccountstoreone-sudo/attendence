@@ -16,7 +16,7 @@ export default function EmployeeDashboardPage() {
   const [profile, setProfile] = useState<{ full_name: string; branch_name: string } | null>(null);
   const [todayRecord, setTodayRecord] = useState<{ check_in_time?: string; check_out_time?: string; status?: string } | null>(null);
   // B6 fix: Store real leave balance
-  const [leaveBalance, setLeaveBalance] = useState<{ available: number; total: number }>({ available: 20, total: 20 });
+  const [leaveBalance, setLeaveBalance] = useState<{ available: number; total: number } | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -55,6 +55,8 @@ export default function EmployeeDashboardPage() {
         const totalAllocated = balances.reduce((acc, b) => acc + (b.allocated_days || 0), 0);
         const totalUsed = balances.reduce((acc, b) => acc + (b.used_days || 0), 0);
         setLeaveBalance({ available: Math.max(0, totalAllocated - totalUsed), total: totalAllocated });
+      } else {
+        setLeaveBalance({ available: 0, total: 0 });
       }
 
       setLoading(false);
@@ -141,10 +143,16 @@ export default function EmployeeDashboardPage() {
               <h3 className="text-lg font-bold text-white">Leave Balance</h3>
             </div>
             <p className="text-xs text-slate-400">Annual Paid Leave Allocation</p>
-            <div className="mt-4 flex items-baseline space-x-2">
-              <span className="text-4xl font-extrabold text-[#D2A02A]">{leaveBalance.available}</span>
-              <span className="text-sm font-bold text-slate-500">/ {leaveBalance.total} Days Available</span>
-            </div>
+            {leaveBalance?.total === 0 ? (
+              <div className="mt-4 p-3 border border-dashed border-[#1E293B] rounded-xl text-xs text-slate-500 text-center">
+                No leave allocations active.
+              </div>
+            ) : (
+              <div className="mt-4 flex items-baseline space-x-2">
+                <span className="text-4xl font-extrabold text-[#D2A02A]">{leaveBalance?.available || 0}</span>
+                <span className="text-sm font-bold text-slate-500">/ {leaveBalance?.total || 0} Days Available</span>
+              </div>
+            )}
           </div>
 
           {/* Fix: Correct route to /employee/leaves */}

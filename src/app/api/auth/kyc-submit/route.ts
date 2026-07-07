@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ 
-        nid: nid || `doc_${user.id.slice(0, 8)}`, // Fallback for UNIQUE nid constraint since text input is removed
+        nid: nid, // Now properly received from the frontend instead of generating a dummy doc_ ID
         nid_front_url: frontUrl,
         nid_back_url: backUrl,
         kyc_status: 'pending',

@@ -41,6 +41,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/login') ||
     pathname.startsWith('/register') ||
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/branches') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/models') ||
     pathname.startsWith('/favicon.ico')

@@ -87,23 +87,32 @@ export default function BranchManagerDashboardPage() {
         .eq('registration_step', 'pending_approval');
       if (pendingList) setPendingApprovals(pendingList);
 
-      // 3. Fetch today's attendance records for this branch
-      const resAtt = await fetch('/api/attendance/today');
-      const jsonAtt = await resAtt.json();
-      const todayRecords = jsonAtt.success ? jsonAtt.data : [];
+      // 3. Fetch today's attendance records for this branch using Supabase directly
+      // (RLS automatically filters this to the manager's assigned branch)
+      const now = new Date();
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Dhaka',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+      const [month, day, year] = formatter.format(now).split('/');
+      const startOfDay = new Date(`${year}-${month}-${day}T00:00:00+06:00`);
+      const endOfDay = new Date(`${year}-${month}-${day}T23:59:59+06:00`);
 
-      // B9 fix: Fetch real pending corrections count
-      const resCorr = await fetch('/api/attendance/manual-correction');
-      const jsonCorr = await resCorr.json();
-      if (jsonCorr.success && jsonCorr.data) {
-        const pendingCount = jsonCorr.data.filter((c: { status: string }) => c.status === 'pending').length;
-        setPendingCorrections(pendingCount);
-      }
+      const { data: todayRecords } = await supabase
+        .from('attendance_records')
+        .select('employee_id, status, check_in_time, check_out_time')
+        .gte('check_in_time', startOfDay.toISOString())
+        .lte('check_in_time', endOfDay.toISOString());
+
+      // Pending corrections feature is unimplemented in the database schema, setting to 0
+      setPendingCorrections(0);
 
       // Map employees with their current status today
       if (staffList) {
         const mapped: StoreEmployee[] = staffList.map((emp) => {
-          const rec = todayRecords.find((r: { user_id: string }) => r.user_id === emp.id);
+          const rec = (todayRecords || []).find((r) => r.employee_id === emp.id);
           return {
             id: emp.id,
             full_name: emp.full_name,
