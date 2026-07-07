@@ -25,14 +25,14 @@ export async function POST(request: NextRequest) {
     const payload = checkInSchema.parse(body);
 
     // 3. Biometric Verification Check (Spec P35 & P19)
-    if (!payload.face_verified || !payload.faceDescriptor) {
+    if (!payload.face_verified || !payload.faceDescriptor || payload.faceDescriptor.length === 0) {
       return NextResponse.json(
         {
           success: false,
           data: null,
           error: {
             code: 'BIOMETRIC_FAILED',
-            message: 'Biometric verification failed. Face descriptor missing.',
+            message: 'Biometric verification failed. Face descriptor missing or empty.',
           },
           timestamp: new Date().toISOString(),
         },
@@ -61,6 +61,21 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      // Bug 5 fix: Validate descriptor length before comparison to avoid silent mismatch on empty arrays
+      if (payload.faceDescriptor.length !== profile.face_descriptor.length) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: 'BIOMETRIC_DIMENSION_MISMATCH',
+              message: `Face descriptor dimension mismatch: received ${payload.faceDescriptor.length}, expected ${profile.face_descriptor.length}.`,
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
       const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
       if (distance > 0.6) {
         return NextResponse.json(
@@ -134,7 +149,7 @@ export async function POST(request: NextRequest) {
 
     const { data: branch, error: branchErr } = await supabase
       .from('branches')
-      .select('name, latitude, longitude, geofence_radius_meters')
+      .select('name, latitude, longitude, geofence_radius_meters, is_active')
       .eq('id', user.branch_id)
       .single();
 
@@ -150,6 +165,21 @@ export async function POST(request: NextRequest) {
           timestamp: new Date().toISOString(),
         },
         { status: 500 }
+      );
+    }
+
+    if (!branch.is_active) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: 'BRANCH_INACTIVE',
+            message: 'Your assigned branch is currently inactive. Check-in denied.',
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 403 }
       );
     }
 
@@ -178,7 +208,36 @@ export async function POST(request: NextRequest) {
     }
 
     // 7. Insert Attendance Record (Database Trigger calculate_attendance_status computes punctuality)
-    const checkInTime = payload.timestamp || new Date().toISOString();
+    // Bug 6 fix: For offline sync, validate that the provided timestamp falls within today (Asia/Dhaka)
+    // to prevent backdated cross-day check-ins from bypassing the duplicate-guard above.
+    let checkInTime: string;
+    if (payload.is_offline_sync && payload.timestamp) {
+      const offlineDate = new Date(payload.timestamp);
+      const offlineFormatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Dhaka',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+      const [offMonth, offDay, offYear] = offlineFormatter.format(offlineDate).split('/');
+      if (`${offYear}-${offMonth}-${offDay}` !== `${year}-${month}-${day}`) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: 'OFFLINE_SYNC_DATE_MISMATCH',
+              message: 'Offline check-in timestamp must be for today. Backdated sync is not permitted.',
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 400 }
+        );
+      }
+      checkInTime = payload.timestamp;
+    } else {
+      checkInTime = new Date().toISOString();
+    }
 
     const { data: newRecord, error: insertErr } = await supabase
       .from('attendance_records')

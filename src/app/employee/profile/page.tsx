@@ -19,8 +19,9 @@ import { useRouter } from 'next/navigation';
 
 interface ProfileData {
   id: string;
+  employee_id: string | null;
   full_name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   role: string;
   is_active: boolean;
@@ -32,35 +33,47 @@ export default function EmployeeProfilePage() {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+          router.push('/login');
+          return;
+        }
 
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, phone, role, is_active, created_at, branches!profiles_branch_id_fkey(name)')
-        .eq('id', user.id)
-        .single();
+        const { data: prof, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, employee_id, full_name, email, phone, role, is_active, created_at, branches!profiles_branch_id_fkey(name)')
+          .eq('id', user.id)
+          .single();
 
-      if (prof) {
-        setProfile({
-          id: prof.id,
-          full_name: prof.full_name,
-          email: prof.email,
-          phone: prof.phone,
-          role: prof.role,
-          is_active: prof.is_active,
-          created_at: prof.created_at,
-          branch_name: (prof as unknown as { branches?: { name?: string } }).branches?.name || 'Headquarters',
-        });
+        if (profileError) {
+          throw new Error('Failed to load profile data.');
+        }
+
+        if (prof) {
+          setProfile({
+            id: prof.id,
+            employee_id: prof.employee_id,
+            full_name: prof.full_name,
+            email: prof.email ?? null,
+            phone: prof.phone,
+            role: prof.role,
+            is_active: prof.is_active,
+            created_at: prof.created_at,
+            branch_name: (prof as unknown as { branches?: { name?: string } }).branches?.name || 'Headquarters',
+          });
+        }
+      } catch (err: any) {
+        console.error('Error loading profile:', err);
+        setError(err.message || 'An unexpected error occurred.');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     loadProfile();
   }, [supabase, router]);
@@ -69,6 +82,18 @@ export default function EmployeeProfilePage() {
     return (
       <div className="min-h-[600px] flex items-center justify-center">
         <Spinner size="lg" label="Loading Profile..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-[600px] flex flex-col items-center justify-center text-center space-y-4">
+        <div className="text-rose-500 font-semibold text-lg">Failed to load profile</div>
+        <p className="text-slate-400 text-sm max-w-md">{error}</p>
+        <Button onClick={() => window.location.reload()} variant="outline">
+          Retry
+        </Button>
       </div>
     );
   }
@@ -95,7 +120,7 @@ export default function EmployeeProfilePage() {
         <Card className="bg-[#0A101C] border-[#1E293B] p-6 col-span-1 flex flex-col items-center text-center shadow-lg">
           <div className="w-24 h-24 rounded-full bg-[#1E293B] flex items-center justify-center border-4 border-[#040A15] shadow-xl mb-4">
             <span className="text-3xl font-bold text-slate-300">
-              {profile.full_name.charAt(0).toUpperCase()}
+              {(profile.full_name || '?').charAt(0).toUpperCase()}
             </span>
           </div>
           <h2 className="text-xl font-bold text-white">{profile.full_name}</h2>
@@ -124,6 +149,10 @@ export default function EmployeeProfilePage() {
             </div>
             <div className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+                <span className="text-sm font-medium text-slate-500">Employee ID</span>
+                <span className="text-sm text-slate-200 sm:col-span-2 font-medium">{profile.employee_id || 'Not assigned'}</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
                 <span className="text-sm font-medium text-slate-500">Full Name</span>
                 <span className="text-sm text-slate-200 sm:col-span-2 font-medium">{profile.full_name}</span>
               </div>
@@ -131,7 +160,7 @@ export default function EmployeeProfilePage() {
                 <span className="text-sm font-medium text-slate-500">Email Address</span>
                 <div className="sm:col-span-2 flex items-center space-x-2">
                   <Mail className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm text-slate-200">{profile.email}</span>
+                  <span className="text-sm text-slate-200">{profile.email || 'Not available'}</span>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">

@@ -32,7 +32,7 @@ export const BranchTile: React.FC<BranchTileProps> = ({
   isActive = true,
   onClick,
 }) => {
-  const attendanceRate = staffCount > 0 ? Math.round((onlineCount / staffCount) * 100) : 0;
+  const attendanceRate = staffCount > 0 ? Math.round(((onlineCount + lateCount) / staffCount) * 100) : 0;
 
   return (
     <Card

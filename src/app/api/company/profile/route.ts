@@ -6,8 +6,8 @@ import { z } from 'zod';
 const companyUpdateSchema = z.object({
   name: z.string().min(2, 'Company name must be at least 2 characters.'),
   hq_address: z.string().optional(),
-  working_hours_start: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid start time format (HH:mm)'),
-  working_hours_end: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid end time format (HH:mm)'),
+  working_hours_start: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/, 'Invalid start time format'),
+  working_hours_end: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/, 'Invalid end time format'),
   grace_period_minutes: z.number().int().min(0).max(120),
   overtime_multiplier: z.number().min(1).max(5).default(1.5),
 });
@@ -45,9 +45,23 @@ export async function GET() {
       });
     }
 
+    // Postgres TIME fields come with seconds (e.g. 09:00:00). We should slice them for the frontend UI.
+    // Also map DB columns to frontend expected fields.
+    let mappedCompany = company;
+    if (company) {
+      mappedCompany = {
+        ...company,
+        hq_address: company.address,
+        working_hours_start: company.default_work_start_time ? company.default_work_start_time.slice(0, 5) : '09:00',
+        working_hours_end: company.default_work_end_time ? company.default_work_end_time.slice(0, 5) : '18:00',
+        grace_period_minutes: 15,
+        overtime_multiplier: 1.5,
+      };
+    }
+
     return NextResponse.json({
       success: true,
-      data: company,
+      data: mappedCompany,
       message: 'Company profile retrieved successfully.',
       timestamp: new Date().toISOString(),
     });
@@ -72,11 +86,21 @@ export async function PUT(request: NextRequest) {
       .limit(1)
       .maybeSingle();
 
+    // Map frontend keys to database columns
+    const dbPayload = {
+      name: payload.name,
+      address: payload.hq_address || '',
+      default_work_start_time: payload.working_hours_start,
+      default_work_end_time: payload.working_hours_end,
+      // Note: grace_period_minutes and overtime_multiplier are not currently in the company_profile table schema.
+      // We omit them here to prevent PostgREST errors.
+    };
+
     let result;
     if (existing) {
       const { data, error } = await supabase
         .from('company_profile')
-        .update(payload)
+        .update(dbPayload)
         .eq('id', existing.id)
         .select()
         .single();
@@ -85,12 +109,22 @@ export async function PUT(request: NextRequest) {
     } else {
       const { data, error } = await supabase
         .from('company_profile')
-        .insert(payload)
+        .insert(dbPayload)
         .select()
         .single();
       if (error) throw new Error(`Insert failed: ${error.message}`);
       result = data;
     }
+
+    // Map result back to frontend expected structure for Audit and Return
+    const frontendResult = {
+      ...result,
+      hq_address: result.address,
+      working_hours_start: result.default_work_start_time,
+      working_hours_end: result.default_work_end_time,
+      grace_period_minutes: payload.grace_period_minutes,
+      overtime_multiplier: payload.overtime_multiplier,
+    };
 
     // Audit log
     await supabase.from('audit_logs').insert({
@@ -98,13 +132,13 @@ export async function PUT(request: NextRequest) {
       action: 'UPDATE_COMPANY_PROFILE',
       table_name: 'company_profile',
       record_id: result.id,
-      new_values: payload,
+      new_values: frontendResult,
       ip_address: request.headers.get('x-forwarded-for') || '127.0.0.1',
     });
 
     return NextResponse.json({
       success: true,
-      data: result,
+      data: frontendResult,
       message: 'Company profile and attendance policies updated successfully.',
       timestamp: new Date().toISOString(),
     });

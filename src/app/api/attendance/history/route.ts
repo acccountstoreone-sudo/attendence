@@ -19,7 +19,9 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     let query = supabase
       .from('attendance_records')
-      .select('*, profiles!inner(full_name, photo_url, role), branches(name)', { count: 'exact' });
+      // BUG FIX #2: Changed profiles!inner to a left join so records with a
+      // deleted/missing profile are not silently dropped from history results.
+      .select('*, profiles(full_name, photo_url, role), branches(name)', { count: 'exact' });
 
     // Role-based scoping enforcement (in addition to database RLS)
     if (user.role === 'employee') {
@@ -35,8 +37,12 @@ export async function GET(request: NextRequest) {
       if (employeeId) query = query.eq('employee_id', employeeId);
     }
 
-    // Date filtering by month and year
-    if (month && year) {
+    // Date filtering: exact date (YYYY-MM-DD) takes priority over month+year.
+    const date = searchParams.get('date');
+    if (date) {
+      // Filter on the `date` column (plain date, no timezone issues).
+      query = query.eq('date', date);
+    } else if (month && year) {
       const startOfMonth = new Date(Number(year), Number(month) - 1, 1, 0, 0, 0);
       const endOfMonth = new Date(Number(year), Number(month), 0, 23, 59, 59, 999);
       query = query

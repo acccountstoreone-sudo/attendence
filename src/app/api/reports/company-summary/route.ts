@@ -27,11 +27,17 @@ export async function GET(request: NextRequest) {
     }
     const { count: employeeCount } = await empQuery;
 
-    // Get today's attendance stats
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
+    // Get today's attendance stats (Asia/Dhaka Timezone)
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Dhaka',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const [month, day, year] = formatter.format(now).split('/');
+    const startOfDay = new Date(`${year}-${month}-${day}T00:00:00+06:00`);
+    const endOfDay = new Date(`${year}-${month}-${day}T23:59:59+06:00`);
 
     let attQuery = supabase
       .from('attendance_records')
@@ -48,12 +54,12 @@ export async function GET(request: NextRequest) {
 
     let present = 0;
     let late = 0;
-    let absent = 0;
+    let explicitAbsent = 0;
 
     if (attData) {
       present = attData.filter(a => a.status === 'present').length;
       late = attData.filter(a => a.status === 'late').length;
-      absent = attData.filter(a => a.status === 'absent').length;
+      explicitAbsent = attData.filter(a => a.status === 'absent').length;
     }
 
     // Get leaves today
@@ -65,9 +71,13 @@ export async function GET(request: NextRequest) {
       .gte('end_date', startOfDay.toISOString());
 
     const { count: leaveCount } = await leaveQuery;
+    const leaves = leaveCount || 0;
+
+    // Calculate actual absent count (total staff minus present, late, and on leave)
+    const totalStaff = employeeCount || 0;
+    const absent = Math.max(0, totalStaff - present - late - leaves);
 
     // Bug 21 fix: Compute system_health dynamically based on attendance data
-    const totalStaff = employeeCount || 0;
     const absenceRate = totalStaff > 0 ? absent / totalStaff : 0;
     let systemHealth = '99.9% Operational';
     if (absenceRate > 0.5) systemHealth = 'Degraded — High Absenteeism';
@@ -81,7 +91,7 @@ export async function GET(request: NextRequest) {
         present_today: present,
         late_today: late,
         absent_today: absent,
-        on_leave_today: leaveCount || 0,
+        on_leave_today: leaves,
         system_health: systemHealth,
       }
     });

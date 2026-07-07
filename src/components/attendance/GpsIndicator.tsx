@@ -78,8 +78,12 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    checkPosition();
+    // Bug 4 fix: Only auto-run geolocation once the parent has provided real branch coordinates.
+    // Prevents a false "inside geofence" flash using default Dhaka coords while profile is loading.
+    if (branchLatitude !== undefined && branchLongitude !== undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      checkPosition();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchLatitude, branchLongitude]);
 

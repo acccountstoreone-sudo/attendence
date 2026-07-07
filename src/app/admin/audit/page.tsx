@@ -13,12 +13,12 @@ import { createClient } from '@/lib/supabase/client';
 interface AuditLog {
   id: string;
   created_at: string;
-  user_id: string;
+  actor_id: string;
   action: string;
   table_name?: string;
   record_id?: string;
-  old_values?: Record<string, unknown>;
-  new_values?: Record<string, unknown>;
+  old_value?: Record<string, unknown>;
+  new_value?: Record<string, unknown>;
   ip_address?: string;
   actor_name?: string;
 }
@@ -61,24 +61,40 @@ export default function AdminAuditPage() {
     try {
       const { data, error } = await supabase
         .from('audit_logs')
-        .select('*, profiles!audit_logs_user_id_fkey(full_name)')
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(100);
 
       if (error) throw error;
 
+      const actorIds = [...new Set((data || []).map((log: Record<string, unknown>) => log.actor_id).filter(Boolean))];
+      const profilesMap: Record<string, string> = {};
+
+      if (actorIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', actorIds);
+
+        profiles?.forEach((p: Record<string, unknown>) => {
+          if (p.id && p.full_name) {
+            profilesMap[p.id as string] = p.full_name as string;
+          }
+        });
+      }
+
       setLogs(
         (data || []).map((log: Record<string, unknown>) => ({
           id: String(log.id),
           created_at: String(log.created_at),
-          user_id: String(log.user_id),
+          actor_id: String(log.actor_id || ''),
           action: String(log.action),
           table_name: log.table_name as string | undefined,
           record_id: log.record_id as string | undefined,
-          old_values: log.old_values as Record<string, unknown> | undefined,
-          new_values: log.new_values as Record<string, unknown> | undefined,
+          old_value: log.old_value as Record<string, unknown> | undefined,
+          new_value: log.new_value as Record<string, unknown> | undefined,
           ip_address: log.ip_address as string | undefined,
-          actor_name: (log.profiles as { full_name?: string } | null)?.full_name || 'System',
+          actor_name: log.actor_id ? (profilesMap[log.actor_id as string] || 'System') : 'System',
         }))
       );
     } catch (err) {
@@ -257,7 +273,7 @@ export default function AdminAuditPage() {
                           </td>
                           <td className="py-4 px-6">
                             <p className="font-bold text-white">{log.actor_name}</p>
-                            <p className="text-xs text-slate-500 font-mono mt-0.5">{log.user_id?.slice(0, 8)}...</p>
+                            <p className="text-xs text-slate-500 font-mono mt-0.5">{log.actor_id?.slice(0, 8)}...</p>
                           </td>
                           <td className="py-4 px-6 whitespace-normal min-w-[300px]">
                             <p className="font-bold text-[#D2A02A] text-xs uppercase tracking-wider mb-0.5">{log.action}</p>

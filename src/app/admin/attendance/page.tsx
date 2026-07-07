@@ -20,6 +20,11 @@ interface AttendanceRecord {
   check_out_time: string | null;
 }
 
+const getLocalDateString = () => {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+};
+
 export default function AdminAttendancePage() {
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
@@ -27,22 +32,19 @@ export default function AdminAttendancePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   // Bug 7 fix: Add date filter with today as default
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().slice(0, 10) // YYYY-MM-DD
-  );
+  const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
 
   // Bug 7 fix: Fetch historical records by selected date directly from Supabase
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
     try {
-      const startOfDay = new Date(selectedDate);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(selectedDate);
-      endOfDay.setHours(23, 59, 59, 999);
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+      const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
 
       const { data, error } = await supabase
         .from('attendance_records')
-        .select('id, employee_id, check_in_time, check_out_time, status, profiles!attendance_records_employee_id_fkey(full_name, branches!profiles_branch_id_fkey(name))')
+        .select('id, employee_id, check_in_time, check_out_time, status, profiles!attendance_records_employee_id_fkey(full_name), branches!attendance_records_branch_id_fkey(name)')
         .gte('check_in_time', startOfDay.toISOString())
         .lte('check_in_time', endOfDay.toISOString())
         .order('check_in_time', { ascending: false })
@@ -51,12 +53,11 @@ export default function AdminAttendancePage() {
       if (error) throw error;
 
       const formatted: AttendanceRecord[] = (data || []).map((item: Record<string, unknown>) => {
-        const profile = item.profiles as { full_name?: string; branches?: { name?: string } } | null;
         return {
           id: String(item.id),
           user_id: String(item.employee_id),
-          full_name: profile?.full_name || 'Unknown Employee',
-          branch_name: profile?.branches?.name || 'Headquarters',
+          full_name: (item.profiles as { full_name?: string })?.full_name || 'Unknown Employee',
+          branch_name: (item.branches as { name?: string })?.name || 'Headquarters',
           status: String(item.status || 'present'),
           check_in_time: item.check_in_time as string | null,
           check_out_time: item.check_out_time as string | null,
@@ -70,6 +71,7 @@ export default function AdminAttendancePage() {
     }
   }, [selectedDate, supabase]);
 
+  // eslint-disable-next-line
   useEffect(() => { fetchAttendance(); }, [fetchAttendance]);
 
   const filteredRecords = records.filter((r) => {
@@ -86,8 +88,8 @@ export default function AdminAttendancePage() {
     const rows = filteredRecords.map((r) => [
       r.full_name,
       r.branch_name,
-      r.check_in_time ? new Date(r.check_in_time).toISOString() : '',
-      r.check_out_time ? new Date(r.check_out_time).toISOString() : 'Not checked out',
+      r.check_in_time ? new Date(r.check_in_time).toLocaleString() : '',
+      r.check_out_time ? new Date(r.check_out_time).toLocaleString() : 'Not checked out',
       r.status,
     ]);
     const csv = [headers, ...rows].map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -100,7 +102,7 @@ export default function AdminAttendancePage() {
     URL.revokeObjectURL(url);
   };
 
-  const isToday = selectedDate === new Date().toISOString().slice(0, 10);
+  const isToday = selectedDate === getLocalDateString();
 
   return (
     <div className="space-y-8 pb-12">
@@ -182,7 +184,7 @@ export default function AdminAttendancePage() {
               <input
                 type="date"
                 value={selectedDate}
-                max={new Date().toISOString().slice(0, 10)}
+                max={getLocalDateString()}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 className="bg-transparent text-sm text-slate-300 focus:outline-none"
               />

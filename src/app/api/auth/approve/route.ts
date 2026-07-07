@@ -16,6 +16,11 @@ export async function POST(request: Request) {
     if (!currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     if (action === 'approve') {
+      const { data: profile } = await supabase.from('profiles').select('role, branch_id').eq('id', userId).single();
+      if (profile && profile.role !== 'admin' && !profile.branch_id) {
+        return NextResponse.json({ error: 'Cannot approve employee without an assigned branch. Please edit their profile first.' }, { status: 400 });
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({ 

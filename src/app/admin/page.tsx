@@ -252,7 +252,7 @@ export default function AdminDashboardPage() {
 
           {filteredBranches.length === 0 ? (
             <div className="p-12 text-center text-slate-500 bg-[#0A101C] rounded-xl border border-[#1E293B]">
-              <p className="text-sm">No branches found matching "{searchTerm}"</p>
+              <p className="text-sm">No branches found matching &quot;{searchTerm}&quot;</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

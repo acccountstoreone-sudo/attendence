@@ -17,7 +17,7 @@ export default function EmployeeCheckInPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [userProfile, setUserProfile] = useState<{ id: string; branch_id?: string; branch_name?: string } | null>(null);
+  const [userProfile, setUserProfile] = useState<{ id: string; branch_id?: string; branch_name?: string; branch_lat?: number; branch_lng?: number; branch_radius?: number } | null>(null);
   
   // Geolocation state from GpsIndicator
   const [locationState, setLocationState] = useState<{
@@ -40,7 +40,12 @@ export default function EmployeeCheckInPage() {
   useEffect(() => {
     async function loadData() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      // Bug 7 fix: Redirect to login and stop spinner if session is expired/missing
+      if (!user) {
+        setLoading(false);
+        router.push('/login');
+        return;
+      }
 
       const { data: prof } = await supabase
         .from('profiles')
@@ -49,21 +54,44 @@ export default function EmployeeCheckInPage() {
         .single();
 
       if (prof) {
-        setUserProfile({
+        const branchData: { id: string; branch_id?: string; branch_name?: string; branch_lat?: number; branch_lng?: number; branch_radius?: number } = {
           id: prof.id,
           branch_id: prof.branch_id,
           branch_name: (prof as unknown as { branches?: { name?: string } }).branches?.name || 'Anchor Store',
-        });
+        };
+
+        // Fetch real branch coordinates for geofencing
+        if (prof.branch_id) {
+          const supabaseInner = supabase;
+          const { data: branch } = await supabaseInner
+            .from('branches')
+            .select('latitude, longitude, geofence_radius_meters')
+            .eq('id', prof.branch_id)
+            .single();
+          if (branch) {
+            branchData.branch_lat = branch.latitude ? Number(branch.latitude) : undefined;
+            branchData.branch_lng = branch.longitude ? Number(branch.longitude) : undefined;
+            branchData.branch_radius = branch.geofence_radius_meters || 100;
+          }
+        }
+
+        setUserProfile(branchData);
       }
 
       // B5 fix: /api/attendance/today returns an object, not an array
-      const res = await fetch('/api/attendance/today');
-      const json = await res.json();
-      if (json.success && json.data && json.data.checked_in) {
-        setTodayRecord(json.data);
-        if (json.data.check_in_time && !json.data.check_out_time) {
-          setCheckType('out');
+      try {
+        const res = await fetch('/api/attendance/today');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data && json.data.checked_in) {
+            setTodayRecord(json.data);
+            if (json.data.check_in_time && !json.data.check_out_time) {
+              setCheckType('out');
+            }
+          }
         }
+      } catch {
+        // Non-critical: dashboard still works without today's status
       }
       setLoading(false);
     }
@@ -106,7 +134,8 @@ export default function EmployeeCheckInPage() {
         setFeedback({ type: 'success', message: `Successfully Checked ${checkType === 'in' ? 'In' : 'Out'}!` });
         setTimeout(() => router.push('/employee'), 1500);
       } else {
-        setFeedback({ type: 'error', message: `Check-In Failed: ${result.error?.message || 'Geofence or verification error'}` });
+        // Bug 3 fix: Use checkType to correctly say "Check-In" or "Check-Out" in error message
+        setFeedback({ type: 'error', message: `Check-${checkType === 'in' ? 'In' : 'Out'} Failed: ${result.error?.message || 'Geofence or verification error'}` });
       }
     } catch (err) {
       console.error('Submit error:', err);
@@ -206,7 +235,9 @@ export default function EmployeeCheckInPage() {
       {/* GPS Geofence Module (Spec P29) */}
       <GpsIndicator
         branchName={userProfile?.branch_name}
-        geofenceRadius={100}
+        branchLatitude={userProfile?.branch_lat}
+        branchLongitude={userProfile?.branch_lng}
+        geofenceRadius={userProfile?.branch_radius ?? 100}
         onLocationVerified={(coords) => setLocationState(coords)}
       />
 

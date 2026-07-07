@@ -10,6 +10,7 @@ const updateEmployeeSchema = z.object({
   phone: z.string().nullable().optional(),
   photo_url: z.string().url().nullable().optional(),
   facial_id: z.string().nullable().optional(),
+  employee_id: z.string().nullable().optional(),
   is_active: z.boolean().optional(),
 });
 

@@ -12,6 +12,7 @@ const createEmployeeSchema = z.object({
   phone: z.string().optional().nullable(),
   photo_url: z.string().url().optional().nullable(),
   facial_id: z.string().optional().nullable(),
+  employee_id: z.string().optional().nullable(),
 });
 
 export async function GET(request: NextRequest) {
@@ -131,6 +132,7 @@ export async function POST(request: NextRequest) {
         phone: payload.phone || null,
         photo_url: payload.photo_url || null,
         facial_id: payload.facial_id || null,
+        employee_id: payload.employee_id || null,
         is_active: isEmployeeActive,
       })
       .select()

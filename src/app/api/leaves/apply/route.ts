@@ -47,13 +47,17 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // 3. Calculate requested days
-    const start = new Date(input.start_date);
-    const end = new Date(input.end_date);
+    // 3. Calculate requested days using local date to prevent timezone bugs
+    const [startYear, startMonth, startDay] = input.start_date.split('-').map(Number);
+    const [endYear, endMonth, endDay] = input.end_date.split('-').map(Number);
+    
+    const start = new Date(startYear, startMonth - 1, startDay);
+    const end = new Date(endYear, endMonth - 1, endDay);
 
     // B17 fix: Validate date ordering and no past-date leaves
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
     if (start < today) {
       return NextResponse.json({
         success: false,
@@ -68,14 +72,41 @@ export async function POST(request: NextRequest) {
     }
 
     const diffTime = end.getTime() - start.getTime();
-    const requestedDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    // Use Math.round to avoid Daylight Saving Time issues
+    const requestedDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-    const remaining = balance.allocated_days - balance.used_days;
+    // Check for overlapping leaves
+    const { data: overlapping } = await supabase
+      .from('leave_requests')
+      .select('id')
+      .eq('user_id', user.id)
+      .neq('status', 'rejected')
+      .or(`and(start_date.lte.${input.end_date},end_date.gte.${input.start_date})`)
+      .limit(1);
+
+    if (overlapping && overlapping.length > 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'You already have a leave request during this period.',
+      }, { status: 422 });
+    }
+
+    // Check for pending leaves
+    const { data: pendingLeaves } = await supabase
+      .from('leave_requests')
+      .select('total_days')
+      .eq('user_id', user.id)
+      .eq('leave_type_id', leaveType.id)
+      .eq('status', 'pending');
+
+    const pendingDays = pendingLeaves?.reduce((sum, r) => sum + r.total_days, 0) || 0;
+
+    const remaining = balance.allocated_days - balance.used_days - pendingDays;
 
     if (requestedDays > remaining) {
       return NextResponse.json({
         success: false,
-        error: `Insufficient balance. Requested: ${requestedDays}, Remaining: ${remaining}`,
+        error: `Insufficient balance. Requested: ${requestedDays}, Remaining: ${remaining} (including pending requests).`,
       }, { status: 422 });
     }
 

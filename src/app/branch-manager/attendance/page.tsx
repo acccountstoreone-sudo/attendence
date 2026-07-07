@@ -70,6 +70,7 @@ export default function AdminAttendancePage() {
     }
   }, [selectedDate, supabase]);
 
+  // eslint-disable-next-line
   useEffect(() => { fetchAttendance(); }, [fetchAttendance]);
 
   const filteredRecords = records.filter((r) => {

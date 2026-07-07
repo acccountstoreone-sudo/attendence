@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { Calendar, CheckCircle2, AlertTriangle, ArrowLeft, Clock, FileText } from 'lucide-react';
+import { Calendar, CheckCircle2, AlertTriangle, ArrowLeft, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface LeaveBalanceItem {
@@ -26,46 +26,48 @@ export default function EmployeeLeavePage() {
 
   const [balances, setBalances] = useState<LeaveBalanceItem[]>([]);
 
-  const [leaveType, setLeaveType] = useState('CASUAL');
+  const [leaveType, setLeaveType] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
 
-  useEffect(() => {
-    async function loadBalances() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+  const loadBalances = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-        const currentYear = new Date().getFullYear();
-        const { data: balData } = await supabase
-          .from('leave_balances')
-          .select('allocated_days, used_days, leave_types(code, name)')
-          .eq('user_id', user.id)
-          .eq('year', currentYear);
+      const currentYear = new Date().getFullYear();
+      const { data: balData } = await supabase
+        .from('leave_balances')
+        .select('allocated_days, used_days, leave_types(code, name)')
+        .eq('user_id', user.id)
+        .eq('year', currentYear);
 
-        if (balData && balData.length > 0) {
-          const mapped = balData.map((b, idx) => {
-            const typeObj = (b as unknown as { leave_types?: { code: string; name: string } }).leave_types;
-            return {
-              id: String(idx),
-              code: typeObj?.code || 'GENERAL',
-              name: typeObj?.name || 'General Leave',
-              allocated: b.allocated_days || 0,
-              used: b.used_days || 0,
-            };
-          });
-          setBalances(mapped);
-          if (mapped.length > 0) setLeaveType(mapped[0].code);
-        }
-      } catch (err) {
-        console.error('Failed to load leave balances:', err);
-      } finally {
-        setLoading(false);
+      if (balData && balData.length > 0) {
+        const mapped = balData.map((b, idx) => {
+          const typeObj = (b as unknown as { leave_types?: { code: string; name: string } }).leave_types;
+          return {
+            id: String(idx),
+            code: typeObj?.code || 'GENERAL',
+            name: typeObj?.name || 'General Leave',
+            allocated: b.allocated_days || 0,
+            used: b.used_days || 0,
+          };
+        });
+        setBalances(mapped);
+        if (mapped.length > 0) setLeaveType(mapped[0].code);
       }
+    } catch (err) {
+      console.error('Failed to load leave balances:', err);
+    } finally {
+      setLoading(false);
     }
-    loadBalances();
   }, [supabase]);
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => {
+    loadBalances();
+  }, [loadBalances]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,8 +93,12 @@ export default function EmployeeLeavePage() {
         setStartDate('');
         setEndDate('');
         setReason('');
+        loadBalances(); // Refresh balances in case backend returns updated counts
       } else {
-        setFeedback({ type: 'error', message: json.error || 'Failed to submit leave application.' });
+        const errorMessage = typeof json.error === 'object' && json.error?.message
+          ? json.error.message
+          : typeof json.error === 'string' ? json.error : 'Failed to submit leave application.';
+        setFeedback({ type: 'error', message: errorMessage });
       }
     } catch (err) {
       setFeedback({ type: 'error', message: 'A network error occurred. Please try again.' });
@@ -249,7 +255,7 @@ export default function EmployeeLeavePage() {
 
           <Button
             type="submit"
-            disabled={submitting || balances.length === 0}
+            disabled={submitting || balances.length === 0 || !leaveType}
             variant="primary"
             size="lg"
             className="w-full bg-[#D2A02A] text-[#040A15] hover:bg-[#C08F1E] font-extrabold border-none py-4 shadow-lg shadow-[#D2A02A]/20 disabled:opacity-50"

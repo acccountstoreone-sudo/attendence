@@ -11,10 +11,16 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Dhaka',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const [month, day, year] = formatter.format(now).split('/');
+    const startOfDay = new Date(`${year}-${month}-${day}T00:00:00+06:00`);
+    const endOfDay = new Date(`${year}-${month}-${day}T23:59:59+06:00`);
 
     let query = supabase
       .from('attendance_records')

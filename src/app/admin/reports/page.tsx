@@ -79,27 +79,43 @@ export default function AdminReportsPage() {
     }
   };
 
-  const handleExport = async (format: 'pdf' | 'excel') => {
+  const handleExport = async (format: 'pdf' | 'excel', targetBranchId?: string) => {
     setExporting(format);
     try {
+      const branchToExport = targetBranchId || filter.branchId;
       const params = new URLSearchParams({
         month: String(filter.month),
         year: String(filter.year),
         format,
-        ...(filter.branchId ? { branch_id: filter.branchId } : {}),
+        ...(branchToExport ? { branch_id: branchToExport } : {}),
       });
       const res = await fetch(`/api/reports/export?${params}`);
-      if (!res.ok) throw new Error('Export failed');
+      const json = await res.json();
 
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `AnchorFashion_Attendance_${months[filter.month - 1]}_${filter.year}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      if (!res.ok || !json.success) throw new Error(json?.error?.message || 'Export failed');
+
+      if (json.data?.signed_url) {
+        window.open(json.data.signed_url, '_blank');
+      } else if (json.data?.content_base64) {
+        // Fallback for base64 inline download
+        const byteCharacters = atob(json.data.content_base64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray]);
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = json.data.file_name || `Attendance_Report.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } else {
+        throw new Error('Export URL not found');
+      }
     } catch (err) {
       console.error('Export error:', err);
       alert(`Export failed. Please try again.`);
@@ -353,12 +369,7 @@ export default function AdminReportsPage() {
                         size="sm"
                         variant="ghost"
                         icon={<Download className="w-3.5 h-3.5" />}
-                        onClick={() =>
-                          window.open(
-                            `/api/reports/export?branch_id=${row.branch_id}&month=${filter.month}&year=${filter.year}&format=excel`,
-                            '_blank'
-                          )
-                        }
+                        onClick={() => handleExport('excel', row.branch_id)}
                       >
                         Download
                       </Button>

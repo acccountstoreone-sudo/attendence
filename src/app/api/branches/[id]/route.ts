@@ -28,6 +28,39 @@ export async function PUT(
 
     const supabase = await createClient();
 
+    // Fetch existing branch state for safety checks and manager demotion
+    const { data: existingBranch } = await supabase
+      .from('branches')
+      .select('manager_id, is_active')
+      .eq('id', branchId)
+      .single();
+
+    // Prevent deactivation if active staff exist
+    if (payload.is_active === false && existingBranch?.is_active === true) {
+      const { count, error: countErr } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('branch_id', branchId)
+        .eq('is_active', true);
+
+      if (countErr) throw new Error(`Failed to check branch staff: ${countErr.message}`);
+
+      if (count && count > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: { active_employees_count: count },
+            error: {
+              code: 'BRANCH_HAS_ACTIVE_STAFF',
+              message: `Cannot deactivate branch: There are ${count} active employee(s) assigned to this store. Reassign or offboard them first.`,
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     const { data: updatedBranch, error } = await supabase
       .from('branches')
       .update(payload)
@@ -39,8 +72,17 @@ export async function PUT(
       throw new Error(`Failed to update branch: ${error?.message}`);
     }
 
-    // If manager_id changed, update their profile
-    if (payload.manager_id !== undefined) {
+    // If manager_id changed, update their profile and demote old manager
+    if (payload.manager_id !== undefined && existingBranch) {
+      // Demote old manager if it changed
+      if (existingBranch.manager_id && existingBranch.manager_id !== payload.manager_id) {
+        await supabase
+          .from('profiles')
+          .update({ role: 'employee' })
+          .eq('id', existingBranch.manager_id);
+      }
+
+      // Promote new manager
       if (payload.manager_id) {
         await supabase
           .from('profiles')

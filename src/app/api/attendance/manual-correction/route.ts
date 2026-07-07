@@ -48,11 +48,11 @@ export async function POST(request: NextRequest) {
       // Bug 12 fix: Fetch actual shift end time from company profile instead of hardcoding 18:00
       const { data: companyProfile } = await supabase
         .from('company_profile')
-        .select('working_hours_end')
+        .select('default_work_end_time')
         .limit(1)
         .maybeSingle();
 
-      const shiftEndStr = companyProfile?.working_hours_end || '18:00';
+      const shiftEndStr = companyProfile?.default_work_end_time || '18:00';
       const [shiftHour, shiftMin] = shiftEndStr.split(':').map(Number);
 
       const checkOutDate = new Date(payload.check_out_time);
@@ -109,6 +109,20 @@ export async function POST(request: NextRequest) {
       data: updatedRecord,
       message: `Attendance record corrected successfully. Audit log created.`,
       timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    await requireRole(['admin', 'branch_manager']);
+    
+    // Placeholder for manual correction requests
+    return NextResponse.json({
+      success: true,
+      data: [],
     });
   } catch (error) {
     return handleApiError(error);

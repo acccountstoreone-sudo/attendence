@@ -37,10 +37,16 @@ export default function EmployeeDashboardPage() {
       }
 
       // B5 fix: /api/attendance/today returns an object, not an array
-      const res = await fetch('/api/attendance/today');
-      const json = await res.json();
-      if (json.success && json.data && json.data.checked_in) {
-        setTodayRecord(json.data);
+      try {
+        const res = await fetch('/api/attendance/today');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data && json.data.checked_in) {
+            setTodayRecord(json.data);
+          }
+        }
+      } catch {
+        // Non-critical: dashboard still renders without today's status
       }
 
       // B6 fix: Fetch real leave balance for current year
@@ -94,10 +100,15 @@ export default function EmployeeDashboardPage() {
           size="lg"
           variant="primary"
           icon={<Clock className="w-5 h-5 text-[#040A15]" />}
-          className="relative z-10 shadow-xl shadow-[#D2A02A]/20 bg-[#D2A02A] text-[#040A15] hover:bg-[#C08F1E] font-bold border-none"
+          className="relative z-10 shadow-xl shadow-[#D2A02A]/20 bg-[#D2A02A] text-[#040A15] hover:bg-[#C08F1E] font-bold border-none disabled:opacity-60 disabled:cursor-not-allowed"
           onClick={() => router.push('/employee/check-in')}
+          disabled={!!(todayRecord?.check_in_time && todayRecord.check_out_time)}
         >
-          {todayRecord?.check_in_time && !todayRecord.check_out_time ? 'Check Out Now' : 'Biometric Check-In'}
+          {todayRecord?.check_in_time && todayRecord.check_out_time
+            ? 'Shift Complete ✓'
+            : todayRecord?.check_in_time && !todayRecord.check_out_time
+            ? 'Check Out Now'
+            : 'Biometric Check-In'}
         </Button>
       </div>
 

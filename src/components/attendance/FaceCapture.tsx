@@ -35,6 +35,11 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     setHasPermission(null);
     setCameraError('');
     try {
+      // Bug 1 fix: Stop any existing tracks before requesting a new stream to prevent leaks on retry
+      if (videoRef.current && videoRef.current.srcObject) {
+        (videoRef.current.srcObject as MediaStream).getTracks().forEach((t) => t.stop());
+        videoRef.current.srcObject = null;
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 640 }, height: { ideal: 640 }, facingMode: 'user' },
         audio: false,
@@ -52,12 +57,13 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     startCamera();
-    const currentVideoRef = videoRef.current;
+    // Bug 1 fix: Use ref.current in cleanup so we always stop the latest stream, not the one captured at mount
     return () => {
-      if (currentVideoRef && currentVideoRef.srcObject) {
-        const stream = currentVideoRef.srcObject as MediaStream;
-        stream.getTracks().forEach((t) => t.stop());
+      if (videoRef.current && videoRef.current.srcObject) {
+        (videoRef.current.srcObject as MediaStream).getTracks().forEach((t) => t.stop());
+        videoRef.current.srcObject = null;
       }
     };
   }, []);
@@ -82,6 +88,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     setCapturedImage(null);
     setVerificationState('idle');
     setFeedback('Align your face within the biometric frame');
+    // Restart camera in case the track was paused/ended (e.g., tab was backgrounded)
+    startCamera();
   };
 
   const handleConfirmSubmit = async () => {
@@ -105,8 +113,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       setVerificationState('extracting');
       setFeedback('Extracting biometric vectors...');
 
-      if (!canvasRef.current) throw new Error('Canvas not available');
-
+      // Bug 2 fix: Removed dead canvasRef check — face-api processes the img element directly, not the canvas
       // Create an image element from capturedImage to process
       const img = new Image();
       img.src = capturedImage;
