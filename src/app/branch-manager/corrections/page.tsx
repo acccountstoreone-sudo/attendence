@@ -82,7 +82,7 @@ export default function ManualCorrectionsPage() {
   };
 
   const filtered = corrections.filter((c) => {
-    const matchSearch = c.employee_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchSearch = (c.employee_name || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = filter === 'all' || c.status === filter;
     return matchSearch && matchStatus;
   });
@@ -212,6 +212,14 @@ export default function ManualCorrectionsPage() {
 
                 {req.status === 'pending' && (
                   <div className="flex items-center space-x-2 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 px-3 py-1.5 h-auto text-xs font-semibold rounded-lg"
+                      onClick={() => setReviewModal(req)}
+                    >
+                      Review
+                    </Button>
                     <Button
                       size="sm"
                       variant="ghost"

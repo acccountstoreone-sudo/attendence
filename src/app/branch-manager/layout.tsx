@@ -7,6 +7,8 @@ import { Header } from '@/components/layout/Header';
 import { createClient } from '@/lib/supabase/client';
 import { Spinner } from '@/components/ui/Spinner';
 
+import { BottomNav } from '@/components/layout/BottomNav';
+
 export default function BranchManagerLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -68,23 +70,28 @@ export default function BranchManagerLayout({ children }: { children: React.Reac
 
   return (
     <div className="min-h-screen bg-[#040A15] flex">
-      <Sidebar
-        role="branch_manager"
-        isCollapsed={isCollapsed}
-        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-        mobileOpen={mobileOpen}
-        onCloseMobile={() => setMobileOpen(false)}
-      />
+      {/* Sidebar hidden on mobile for branch manager */}
+      <div className="hidden md:block">
+        <Sidebar
+          role="branch_manager"
+          isCollapsed={isCollapsed}
+          onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+          mobileOpen={mobileOpen}
+          onCloseMobile={() => setMobileOpen(false)}
+        />
+      </div>
 
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
         <Header
           user={userProfile}
           onOpenMobileSidebar={() => setMobileOpen(true)}
         />
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto pb-24 md:pb-6">
           {children}
         </main>
       </div>
+
+      <BottomNav role="branch_manager" />
     </div>
   );
 }

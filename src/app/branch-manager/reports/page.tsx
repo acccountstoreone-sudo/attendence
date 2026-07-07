@@ -110,8 +110,8 @@ export default function AdminReportsPage() {
 
   const filtered = reportData.filter(
     (r) =>
-      r.branch_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.branch_code.toLowerCase().includes(searchTerm.toLowerCase())
+      (r.branch_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (r.branch_code || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const avgAttendance =

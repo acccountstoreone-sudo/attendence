@@ -14,6 +14,8 @@ import {
   MapPin,
   Camera,
   AlertCircle,
+  Edit3,
+  X,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -38,6 +40,15 @@ export default function EmployeeHistoryPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const PER_PAGE = 10;
+
+  // Correction Modal State
+  const [isCorrectionModalOpen, setIsCorrectionModalOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
+  const [correctionType, setCorrectionType] = useState<'check_in' | 'check_out'>('check_in');
+  const [requestedTime, setRequestedTime] = useState('');
+  const [correctionReason, setCorrectionReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [correctionSuccess, setCorrectionSuccess] = useState('');
 
   useEffect(() => {
     async function loadHistory() {
@@ -105,6 +116,60 @@ export default function EmployeeHistoryPage() {
     setPage(1);
   }
 
+  const openCorrectionModal = (record: AttendanceRecord) => {
+    setSelectedRecord(record);
+    setCorrectionType('check_in');
+    setRequestedTime('');
+    setCorrectionReason('');
+    setCorrectionSuccess('');
+    setError(null);
+    setIsCorrectionModalOpen(true);
+  };
+
+  const submitCorrectionRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedRecord || !requestedTime || correctionReason.length < 5) {
+      setError('Please provide a valid time and reason (min 5 characters).');
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setCorrectionSuccess('');
+
+    try {
+      // Assemble datetime correctly by combining the record's date and the time input
+      const dateStr = selectedRecord.date || selectedRecord.check_in_time?.slice(0, 10) || new Date().toISOString().slice(0, 10);
+      const requestedDateTime = new Date(`${dateStr}T${requestedTime}:00`).toISOString();
+      const originalTime = correctionType === 'check_in' ? selectedRecord.check_in_time : selectedRecord.check_out_time;
+
+      const res = await fetch('/api/attendance/request-correction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          record_id: selectedRecord.id,
+          date: dateStr,
+          type: correctionType,
+          original_time: originalTime,
+          requested_time: requestedDateTime,
+          reason: correctionReason,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error?.message || json.error || 'Failed to submit request');
+      }
+      setCorrectionSuccess('Correction request submitted successfully and is pending manager approval.');
+      setTimeout(() => {
+        setIsCorrectionModalOpen(false);
+      }, 2500);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-8 pb-12 max-w-4xl mx-auto">
       {/* Header */}
@@ -164,12 +229,13 @@ export default function EmployeeHistoryPage() {
                   <th className="py-4 px-5">Check-Out</th>
                   <th className="py-4 px-5">Hours Worked</th>
                   <th className="py-4 px-5">Method</th>
+                  <th className="py-4 px-5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {records.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-16 text-center text-slate-500 text-sm">
+                    <td colSpan={7} className="py-16 text-center text-slate-500 text-sm">
                       {/* BUG FIX #8: Context-aware empty-state message */}
                       {searchDate
                         ? 'No attendance records found for the selected date.'
@@ -251,6 +317,17 @@ export default function EmployeeHistoryPage() {
                             <span className="capitalize">{rec.check_in_method || 'manual'}</span>
                           </div>
                         </td>
+                        <td className="py-4 px-5 text-right">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openCorrectionModal(rec)}
+                            title="Request Correction"
+                            className="text-slate-400 hover:text-blue-400"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </Button>
+                        </td>
                       </tr>
                     );
                   })
@@ -284,6 +361,117 @@ export default function EmployeeHistoryPage() {
             </div>
           </div>
         </Card>
+      )}
+
+      {/* Correction Modal */}
+      {isCorrectionModalOpen && selectedRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-slate-800/60 bg-slate-950/50">
+              <div>
+                <h3 className="text-lg font-extrabold text-white">Request Correction</h3>
+                <p className="text-sm text-slate-400">For {selectedRecord.date || 'this record'}</p>
+              </div>
+              <button
+                onClick={() => setIsCorrectionModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 rounded-full transition-colors"
+                disabled={isSubmitting}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={submitCorrectionRequest} className="p-6 space-y-5">
+              {error && (
+                <div className="p-3 bg-red-950/40 text-red-400 text-sm rounded-xl border border-red-900/50 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+              {correctionSuccess && (
+                <div className="p-3 bg-emerald-950/40 text-emerald-400 text-sm rounded-xl border border-emerald-900/50">
+                  {correctionSuccess}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Correction Type</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                      <input 
+                        type="radio" 
+                        name="correctionType" 
+                        value="check_in"
+                        checked={correctionType === 'check_in'}
+                        onChange={() => setCorrectionType('check_in')}
+                        className="text-blue-500 focus:ring-blue-500 bg-slate-800 border-slate-600"
+                        disabled={isSubmitting}
+                      />
+                      Check-In Time
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                      <input 
+                        type="radio" 
+                        name="correctionType" 
+                        value="check_out"
+                        checked={correctionType === 'check_out'}
+                        onChange={() => setCorrectionType('check_out')}
+                        className="text-blue-500 focus:ring-blue-500 bg-slate-800 border-slate-600"
+                        disabled={isSubmitting}
+                      />
+                      Check-Out Time
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Requested Time</label>
+                  <input
+                    type="time"
+                    value={requestedTime}
+                    onChange={(e) => setRequestedTime(e.target.value)}
+                    required
+                    disabled={isSubmitting}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Reason</label>
+                  <textarea
+                    value={correctionReason}
+                    onChange={(e) => setCorrectionReason(e.target.value)}
+                    placeholder="Provide a valid reason for this correction..."
+                    required
+                    minLength={5}
+                    rows={3}
+                    disabled={isSubmitting}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none placeholder:text-slate-600"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-800/80">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  onClick={() => setIsCorrectionModalOpen(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  variant="primary"
+                  disabled={isSubmitting || !!correctionSuccess}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Request'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

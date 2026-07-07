@@ -44,12 +44,14 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
     <header className="h-20 bg-[#061224]/80 backdrop-blur-2xl border-b border-white/[0.03] px-4 md:px-8 flex items-center justify-between sticky top-0 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.2)]">
       {/* Left side: Mobile menu & Branch badge */}
       <div className="flex items-center space-x-3">
-        <button
-          onClick={onOpenMobileSidebar}
-          className="md:hidden p-2 rounded-xl text-slate-300 hover:text-[#D2A02A] hover:bg-[#1E293B] transition-colors"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
+        {user.role === 'admin' && (
+          <button
+            onClick={onOpenMobileSidebar}
+            className="md:hidden p-2 rounded-xl text-slate-300 hover:text-[#D2A02A] hover:bg-[#1E293B] transition-colors"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+        )}
 
         <div className="flex items-center space-x-2 bg-white/[0.02] backdrop-blur-md border border-white/[0.05] px-3 py-1.5 rounded-xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
           <Store className="w-4 h-4 text-[#D2A02A] shrink-0" />

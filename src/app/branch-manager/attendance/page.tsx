@@ -26,19 +26,18 @@ export default function AdminAttendancePage() {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  // Bug 7 fix: Add date filter with today as default
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().slice(0, 10) // YYYY-MM-DD
-  );
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
 
   // Bug 7 fix: Fetch historical records by selected date directly from Supabase
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
     try {
-      const startOfDay = new Date(selectedDate);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(selectedDate);
-      endOfDay.setHours(23, 59, 59, 999);
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+      const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
 
       const { data, error } = await supabase
         .from('attendance_records')
@@ -75,8 +74,8 @@ export default function AdminAttendancePage() {
 
   const filteredRecords = records.filter((r) => {
     const matchesSearch =
-      r.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.branch_name.toLowerCase().includes(searchTerm.toLowerCase());
+      (r.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (r.branch_name || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -101,7 +100,10 @@ export default function AdminAttendancePage() {
     URL.revokeObjectURL(url);
   };
 
-  const isToday = selectedDate === new Date().toISOString().slice(0, 10);
+  const isToday = (() => {
+    const d = new Date();
+    return selectedDate === `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  })();
 
   return (
     <div className="space-y-8 pb-12">
@@ -183,7 +185,7 @@ export default function AdminAttendancePage() {
               <input
                 type="date"
                 value={selectedDate}
-                max={new Date().toISOString().slice(0, 10)}
+                max={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 className="bg-transparent text-sm text-slate-300 focus:outline-none"
               />

@@ -153,6 +153,21 @@ body {
   background: var(--primary);
 }
 
+/* Mobile App Feel Adjustments */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
 /* Shimmer animation for skeleton load */
 @keyframes shimmer {
   100% {

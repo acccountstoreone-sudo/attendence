@@ -117,12 +117,41 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    await requireRole(['admin', 'branch_manager']);
-    
-    // Placeholder for manual correction requests
+    const user = await requireRole(['admin', 'branch_manager']);
+    const supabase = await createClient();
+
+    let query = supabase
+      .from('correction_requests')
+      .select('*, profiles!correction_requests_employee_id_fkey(full_name)')
+      .order('created_at', { ascending: false });
+
+    // Branch managers only see their branch's requests
+    if (user.role === 'branch_manager' && user.branch_id) {
+      query = query.eq('branch_id', user.branch_id);
+    }
+
+    const { data: requests, error } = await query;
+
+    if (error) {
+      throw new Error(`Failed to fetch correction requests: ${error.message}`);
+    }
+
+    const formattedData = (requests || []).map(req => ({
+      id: req.id,
+      user_id: req.employee_id,
+      employee_name: (req.profiles as any)?.full_name || 'Unknown',
+      date: req.date,
+      type: req.type,
+      original_time: req.original_time,
+      requested_time: req.requested_time,
+      reason: req.reason,
+      status: req.status,
+      created_at: req.created_at,
+    }));
+
     return NextResponse.json({
       success: true,
-      data: [],
+      data: formattedData,
     });
   } catch (error) {
     return handleApiError(error);

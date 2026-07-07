@@ -82,8 +82,8 @@ export default function StoreEmployeesPage() {
 
   const filteredEmployees = employees.filter((e) => {
     const matchesSearch =
-      e.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      e.email.toLowerCase().includes(searchTerm.toLowerCase());
+      (e.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (e.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesActive = showInactive ? !e.is_active : e.is_active;
     return matchesSearch && matchesActive;
   });

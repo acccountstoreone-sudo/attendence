@@ -64,7 +64,7 @@ export default function BranchManagerDashboardPage() {
       // 1. Get branch info
       const { data: profile } = await supabase
         .from('profiles')
-        .select('branch_id, branches(name)')
+        .select('branch_id, branches!profiles_branch_id_fkey(name)')
         .eq('id', user.id)
         .single();
 
@@ -81,10 +81,14 @@ export default function BranchManagerDashboardPage() {
       const { data: staffList } = await query;
 
       // 2.5 Fetch pending approvals
-      const { data: pendingList } = await supabase
+      let pendingQuery = supabase
         .from('profiles')
         .select('id, full_name, email, nid, nid_front_url, nid_back_url')
         .eq('registration_step', 'pending_approval');
+      if (branchId) {
+        pendingQuery = pendingQuery.eq('branch_id', branchId);
+      }
+      const { data: pendingList } = await pendingQuery;
       if (pendingList) setPendingApprovals(pendingList);
 
       // 3. Fetch today's attendance records for this branch using Supabase directly
@@ -106,8 +110,17 @@ export default function BranchManagerDashboardPage() {
         .gte('check_in_time', startOfDay.toISOString())
         .lte('check_in_time', endOfDay.toISOString());
 
-      // Pending corrections feature is unimplemented in the database schema, setting to 0
-      setPendingCorrections(0);
+      // Fetch pending corrections count
+      let correctionsQuery = supabase
+        .from('correction_requests')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      
+      if (branchId) {
+        correctionsQuery = correctionsQuery.eq('branch_id', branchId);
+      }
+      const { count: correctionsCount } = await correctionsQuery;
+      setPendingCorrections(correctionsCount || 0);
 
       // Map employees with their current status today
       if (staffList) {

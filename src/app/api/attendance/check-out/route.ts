@@ -22,14 +22,14 @@ export async function POST(request: NextRequest) {
     const payload = checkOutSchema.parse(body);
 
     // 3. Biometric Verification Check
-    if (!payload.face_verified || !payload.faceDescriptor) {
+    if (!payload.face_verified || !payload.faceDescriptor || payload.faceDescriptor.length === 0) {
       return NextResponse.json(
         {
           success: false,
           data: null,
           error: {
             code: 'BIOMETRIC_FAILED',
-            message: 'Biometric verification failed. Face descriptor missing.',
+            message: 'Biometric verification failed. Face descriptor missing or empty.',
           },
           timestamp: new Date().toISOString(),
         },
@@ -58,6 +58,20 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      if (payload.faceDescriptor.length !== profile.face_descriptor.length) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: 'BIOMETRIC_DIMENSION_MISMATCH',
+              message: `Face descriptor dimension mismatch: received ${payload.faceDescriptor.length}, expected ${profile.face_descriptor.length}.`,
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
       const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
       if (distance > 0.6) {
         return NextResponse.json(
@@ -77,15 +91,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, data: null, error: { code: 'BIOMETRIC_ERROR', message: 'Error processing facial comparison.' } }, { status: 500 });
     }
 
-    // Find today's open attendance record
-    const now = new Date();
+    // Find today's open attendance record (or the record for the offline sync date)
+    let targetDate = new Date();
+    
+    if (payload.is_offline_sync && payload.timestamp) {
+      targetDate = new Date(payload.timestamp);
+      
+      const todayDate = new Date();
+      const offlineFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' });
+      const [offMonth, offDay, offYear] = offlineFormatter.format(targetDate).split('/');
+      const [curMonth, curDay, curYear] = offlineFormatter.format(todayDate).split('/');
+      
+      if (`${offYear}-${offMonth}-${offDay}` !== `${curYear}-${curMonth}-${curDay}`) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: 'OFFLINE_SYNC_DATE_MISMATCH',
+              message: 'Offline check-out timestamp must be for today. Backdated sync is not permitted.',
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Dhaka',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
     });
-    const [month, day, year] = formatter.format(now).split('/');
+    const [month, day, year] = formatter.format(targetDate).split('/');
     
     const startOfDay = new Date(`${year}-${month}-${day}T00:00:00+06:00`);
     const endOfDay = new Date(`${year}-${month}-${day}T23:59:59+06:00`);
@@ -105,7 +144,7 @@ export async function POST(request: NextRequest) {
           data: null,
           error: {
             code: 'NO_CHECKIN_FOUND',
-            message: 'No open check-in record found for today. Please check in first.',
+            message: 'No open check-in record found for the given date. Please check in first.',
           },
           timestamp: new Date().toISOString(),
         },
@@ -145,7 +184,7 @@ export async function POST(request: NextRequest) {
           branch.geofence_radius_meters || 100
         );
 
-        if (!geo.within) {
+        if (!geo.within && !payload.is_offline_sync) {
           return NextResponse.json(
             {
               success: false,

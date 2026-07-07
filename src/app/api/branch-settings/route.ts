@@ -80,15 +80,6 @@ export async function PUT(request: NextRequest) {
       throw new Error(`Failed to update branch settings: ${error?.message}`);
     }
 
-    await supabase.from('audit_logs').insert({
-      actor_id: user.id,
-      action: 'UPDATE',
-      table_name: 'branch_settings',
-      record_id: branchId,
-      new_value: payload,
-      ip_address: getSafeIpAddress(request),
-    });
-
     return NextResponse.json({
       success: true,
       data: updatedSettings,
