@@ -400,54 +400,54 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden bg-gradient-to-b from-[#020810] via-[#040D1A] to-[#020810] select-none">
       
       {/* Subtle background ambient glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-blue-600/10 rounded-full blur-[90px] pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-emerald-600/10 rounded-full blur-[80px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-emerald-600/15 rounded-full blur-[90px] pointer-events-none" />
 
       {/* === GPS Status Pill === */}
-      <div className="flex-none w-full flex items-center justify-center pt-2 pb-1 z-30 pointer-events-none">
+      <div className="flex-none w-full flex items-center justify-center pt-2 pb-1 z-30 pointer-events-none px-4">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold backdrop-blur-xl border pointer-events-auto shadow-lg
+          className={`flex items-center space-x-2 px-4 py-2 rounded-full text-xs font-extrabold backdrop-blur-2xl border pointer-events-auto shadow-2xl
             ${gpsOk
-              ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300 shadow-emerald-950/50'
+              ? 'bg-emerald-950/90 border-emerald-400/50 text-emerald-200 shadow-emerald-950/60'
               : gpsStatus === 'locating'
-                ? 'bg-slate-900/80 border-slate-600/40 text-slate-300 animate-pulse'
-                : 'bg-rose-950/80 border-rose-500/40 text-rose-300 shadow-rose-950/50'
+                ? 'bg-[#0B1729]/95 border-blue-400/50 text-blue-200 animate-pulse'
+                : 'bg-rose-950/90 border-rose-400/50 text-rose-200 shadow-rose-950/60'
             }`}
         >
-          <MapPin className="w-3.5 h-3.5" />
-          <span>
+          <MapPin className="w-4 h-4 shrink-0" />
+          <span className="tracking-tight">
             {gpsOk ? `✓ Inside Zone (${branchName ?? 'Store'})`
-              : gpsStatus === 'locating'  ? 'Locating Store...'
-              : gpsStatus === 'error'     ? 'GPS Error — tap to retry'
+              : gpsStatus === 'locating'  ? 'Locating Store GPS...'
+              : gpsStatus === 'error'     ? 'GPS Error — Tap to retry'
               : `${gpsDistance ?? '—'}m away from ${branchName ?? 'store'}`}
           </span>
           {(gpsStatus === 'error' || !gpsOk) && (
-            <button onClick={gpsRefresh} className="ml-1 p-0.5 hover:bg-white/10 rounded-full transition-colors">
-              <RefreshCw className="w-3 h-3" />
+            <button onClick={gpsRefresh} className="ml-1 p-1 hover:bg-white/15 rounded-full transition-colors">
+              <RefreshCw className="w-3.5 h-3.5" />
             </button>
           )}
         </motion.div>
       </div>
 
-      {/* === Center Biometric Pod (Sleek Rounded Oval/Pill) === */}
+      {/* === Center Biometric Pod (~10% Rounded Rectangular Card for Perfect Mobile Framing) === */}
       <div className="flex-1 flex flex-col items-center justify-center my-auto z-20 w-full px-4">
         
-        {/* The Rounded Camera Box */}
-        <div className="relative w-[260px] h-[340px] sm:w-[290px] sm:h-[380px] rounded-[130px] sm:rounded-[145px] p-1.5 transition-all duration-500 shadow-2xl flex items-center justify-center"
+        {/* The 10% Rounded Camera Box (aspect-4/5 gives wide, spacious mobile view without horizontal cropping!) */}
+        <div className="relative w-[88%] sm:w-[340px] max-w-[360px] aspect-[4/5] sm:aspect-[3/4] rounded-[2.2rem] sm:rounded-[2.5rem] p-1.5 transition-all duration-500 shadow-2xl flex items-center justify-center"
           style={{
             background: phase === 'success' ? 'linear-gradient(135deg, #10B981, #059669)'
                       : phase === 'cam_err' ? 'linear-gradient(135deg, #F43F5E, #E11D48)'
                       : isRunning && currentChConf ? `linear-gradient(135deg, ${currentChConf.color}, #3B82F6)`
                       : 'linear-gradient(135deg, #3B82F6, #10B981)',
-            boxShadow: phase === 'success' ? '0 0 45px rgba(16, 185, 129, 0.4)'
-                     : isRunning && currentChConf ? `0 0 40px ${currentChConf.color}40`
-                     : '0 0 35px rgba(59, 130, 246, 0.25)'
+            boxShadow: phase === 'success' ? '0 0 55px rgba(16, 185, 129, 0.5)'
+                     : isRunning && currentChConf ? `0 0 50px ${currentChConf.color}55`
+                     : '0 0 45px rgba(59, 130, 246, 0.35)'
           }}
         >
-          {/* Inner dark bezel */}
-          <div className="relative w-full h-full rounded-[124px] sm:rounded-[139px] overflow-hidden bg-[#040A15] shadow-inner">
+          {/* Inner dark bezel with ~10% rounded corners */}
+          <div className="relative w-full h-full rounded-[1.8rem] sm:rounded-[2.1rem] overflow-hidden bg-[#040A15] shadow-inner">
             
             {/* Live camera feed inside the rounded bezel */}
             <video
@@ -462,17 +462,17 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               <motion.div
                 animate={{ top: ['0%', '100%', '0%'] }}
                 transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
-                className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_15px_#60A5FA] z-20 pointer-events-none"
+                className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_16px_#60A5FA] z-20 pointer-events-none"
               />
             )}
 
             {/* Corner brackets inside pod for high-tech look */}
             {['tl','tr','bl','br'].map(pos => (
-              <div key={pos} className={`absolute w-6 h-6 border-white/60 z-10 pointer-events-none
-                ${pos==='tl' ? 'top-6 left-6 border-t-2 border-l-2 rounded-tl-xl'
-                : pos==='tr' ? 'top-6 right-6 border-t-2 border-r-2 rounded-tr-xl'
-                : pos==='bl' ? 'bottom-6 left-6 border-b-2 border-l-2 rounded-bl-xl'
-                             : 'bottom-6 right-6 border-b-2 border-r-2 rounded-br-xl'}`}
+              <div key={pos} className={`absolute w-7 h-7 border-white/80 z-10 pointer-events-none drop-shadow
+                ${pos==='tl' ? 'top-5 left-5 border-t-2 border-l-2 rounded-tl-xl'
+                : pos==='tr' ? 'top-5 right-5 border-t-2 border-r-2 rounded-tr-xl'
+                : pos==='bl' ? 'bottom-5 left-5 border-b-2 border-l-2 rounded-bl-xl'
+                             : 'bottom-5 right-5 border-b-2 border-r-2 rounded-br-xl'}`}
               />
             ))}
 
@@ -481,41 +481,42 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="absolute inset-0 bg-emerald-950/80 backdrop-blur-sm flex flex-col items-center justify-center z-30"
+                className="absolute inset-0 bg-emerald-950/85 backdrop-blur-md flex flex-col items-center justify-center z-30"
               >
                 <motion.div
                   initial={{ scale: 0.5 }}
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 0.6 }}
                 >
-                  <CheckCircle2 className="w-20 h-20 text-emerald-400 drop-shadow-[0_0_20px_rgba(52,211,153,0.8)]" />
+                  <CheckCircle2 className="w-24 h-24 text-emerald-400 drop-shadow-[0_0_24px_rgba(52,211,153,0.9)]" />
                 </motion.div>
-                <p className="text-white font-extrabold text-lg mt-3 tracking-tight">Verified!</p>
+                <p className="text-white font-extrabold text-xl mt-4 tracking-tight drop-shadow">Identity Verified!</p>
               </motion.div>
             )}
 
             {/* Model Loading Overlay inside Pod */}
             {phase === 'loading' && (
-              <div className="absolute inset-0 bg-[#020810]/90 backdrop-blur-md flex flex-col items-center justify-center z-30 p-6 text-center">
-                <div className="w-36 h-1.5 bg-slate-800 rounded-full overflow-hidden shadow-inner mb-3">
+              <div className="absolute inset-0 bg-[#020810]/95 backdrop-blur-md flex flex-col items-center justify-center z-30 p-6 text-center">
+                <div className="w-40 h-2 bg-slate-800 rounded-full overflow-hidden shadow-inner mb-4">
                   <motion.div
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.35 }}
-                    className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full"
+                    className="h-full bg-gradient-to-r from-blue-500 via-emerald-400 to-blue-400 rounded-full"
                   />
                 </div>
-                <p className="text-slate-200 text-xs font-bold">Loading Biometrics</p>
-                <p className="text-slate-500 text-[10px] mt-0.5">{progress}%</p>
+                <p className="text-white text-sm font-extrabold tracking-wide">Loading Biometrics</p>
+                <p className="text-slate-400 text-xs mt-1 font-semibold">{progress}%</p>
               </div>
             )}
 
             {/* Camera Error Overlay inside Pod */}
             {phase === 'cam_err' && (
               <div className="absolute inset-0 bg-[#020810]/95 backdrop-blur-md flex flex-col items-center justify-center z-30 p-6 text-center">
-                <AlertCircle className="w-12 h-12 text-rose-500 mb-2 drop-shadow-[0_0_12px_rgba(244,63,94,0.5)]" />
-                <p className="text-white font-bold text-sm mb-1">Camera Off</p>
+                <AlertCircle className="w-14 h-14 text-rose-500 mb-3 drop-shadow-[0_0_16px_rgba(244,63,94,0.6)]" />
+                <p className="text-white font-extrabold text-base mb-1">Camera Required</p>
+                <p className="text-rose-200/80 text-xs mb-4 leading-relaxed">{camErr}</p>
                 <Button size="sm" variant="outline" onClick={startCam} icon={<RefreshCw className="w-3.5 h-3.5" />}>
-                  Retry
+                  Retry Access
                 </Button>
               </div>
             )}
@@ -524,16 +525,16 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
         {/* Challenge Progress Dots Below Pod */}
         {isRunning && (
-          <div className="flex space-x-2.5 mt-5">
+          <div className="flex space-x-3 mt-4">
             <motion.div
               animate={{ scale: chIdx === 0 ? [1,1.3,1] : 1 }}
               transition={{ repeat: chIdx===0 ? Infinity : 0, duration: 1.2 }}
-              className={`w-2.5 h-2.5 rounded-full ${chIdx === 0 ? 'bg-emerald-400 shadow-[0_0_8px_#34D399]' : 'bg-slate-700'}`}
+              className={`w-3 h-3 rounded-full ${chIdx === 0 ? 'bg-emerald-400 shadow-[0_0_10px_#34D399]' : 'bg-slate-700'}`}
             />
             <motion.div
               animate={{ scale: chIdx === 1 ? [1,1.3,1] : 1 }}
               transition={{ repeat: chIdx===1 ? Infinity : 0, duration: 1.2 }}
-              className={`w-2.5 h-2.5 rounded-full ${chIdx === 1 ? 'bg-blue-400 shadow-[0_0_8px_#60A5FA]' : 'bg-slate-700'}`}
+              className={`w-3 h-3 rounded-full ${chIdx === 1 ? 'bg-blue-400 shadow-[0_0_10px_#60A5FA]' : 'bg-slate-700'}`}
             />
           </div>
         )}
@@ -547,10 +548,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           <motion.div
             initial={{ opacity:0, y:8 }}
             animate={{ opacity:1, y:0 }}
-            className="w-full max-w-sm mb-3 flex items-start space-x-2.5 bg-rose-950/90 border border-rose-500/40 backdrop-blur-xl px-4 py-3 rounded-2xl shadow-xl"
+            className="w-full max-w-sm mb-3 flex items-start space-x-3 bg-rose-950/95 border border-rose-500/50 backdrop-blur-2xl px-5 py-3.5 rounded-2xl shadow-2xl"
           >
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-            <span className="text-rose-200 text-xs font-semibold leading-snug">
+            <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+            <span className="text-rose-100 text-xs sm:text-sm font-bold leading-snug">
               {gpsStatus === 'error'
                 ? 'GPS unavailable. Please enable location access to check in.'
                 : gpsStatus === 'locating'
@@ -560,7 +561,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           </motion.div>
         )}
 
-        {/* Challenge instruction card */}
+        {/* Challenge instruction card (Crystal Clear Typography) */}
         <AnimatePresence mode="wait">
           {isRunning && currentChConf && (
             <motion.div
@@ -569,17 +570,19 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               animate={{ opacity:1, y:0, scale:1 }}
               exit={{ opacity:0, scale:0.92 }}
               transition={{ type:'spring', damping:20 }}
-              className="w-full max-w-sm flex items-center space-x-4 bg-[#061224]/95 backdrop-blur-2xl rounded-3xl px-5 py-4 mb-2 shadow-2xl"
-              style={{ borderWidth:1.5, borderStyle:'solid', borderColor: `${currentChConf.color}50` }}
+              className="w-full max-w-sm flex items-center space-x-4 bg-[#0A1628]/95 backdrop-blur-2xl rounded-3xl p-4 sm:p-5 mb-2 shadow-2xl border border-white/20"
+              style={{ borderColor: `${currentChConf.color}60` }}
             >
-              <div className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: `${currentChConf.color}20` }}>
+              <div className="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: `${currentChConf.color}25`, border: `1px solid ${currentChConf.color}50` }}>
                 <span style={{ color: currentChConf.color }}>{currentChConf.icon}</span>
               </div>
               <div className="flex-1">
-                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-0.5">
-                  Step {chIdx + 1} of 2 — Live Verification
-                </p>
-                <p className="text-white font-bold text-sm leading-snug">{currentChConf.label}</p>
+                <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold uppercase tracking-widest text-slate-900 mb-1" style={{ background: currentChConf.color }}>
+                  Step {chIdx + 1} of 2
+                </span>
+                <h3 className="text-white font-extrabold text-base sm:text-lg leading-tight drop-shadow">
+                  {currentChConf.label}
+                </h3>
               </div>
             </motion.div>
           )}
@@ -590,14 +593,14 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           <motion.div
             initial={{ opacity:0, y:10 }}
             animate={{ opacity:1, y:0 }}
-            className="w-full max-w-sm flex items-center space-x-3 bg-blue-950/90 backdrop-blur-xl border border-blue-500/30 rounded-2xl px-5 py-3.5 mb-2 shadow-xl"
+            className="w-full max-w-sm flex items-center space-x-3 bg-blue-950/95 backdrop-blur-2xl border border-blue-400/40 rounded-2xl px-5 py-4 mb-2 shadow-2xl"
           >
             <motion.div
               animate={{ rotate:360 }}
               transition={{ repeat:Infinity, duration:1, ease:'linear' }}
               className="w-5 h-5 border-2 border-blue-400/30 border-t-blue-400 rounded-full shrink-0"
             />
-            <p className="text-blue-100 font-semibold text-sm">{msg}</p>
+            <p className="text-white font-extrabold text-sm sm:text-base tracking-wide">{msg}</p>
           </motion.div>
         )}
 
@@ -608,11 +611,11 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               key={msg}
               initial={{ opacity:0, y:4 }}
               animate={{ opacity:1, y:0 }}
-              className={`w-full max-w-sm text-center text-xs font-semibold px-4 py-3 rounded-2xl mb-2 border shadow-lg
-                ${msgType==='error'   ? 'bg-rose-950/90 border-rose-500/40 text-rose-200 shadow-rose-950/50'
-                : msgType==='success' ? 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200 shadow-emerald-950/50'
-                : msgType==='warn'    ? 'bg-amber-950/90 border-amber-500/40 text-amber-200 shadow-amber-950/50'
-                : 'bg-slate-900/80 border-slate-700/40 text-slate-300'}`}
+              className={`w-full max-w-sm text-center text-xs sm:text-sm font-extrabold px-5 py-3.5 rounded-2xl mb-2 border shadow-2xl tracking-wide
+                ${msgType==='error'   ? 'bg-rose-950/95 border-rose-500/50 text-rose-100 shadow-rose-950/60'
+                : msgType==='success' ? 'bg-emerald-950/95 border-emerald-500/50 text-emerald-100 shadow-emerald-950/60'
+                : msgType==='warn'    ? 'bg-amber-950/95 border-amber-500/50 text-amber-100 shadow-amber-950/60'
+                : 'bg-[#0A1628]/95 border-white/20 text-white'}`}
             >
               {msg}
             </motion.p>
@@ -621,7 +624,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
         {/* Security badge */}
         {!['cam_err','loading','success'].includes(phase) && (
-          <p className="text-slate-500 text-[11px] text-center mt-1 font-medium flex items-center justify-center space-x-1.5">
+          <p className="text-slate-400 text-xs text-center mt-1 font-bold flex items-center justify-center space-x-2 tracking-wide">
             <span>🔒 End-to-end Biometric</span>
             <span>•</span>
             <span>Anti-Spoofing Active</span>

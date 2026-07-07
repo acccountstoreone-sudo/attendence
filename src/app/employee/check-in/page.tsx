@@ -207,25 +207,25 @@ export default function EmployeeCheckInPage() {
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#020810]" style={{ fontFamily: 'Inter, sans-serif' }}>
 
       {/* ── Top Navigation Bar ── */}
-      <div className="flex-none flex items-center justify-between px-4 pt-4 pb-3 bg-gradient-to-b from-[#020810]/90 to-transparent z-40 backdrop-blur-sm" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+      <div className="flex-none flex items-center justify-between px-4 pt-4 pb-3 bg-gradient-to-b from-[#020810]/95 to-transparent z-40 backdrop-blur-md" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
         <button
           onClick={() => router.push('/employee')}
-          className="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-all active:scale-95"
+          className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 text-white transition-all active:scale-95 shadow-lg"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
 
         <div className="flex flex-col items-center">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400">
+          <span className="text-[11px] font-extrabold uppercase tracking-widest text-blue-400 drop-shadow">
             Biometric Attendance
           </span>
-          <span className="text-white font-extrabold text-sm">{profile?.branch_name}</span>
+          <span className="text-white font-extrabold text-base tracking-tight">{profile?.branch_name}</span>
         </div>
 
         {/* Live Clock */}
-        <div className="flex items-center space-x-1.5 bg-white/5 border border-white/10 rounded-2xl px-3 py-2">
-          <Clock className="w-3.5 h-3.5 text-blue-400" />
-          <span className="text-white font-bold text-xs tabular-nums">{time}</span>
+        <div className="flex items-center space-x-1.5 bg-white/10 border border-white/15 rounded-2xl px-3.5 py-2 shadow-lg">
+          <Clock className="w-4 h-4 text-blue-400 animate-pulse shrink-0" />
+          <span className="text-white font-extrabold text-xs tabular-nums">{time}</span>
         </div>
       </div>
 
@@ -235,29 +235,29 @@ export default function EmployeeCheckInPage() {
           <motion.div
             initial={{ opacity:0, y:-10 }}
             animate={{ opacity:1, y:0 }}
-            className="flex-none mx-4 mb-0 flex items-center justify-between bg-blue-950/80 backdrop-blur-xl border border-blue-500/30 rounded-2xl px-4 py-2.5 z-30"
+            className="flex-none mx-4 mb-1 flex items-center justify-between bg-[#0A1628]/95 backdrop-blur-2xl border border-white/20 rounded-2xl px-4 py-3 z-30 shadow-2xl"
           >
-            <div className="flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+            <div className="flex items-center space-x-2.5">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
               <div>
-                <p className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">Today's Record</p>
-                <p className="text-white text-xs font-semibold">
-                  In: <span className="text-blue-300">{todayRecord.check_in_time ? new Date(todayRecord.check_in_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—'}</span>
-                  {todayRecord.check_out_time && <> · Out: <span className="text-slate-400">{new Date(todayRecord.check_out_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></>}
+                <p className="text-[10px] sm:text-xs font-extrabold text-blue-300 uppercase tracking-widest">Today's Record</p>
+                <p className="text-white text-xs sm:text-sm font-extrabold">
+                  In: <span className="text-emerald-300">{todayRecord.check_in_time ? new Date(todayRecord.check_in_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—'}</span>
+                  {todayRecord.check_out_time && <> · Out: <span className="text-slate-300">{new Date(todayRecord.check_out_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></>}
                 </p>
               </div>
             </div>
 
             {/* Check-in / Check-out Toggle */}
-            <div className="flex bg-[#040A15] p-0.5 rounded-xl border border-slate-800">
+            <div className="flex bg-[#040A15] p-1 rounded-xl border border-white/15 shadow-inner">
               {(['in','out'] as const).map(t => (
                 <button
                   key={t}
                   onClick={() => setCheckType(t)}
-                  className={`px-3 py-1.5 rounded-[10px] text-[11px] font-bold transition-all ${
+                  className={`px-3.5 py-1.5 rounded-[10px] text-xs font-extrabold transition-all ${
                     checkType === t
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50 scale-[1.02]'
+                      : 'text-slate-300 hover:text-white'
                   }`}
                 >
                   {t === 'in' ? 'Check In' : 'Check Out'}
@@ -270,16 +270,16 @@ export default function EmployeeCheckInPage() {
 
       {/* ── Check-in/out toggle when no record exists ── */}
       {!todayRecord && (
-        <div className="flex-none flex justify-center px-4 z-30">
-          <div className="flex bg-[#040A15]/80 backdrop-blur-xl p-0.5 rounded-2xl border border-slate-800/80">
+        <div className="flex-none flex justify-center px-4 z-30 mb-1">
+          <div className="flex bg-[#0A1628]/95 backdrop-blur-2xl p-1 rounded-2xl border border-white/20 shadow-2xl">
             {(['in','out'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setCheckType(t)}
-                className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${
+                className={`px-7 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${
                   checkType === t
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-900/50 scale-[1.02]'
+                    : 'text-slate-300 hover:text-white'
                 }`}
               >
                 {t === 'in' ? '▶ Check In' : '■ Check Out'}
