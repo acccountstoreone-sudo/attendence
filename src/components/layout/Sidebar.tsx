@@ -123,7 +123,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Navigation Links */}
       <div className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin scrollbar-thumb-[#1E293B] scrollbar-track-transparent">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          // If the link is a root dashboard (/admin, /branch-manager, /employee), it must match exactly.
+          // Otherwise, it can match exactly or as a sub-path.
+          const isRoot = item.href === '/admin' || item.href === '/branch-manager' || item.href === '/employee';
+          const isActive = isRoot 
+            ? pathname === item.href 
+            : (pathname === item.href || pathname.startsWith(`${item.href}/`));
+
           return (
             <Link
               key={item.href}
@@ -132,7 +138,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className={cn(
                 'relative flex items-center space-x-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-300 group outline-none',
                 isActive
-                  ? 'text-[#040A15] font-bold'
+                  ? 'text-white font-bold'
                   : 'text-slate-400 hover:text-slate-200'
               )}
             >
