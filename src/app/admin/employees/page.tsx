@@ -20,11 +20,13 @@ import {
   XCircle,
   Eye,
   EyeOff,
+  Upload,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { KYCReviewModal } from '@/components/admin/KYCReviewModal';
+import { BulkImportModal } from '@/components/admin/BulkImportModal';
 
 interface Employee {
   id: string;
@@ -64,6 +66,7 @@ export default function AdminEmployeesPage() {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [pendingApprovals, setPendingApprovals] = useState<Employee[]>([]);
   const [reviewingEmployee, setReviewingEmployee] = useState<Employee | null>(null);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
   // Bug 19 fix: Wrapped in useCallback
   const loadData = useCallback(async () => {
@@ -158,6 +161,14 @@ export default function AdminEmployeesPage() {
             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>{activeCount} Active</span>
             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-500"></div>{inactiveCount} Suspended</span>
           </div>
+          <Button 
+            variant="secondary" 
+            icon={<Upload className="w-4 h-4" />} 
+            onClick={() => setBulkModalOpen(true)}
+            className="bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white transition-colors font-medium border border-slate-700"
+          >
+            Bulk Import (CSV)
+          </Button>
           <Button 
             variant="primary" 
             icon={<Plus className="w-4 h-4" />} 
@@ -368,6 +379,15 @@ export default function AdminEmployeesPage() {
           </div>
         </div>
       )}
+
+      <BulkImportModal
+        isOpen={bulkModalOpen}
+        onClose={() => setBulkModalOpen(false)}
+        onSuccess={() => {
+          setBulkModalOpen(false);
+          loadData();
+        }}
+      />
     </div>
   );
 }
