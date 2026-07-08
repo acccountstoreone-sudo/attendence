@@ -141,9 +141,16 @@ export default function EmployeeCheckInPage() {
     status?: string;
   } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isReverifyMode, setIsReverifyMode] = useState(false);
 
   const gps = useGPS(profile, loading);
   const offline = useOfflineQueue();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search.includes('reverify=true')) {
+      setIsReverifyMode(true);
+    }
+  }, []);
 
   // ── Load profile + today's record ──────────────────────
   useEffect(() => {
@@ -229,6 +236,28 @@ export default function EmployeeCheckInPage() {
     setSubmitting(true);
     setSubmitError(null);
 
+    // ── Re-Verification Mode ────────────────────────────────
+    if (isReverifyMode) {
+      const res = await fetch('/api/employees/enroll-face', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          faceDescriptor,
+          selfieUrl: base64Image,
+          latitude: gps.coords?.lat ?? 0,
+          longitude: gps.coords?.lng ?? 0,
+        })
+      });
+      const result = await res.json();
+      setSubmitting(false);
+      if (!result.success) throw new Error(result.error?.message ?? 'Face re-enrollment failed');
+      
+      alert('Face Reverification Successful! You can now check in normally.');
+      setIsReverifyMode(false);
+      if (typeof window !== 'undefined') window.history.replaceState({}, '', '/employee/check-in');
+      return;
+    }
+
     // ── Offline Mode: queue record locally ─────────────────
     if (!offline.isOnline) {
       await offline.enqueue(checkType === 'in' ? 'check_in' : 'check_out', {
@@ -274,12 +303,16 @@ export default function EmployeeCheckInPage() {
     setSubmitting(false);
 
     if (!result.success) {
+      if (result.error?.code === 'BIOMETRIC_REVERIFICATION_REQUIRED') {
+        setIsReverifyMode(true);
+        throw new Error('Admin requested reverification. The system is now in Re-Enrollment mode. Please scan your face again to save your new reference biometrics.');
+      }
       throw new Error(result.error?.message ?? `Check-${checkType === 'in' ? 'In' : 'Out'} failed`);
     }
 
     // Redirect to dashboard after short delay
     setTimeout(() => router.push('/employee'), 2200);
-  }, [gps.coords, gps.verified, gps.distance, profile, checkType, router, offline]);
+  }, [gps.coords, gps.verified, gps.distance, profile, checkType, router, offline, isReverifyMode]);
 
   // ─────────────────────────────────────────────────────────
   // Render: Loading screen
@@ -318,6 +351,14 @@ export default function EmployeeCheckInPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {isReverifyMode && (
+        <div className="flex-none px-4 py-3 bg-rose-500 text-white z-40 shadow-lg mt-14 sm:mt-0 flex flex-col items-center justify-center text-center font-bold text-sm relative">
+          <span className="text-lg mb-1">⚠️</span>
+          Admin has reset your Face Biometrics. 
+          <span className="text-xs font-normal opacity-90 mt-0.5">Please scan your face to re-enroll now!</span>
+        </div>
+      )}
 
       {/* ── Minimal Floating Back Button for Mobile View (since top bar is hidden) ── */}
       <button
