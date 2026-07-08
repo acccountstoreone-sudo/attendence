@@ -19,6 +19,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  TrendingUp,
+  DollarSign,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -59,7 +61,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'All Branches', href: '/admin/branches', icon: <Store className="w-5 h-5" /> },
     { label: 'Employees', href: '/admin/employees', icon: <Users className="w-5 h-5" /> },
     { label: 'Attendance Live', href: '/admin/attendance', icon: <Clock className="w-5 h-5" /> },
-    { label: 'Payroll & Reports', href: '/admin/reports', icon: <FileBarChart className="w-5 h-5" /> },
+    { label: 'Payroll', href: '/admin/payroll', icon: <FileBarChart className="w-5 h-5" /> },
+    { label: 'Salary Settings', href: '/admin/salary-settings', icon: <DollarSign className="w-5 h-5" /> },
+    { label: 'Analytics', href: '/admin/analytics', icon: <TrendingUp className="w-5 h-5" /> },
     { label: 'Public Holidays', href: '/admin/holidays', icon: <CalendarDays className="w-5 h-5" /> },
     { label: 'Company Policy', href: '/admin/settings', icon: <Settings className="w-5 h-5" /> },
     { label: 'Audit Logs', href: '/admin/audit', icon: <ShieldAlert className="w-5 h-5" /> },
