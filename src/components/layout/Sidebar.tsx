@@ -60,6 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Employees', href: '/admin/employees', icon: <Users className="w-5 h-5" /> },
     { label: 'Attendance Live', href: '/admin/attendance', icon: <Clock className="w-5 h-5" /> },
     { label: 'Payroll & Reports', href: '/admin/reports', icon: <FileBarChart className="w-5 h-5" /> },
+    { label: 'Public Holidays', href: '/admin/holidays', icon: <CalendarDays className="w-5 h-5" /> },
     { label: 'Company Policy', href: '/admin/settings', icon: <Settings className="w-5 h-5" /> },
     { label: 'Audit Logs', href: '/admin/audit', icon: <ShieldAlert className="w-5 h-5" /> },
   ];
@@ -69,6 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'My Branch', href: '/branch-manager/store', icon: <Store className="w-5 h-5" /> },
     { label: 'Store Employees', href: '/branch-manager/employees', icon: <Users className="w-5 h-5" /> },
     { label: 'Attendance Live', href: '/branch-manager/attendance', icon: <Clock className="w-5 h-5" /> },
+    { label: 'Shift Roster', href: '/branch-manager/shifts', icon: <CalendarDays className="w-5 h-5" /> },
     { label: 'Store Reports', href: '/branch-manager/reports', icon: <FileBarChart className="w-5 h-5" /> },
     { label: 'Manual Corrections', href: '/branch-manager/corrections', icon: <UserCheck className="w-5 h-5" /> },
   ];

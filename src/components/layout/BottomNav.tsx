@@ -24,7 +24,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({ role }) => {
     { label: 'Store', href: '/branch-manager', icon: <Store className="w-6 h-6" /> },
     { label: 'Staff', href: '/branch-manager/employees', icon: <Users className="w-6 h-6" /> },
     { label: 'Live', href: '/branch-manager/attendance', icon: <Clock className="w-6 h-6" /> },
-    { label: 'Corrections', href: '/branch-manager/corrections', icon: <UserCheck className="w-6 h-6" /> },
+    { label: 'Shifts', href: '/branch-manager/shifts', icon: <CalendarDays className="w-6 h-6" /> },
+    { label: 'Fixes', href: '/branch-manager/corrections', icon: <UserCheck className="w-6 h-6" /> },
   ];
 
   const empNav: NavItem[] = [
