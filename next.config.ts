@@ -5,9 +5,10 @@ const withPWA = (withPWAInit as unknown as (opts: Record<string, unknown>) => (c
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
+  workboxOptions: {
+    disableDevLogs: true,
+  },
 });
 
 const nextConfig: NextConfig = {
