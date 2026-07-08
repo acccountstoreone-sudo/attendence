@@ -11,7 +11,9 @@ import {
   Eye,
   EyeOff,
   ShieldAlert,
+  FileText,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -32,8 +34,10 @@ interface Employee {
 
 export default function StoreEmployeesPage() {
   const supabase = createClient();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const openDutyReport = (emp: Employee) => router.push(`/branch-manager/employees/${emp.id}/duty-report`);
   const [searchTerm, setSearchTerm] = useState('');
   const [showInactive, setShowInactive] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -211,16 +215,28 @@ export default function StoreEmployeesPage() {
                         )}
                       </td>
                       <td className="py-4 px-6 text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className={`px-3 py-1.5 text-xs font-semibold rounded-lg ${emp.is_active ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-500/10' : 'text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10'}`}
-                          onClick={() => toggleActive(emp)}
-                          disabled={togglingId === emp.id || emp.registration_step === 'pending_approval'}
-                          isLoading={togglingId === emp.id}
-                        >
-                          {emp.is_active ? 'Suspend Access' : 'Restore Access'}
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-amber-400 border-amber-500/30 hover:bg-amber-500/10 px-2.5 py-1.5 text-xs font-semibold gap-1"
+                            onClick={() => openDutyReport(emp)}
+                            title="View & Export Month-wise Duty & Overtime Report"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            Duty Report
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg ${emp.is_active ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-500/10' : 'text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10'}`}
+                            onClick={() => toggleActive(emp)}
+                            disabled={togglingId === emp.id || emp.registration_step === 'pending_approval'}
+                            isLoading={togglingId === emp.id}
+                          >
+                            {emp.is_active ? 'Suspend Access' : 'Restore Access'}
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))

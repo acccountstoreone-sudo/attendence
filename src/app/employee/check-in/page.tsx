@@ -151,13 +151,13 @@ export default function EmployeeCheckInPage() {
         if (prof.branch_id) {
           const { data: branch } = await supabase
             .from('branches')
-            .select('latitude, longitude, geofence_radius_meters')
+            .select('*')
             .eq('id', prof.branch_id)
             .single();
           if (branch) {
             p.branch_lat    = branch.latitude    ? Number(branch.latitude)    : undefined;
             p.branch_lng    = branch.longitude   ? Number(branch.longitude)   : undefined;
-            p.branch_radius = branch.geofence_radius_meters ?? 100;
+            p.branch_radius = branch.geofence_radius_meters ?? branch.radius_meters ?? 100;
           }
         }
 
@@ -184,6 +184,9 @@ export default function EmployeeCheckInPage() {
   // This function throws on failure so FaceCapture can handle it.
   const handleBiometricSubmit = useCallback(async (base64Image: string, faceDescriptor: number[]) => {
     if (!gps.coords) throw new Error('GPS coordinates unavailable. Please retry.');
+    if (!gps.verified) {
+      throw new Error(`Check-in denied: You are ${gps.distance ?? 'too far'}m away from ${profile?.branch_name ?? 'the store'} geofence.`);
+    }
     setSubmitting(true);
     setSubmitError(null);
 
@@ -233,7 +236,7 @@ export default function EmployeeCheckInPage() {
 
     // Redirect to dashboard after short delay
     setTimeout(() => router.push('/employee'), 2200);
-  }, [gps.coords, checkType, router, offline]);
+  }, [gps.coords, gps.verified, gps.distance, profile?.branch_name, checkType, router, offline]);
 
   // ─────────────────────────────────────────────────────────
   // Render: Loading screen

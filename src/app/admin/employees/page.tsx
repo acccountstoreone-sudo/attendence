@@ -21,6 +21,8 @@ import {
   Eye,
   EyeOff,
   Upload,
+  FileText,
+  Clock,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -90,6 +92,7 @@ export default function AdminEmployeesPage() {
 
   const openAddModal = () => router.push('/admin/employees/new');
   const openEditModal = (emp: Employee) => router.push(`/admin/employees/${emp.id}/edit`);
+  const openDutyReport = (emp: Employee) => router.push(`/admin/employees/${emp.id}/duty-report`);
 
   // Bug 10 fix: Handle API errors, show feedback toast, track loading state per row
   const toggleActive = async (emp: Employee) => {
@@ -357,6 +360,16 @@ export default function AdminEmployeesPage() {
                       </td>
                       <td className="py-3 px-5 text-right">
                         <div className="flex items-center justify-end space-x-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-amber-400 border-amber-500/30 hover:bg-amber-500/10 px-2.5 text-xs gap-1"
+                            onClick={() => openDutyReport(emp)}
+                            title="View & Export Month-wise Duty & Overtime Report"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            Duty Report
+                          </Button>
                           <Button size="sm" variant="ghost" className="text-slate-400 hover:text-slate-200 px-2" onClick={() => openEditModal(emp)}>
                             Edit
                           </Button>

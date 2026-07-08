@@ -111,22 +111,44 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Insert Leave Request
-    const { data: requestRecord, error: reqErr } = await supabase
+    const insertPayload: Record<string, any> = {
+      user_id: user.id,
+      employee_id: user.id,
+      branch_id: user.branch_id,
+      leave_type_id: leaveType.id,
+      type: (leaveType.code || 'CASUAL').toLowerCase(),
+      start_date: input.start_date,
+      end_date: input.end_date,
+      total_days: requestedDays,
+      reason: input.reason,
+      status: 'pending'
+    };
+
+    let { data: requestRecord, error: reqErr } = await supabase
       .from('leave_requests')
-      .insert({
-        user_id: user.id,
-        branch_id: user.branch_id,
-        leave_type_id: leaveType.id,
-        start_date: input.start_date,
-        end_date: input.end_date,
-        total_days: requestedDays,
-        reason: input.reason,
-        status: 'pending'
-      })
+      .insert(insertPayload)
       .select()
       .single();
 
-    if (reqErr) throw new Error(reqErr.message);
+    if (reqErr) {
+      // Fallback if one of the columns doesn't exist in active schema
+      delete insertPayload.employee_id;
+      delete insertPayload.type;
+      const res = await supabase.from('leave_requests').insert(insertPayload).select().single();
+      if (res.error) {
+        delete insertPayload.user_id;
+        delete insertPayload.leave_type_id;
+        insertPayload.employee_id = user.id;
+        insertPayload.type = (leaveType.code || 'CASUAL').toLowerCase();
+        const res2 = await supabase.from('leave_requests').insert(insertPayload).select().single();
+        if (res2.error) throw new Error(res2.error.message);
+        requestRecord = res2.data;
+      } else {
+        requestRecord = res.data;
+      }
+    }
+
+    if (!requestRecord && reqErr) throw new Error(reqErr.message);
 
     return NextResponse.json({
       success: true,

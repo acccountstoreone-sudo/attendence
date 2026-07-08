@@ -16,7 +16,9 @@ import {
   ChevronDown,
   TrendingUp,
   TrendingDown,
+  UserCheck,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface BranchReportRow {
   branch_id: string;
@@ -36,6 +38,7 @@ interface FilterState {
 }
 
 export default function BranchManagerReportsPage() {
+  const router = useRouter();
   const currentDate = new Date();
   const [filter, setFilter] = useState<FilterState>({
     month: currentDate.getMonth() + 1,
@@ -43,7 +46,7 @@ export default function BranchManagerReportsPage() {
   });
   const [reportData, setReportData] = useState<BranchReportRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [exporting, setExporting] = useState<'pdf' | 'excel' | null>(null);
+  const [exporting, setExporting] = useState<'pdf' | 'excel' | 'csv' | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
 
   const months = [
@@ -73,7 +76,7 @@ export default function BranchManagerReportsPage() {
     }
   };
 
-  const handleExport = async (format: 'pdf' | 'excel') => {
+  const handleExport = async (format: 'pdf' | 'excel' | 'csv') => {
     setExporting(format);
     try {
       const params = new URLSearchParams({
@@ -82,20 +85,47 @@ export default function BranchManagerReportsPage() {
         format,
       });
       const res = await fetch(`/api/reports/export?${params}`);
-      if (!res.ok) throw new Error('Export failed');
+      if (!res.ok) throw new Error('Export request failed');
+
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const json = await res.json();
+        if (!json.success) throw new Error(json?.error?.message || 'Export failed');
+        if (json.data?.signed_url) {
+          window.open(json.data.signed_url, '_blank');
+          return;
+        } else if (json.data?.content_base64) {
+          const byteCharacters = atob(json.data.content_base64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray]);
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = json.data.file_name || `Attendance_${months[filter.month - 1]}_${filter.year}.${format === 'excel' ? 'xlsx' : format === 'csv' ? 'csv' : 'pdf'}`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          return;
+        }
+      }
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Attendance_${months[filter.month - 1]}_${filter.year}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      a.download = `Attendance_${months[filter.month - 1]}_${filter.year}.${format === 'excel' ? 'xlsx' : format === 'csv' ? 'csv' : 'pdf'}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Export error:', err);
-      alert(`Export failed. Please try again.`);
+      alert(`Export failed: ${err.message || 'Please try again.'}`);
     } finally {
       setExporting(null);
     }
@@ -125,6 +155,16 @@ export default function BranchManagerReportsPage() {
           <Button
             size="sm"
             variant="outline"
+            icon={<FileText className="w-4 h-4 text-sky-400" />}
+            isLoading={exporting === 'csv'}
+            disabled={!hasLoaded || reportData.length === 0}
+            onClick={() => handleExport('csv')}
+          >
+            Export CSV
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
             icon={<FileSpreadsheet className="w-4 h-4 text-emerald-400" />}
             isLoading={exporting === 'excel'}
             disabled={!hasLoaded || reportData.length === 0}
@@ -143,6 +183,27 @@ export default function BranchManagerReportsPage() {
             Export PDF
           </Button>
         </div>
+      </div>
+
+      {/* Quick Access to Individual Store Employee Month-wise Duty & Overtime Reports */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-amber-500/10 border border-amber-500/30 rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400">
+            <UserCheck className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="font-bold text-white text-base">Individual Staff Duty & Overtime Analytics</h3>
+            <p className="text-xs text-slate-400">View & export exact month-wise duty hours, late minutes, overtime, and missed days for your store staff</p>
+          </div>
+        </div>
+        <Button
+          onClick={() => router.push('/branch-manager/employees')}
+          variant="primary"
+          size="sm"
+          className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs gap-1.5 shadow-md shadow-amber-500/20 shrink-0"
+        >
+          View Store Staff Rosters & Export &rarr;
+        </Button>
       </div>
 
       {/* Filter Bar */}

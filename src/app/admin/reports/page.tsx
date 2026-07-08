@@ -18,7 +18,9 @@ import {
   ChevronDown,
   TrendingUp,
   TrendingDown,
+  UserCheck,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface BranchReportRow {
   branch_id: string;
@@ -39,6 +41,7 @@ interface FilterState {
 }
 
 export default function AdminReportsPage() {
+  const router = useRouter();
   const currentDate = new Date();
   const [filter, setFilter] = useState<FilterState>({
     month: currentDate.getMonth() + 1,
@@ -47,7 +50,7 @@ export default function AdminReportsPage() {
   });
   const [reportData, setReportData] = useState<BranchReportRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [exporting, setExporting] = useState<'pdf' | 'excel' | null>(null);
+  const [exporting, setExporting] = useState<'pdf' | 'excel' | 'csv' | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [hasLoaded, setHasLoaded] = useState(false);
 
@@ -79,7 +82,7 @@ export default function AdminReportsPage() {
     }
   };
 
-  const handleExport = async (format: 'pdf' | 'excel', targetBranchId?: string) => {
+  const handleExport = async (format: 'pdf' | 'excel' | 'csv', targetBranchId?: string) => {
     setExporting(format);
     try {
       const branchToExport = targetBranchId || filter.branchId;
@@ -90,35 +93,48 @@ export default function AdminReportsPage() {
         ...(branchToExport ? { branch_id: branchToExport } : {}),
       });
       const res = await fetch(`/api/reports/export?${params}`);
-      const json = await res.json();
+      if (!res.ok) throw new Error('Export request failed');
 
-      if (!res.ok || !json.success) throw new Error(json?.error?.message || 'Export failed');
-
-      if (json.data?.signed_url) {
-        window.open(json.data.signed_url, '_blank');
-      } else if (json.data?.content_base64) {
-        // Fallback for base64 inline download
-        const byteCharacters = atob(json.data.content_base64);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const json = await res.json();
+        if (!json.success) throw new Error(json?.error?.message || 'Export failed');
+        if (json.data?.signed_url) {
+          window.open(json.data.signed_url, '_blank');
+          return;
+        } else if (json.data?.content_base64) {
+          const byteCharacters = atob(json.data.content_base64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray]);
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = json.data.file_name || `Attendance_Report_${filter.year}_${filter.month}.${format === 'excel' ? 'xlsx' : format === 'csv' ? 'csv' : 'pdf'}`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          return;
         }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray]);
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = json.data.file_name || `Attendance_Report.${format === 'excel' ? 'xlsx' : 'pdf'}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      } else {
-        throw new Error('Export URL not found');
       }
-    } catch (err) {
+
+      // If binary buffer returned directly
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Attendance_Report_${filter.year}_${filter.month}.${format === 'excel' ? 'xlsx' : format === 'csv' ? 'csv' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
       console.error('Export error:', err);
-      alert(`Export failed. Please try again.`);
+      alert(`Export failed: ${err.message || 'Please try again.'}`);
     } finally {
       setExporting(null);
     }
@@ -157,6 +173,16 @@ export default function AdminReportsPage() {
           <Button
             size="sm"
             variant="outline"
+            icon={<FileText className="w-4 h-4 text-sky-400" />}
+            isLoading={exporting === 'csv'}
+            disabled={!hasLoaded || reportData.length === 0}
+            onClick={() => handleExport('csv')}
+          >
+            Export CSV
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
             icon={<FileSpreadsheet className="w-4 h-4 text-emerald-400" />}
             isLoading={exporting === 'excel'}
             disabled={!hasLoaded || reportData.length === 0}
@@ -175,6 +201,27 @@ export default function AdminReportsPage() {
             Export PDF
           </Button>
         </div>
+      </div>
+
+      {/* Quick Access to Individual Employee Month-wise Duty & Overtime Reports */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-amber-500/10 border border-amber-500/30 rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400">
+            <UserCheck className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="font-bold text-white text-base">Individual Employee Duty & Overtime Analytics</h3>
+            <p className="text-xs text-slate-400">View & export exact month-wise duty hours, late minutes, overtime, and missed days per staff</p>
+          </div>
+        </div>
+        <Button
+          onClick={() => router.push('/admin/employees')}
+          variant="primary"
+          size="sm"
+          className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs gap-1.5 shadow-md shadow-amber-500/20 shrink-0"
+        >
+          View Employee Rosters & Export &rarr;
+        </Button>
       </div>
 
       {/* Filter Bar (Spec P30) */}

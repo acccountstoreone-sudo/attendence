@@ -121,6 +121,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const chIdxRef   = useRef<0|1>(0);
   const phRef      = useRef<Phase>('init');
   const mountedRef = useRef(true);
+  const isCapturingRef = useRef(false);
 
   // ── State (triggers re-renders) ──────────────────────
   const [phase, _setPhase]  = useState<Phase>('init');
@@ -208,6 +209,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       const fa  = faRef.current;
       const v   = videoRef.current;
       const ph  = phRef.current;
+      if (ph === 'cam_err' || !mountedRef.current) {
+        stopLoop();
+        return;
+      }
       if (!fa || !v || v.readyState < 3) return;
       // Only run during active challenge phase
       if (ph !== 'challenge') return;
@@ -345,7 +350,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
   // ── Phase side-effects ───────────────────────────────
   useEffect(() => {
-    if (phase === 'motion') runCapture();
+    if (phase === 'motion' && !isCapturingRef.current) {
+      isCapturingRef.current = true;
+      runCapture().finally(() => { isCapturingRef.current = false; });
+    }
   }, [phase, runCapture]);
 
   // When GPS status changes while waiting, update message or start liveness

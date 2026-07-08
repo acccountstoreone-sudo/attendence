@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { computeEmployeeDutySummary } from '@/lib/dutyEngine';
 import { z } from 'zod';
 
 const generatePayrollSchema = z.object({
@@ -10,19 +11,18 @@ const generatePayrollSchema = z.object({
 });
 
 /**
- * Generates Monthly Payroll (Spec P65).
- * Calculates total payable days based on attendance and deducts for absences.
+ * POST /api/payroll/generate
+ * Generates Monthly Payroll accurately integrating exact duty summary engine (Spec P65).
+ * Automatically accounts for approved leaves, holidays, overtime pay (1.5x), and late/missed deductions.
  */
 export async function POST(request: NextRequest) {
   try {
-    // Only admins or branch managers can generate payroll
     const user = await requireRole(['admin', 'branch_manager']);
     const body = await request.json();
     const input = generatePayrollSchema.parse(body);
 
     const supabase = await createClient();
 
-    // Determine target scope
     let profilesQuery = supabase.from('profiles').select('id, full_name, branch_id');
     
     if (input.user_id) {
@@ -39,97 +39,99 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: employees, error: empErr } = await profilesQuery;
-    if (empErr || !employees) throw new Error('Failed to fetch employees');
+    if (empErr || !employees) throw new Error('Failed to fetch employees for payroll generation');
 
     const results = [];
+    const [yearStr, monthStr] = input.month_year.split('-');
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10);
+    const daysInMonth = new Date(year, month, 0).getDate();
 
-    // Calculate for each employee
     for (const employee of employees) {
-      // 1. Fetch Salary Settings
-      const { data: settings } = await supabase
-        .from('salary_settings')
-        .select('*')
-        .eq('user_id', employee.id)
-        .single();
+      try {
+        // 1. Fetch Salary Settings
+        const { data: settings } = await supabase
+          .from('salary_settings')
+          .select('*')
+          .eq('user_id', employee.id)
+          .single();
 
-      if (!settings) {
-        results.push({ user_id: employee.id, status: 'error', reason: 'No salary settings found' });
-        continue;
-      }
-
-      // 2. Fetch Attendance for the month
-      const [year, month] = input.month_year.split('-');
-      const startDate = new Date(parseInt(year), parseInt(month) - 1, 1).toISOString();
-      const endDate = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59).toISOString();
-
-      const { data: logs } = await supabase
-        .from('attendance_records')
-        .select('status')
-        .eq('employee_id', employee.id)
-        .gte('check_in_time', startDate)
-        .lte('check_in_time', endDate);
-
-      let presentDays = 0;
-      let lateDays = 0;
-      let absentDays = 0;
-      let halfDays = 0;
-
-      if (logs) {
-        for (const log of logs) {
-          if (log.status === 'present') presentDays++;
-          if (log.status === 'late') lateDays++; // E.g., 3 lates = 1 absent penalty (simplified)
-          if (log.status === 'absent') absentDays++;
-          if (log.status === 'half_day') halfDays++;
+        if (!settings) {
+          results.push({ user_id: employee.id, full_name: employee.full_name, status: 'error', reason: 'No salary settings configured' });
+          continue;
         }
-      }
 
-      // 3. Compute Net Payable (Simplified rules)
-      const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
-      
-      // Assumption: Weekends are paid. We only deduct for explicitly marked absences.
-      // 3 Lates = 1 Absent penalty
-      const latePenalties = Math.floor(lateDays / 3);
-      const totalAbsences = absentDays + latePenalties + (halfDays * 0.5);
+        // 2. Compute exact duty report using dutyEngine
+        const dutySummary = await computeEmployeeDutySummary(supabase, employee.id, month, year);
+        const { summary } = dutySummary;
 
-      const totalPayableDays = Math.max(0, daysInMonth - totalAbsences);
-      
-      const grossSalary = Number(settings.base_salary) + 
-                          Number(settings.house_rent_allowance) + 
-                          Number(settings.medical_allowance) + 
-                          Number(settings.transport_allowance);
-      
-      const dailyRate = grossSalary / daysInMonth;
-      const deductions = totalAbsences * dailyRate;
-      const netPayable = grossSalary - deductions;
+        // 3. Calculate Deductions & Overtime
+        // 3 lates = 1 absent penalty, half day = 0.5 absent
+        const latePenalties = Math.floor(summary.total_late_days / 3);
+        const totalAbsences = summary.total_missed_days + latePenalties + (summary.total_half_days * 0.5);
 
-      // 4. Save to payroll_sheets
-      const { data: sheet, error: sheetErr } = await supabase
-        .from('payroll_sheets')
-        .upsert({
-          user_id: employee.id,
-          month_year: input.month_year,
-          total_payable_days: totalPayableDays,
-          gross_salary: parseFloat(grossSalary.toFixed(2)),
-          deductions: parseFloat(deductions.toFixed(2)),
-          net_payable: parseFloat(netPayable.toFixed(2)),
-          status: 'draft'
-        }, { onConflict: 'user_id, month_year' })
-        .select()
-        .single();
+        const totalPayableDays = Math.max(0, daysInMonth - totalAbsences);
 
-      if (sheetErr) {
-        results.push({ user_id: employee.id, status: 'error', reason: sheetErr.message });
-      } else {
-        results.push({ user_id: employee.id, status: 'success', data: sheet });
+        const baseSalary = Number(settings.base_salary || 0);
+        const houseRent = Number(settings.house_rent_allowance || 0);
+        const medical = Number(settings.medical_allowance || 0);
+        const transport = Number(settings.transport_allowance || 0);
+        const grossSalary = baseSalary + houseRent + medical + transport;
+
+        const dailyRate = grossSalary / daysInMonth;
+        const deductions = totalAbsences * dailyRate;
+
+        // Overtime: standard 1.5x hourly rate based on base salary (8 hrs/day)
+        const hourlyRate = baseSalary > 0 ? (baseSalary / daysInMonth) / 8 : dailyRate / 8;
+        const overtimePay = (summary.total_overtime_minutes / 60) * hourlyRate * 1.5;
+
+        const netPayable = grossSalary - deductions + overtimePay;
+
+        // 4. Save/Upsert into payroll_sheets
+        const { data: sheet, error: sheetErr } = await supabase
+          .from('payroll_sheets')
+          .upsert({
+            user_id: employee.id,
+            month_year: input.month_year,
+            total_payable_days: Number(totalPayableDays.toFixed(1)),
+            gross_salary: parseFloat(grossSalary.toFixed(2)),
+            deductions: parseFloat(deductions.toFixed(2)),
+            net_payable: parseFloat(netPayable.toFixed(2)),
+            status: 'draft',
+            created_at: new Date().toISOString()
+          }, { onConflict: 'user_id, month_year' })
+          .select()
+          .single();
+
+        if (sheetErr) {
+          results.push({ user_id: employee.id, full_name: employee.full_name, status: 'error', reason: sheetErr.message });
+        } else {
+          results.push({
+            user_id: employee.id,
+            full_name: employee.full_name,
+            status: 'success',
+            data: {
+              ...sheet,
+              duty_summary_snapshot: {
+                present_days: summary.total_present_days,
+                on_leave_days: summary.total_on_leave_days,
+                missed_days: summary.total_missed_days,
+                overtime_hours: summary.total_overtime_hours,
+                overtime_pay: parseFloat(overtimePay.toFixed(2))
+              }
+            }
+          });
+        }
+      } catch (err: any) {
+        results.push({ user_id: employee.id, full_name: employee.full_name, status: 'error', reason: err.message });
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: `Payroll generation completed for ${results.length} employees`,
+      message: `Payroll generation completed for ${results.length} employees (${input.month_year}).`,
       data: results
     });
-
   } catch (error) {
     return handleApiError(error);
   }
