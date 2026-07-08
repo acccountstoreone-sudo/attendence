@@ -2,7 +2,7 @@ import React from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { BranchEmployee, Branch } from './types';
-import { ChevronLeft, User, Phone, MapPin, Briefcase, Calendar, Clock, Map, Camera, Activity } from 'lucide-react';
+import { ChevronLeft, User, Phone, MapPin, Calendar, Clock, Map, Camera } from 'lucide-react';
 
 interface BranchEmployeeProfileTabProps {
   employeeId: string;

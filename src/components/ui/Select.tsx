@@ -69,7 +69,7 @@ export const SelectValue: React.FC<{ placeholder?: string }> = ({ placeholder })
 };
 
 export const SelectContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, children, ...props }, ref) => {
+  ({ className, children, ...props }, _ref) => {
     const ctx = useContext(SelectContext);
     const contentRef = useRef<HTMLDivElement>(null);
     if (!ctx) throw new Error('SelectContent must be used within a Select');

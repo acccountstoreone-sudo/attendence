@@ -139,7 +139,7 @@ export default function EmployeeProfilePage() {
           </div>
           <h2 className="text-xl font-bold text-white">{profile.full_name}</h2>
           <p className="text-sm text-amber-500 font-medium capitalize mt-1">
-            {profile.role.replace('_', ' ')}
+            {(profile.role || '').replace(/_/g, ' ')}
           </p>
           <div className="w-full h-px bg-[#1E293B] my-6" />
           <div className="w-full space-y-3 text-left">

@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Card } from '@/components/ui/Card';
 import { Branch, BranchEmployee } from './types';
@@ -8,8 +10,8 @@ interface BranchOverviewTabProps {
   employees: BranchEmployee[];
 }
 
-export const BranchOverviewTab: React.FC<BranchOverviewTabProps> = ({ branch, employees }) => {
-  const manager = employees.find(e => e.id === branch.manager_id || e.role === 'branch_manager');
+export const BranchOverviewTab: React.FC<BranchOverviewTabProps> = ({ branch, employees = [] }) => {
+  const manager = employees.find(e => (branch.manager_id && e.id === branch.manager_id) || (!branch.manager_id && e.role === 'branch_manager'));
 
   // Placeholder stats - in a real implementation these would be fetched from the server
   const stats = {

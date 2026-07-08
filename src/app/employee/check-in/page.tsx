@@ -13,7 +13,7 @@ import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 // ─────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────
-type GpsStatus = 'locating' | 'inside' | 'approaching' | 'outside' | 'error';
+type GpsStatus = 'locating' | 'inside' | 'approaching' | 'outside' | 'error' | 'not_configured' | 'permission_denied' | 'timeout' | 'not_supported';
 
 interface BranchProfile {
   id: string;
@@ -45,14 +45,14 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
       return;
     }
     if (branch.branch_lat === undefined || branch.branch_lng === undefined || branch.branch_lat === null || branch.branch_lng === null) {
-      setStatus(isAdminOrManager ? 'inside' : 'error');
+      setStatus(isAdminOrManager ? 'inside' : 'not_configured');
       return;
     }
 
     setStatus('locating');
 
     if (!navigator.geolocation) {
-      setStatus(isAdminOrManager ? 'inside' : 'error');
+      setStatus(isAdminOrManager ? 'inside' : 'not_supported');
       return;
     }
 
@@ -74,13 +74,27 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
       }
     };
 
+    const handleError = (err: GeolocationPositionError) => {
+      if (isAdminOrManager) {
+        setStatus('inside');
+        return;
+      }
+      if (err.code === err.PERMISSION_DENIED) {
+        setStatus('permission_denied');
+      } else if (err.code === err.TIMEOUT) {
+        setStatus('timeout');
+      } else {
+        setStatus('error');
+      }
+    };
+
     navigator.geolocation.getCurrentPosition(
       handlePos,
       () => {
-        // Fallback: if high accuracy times out/fails (common on desktop/indoor WiFi), retry with standard accuracy
+        // Fallback: if high accuracy times out/fails, retry with standard accuracy
         navigator.geolocation.getCurrentPosition(
           handlePos,
-          () => setStatus(isAdminOrManager ? 'inside' : 'error'),
+          (err2) => handleError(err2),
           { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
         );
       },
@@ -133,7 +147,6 @@ export default function EmployeeCheckInPage() {
   const [loading, setLoading]       = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [profile, setProfile]       = useState<BranchProfile | null>(null);
-  const [branchesList, setBranchesList] = useState<Array<{ id: string; name: string; latitude: number | null; longitude: number | null; geofence_radius_meters: number }>>([]);
   const [checkType, setCheckType]   = useState<'in' | 'out'>('in');
   const [todayRecord, setTodayRecord] = useState<{
     check_in_time?: string;
@@ -148,6 +161,7 @@ export default function EmployeeCheckInPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.search.includes('reverify=true')) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsReverifyMode(true);
     }
   }, []);
@@ -172,7 +186,6 @@ export default function EmployeeCheckInPage() {
         .order('name');
       if (allB) {
         bList = allB;
-        setBranchesList(allB);
       }
 
       if (prof) {
@@ -195,14 +208,38 @@ export default function EmployeeCheckInPage() {
             p.branch_radius = branch.geofence_radius_meters ?? branch.radius_meters ?? 100;
           }
         } else if (bList && bList.length > 0) {
-          // Auto assign first branch if none assigned (e.g. for Admin Sajjad Ali)
-          const firstBranch = bList.find(b => b.latitude !== null && b.longitude !== null) || bList[0];
-          if (firstBranch) {
-            p.branch_id = firstBranch.id;
-            p.branch_name = `${firstBranch.name} (Auto-Selected for Admin)`;
-            p.branch_lat = firstBranch.latitude ? Number(firstBranch.latitude) : undefined;
-            p.branch_lng = firstBranch.longitude ? Number(firstBranch.longitude) : undefined;
-            p.branch_radius = firstBranch.geofence_radius_meters ?? 100;
+          // Auto detect closest branch
+          try {
+            const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+              if (!navigator.geolocation) reject(new Error('no geo'));
+              navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 5000 });
+            });
+            const { latitude, longitude } = pos.coords;
+            let closest = bList[0];
+            let minD = Infinity;
+            for (const b of bList) {
+              if (b.latitude && b.longitude) {
+                const d = calculateDistance(latitude, longitude, Number(b.latitude), Number(b.longitude));
+                if (d < minD) { minD = d; closest = b; }
+              }
+            }
+            if (closest) {
+              p.branch_id = closest.id;
+              p.branch_name = `${closest.name}`;
+              p.branch_lat = closest.latitude ? Number(closest.latitude) : undefined;
+              p.branch_lng = closest.longitude ? Number(closest.longitude) : undefined;
+              p.branch_radius = closest.geofence_radius_meters ?? 100;
+            }
+          } catch {
+            // Fallback if GPS fails during auto-detect
+            const firstBranch = bList.find(b => b.latitude !== null && b.longitude !== null) || bList[0];
+            if (firstBranch) {
+              p.branch_id = firstBranch.id;
+              p.branch_name = `${firstBranch.name}`;
+              p.branch_lat = firstBranch.latitude ? Number(firstBranch.latitude) : undefined;
+              p.branch_lng = firstBranch.longitude ? Number(firstBranch.longitude) : undefined;
+              p.branch_radius = firstBranch.geofence_radius_meters ?? 100;
+            }
           }
         }
 
@@ -392,37 +429,7 @@ export default function EmployeeCheckInPage() {
         </div>
       </div>
 
-      {/* ── Admin / Manager Branch Switcher (for testing check-in across locations) ── */}
-      {(profile?.role === 'admin' || profile?.role === 'branch_manager' || !profile?.branch_id) && branchesList.length > 0 && (
-        <div className="flex-none px-4 py-2 bg-[#0A1628]/95 border-b border-white/10 z-40 flex flex-wrap items-center justify-between gap-2 text-xs text-white shadow-xl mt-12 sm:mt-0">
-          <span className="text-amber-400 font-extrabold flex items-center gap-1.5 text-[11px]">
-            ★ {profile?.role === 'admin' ? 'Admin Override' : 'Store Selection'}:
-          </span>
-          <select
-            value={profile?.branch_id || ''}
-            onChange={(e) => {
-              const sel = branchesList.find(b => b.id === e.target.value);
-              if (sel && profile) {
-                setProfile({
-                  ...profile,
-                  branch_id: sel.id,
-                  branch_name: sel.name,
-                  branch_lat: sel.latitude ? Number(sel.latitude) : undefined,
-                  branch_lng: sel.longitude ? Number(sel.longitude) : undefined,
-                  branch_radius: sel.geofence_radius_meters ?? 100,
-                });
-              }
-            }}
-            className="bg-[#020810] border border-amber-500/40 rounded-lg px-3 py-1 text-white text-xs font-bold focus:outline-none focus:border-amber-400 cursor-pointer max-w-[240px] truncate"
-          >
-            {branchesList.map(b => (
-              <option key={b.id} value={b.id}>
-                {b.name} {b.latitude ? `(${Number(b.latitude).toFixed(2)}, ${Number(b.longitude).toFixed(2)})` : '(No GPS)'}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      {/* ── Admin / Manager Branch Switcher removed as per user request ── */}
 
       {/* ── Today's Status Banner (if already checked in) ── */}
       <AnimatePresence>

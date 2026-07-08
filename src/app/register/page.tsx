@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Lock, Mail, User, Phone, IdCard, AlertTriangle, Check, ShieldCheck, Fingerprint, ScanFace, MapPin, Orbit, Camera, ArrowRight, RefreshCw, Upload, FileText, X } from 'lucide-react';
+import { Lock, Mail, User, IdCard, AlertTriangle, Check, ShieldCheck, ScanFace, MapPin, Orbit, Camera, ArrowRight, RefreshCw, Upload, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Abstract3DBackground from '@/components/Abstract3DBackground';
 import Webcam from 'react-webcam';
@@ -82,9 +82,7 @@ export default function RegisterPage() {
       const saved = localStorage.getItem('anchor_register_form');
       if (saved) {
         try {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setFormData(JSON.parse(saved));
-        } catch (e) {}
+        } catch { }
       }
     }
   }, []);
@@ -189,7 +187,7 @@ export default function RegisterPage() {
 
     try {
       // 1. Sign up user via Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -219,7 +217,7 @@ export default function RegisterPage() {
       let otpRes;
       try {
         otpRes = await res.json();
-      } catch (parseErr) {
+      } catch {
         throw new Error(`Server returned an invalid response (${res.status} ${res.statusText}). Please check server logs.`);
       }
 
@@ -454,7 +452,7 @@ export default function RegisterPage() {
           <div className="mb-8 flex flex-col items-center">
             {/* Step Indicators */}
             <div className="flex gap-2 mb-6">
-              {['basic_info', 'otp', 'kyc', 'face_scan'].map((s, i) => (
+              {['basic_info', 'otp', 'kyc', 'face_scan'].map((s) => (
                  <div key={s} className={`h-1.5 w-12 rounded-full transition-colors duration-500 ${step === s ? 'bg-[#D2A02A]' : 'bg-[#1E293B]'}`} />
               ))}
             </div>

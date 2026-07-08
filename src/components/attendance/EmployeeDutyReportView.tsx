@@ -22,8 +22,6 @@ import {
   MapPin,
   ShieldAlert,
   ShieldCheck,
-  Camera,
-  Navigation,
   LocateFixed,
   ExternalLink,
 } from 'lucide-react';

@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
-import { Clock, Calendar, History, ArrowRight, CheckCircle2, ShieldCheck, MapPin } from 'lucide-react';
+import { Clock, Calendar, ShieldCheck, MapPin } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 

@@ -7,7 +7,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CalendarDays, CheckCircle2, XCircle, Clock, AlertTriangle, 
-  Search, Filter, UserCheck, MessageSquare, RefreshCw, Building2 
+  Search, Filter, MessageSquare, RefreshCw, Building2 
 } from 'lucide-react';
 
 export interface LeaveRequestRecord {

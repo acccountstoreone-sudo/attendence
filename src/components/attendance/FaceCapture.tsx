@@ -16,7 +16,7 @@ export interface FaceCaptureProps {
   /** Called on successful liveness + capture. Throws on API failure. */
   onCapture: (image: string, descriptor: number[]) => Promise<void>;
   gpsVerified: boolean;
-  gpsStatus: 'locating' | 'inside' | 'approaching' | 'outside' | 'error';
+  gpsStatus: 'locating' | 'inside' | 'approaching' | 'outside' | 'error' | 'not_configured' | 'permission_denied' | 'timeout' | 'not_supported';
   gpsDistance: number | null;
   gpsRefresh: () => void;
   branchName?: string;
@@ -109,7 +109,7 @@ const CONF: Record<Challenge, {
 
 export const FaceCapture: React.FC<FaceCaptureProps> = ({
   onCapture, gpsVerified, gpsStatus, gpsDistance, gpsRefresh,
-  branchName, isLoading=false, checkType='in'
+  branchName, checkType='in'
 }) => {
   // ── Refs (mutable, no re-render needed) ──────────────
   const videoRef   = useRef<HTMLVideoElement|null>(null);
@@ -129,7 +129,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const [msg, setMsg]       = useState('Initializing...');
   const [msgType, setMT]    = useState<'info'|'success'|'error'|'warn'>('info');
   const [camErr, setCamErr] = useState('');
-  const [hasCam, setHasCam] = useState<boolean|null>(null);
+  const [_hasCam, setHasCam] = useState<boolean|null>(null);
   // Track challenge index for rendering (ref alone doesn't trigger re-render)
   const [chIdx, setChIdx]   = useState<0|1>(0);
   const [chsState, setChsState] = useState<[Challenge,Challenge]>(['blink','smile']);
@@ -364,8 +364,16 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       announce('Location verified! Starting face verification.', 'success');
       setTimeout(() => { if (mountedRef.current) startLiveness(); }, 1000);
     } else {
-      if (gpsStatus === 'error') {
-        announce('Store GPS location not configured or GPS error. Ask Admin to set branch location on map.', 'warn');
+      if (gpsStatus === 'not_configured') {
+        announce('Store GPS location not configured. Ask Admin to set branch location on map.', 'warn');
+      } else if (gpsStatus === 'permission_denied') {
+        announce('Location permission denied. Please allow location access in your browser and refresh.', 'error');
+      } else if (gpsStatus === 'timeout') {
+        announce('Location request timed out. Move to a clearer area and refresh.', 'warn');
+      } else if (gpsStatus === 'not_supported') {
+        announce('GPS is not supported on this browser (requires HTTPS).', 'error');
+      } else if (gpsStatus === 'error') {
+        announce('GPS error occurred. Please tap refresh.', 'warn');
       } else if (gpsStatus === 'locating') {
         announce('Detecting location...', 'info');
       } else {
@@ -390,8 +398,16 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         setTimeout(() => { if (mountedRef.current) startLiveness(); }, 800);
       } else {
         setPhase('wait_gps');
-        if (gpsStatus === 'error') {
-          announce('Store GPS location not configured or GPS error. Ask Admin to set branch location on map.', 'warn');
+        if (gpsStatus === 'not_configured') {
+          announce('Store GPS location not configured. Ask Admin to set branch location on map.', 'warn');
+        } else if (gpsStatus === 'permission_denied') {
+          announce('Location permission denied. Please allow location access in your browser and refresh.', 'error');
+        } else if (gpsStatus === 'timeout') {
+          announce('Location request timed out. Move to a clearer area and refresh.', 'warn');
+        } else if (gpsStatus === 'not_supported') {
+          announce('GPS is not supported on this browser (requires HTTPS).', 'error');
+        } else if (gpsStatus === 'error') {
+          announce('GPS error occurred. Please tap refresh.', 'warn');
         } else if (gpsStatus === 'locating') {
           announce('Detecting location...', 'info');
         } else {
@@ -402,10 +418,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
     init();
 
+    const videoEl = videoRef.current;
     return () => {
       mountedRef.current = false;
       stopLoop();
-      const videoEl = videoRef.current;
       if (videoEl?.srcObject) {
         (videoEl.srcObject as MediaStream).getTracks().forEach(t => t.stop());
       }
@@ -445,11 +461,15 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           <MapPin className="w-4 h-4 shrink-0" />
           <span className="tracking-tight">
             {gpsOk ? `✓ Inside Zone (${branchName ?? 'Store'})`
-              : gpsStatus === 'locating'  ? 'Locating Store GPS...'
-              : gpsStatus === 'error'     ? 'Store GPS not configured or GPS Error — Tap refresh'
+              : gpsStatus === 'locating'          ? 'Locating Store GPS...'
+              : gpsStatus === 'not_configured'    ? 'Store GPS not configured — Ask Admin'
+              : gpsStatus === 'permission_denied' ? 'Location Access Denied — Allow & Refresh'
+              : gpsStatus === 'timeout'           ? 'Location Timeout — Tap refresh'
+              : gpsStatus === 'not_supported'     ? 'GPS requires HTTPS — Access Denied'
+              : gpsStatus === 'error'             ? 'GPS Error — Tap refresh'
               : `${gpsDistance ?? '—'}m away from ${branchName ?? 'store'}`}
           </span>
-          {(gpsStatus === 'error' || !gpsOk) && (
+          {(!gpsOk && gpsStatus !== 'locating') && (
             <button onClick={gpsRefresh} className="ml-1 p-1 hover:bg-white/15 rounded-full transition-colors">
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
@@ -578,8 +598,16 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           >
             <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
             <span className="text-rose-100 text-xs sm:text-sm font-bold leading-snug">
-              {gpsStatus === 'error'
-                ? 'Store GPS location not configured or permission denied. Please tap refresh.'
+              {gpsStatus === 'not_configured'
+                ? 'Store GPS location not configured. Ask Admin to set it.'
+                : gpsStatus === 'permission_denied'
+                ? 'Location permission denied. Please allow access in browser and refresh.'
+                : gpsStatus === 'timeout'
+                ? 'Location request timed out. Tap refresh to try again.'
+                : gpsStatus === 'not_supported'
+                ? 'GPS is not supported by your browser. Please access the site using HTTPS.'
+                : gpsStatus === 'error'
+                ? 'GPS Error occurred. Please tap refresh.'
                 : gpsStatus === 'locating'
                   ? 'Detecting your location...'
                   : `You are ${gpsDistance}m from ${branchName}. Move inside the store.`}

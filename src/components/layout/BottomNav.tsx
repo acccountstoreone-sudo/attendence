@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Clock, History, CalendarDays, User, Store, Users, FileBarChart, UserCheck } from 'lucide-react';
+import { LayoutDashboard, Clock, History, CalendarDays, User, Store, Users, UserCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export interface BottomNavProps {

@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -64,27 +66,27 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-slate-400">Office Start Time</Label>
-                <Input type="time" defaultValue="09:00" className="bg-slate-950 border-slate-800" />
+                <Input type="time" defaultValue={branch.office_start_time || "09:00"} className="bg-slate-950 border-slate-800" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-slate-400">Office End Time</Label>
-                <Input type="time" defaultValue="18:00" className="bg-slate-950 border-slate-800" />
+                <Input type="time" defaultValue={branch.office_end_time || "18:00"} className="bg-slate-950 border-slate-800" />
               </div>
             </div>
             
             <div className="space-y-1.5">
               <Label className="text-slate-400">Grace Time (Minutes)</Label>
-              <Input type="number" defaultValue="15" className="bg-slate-950 border-slate-800" />
+              <Input type="number" defaultValue={branch.grace_time_minutes?.toString() || "15"} className="bg-slate-950 border-slate-800" />
             </div>
 
             <div className="space-y-1.5">
               <Label className="text-slate-400">Late Rules</Label>
-              <Input defaultValue="Deduct half day after 3 late days" className="bg-slate-950 border-slate-800" />
+              <Input defaultValue={branch.late_rules || "Deduct half day after 3 late days"} className="bg-slate-950 border-slate-800" />
             </div>
 
             <div className="space-y-1.5">
               <Label className="text-slate-400">Overtime Rules</Label>
-              <Input defaultValue="Calculated after 18:30" className="bg-slate-950 border-slate-800" />
+              <Input defaultValue={branch.overtime_rules || "Calculated after 18:30"} className="bg-slate-950 border-slate-800" />
             </div>
             
             <div className="pt-4 border-t border-slate-800/50 flex justify-between items-center">

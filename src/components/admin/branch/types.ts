@@ -10,6 +10,11 @@ export interface Branch {
   longitude?: number;
   geofence_radius_meters: number;
   manager_id?: string;
+  office_start_time?: string;
+  office_end_time?: string;
+  grace_time_minutes?: number;
+  late_rules?: string;
+  overtime_rules?: string;
 }
 
 export interface BranchEmployee {

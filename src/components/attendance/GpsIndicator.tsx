@@ -15,13 +15,13 @@ export interface GpsIndicatorProps {
 }
 
 export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
-  branchLatitude = 23.8103, // Default Dhaka coordinates if not assigned
-  branchLongitude = 90.4125,
+  branchLatitude,
+  branchLongitude,
   branchName = 'Assigned Store Branch',
   geofenceRadius = 100,
   onLocationVerified,
 }) => {
-  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [status, setStatus] = useState<'locating' | 'inside' | 'approaching' | 'outside' | 'error'>('locating');
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -43,7 +43,9 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
         setCoords({ latitude, longitude });
 
         // Calculate Haversine distance in meters
-        const distMeters = Math.round(calculateDistance(latitude, longitude, branchLatitude, branchLongitude));
+        const targetLat = branchLatitude ?? 23.8103;
+        const targetLon = branchLongitude ?? 90.4125;
+        const distMeters = Math.round(calculateDistance(latitude, longitude, targetLat, targetLon));
         setDistance(distMeters);
 
         const isWithin = distMeters <= geofenceRadius;

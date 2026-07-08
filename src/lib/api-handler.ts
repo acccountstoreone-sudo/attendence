@@ -20,7 +20,7 @@ export interface ApiResponse<T = unknown> {
 export async function withApiHandler<T>(
   req: NextRequest,
   handler: (req: NextRequest) => Promise<T>,
-  options?: { requiredRole?: string[]; rateLimitKey?: string }
+  _options?: { requiredRole?: string[]; rateLimitKey?: string }
 ): Promise<NextResponse<ApiResponse<T>>> {
   try {
     const data = await handler(req);

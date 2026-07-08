@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Lock, Mail, Eye, EyeOff, AlertTriangle, Check, ShieldCheck, Fingerprint, ScanFace, MapPin, Orbit } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, AlertTriangle, Check, ShieldCheck, ScanFace, MapPin, Orbit } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Abstract3DBackground from '@/components/Abstract3DBackground';
 

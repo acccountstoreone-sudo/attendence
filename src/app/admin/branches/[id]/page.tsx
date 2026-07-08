@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { ChevronLeft, Store, LayoutDashboard, Users, User, Calendar, FileText, Settings, Bell, BarChart2 } from 'lucide-react';
+import { ChevronLeft, Store, LayoutDashboard, Users, Calendar, FileText, Settings, Bell } from 'lucide-react';
 import { Branch, BranchEmployee } from '@/components/admin/branch/types';
 
 import { BranchOverviewTab } from '@/components/admin/branch/BranchOverviewTab';
@@ -21,7 +21,6 @@ type TabType = 'overview' | 'employees' | 'profile' | 'attendance' | 'reports' |
 export default function BranchWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const supabase = createClient();
-  const [branchId, setBranchId] = useState<string>('');
   const [branch, setBranch] = useState<Branch | null>(null);
   const [employees, setEmployees] = useState<BranchEmployee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,46 +29,42 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
 
   useEffect(() => {
-    params.then((p) => {
-      setBranchId(p.id);
-      loadBranchData(p.id);
-      loadBranchEmployees(p.id);
-    });
-  }, [params]);
-
-  async function loadBranchData(id: string) {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('branches')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (data) {
-      setBranch(data);
-    } else if (error) {
-      console.error(error);
-    }
-    setLoading(false);
-  }
-
-  async function loadBranchEmployees(id: string) {
-    try {
-      const res = await fetch(`/api/employees?branch_id=${id}`);
-      if (res.ok) {
-        const json = await res.json();
-        // Map backend data to our frontend type, adding mock status for UI demonstration
-        const mapped: BranchEmployee[] = (json.data || []).map((e: any) => ({
-          ...e,
-          is_active: Math.random() > 0.3, // Mock active status
-          is_present_today: Math.random() > 0.2 // Mock present status
-        }));
-        setEmployees(mapped);
+    async function loadData(id: string) {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('branches')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (data) {
+        setBranch(data);
+      } else if (error) {
+        console.error(error);
       }
-    } catch (err) {
-      console.error(err);
+
+      try {
+        const res = await fetch(`/api/employees?branch_id=${id}`);
+        if (res.ok) {
+          const json = await res.json();
+          // Map backend data to our frontend type, adding mock status for UI demonstration
+          const mapped: BranchEmployee[] = (json.data || []).map((e: Record<string, unknown>) => ({
+            ...e,
+            is_active: Math.random() > 0.3, // Mock active status
+            is_present_today: Math.random() > 0.2 // Mock present status
+          }));
+          setEmployees(mapped);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      setLoading(false);
     }
-  }
+
+    params.then((p) => {
+      loadData(p.id);
+    });
+  }, [params, supabase]);
 
   const handleViewProfile = (empId: string) => {
     setSelectedEmployeeId(empId);

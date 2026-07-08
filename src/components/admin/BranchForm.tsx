@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Store, MapPin, Phone, Globe, Lock, Unlock } from 'lucide-react';
+import { MapPin, Phone, Globe, Lock, Unlock } from 'lucide-react';
 import { LocationMapPicker } from '@/components/admin/LocationMapPicker';
 
 interface BranchFormProps {

@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -59,7 +61,7 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300">
-                        {emp.role.replace('_', ' ')}
+                        {emp.role.replace(/_/g, ' ')}
                       </span>
                     </td>
                     <td className="px-6 py-4">
