@@ -1,22 +1,49 @@
 {
-  "name": "Attendance System",
+  "name": "Attendance System - Biometric & GPS Portal",
   "short_name": "Attendance",
-  "description": "Secure and modern attendance management platform.",
+  "description": "Secure, real-time biometric face verification and GPS geofence attendance management platform.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#040A15",
   "theme_color": "#040A15",
   "orientation": "portrait-primary",
+  "scope": "/",
   "icons": [
     {
-      "src": "/icon-192x192.png",
+      "src": "/icon-192x192.svg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/svg+xml",
+      "purpose": "any"
     },
     {
-      "src": "/icon-512x512.png",
+      "src": "/icon-512x512.svg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-icon",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

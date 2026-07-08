@@ -346,14 +346,24 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     if (phase === 'motion') runCapture();
   }, [phase, runCapture]);
 
-  // When GPS becomes verified while waiting, start liveness
+  // When GPS status changes while waiting, update message or start liveness
   useEffect(() => {
-    if (gpsVerified && phRef.current === 'wait_gps') {
+    if (phRef.current !== 'wait_gps') return;
+    
+    if (gpsVerified) {
       announce('Location verified! Starting face verification.', 'success');
       setTimeout(() => { if (mountedRef.current) startLiveness(); }, 1000);
+    } else {
+      if (gpsStatus === 'error') {
+        announce('Please enable location services to continue.', 'warn');
+      } else if (gpsStatus === 'locating') {
+        announce('Detecting location...', 'info');
+      } else {
+        announce(`You are ${gpsDistance ?? '—'}m away. Move closer to the store.`, 'warn');
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gpsVerified]);
+  }, [gpsVerified, gpsStatus, gpsDistance]);
 
   // ── Mount / Unmount ──────────────────────────────────
   useEffect(() => {
@@ -371,7 +381,13 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         setTimeout(() => { if (mountedRef.current) startLiveness(); }, 800);
       } else {
         setPhase('wait_gps');
-        announce('Please enable location services to continue.', 'warn');
+        if (gpsStatus === 'error') {
+          announce('Please enable location services to continue.', 'warn');
+        } else if (gpsStatus === 'locating') {
+          announce('Detecting location...', 'info');
+        } else {
+          announce('You are outside the store geofence. Move closer.', 'warn');
+        }
       }
     }
 

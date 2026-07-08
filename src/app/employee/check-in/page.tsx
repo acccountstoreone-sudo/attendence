@@ -47,7 +47,7 @@ function useGPS(branch: BranchProfile | null) {
         setStatus(d <= r ? 'inside' : d <= r * 1.5 ? 'approaching' : 'outside');
       },
       () => setStatus('error'),
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   }, [branch]);
 

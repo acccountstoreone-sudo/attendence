@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 import type { Metadata } from "next";
+import { PwaInstallPrompt } from "@/components/pwa/PwaInstallPrompt";
 
 export const viewport: Viewport = {
   themeColor: "#040A15",
@@ -50,6 +51,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning={true}>
         {children}
+        <PwaInstallPrompt />
       </body>
     </html>
   );

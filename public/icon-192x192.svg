@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#040A15" />
+      <stop offset="50%" stop-color="#0A1628" />
+      <stop offset="100%" stop-color="#1E3A8A" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#60A5FA" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Background Shield/Rounded Box -->
+  <rect x="8" y="8" width="176" height="176" rx="44" fill="url(#bg)" stroke="rgba(255,255,255,0.15)" stroke-width="3" />
+  
+  <!-- Outer Corner Brackets (Biometric Scanner Motif) -->
+  <path d="M 46 64 L 46 46 L 64 46" fill="none" stroke="#60A5FA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" />
+  <path d="M 146 64 L 146 46 L 128 46" fill="none" stroke="#60A5FA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" />
+  <path d="M 46 128 L 46 146 L 64 146" fill="none" stroke="#60A5FA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" />
+  <path d="M 146 128 L 146 146 L 128 146" fill="none" stroke="#60A5FA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" />
+  
+  <!-- Center Shield Icon -->
+  <path d="M 96 42 C 76 42 60 48 60 48 V 98 C 60 126 96 148 96 148 C 96 148 132 126 132 98 V 48 C 132 48 116 42 96 42 Z" fill="rgba(59, 130, 246, 0.15)" stroke="url(#accent)" stroke-width="4" stroke-linejoin="round" />
+  
+  <!-- Checkmark / Biometric Verify Motif -->
+  <path d="M 80 96 L 92 108 L 114 84" fill="none" stroke="#34D399" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" />
+</svg>
