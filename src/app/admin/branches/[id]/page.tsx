@@ -2,42 +2,32 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Store, MapPin, Phone, Globe, UserCheck, ChevronLeft, Building2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { LocationMapViewer } from '@/components/admin/LocationMapViewer';
+import { ChevronLeft, Store, LayoutDashboard, Users, User, Calendar, FileText, Settings, Bell, BarChart2 } from 'lucide-react';
+import { Branch, BranchEmployee } from '@/components/admin/branch/types';
 
-interface Branch {
-  id: string;
-  name: string;
-  code: string;
-  address?: string;
-  city?: string;
-  phone?: string;
-  is_active: boolean;
-  latitude?: number;
-  longitude?: number;
-  geofence_radius_meters: number;
-  manager_id?: string;
-}
+import { BranchOverviewTab } from '@/components/admin/branch/BranchOverviewTab';
+import { BranchEmployeesTab } from '@/components/admin/branch/BranchEmployeesTab';
+import { BranchEmployeeProfileTab } from '@/components/admin/branch/BranchEmployeeProfileTab';
+import { BranchAttendanceTab } from '@/components/admin/branch/BranchAttendanceTab';
+import { BranchReportsTab } from '@/components/admin/branch/BranchReportsTab';
+import { BranchSettingsTab } from '@/components/admin/branch/BranchSettingsTab';
+import { BranchAnnouncementTab } from '@/components/admin/branch/BranchAnnouncementTab';
+import { Card } from '@/components/ui/Card';
 
-interface BranchEmployee {
-  id: string;
-  role: string;
-  full_name: string;
-  email: string;
-}
+type TabType = 'overview' | 'employees' | 'profile' | 'attendance' | 'reports' | 'settings' | 'announcements';
 
-export default function BranchDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+export default function BranchWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const supabase = createClient();
   const [branchId, setBranchId] = useState<string>('');
   const [branch, setBranch] = useState<Branch | null>(null);
   const [employees, setEmployees] = useState<BranchEmployee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
 
   useEffect(() => {
     params.then((p) => {
@@ -59,47 +49,31 @@ export default function BranchDetailsPage({ params }: { params: Promise<{ id: st
       setBranch(data);
     } else if (error) {
       console.error(error);
-      alert('Failed to load branch details');
     }
     setLoading(false);
-  };
+  }
 
   async function loadBranchEmployees(id: string) {
-    setLoadingEmployees(true);
     try {
       const res = await fetch(`/api/employees?branch_id=${id}`);
       if (res.ok) {
         const json = await res.json();
-        setEmployees(json.data || []);
+        // Map backend data to our frontend type, adding mock status for UI demonstration
+        const mapped: BranchEmployee[] = (json.data || []).map((e: any) => ({
+          ...e,
+          is_active: Math.random() > 0.3, // Mock active status
+          is_present_today: Math.random() > 0.2 // Mock present status
+        }));
+        setEmployees(mapped);
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoadingEmployees(false);
     }
-  };
+  }
 
-  const handleSetManager = async (employeeId: string) => {
-    if (!branch) return;
-    if (!confirm('Are you sure you want to set this employee as the Branch Manager?')) return;
-    
-    try {
-      const res = await fetch(`/api/branches/${branch.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ manager_id: employeeId }),
-      });
-      if (res.ok) {
-        await loadBranchData(branch.id);
-        await loadBranchEmployees(branch.id);
-      } else {
-        const err = await res.json();
-        alert(`Failed to set manager: ${err.error?.message || err.message}`);
-      }
-    } catch (error) {
-      console.error(error);
-      alert('An error occurred while setting the manager.');
-    }
+  const handleViewProfile = (empId: string) => {
+    setSelectedEmployeeId(empId);
+    setActiveTab('profile');
   };
 
   if (loading) {
@@ -113,161 +87,106 @@ export default function BranchDetailsPage({ params }: { params: Promise<{ id: st
   if (!branch) {
     return (
       <div className="text-center py-12">
-        <Building2 className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+        <Store className="w-12 h-12 text-slate-600 mx-auto mb-4" />
         <h2 className="text-xl font-bold text-white mb-2">Branch Not Found</h2>
-        <Button onClick={() => router.push('/admin/branches')} variant="secondary">Go Back</Button>
+        <button onClick={() => router.push('/admin/branches')} className="text-[#D2A02A] hover:underline">Go Back</button>
       </div>
     );
   }
 
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4 mr-2" /> },
+    { id: 'employees', label: 'Employees', icon: <Users className="w-4 h-4 mr-2" /> },
+    { id: 'attendance', label: 'Attendance', icon: <Calendar className="w-4 h-4 mr-2" /> },
+    { id: 'reports', label: 'Reports', icon: <FileText className="w-4 h-4 mr-2" /> },
+    { id: 'announcements', label: 'Announcements', icon: <Bell className="w-4 h-4 mr-2" /> },
+    { id: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4 mr-2" /> },
+  ];
+
   return (
-    <div className="space-y-8 pb-12 max-w-5xl mx-auto">
+    <div className="space-y-6 pb-12 max-w-[1600px] mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
           <Link href="/admin/branches" className="flex items-center text-slate-400 hover:text-white transition-colors text-sm mb-2 w-fit">
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Back to Branches
+            <ChevronLeft className="w-4 h-4 mr-1" /> Back to All Branches
           </Link>
           <div className="flex items-center space-x-2 text-[#D2A02A] text-xs font-bold uppercase tracking-widest mb-1">
             <Store className="w-4 h-4" />
-            <span>Branch Dashboard</span>
+            <span>Workspace</span>
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">
             {branch.name} <span className="text-xl text-slate-500 font-normal">({branch.code})</span>
           </h1>
-          <p className="text-sm text-slate-400">
-            View branch settings, GPS configuration, and manage assigned staff.
-          </p>
-        </div>
-        <div className="flex space-x-3">
-          <Button variant="secondary" onClick={() => router.push(`/admin/branches/${branch.id}/edit`)}>
-            Edit Settings
-          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-slate-900 border-slate-800 p-6 shadow-xl">
-          <h4 className="text-sm font-semibold text-[#D2A02A] uppercase tracking-wider mb-4">Location Info</h4>
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-slate-950 rounded-lg">
-                <MapPin className="w-5 h-5 text-slate-400" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">{branch.address || 'No street address provided'}</p>
-                <p className="text-xs text-slate-500 mt-1">{branch.city ? `${branch.city}, Bangladesh` : 'City not specified'}</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-slate-950 rounded-lg">
-                <Phone className="w-5 h-5 text-slate-400" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">{branch.phone || 'No phone number'}</p>
-                <p className="text-xs text-slate-500 mt-1">Primary Contact</p>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="bg-slate-900 border-slate-800 p-6 shadow-xl">
-          <h4 className="text-sm font-semibold text-[#D2A02A] uppercase tracking-wider mb-4">Geofence Settings & Map</h4>
-          {branch.latitude && branch.longitude ? (
-            <div className="space-y-4">
-              <LocationMapViewer
-                latitude={branch.latitude}
-                longitude={branch.longitude}
-                radiusMeters={branch.geofence_radius_meters}
-                branchName={branch.name}
-              />
-            </div>
-          ) : (
-            <div className="h-full flex flex-col justify-center items-center py-6 text-center">
-              <Globe className="w-10 h-10 text-slate-700 mb-2" />
-              <p className="text-sm font-medium text-slate-400">GPS Coordinates Not Set</p>
-              <p className="text-xs text-slate-500 mt-1">Biometric check-in requires a geofence.</p>
-              <Button size="sm" variant="outline" className="mt-4" onClick={() => router.push(`/admin/branches/${branch.id}/edit`)}>
-                Set Location on Map
-              </Button>
-            </div>
-          )}
-        </Card>
+      {/* Quick Statistics Top Bar */}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+         <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+            <span className="text-xs text-slate-400">Total Staff</span>
+            <span className="text-lg font-bold text-white">{employees.length}</span>
+         </div>
+         <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+            <span className="text-xs text-slate-400">Present</span>
+            <span className="text-lg font-bold text-emerald-500">{employees.filter(e => e.is_present_today).length}</span>
+         </div>
+         <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+            <span className="text-xs text-slate-400">Absent</span>
+            <span className="text-lg font-bold text-red-500">{employees.filter(e => !e.is_present_today).length}</span>
+         </div>
+         <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+            <span className="text-xs text-slate-400">Active Now</span>
+            <span className="text-lg font-bold text-blue-500">{employees.filter(e => e.is_active).length}</span>
+         </div>
+         <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+            <span className="text-xs text-slate-400">Late</span>
+            <span className="text-lg font-bold text-orange-500">2</span>
+         </div>
+         <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+            <span className="text-xs text-slate-400">Attendance %</span>
+            <span className="text-lg font-bold text-[#D2A02A]">
+              {employees.length > 0 ? Math.round((employees.filter(e => e.is_present_today).length / employees.length) * 100) : 0}%
+            </span>
+         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h4 className="text-lg font-bold text-white">Assigned Employees ({employees.length})</h4>
-          <Button variant="outline" size="sm" onClick={() => router.push('/admin/employees/new')}>
-            Add Staff
-          </Button>
+      {/* Tab Navigation */}
+      <Card className="bg-slate-900/80 border-slate-800 backdrop-blur-md p-1 sticky top-0 z-10 overflow-x-auto shadow-2xl">
+        <div className="flex space-x-1 min-w-max">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as TabType)}
+              className={`flex items-center px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                activeTab === tab.id || (tab.id === 'employees' && activeTab === 'profile')
+                  ? 'bg-[#D2A02A]/10 text-[#D2A02A] shadow-sm'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
         </div>
-        
-        <Card className="bg-slate-900 border-slate-800 overflow-hidden shadow-xl">
-          {loadingEmployees ? (
-            <div className="p-12 text-center text-slate-400">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#D2A02A] mx-auto mb-4"></div>
-              Loading staff roster...
-            </div>
-          ) : employees.length === 0 ? (
-            <div className="p-12 text-center text-slate-500">
-              <UserCheck className="w-12 h-12 text-slate-700 mx-auto mb-3" />
-              <p className="text-sm font-medium">No employees assigned to this branch yet.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
-                  <tr>
-                    <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Employee Name</th>
-                    <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Role</th>
-                    <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800">
-                  {employees.map((emp) => {
-                    const isManager = branch.manager_id === emp.id || emp.role === 'branch_manager';
-                    return (
-                      <tr key={emp.id} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="font-bold text-white">{emp.full_name}</div>
-                          <div className="text-xs text-slate-500 mt-1">{emp.email}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          {isManager ? (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-[#D2A02A]/10 text-[#D2A02A] border border-[#D2A02A]/20">
-                              Branch Manager
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300">
-                              {emp.role}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          {!isManager ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-xs text-[#D2A02A] hover:bg-[#D2A02A]/10 hover:text-[#D2A02A]"
-                              onClick={() => handleSetManager(emp.id)}
-                            >
-                              <UserCheck className="w-3.5 h-3.5 mr-1.5" />
-                              Promote to Manager
-                            </Button>
-                          ) : (
-                            <span className="text-xs text-slate-500 italic">Current Manager</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
+      </Card>
+
+      {/* Tab Content */}
+      <div className="mt-6">
+        {activeTab === 'overview' && <BranchOverviewTab branch={branch} employees={employees} />}
+        {activeTab === 'employees' && <BranchEmployeesTab employees={employees} onViewProfile={handleViewProfile} />}
+        {activeTab === 'profile' && selectedEmployeeId && (
+          <BranchEmployeeProfileTab 
+            employeeId={selectedEmployeeId} 
+            employees={employees} 
+            branch={branch}
+            onBack={() => setActiveTab('employees')} 
+          />
+        )}
+        {activeTab === 'attendance' && <BranchAttendanceTab />}
+        {activeTab === 'reports' && <BranchReportsTab />}
+        {activeTab === 'settings' && <BranchSettingsTab branch={branch} />}
+        {activeTab === 'announcements' && <BranchAnnouncementTab branch={branch} />}
       </div>
     </div>
   );
