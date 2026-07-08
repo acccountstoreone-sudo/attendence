@@ -26,35 +26,36 @@ export default function BranchManagerLayout({ children }: { children: React.Reac
 
   useEffect(() => {
     async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+          router.push('/login');
+          return;
+        }
+
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, role, branch_id, branches!profiles_branch_id_fkey(name)')
+          .eq('id', user.id)
+          .single();
+
+        if (error || !profile || (profile.role !== 'branch_manager' && profile.role !== 'admin')) {
+          router.push('/login?error=unauthorized');
+          return;
+        }
+
+        setUserProfile({
+          id: profile.id,
+          full_name: profile.full_name,
+          role: profile.role,
+          branch_id: profile.branch_id,
+          branch_name: (profile as unknown as { branches?: { name?: string } }).branches?.name || 'Assigned Branch',
+        });
+        setLoading(false);
+      } catch (err) {
+        console.error('Failed auth verification in BranchManagerLayout:', err);
+        router.push('/login?error=session_error');
       }
-
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, role, branch_id, branches!profiles_branch_id_fkey(name)')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Failed to fetch profile in branch manager layout:', error);
-      }
-
-      if (!profile || (profile.role !== 'branch_manager' && profile.role !== 'admin')) {
-        router.push('/login?error=unauthorized');
-        return;
-      }
-
-      setUserProfile({
-        id: profile.id,
-        full_name: profile.full_name,
-        role: profile.role,
-        branch_id: profile.branch_id,
-        branch_name: (profile as unknown as { branches?: { name?: string } }).branches?.name || 'Assigned Branch',
-      });
-      setLoading(false);
     }
 
     checkAuth();

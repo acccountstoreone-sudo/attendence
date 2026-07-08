@@ -67,6 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Public Holidays', href: '/admin/holidays', icon: <CalendarDays className="w-5 h-5" /> },
     { label: 'Company Policy', href: '/admin/settings', icon: <Settings className="w-5 h-5" /> },
     { label: 'Audit Logs', href: '/admin/audit', icon: <ShieldAlert className="w-5 h-5" /> },
+    { label: 'My Profile', href: '/admin/profile', icon: <User className="w-5 h-5" /> },
   ];
 
   const bmNav: NavItem[] = [
@@ -77,6 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Shift Roster', href: '/branch-manager/shifts', icon: <CalendarDays className="w-5 h-5" /> },
     { label: 'Store Reports', href: '/branch-manager/reports', icon: <FileBarChart className="w-5 h-5" /> },
     { label: 'Manual Corrections', href: '/branch-manager/corrections', icon: <UserCheck className="w-5 h-5" /> },
+    { label: 'My Profile', href: '/branch-manager/profile', icon: <User className="w-5 h-5" /> },
   ];
 
   const empNav: NavItem[] = [

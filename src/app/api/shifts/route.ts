@@ -67,13 +67,23 @@ export async function POST(request: NextRequest) {
 /** PATCH /api/shifts — Update a shift */
 export async function PATCH(request: NextRequest) {
   try {
-    await requireRole(['admin', 'branch_manager']);
+    const user = await requireRole(['admin', 'branch_manager']);
     const body = await request.json();
     const { id, ...updates } = body;
     if (!id) return NextResponse.json({ success: false, data: null, error: { code: 'MISSING_ID', message: 'Shift ID is required.' }, timestamp: new Date().toISOString() }, { status: 400 });
 
+    // Branch managers cannot reassign shift to another branch
+    if (user.role === 'branch_manager') {
+      delete updates.branch_id;
+    }
+
     const supabase = await createClient();
-    const { data, error } = await supabase.from('shifts').update(updates).eq('id', id).select().single();
+    let query = supabase.from('shifts').update(updates).eq('id', id);
+    if (user.role === 'branch_manager' && user.branch_id) {
+      query = query.eq('branch_id', user.branch_id);
+    }
+
+    const { data, error } = await query.select().single();
     if (error) throw error;
 
     return NextResponse.json({ success: true, data, timestamp: new Date().toISOString() });
@@ -85,13 +95,18 @@ export async function PATCH(request: NextRequest) {
 /** DELETE /api/shifts?id=xxx — Delete a shift */
 export async function DELETE(request: NextRequest) {
   try {
-    await requireRole(['admin', 'branch_manager']);
+    const user = await requireRole(['admin', 'branch_manager']);
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ success: false, data: null, error: { code: 'MISSING_ID', message: 'Shift ID is required.' }, timestamp: new Date().toISOString() }, { status: 400 });
 
     const supabase = await createClient();
-    const { error } = await supabase.from('shifts').delete().eq('id', id);
+    let query = supabase.from('shifts').delete().eq('id', id);
+    if (user.role === 'branch_manager' && user.branch_id) {
+      query = query.eq('branch_id', user.branch_id);
+    }
+
+    const { error } = await query;
     if (error) throw error;
 
     return NextResponse.json({ success: true, data: { deleted: id }, timestamp: new Date().toISOString() });

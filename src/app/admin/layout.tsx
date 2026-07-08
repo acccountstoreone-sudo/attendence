@@ -28,35 +28,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+          router.push('/login');
+          return;
+        }
+
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, role, branch_id')
+          .eq('id', user.id)
+          .single();
+
+        if (error || !profile || profile.role !== 'admin') {
+          router.push('/login?error=unauthorized');
+          return;
+        }
+
+        setUserProfile({
+          id: profile.id,
+          full_name: profile.full_name,
+          role: profile.role,
+          branch_id: profile.branch_id,
+          branch_name: 'Headquarters',
+        });
+        setLoading(false);
+      } catch (err) {
+        console.error('Failed auth verification in AdminLayout:', err);
+        router.push('/login?error=session_error');
       }
-
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, role, branch_id')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Failed to fetch profile in admin layout:', error);
-      }
-
-      if (!profile || profile.role !== 'admin') {
-        router.push('/login?error=unauthorized');
-        return;
-      }
-
-      setUserProfile({
-        id: profile.id,
-        full_name: profile.full_name,
-        role: profile.role,
-        branch_id: profile.branch_id,
-        branch_name: 'Headquarters',
-      });
-      setLoading(false);
     }
 
     checkAuth();

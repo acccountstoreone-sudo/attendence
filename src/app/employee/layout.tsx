@@ -26,36 +26,41 @@ export default function EmployeeLayout({ children }: { children: React.ReactNode
 
   useEffect(() => {
     async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+          router.push('/login');
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, full_name, role, branch_id, branches!profiles_branch_id_fkey(name)')
+          .eq('id', user.id)
+          .single();
+
+        if (!profile) {
+          router.push('/login?error=unauthorized');
+          return;
+        }
+
+        if (!['employee', 'branch_manager'].includes(profile.role)) {
+          router.push('/unauthorized');
+          return;
+        }
+
+        setUserProfile({
+          id: profile.id,
+          full_name: profile.full_name,
+          role: profile.role,
+          branch_id: profile.branch_id,
+          branch_name: (profile as unknown as { branches?: { name?: string } }).branches?.name || 'Anchor Fashion Store',
+        });
+        setLoading(false);
+      } catch (err) {
+        console.error('Failed auth verification in EmployeeLayout:', err);
+        router.push('/login?error=session_error');
       }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, full_name, role, branch_id, branches!profiles_branch_id_fkey(name)')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile) {
-        router.push('/login?error=unauthorized');
-        return;
-      }
-
-      if (!['employee', 'branch_manager'].includes(profile.role)) {
-        router.push('/unauthorized');
-        return;
-      }
-
-      setUserProfile({
-        id: profile.id,
-        full_name: profile.full_name,
-        role: profile.role,
-        branch_id: profile.branch_id,
-        branch_name: (profile as unknown as { branches?: { name?: string } }).branches?.name || 'Anchor Fashion Store',
-      });
-      setLoading(false);
     }
 
     checkAuth();
