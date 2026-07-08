@@ -27,32 +27,59 @@ interface BranchProfile {
 // ─────────────────────────────────────────────────────────────
 // Custom GPS Hook
 // ─────────────────────────────────────────────────────────────
-function useGPS(branch: BranchProfile | null) {
+function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
   const [status, setStatus]     = useState<GpsStatus>('locating');
   const [distance, setDistance] = useState<number | null>(null);
   const [coords, setCoords]     = useState<{ lat: number; lng: number } | null>(null);
 
   const check = useCallback(() => {
-    if (!branch?.branch_lat || !branch?.branch_lng) return;
+    if (loadingProfile) {
+      setStatus('locating');
+      return;
+    }
+    if (!branch) {
+      setStatus('error');
+      return;
+    }
+    if (branch.branch_lat === undefined || branch.branch_lng === undefined || branch.branch_lat === null || branch.branch_lng === null) {
+      setStatus('error');
+      return;
+    }
+
     setStatus('locating');
 
-    if (!navigator.geolocation) { setStatus('error'); return; }
+    if (!navigator.geolocation) {
+      setStatus('error');
+      return;
+    }
+
+    const latTarget = branch.branch_lat;
+    const lngTarget = branch.branch_lng;
+    const radiusTarget = branch.branch_radius ?? 100;
+
+    const handlePos = (pos: GeolocationPosition) => {
+      const { latitude, longitude } = pos.coords;
+      const d = Math.round(calculateDistance(latitude, longitude, latTarget, lngTarget));
+      setCoords({ lat: latitude, lng: longitude });
+      setDistance(d);
+      setStatus(d <= radiusTarget ? 'inside' : d <= radiusTarget * 1.5 ? 'approaching' : 'outside');
+    };
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        const d = Math.round(calculateDistance(latitude, longitude, branch.branch_lat!, branch.branch_lng!));
-        const r = branch.branch_radius ?? 100;
-        setCoords({ lat: latitude, lng: longitude });
-        setDistance(d);
-        setStatus(d <= r ? 'inside' : d <= r * 1.5 ? 'approaching' : 'outside');
+      handlePos,
+      () => {
+        // Fallback: if high accuracy times out/fails (common on desktop/indoor WiFi), retry with standard accuracy
+        navigator.geolocation.getCurrentPosition(
+          handlePos,
+          () => setStatus('error'),
+          { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+        );
       },
-      () => setStatus('error'),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 10000 }
     );
-  }, [branch]);
+  }, [branch, loadingProfile]);
 
-  useEffect(() => { setTimeout(() => check(), 0); }, [check]);
+  useEffect(() => { check(); }, [check]);
 
   return {
     status,
@@ -99,7 +126,7 @@ export default function EmployeeCheckInPage() {
   } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const gps = useGPS(profile);
+  const gps = useGPS(profile, loading);
   const offline = useOfflineQueue();
 
   // ── Load profile + today's record ──────────────────────
@@ -223,7 +250,7 @@ export default function EmployeeCheckInPage() {
   // Render: Full-screen check-in
   // ─────────────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#020810]" style={{ fontFamily: 'Inter, sans-serif' }}>
+    <div className="min-h-[100dvh] flex flex-col overflow-x-hidden bg-[#020810] relative" style={{ fontFamily: 'Inter, sans-serif' }}>
 
       {/* ── Offline Banner ── */}
       <AnimatePresence>
@@ -284,7 +311,7 @@ export default function EmployeeCheckInPage() {
           <motion.div
             initial={{ opacity:0, y:-10 }}
             animate={{ opacity:1, y:0 }}
-            className="flex-none mx-4 mb-1 mt-14 sm:mt-0 flex items-center justify-between bg-[#0A1628]/95 backdrop-blur-2xl border border-white/20 rounded-2xl px-4 py-3 z-30 shadow-2xl"
+            className="flex-none mx-4 mb-1 mt-12 sm:mt-0 flex items-center justify-between bg-[#0A1628]/95 backdrop-blur-2xl border border-white/20 rounded-2xl px-4 py-3 z-30 shadow-2xl"
           >
             <div className="flex items-center space-x-2.5">
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
@@ -319,7 +346,7 @@ export default function EmployeeCheckInPage() {
 
       {/* ── Check-in/out toggle when no record exists ── */}
       {!todayRecord && (
-        <div className="flex-none flex justify-center px-4 z-30 mb-1 mt-14 sm:mt-0">
+        <div className="flex-none flex justify-center px-4 z-30 mb-1 mt-12 sm:mt-0">
           <div className="flex bg-[#0A1628]/95 backdrop-blur-2xl p-1 rounded-2xl border border-white/20 shadow-2xl">
             {(['in','out'] as const).map(t => (
               <button
@@ -339,7 +366,7 @@ export default function EmployeeCheckInPage() {
       )}
 
       {/* ── FaceCapture fills remaining space ── */}
-      <div className="flex-1 relative min-h-0 mt-2">
+      <div className="flex-1 relative min-h-0 mt-2 flex flex-col">
         <FaceCapture
           onCapture={handleBiometricSubmit}
           gpsVerified={gps.verified}

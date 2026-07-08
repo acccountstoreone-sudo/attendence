@@ -350,22 +350,21 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
   // When GPS status changes while waiting, update message or start liveness
   useEffect(() => {
-    if (phRef.current !== 'wait_gps') return;
+    if (phRef.current !== 'wait_gps' && phase !== 'wait_gps') return;
     
     if (gpsVerified) {
       announce('Location verified! Starting face verification.', 'success');
       setTimeout(() => { if (mountedRef.current) startLiveness(); }, 1000);
     } else {
       if (gpsStatus === 'error') {
-        announce('Please enable location services to continue.', 'warn');
+        announce('Store GPS location not configured or GPS error. Ask Admin to set branch location on map.', 'warn');
       } else if (gpsStatus === 'locating') {
         announce('Detecting location...', 'info');
       } else {
         announce(`You are ${gpsDistance ?? '—'}m away. Move closer to the store.`, 'warn');
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gpsVerified, gpsStatus, gpsDistance]);
+  }, [phase, gpsVerified, gpsStatus, gpsDistance, announce, startLiveness]);
 
   // ── Mount / Unmount ──────────────────────────────────
   useEffect(() => {
@@ -384,7 +383,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       } else {
         setPhase('wait_gps');
         if (gpsStatus === 'error') {
-          announce('Please enable location services to continue.', 'warn');
+          announce('Store GPS location not configured or GPS error. Ask Admin to set branch location on map.', 'warn');
         } else if (gpsStatus === 'locating') {
           announce('Detecting location...', 'info');
         } else {
@@ -416,7 +415,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   // Render
   // ─────────────────────────────────────────────────────
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-hidden bg-gradient-to-b from-[#020810] via-[#040D1A] to-[#020810] select-none">
+    <div className="relative w-full h-full flex flex-col items-center justify-between overflow-y-auto overflow-x-hidden min-h-0 py-2 bg-gradient-to-b from-[#020810] via-[#040D1A] to-[#020810] select-none">
       
       {/* Subtle background ambient glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none" />
@@ -439,7 +438,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           <span className="tracking-tight">
             {gpsOk ? `✓ Inside Zone (${branchName ?? 'Store'})`
               : gpsStatus === 'locating'  ? 'Locating Store GPS...'
-              : gpsStatus === 'error'     ? 'GPS Error — Tap to retry'
+              : gpsStatus === 'error'     ? 'Store GPS not configured or GPS Error — Tap refresh'
               : `${gpsDistance ?? '—'}m away from ${branchName ?? 'store'}`}
           </span>
           {(gpsStatus === 'error' || !gpsOk) && (
@@ -453,8 +452,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       {/* === Center Biometric Pod (~10% Rounded Rectangular Card for Perfect Mobile Framing) === */}
       <div className="flex-1 flex flex-col items-center justify-center my-auto z-20 w-full px-4">
         
-        {/* The 10% Rounded Camera Box (aspect-4/5 gives wide, spacious mobile view without horizontal cropping!) */}
-        <div className="relative w-[88%] sm:w-[340px] max-w-[360px] aspect-[4/5] sm:aspect-[3/4] rounded-[2.2rem] sm:rounded-[2.5rem] p-1.5 transition-all duration-500 shadow-2xl flex items-center justify-center"
+        {/* The 10% Rounded Camera Box (aspect-1/1 on mobile gives compact height so top/bottom text is never pushed off!) */}
+        <div className="relative w-[76%] sm:w-[320px] max-w-[340px] max-h-[38vh] aspect-[1/1] sm:aspect-[3/4] rounded-[2rem] sm:rounded-[2.5rem] p-1.5 transition-all duration-500 shadow-2xl flex items-center justify-center shrink-0 my-1"
           style={{
             background: phase === 'success' ? 'linear-gradient(135deg, #10B981, #059669)'
                       : phase === 'cam_err' ? 'linear-gradient(135deg, #F43F5E, #E11D48)'
@@ -560,19 +559,19 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       </div>
 
       {/* === Bottom Challenge / Status UI === */}
-      <div className="flex-none w-full flex flex-col items-center z-30 pb-4 px-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+      <div className="flex-none w-full flex flex-col items-center z-30 pb-3 px-4 shrink-0" style={{ paddingBottom: 'max(0.8rem, env(safe-area-inset-bottom))' }}>
 
         {/* GPS out-of-zone warning */}
         {!gpsOk && phase !== 'loading' && phase !== 'cam_err' && phase !== 'success' && (
           <motion.div
             initial={{ opacity:0, y:8 }}
             animate={{ opacity:1, y:0 }}
-            className="w-full max-w-sm mb-3 flex items-start space-x-3 bg-rose-950/95 border border-rose-500/50 backdrop-blur-2xl px-5 py-3.5 rounded-2xl shadow-2xl"
+            className="w-full max-w-sm mb-2.5 flex items-start space-x-3 bg-rose-950/95 border border-rose-500/50 backdrop-blur-2xl px-4 py-3 rounded-2xl shadow-2xl"
           >
             <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
             <span className="text-rose-100 text-xs sm:text-sm font-bold leading-snug">
               {gpsStatus === 'error'
-                ? 'GPS unavailable. Please enable location access to check in.'
+                ? 'Store GPS location not configured or permission denied. Please tap refresh.'
                 : gpsStatus === 'locating'
                   ? 'Detecting your location...'
                   : `You are ${gpsDistance}m from ${branchName}. Move inside the store.`}
