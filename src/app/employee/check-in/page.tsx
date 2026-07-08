@@ -6,8 +6,9 @@ import { Spinner } from '@/components/ui/Spinner';
 import { createClient } from '@/lib/supabase/client';
 import { calculateDistance } from '@/lib/geo';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Clock, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle2, WifiOff, RefreshCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -99,6 +100,7 @@ export default function EmployeeCheckInPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const gps = useGPS(profile);
+  const offline = useOfflineQueue();
 
   // ── Load profile + today's record ──────────────────────
   useEffect(() => {
@@ -158,6 +160,23 @@ export default function EmployeeCheckInPage() {
     setSubmitting(true);
     setSubmitError(null);
 
+    // ── Offline Mode: queue record locally ─────────────────
+    if (!offline.isOnline) {
+      await offline.enqueue(checkType === 'in' ? 'check_in' : 'check_out', {
+        latitude: gps.coords.lat,
+        longitude: gps.coords.lng,
+        face_verified: true,
+        faceDescriptor,
+        liveness_passed: true,
+        photo_url: base64Image,
+        timestamp: new Date().toISOString(),
+      });
+      setSubmitting(false);
+      // Show success message then redirect
+      setTimeout(() => router.push('/employee'), 2200);
+      return;
+    }
+
     const endpoint = checkType === 'in' ? '/api/attendance/check-in' : '/api/attendance/check-out';
     const payload  = checkType === 'in'
       ? {
@@ -187,7 +206,7 @@ export default function EmployeeCheckInPage() {
 
     // Redirect to dashboard after short delay
     setTimeout(() => router.push('/employee'), 2200);
-  }, [gps.coords, checkType, router]);
+  }, [gps.coords, checkType, router, offline]);
 
   // ─────────────────────────────────────────────────────────
   // Render: Loading screen
@@ -205,6 +224,27 @@ export default function EmployeeCheckInPage() {
   // ─────────────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#020810]" style={{ fontFamily: 'Inter, sans-serif' }}>
+
+      {/* ── Offline Banner ── */}
+      <AnimatePresence>
+        {!offline.isOnline && (
+          <motion.div
+            initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -40, opacity: 0 }}
+            className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-amber-500/95 text-amber-950 font-semibold text-xs rounded-full px-4 py-2 shadow-xl"
+          >
+            <WifiOff className="w-4 h-4" /> Offline Mode — Check-in saved locally
+          </motion.div>
+        )}
+        {offline.isOnline && offline.pendingCount > 0 && (
+          <motion.div
+            initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -40, opacity: 0 }}
+            className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-blue-500/90 text-white text-xs rounded-full px-4 py-2 shadow-xl"
+          >
+            {offline.syncing ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+            {offline.syncing ? `Syncing ${offline.pendingCount} record(s)…` : `${offline.pendingCount} offline record(s) pending sync`}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Minimal Floating Back Button for Mobile View (since top bar is hidden) ── */}
       <button
