@@ -28,10 +28,13 @@ export async function GET(request: NextRequest) {
     if (userId) {
       query = query.eq('user_id', userId);
     } else if (branchId) {
-      query = query.in(
-        'user_id',
-        supabase.from('profiles').select('id').eq('branch_id', branchId)
-      );
+      const { data: profs } = await supabase.from('profiles').select('id').eq('branch_id', branchId);
+      const userIds = (profs || []).map((p: { id: string }) => p.id);
+      if (userIds.length > 0) {
+        query = query.in('user_id', userIds);
+      } else {
+        return NextResponse.json({ success: true, data: [], timestamp: new Date().toISOString() });
+      }
     }
 
     const { data, error } = await query;

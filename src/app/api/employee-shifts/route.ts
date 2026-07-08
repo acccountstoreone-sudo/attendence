@@ -18,7 +18,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const branchId = searchParams.get('branch_id') ?? user.branch_id;
 
-    const { data, error } = await supabase
+    let userIds: string[] = [];
+    if (branchId) {
+      const { data: profs } = await supabase.from('profiles').select('id').eq('branch_id', branchId);
+      userIds = (profs || []).map((p: { id: string }) => p.id);
+    }
+
+    let query = supabase
       .from('employee_shifts')
       .select(`
         id,
@@ -26,12 +32,15 @@ export async function GET(request: NextRequest) {
         effective_to,
         shifts ( id, name, start_time, end_time, grace_period_minutes ),
         profiles!user_id ( id, full_name, employee_id, avatar_url )
-      `)
-      .in(
-        'user_id',
-        supabase.from('profiles').select('id').eq('branch_id', branchId ?? '')
-      )
-      .order('effective_from', { ascending: false });
+      `);
+
+    if (branchId && userIds.length > 0) {
+      query = query.in('user_id', userIds);
+    } else if (branchId && userIds.length === 0) {
+      return NextResponse.json({ success: true, data: [], timestamp: new Date().toISOString() });
+    }
+
+    const { data, error } = await query.order('effective_from', { ascending: false });
 
     if (error) throw error;
 

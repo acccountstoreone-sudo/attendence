@@ -1,11 +1,12 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-export type BadgeStatus = 'present' | 'late' | 'absent' | 'half_day' | 'pending' | 'active' | 'inactive';
+export type BadgeStatus = 'present' | 'late' | 'absent' | 'half_day' | 'pending' | 'active' | 'inactive' | 'info' | 'success' | 'warning' | 'error';
+export type BadgeVariant = 'solid' | 'outline' | 'subtle' | 'info' | 'success' | 'warning' | 'error';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   status?: BadgeStatus;
-  variant?: 'solid' | 'outline' | 'subtle';
+  variant?: BadgeVariant;
 }
 
 export const Badge: React.FC<BadgeProps> = ({
@@ -17,7 +18,7 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   const baseStyles = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors';
 
-  const statusColors = {
+  const statusColors: Record<string, Record<string, string>> = {
     present: {
       subtle: 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 shadow-sm shadow-emerald-500/10',
       solid: 'bg-emerald-600 text-white',
@@ -55,16 +56,29 @@ export const Badge: React.FC<BadgeProps> = ({
     },
   };
 
-  const selectedColor = statusColors[status]?.[variant] || statusColors.pending.subtle;
+  const semanticVariants: Record<string, string> = {
+    info: 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-sm',
+    success: 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shadow-sm',
+    warning: 'bg-amber-500/10 text-amber-300 border border-amber-500/20 shadow-sm',
+    error: 'bg-rose-500/10 text-rose-300 border border-rose-500/20 shadow-sm',
+  };
+
+  let selectedColor = statusColors[status]?.[variant || 'subtle'] || statusColors.pending.subtle;
+  if (variant && semanticVariants[variant]) {
+    selectedColor = semanticVariants[variant];
+  } else if (status && semanticVariants[status]) {
+    selectedColor = semanticVariants[status];
+  }
+
+  const dotColor =
+    variant === 'success' || status === 'present' || status === 'active' || status === 'success' ? 'bg-emerald-400' :
+    variant === 'warning' || status === 'late' || status === 'warning' ? 'bg-amber-400' :
+    variant === 'error' || status === 'absent' || status === 'inactive' || status === 'error' ? 'bg-rose-400' :
+    variant === 'info' || status === 'half_day' || status === 'info' ? 'bg-indigo-400' : 'bg-slate-400';
 
   return (
     <span className={cn(baseStyles, selectedColor, className)} {...props}>
-      <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5 animate-pulse', 
-        status === 'present' || status === 'active' ? 'bg-emerald-400' :
-        status === 'late' ? 'bg-amber-400' :
-        status === 'absent' || status === 'inactive' ? 'bg-rose-400' :
-        status === 'half_day' ? 'bg-blue-400' : 'bg-slate-400'
-      )} />
+      <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5 animate-pulse', dotColor)} />
       {children || status.replace('_', ' ')}
     </span>
   );

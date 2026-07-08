@@ -103,7 +103,8 @@ export async function POST(request: NextRequest) {
         results.push({ email: row.email, full_name: row.full_name, status: 'success' });
       } catch (err: unknown) {
         errorCount++;
-        const msg = err instanceof z.ZodError ? err.errors.map(e => e.message).join(', ') : (err instanceof Error ? err.message : 'Unknown error');
+        const zodErr = err as any;
+        const msg = err instanceof z.ZodError ? (zodErr.issues || zodErr.errors || []).map((e: any) => e.message).join(', ') : (err instanceof Error ? err.message : 'Unknown error');
         results.push({
           email: rawRow.email || rawRow.Email || 'Unknown',
           full_name: rawRow.full_name || rawRow.Name || 'Unknown',

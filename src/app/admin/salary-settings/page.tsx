@@ -20,7 +20,7 @@ interface SalarySetting {
     id: string;
     full_name: string;
     employee_id?: string;
-    branches?: { name?: string };
+    branches?: any;
   };
 }
 
@@ -29,7 +29,7 @@ interface Employee {
   full_name: string;
   employee_id?: string;
   branch_id?: string;
-  branches?: { name?: string };
+  branches?: any;
 }
 
 const defaultForm = { user_id: '', base_salary: 0, house_rent_allowance: 0, medical_allowance: 0, transport_allowance: 0 };
@@ -53,8 +53,8 @@ export default function AdminSalarySettingsPage() {
       supabase.from('profiles').select('id, full_name, employee_id, branch_id, branches!branch_id(name)').eq('role', 'employee').eq('is_active', true).order('full_name'),
     ]);
     const settingsJson = await settingsRes.json();
-    if (settingsJson.success) setSettings(settingsJson.data ?? []);
-    if (!empsRes.error) setEmployees(empsRes.data ?? []);
+    if (settingsJson.success) setSettings((settingsJson.data ?? []) as any);
+    if (!empsRes.error) setEmployees((empsRes.data ?? []) as any);
     setLoading(false);
   }, [supabase]);
 
