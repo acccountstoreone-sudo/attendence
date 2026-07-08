@@ -42,7 +42,18 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
 
     // Resolve the branch to verify against
-    const targetBranchId = input.branch_id || user.branch_id;
+    let targetBranchId = input.branch_id || user.branch_id;
+    if (!targetBranchId && (user.role === 'admin' || user.role === 'branch_manager')) {
+      const { data: firstActive } = await supabase
+        .from('branches')
+        .select('id')
+        .eq('is_active', true)
+        .not('latitude', 'is', null)
+        .limit(1)
+        .maybeSingle();
+      if (firstActive) targetBranchId = firstActive.id;
+    }
+
     if (!targetBranchId) {
       return NextResponse.json({
         success: false,

@@ -4,15 +4,17 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
+import { revalidatePath } from 'next/cache';
+
 const updateBranchSchema = z.object({
   name: z.string().min(3).optional(),
   code: z.string().min(2).optional(),
   address: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
-  latitude: z.number().min(-90).max(90).nullable().optional(),
-  longitude: z.number().min(-180).max(180).nullable().optional(),
-  geofence_radius_meters: z.number().int().min(10).max(5000).optional(),
+  latitude: z.coerce.number().min(-90).max(90).nullable().optional(),
+  longitude: z.coerce.number().min(-180).max(180).nullable().optional(),
+  geofence_radius_meters: z.coerce.number().min(10).max(50000).optional().transform((v) => v !== undefined ? Math.round(v) : undefined),
   manager_id: z.string().uuid().nullable().optional(),
   is_active: z.boolean().optional(),
 });
@@ -153,6 +155,15 @@ export async function PUT(
       new_value: payload,
       ip_address: request.headers.get('x-forwarded-for') || '127.0.0.1',
     });
+
+    try {
+      revalidatePath('/admin/branches');
+      revalidatePath(`/admin/branches/${branchId}`);
+      revalidatePath('/employee/check-in');
+      revalidatePath('/branch-manager/store');
+    } catch {
+      // Ignore if revalidatePath fails outside Next route context
+    }
 
     return NextResponse.json({
       success: true,

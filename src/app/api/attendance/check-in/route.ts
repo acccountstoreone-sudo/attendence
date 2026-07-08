@@ -11,6 +11,8 @@ const checkInSchema = z.object({
   face_verified: z.boolean(),
   faceDescriptor: z.array(z.number()).optional(),
   facial_id: z.string().optional(),
+  branch_id: z.string().uuid().optional(),
+  is_manual_override: z.boolean().optional(),
   is_offline_sync: z.boolean().optional().default(false),
   timestamp: z.string().datetime().optional(),
   liveness_passed: z.boolean().optional(),
@@ -19,8 +21,8 @@ const checkInSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Enforce Role: Employees & Branch Managers can check in
-    const user = await requireRole(['employee', 'branch_manager']);
+    // 1. Enforce Role: Employees, Branch Managers, & Admins can check in
+    const user = await requireRole(['admin', 'employee', 'branch_manager']);
 
     // 2. Parse & Validate Body
     const body = await request.json();
@@ -146,14 +148,26 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. Fetch Branch Geofence Coordinates & Settings
-    if (!user.branch_id) {
+    let targetBranchId = payload.branch_id || user.branch_id;
+    if (!targetBranchId && (user.role === 'admin' || user.role === 'branch_manager')) {
+      const { data: firstActive } = await supabase
+        .from('branches')
+        .select('id')
+        .eq('is_active', true)
+        .not('latitude', 'is', null)
+        .limit(1)
+        .maybeSingle();
+      if (firstActive) targetBranchId = firstActive.id;
+    }
+
+    if (!targetBranchId) {
       return NextResponse.json(
         {
           success: false,
           data: null,
           error: {
             code: 'NO_BRANCH_ASSIGNED',
-            message: 'Your profile is not assigned to any physical store branch. Contact HR.',
+            message: 'Your profile is not assigned to any physical store branch. Contact HR or select a branch.',
           },
           timestamp: new Date().toISOString(),
         },
@@ -164,7 +178,7 @@ export async function POST(request: NextRequest) {
     const { data: branch, error: branchErr } = await supabase
       .from('branches')
       .select('name, latitude, longitude, geofence_radius_meters, is_active')
-      .eq('id', user.branch_id)
+      .eq('id', targetBranchId)
       .single();
 
     if (branchErr || !branch || !branch.latitude || !branch.longitude) {
@@ -206,7 +220,9 @@ export async function POST(request: NextRequest) {
       branch.geofence_radius_meters || 100
     );
 
-    if (!geo.within && !payload.is_offline_sync) {
+    const isAdminOrManager = user.role === 'admin' || user.role === 'branch_manager' || payload.is_manual_override;
+
+    if (!geo.within && !payload.is_offline_sync && !isAdminOrManager) {
       return NextResponse.json(
         {
           success: false,
@@ -257,13 +273,13 @@ export async function POST(request: NextRequest) {
       .from('attendance_records')
       .insert({
         employee_id: user.id,
-        branch_id: user.branch_id,
+        branch_id: targetBranchId,
         check_in_time: checkInTime,
         check_in_lat: payload.latitude,
         check_in_lng: payload.longitude,
         face_verified: payload.face_verified,
         status: 'present', // Will be evaluated/overridden by trigger trg_calculate_attendance_status
-        is_manual_override: false,
+        is_manual_override: !geo.within || Boolean(payload.is_manual_override),
       })
       .select()
       .single();

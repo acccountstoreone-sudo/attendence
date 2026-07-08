@@ -31,8 +31,8 @@ export function BranchForm({ initialData }: BranchFormProps) {
     address: initialData?.address || '',
     city: initialData?.city || '',
     phone: initialData?.phone || '',
-    latitude: initialData?.latitude ? String(initialData.latitude) : '',
-    longitude: initialData?.longitude ? String(initialData.longitude) : '',
+    latitude: initialData?.latitude !== undefined && initialData?.latitude !== null ? String(initialData.latitude) : '',
+    longitude: initialData?.longitude !== undefined && initialData?.longitude !== null ? String(initialData.longitude) : '',
     geofence_radius_meters: initialData?.geofence_radius_meters ? String(initialData.geofence_radius_meters) : '100',
     is_active: initialData ? initialData.is_active : true,
   });
@@ -47,9 +47,9 @@ export function BranchForm({ initialData }: BranchFormProps) {
         address: form.address || null,
         city: form.city || null,
         phone: form.phone || null,
-        latitude: form.latitude ? Number(form.latitude) : null,
-        longitude: form.longitude ? Number(form.longitude) : null,
-        geofence_radius_meters: Number(form.geofence_radius_meters) || 100,
+        latitude: form.latitude !== '' && form.latitude !== null ? Number(form.latitude) : null,
+        longitude: form.longitude !== '' && form.longitude !== null ? Number(form.longitude) : null,
+        geofence_radius_meters: Math.round(Number(form.geofence_radius_meters)) || 100,
         is_active: form.is_active,
       };
 
@@ -83,8 +83,9 @@ export function BranchForm({ initialData }: BranchFormProps) {
         }
       }
 
-      router.push('/admin/branches');
+      alert('Branch location and details saved successfully!');
       router.refresh();
+      router.push('/admin/branches');
     } catch (err: unknown) {
       console.error('Save error:', err);
       alert(`Failed to save branch: ${err instanceof Error ? err.message : String(err)}`);

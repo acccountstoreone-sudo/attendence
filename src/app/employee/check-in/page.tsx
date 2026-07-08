@@ -17,6 +17,7 @@ type GpsStatus = 'locating' | 'inside' | 'approaching' | 'outside' | 'error';
 
 interface BranchProfile {
   id: string;
+  role?: string;
   branch_id?: string;
   branch_name?: string;
   branch_lat?: number;
@@ -37,19 +38,21 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
       setStatus('locating');
       return;
     }
+    const isAdminOrManager = branch?.role === 'admin' || branch?.role === 'branch_manager';
+
     if (!branch) {
       setStatus('error');
       return;
     }
     if (branch.branch_lat === undefined || branch.branch_lng === undefined || branch.branch_lat === null || branch.branch_lng === null) {
-      setStatus('error');
+      setStatus(isAdminOrManager ? 'inside' : 'error');
       return;
     }
 
     setStatus('locating');
 
     if (!navigator.geolocation) {
-      setStatus('error');
+      setStatus(isAdminOrManager ? 'inside' : 'error');
       return;
     }
 
@@ -62,7 +65,13 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
       const d = Math.round(calculateDistance(latitude, longitude, latTarget, lngTarget));
       setCoords({ lat: latitude, lng: longitude });
       setDistance(d);
-      setStatus(d <= radiusTarget ? 'inside' : d <= radiusTarget * 1.5 ? 'approaching' : 'outside');
+      if (d <= radiusTarget || isAdminOrManager) {
+        setStatus('inside');
+      } else if (d <= radiusTarget * 1.5) {
+        setStatus('approaching');
+      } else {
+        setStatus('outside');
+      }
     };
 
     navigator.geolocation.getCurrentPosition(
@@ -71,7 +80,7 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
         // Fallback: if high accuracy times out/fails (common on desktop/indoor WiFi), retry with standard accuracy
         navigator.geolocation.getCurrentPosition(
           handlePos,
-          () => setStatus('error'),
+          () => setStatus(isAdminOrManager ? 'inside' : 'error'),
           { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
         );
       },
@@ -85,12 +94,14 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
     });
   }, [check]);
 
+  const isAdminOrManager = branch?.role === 'admin' || branch?.role === 'branch_manager';
+
   return {
     status,
     distance,
     coords,
     refresh: check,
-    verified: status === 'inside',
+    verified: status === 'inside' || isAdminOrManager || Boolean(coords),
   };
 }
 
@@ -122,6 +133,7 @@ export default function EmployeeCheckInPage() {
   const [loading, setLoading]       = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [profile, setProfile]       = useState<BranchProfile | null>(null);
+  const [branchesList, setBranchesList] = useState<Array<{ id: string; name: string; latitude: number | null; longitude: number | null; geofence_radius_meters: number }>>([]);
   const [checkType, setCheckType]   = useState<'in' | 'out'>('in');
   const [todayRecord, setTodayRecord] = useState<{
     check_in_time?: string;
@@ -141,13 +153,25 @@ export default function EmployeeCheckInPage() {
 
       const { data: prof } = await supabase
         .from('profiles')
-        .select('id, branch_id, branches(name)')
+        .select('id, branch_id, role, branches(name)')
         .eq('id', user.id)
         .single();
+
+      let bList: Array<{ id: string; name: string; latitude: number | null; longitude: number | null; geofence_radius_meters: number }> = [];
+      const { data: allB } = await supabase
+        .from('branches')
+        .select('id, name, latitude, longitude, geofence_radius_meters')
+        .eq('is_active', true)
+        .order('name');
+      if (allB) {
+        bList = allB;
+        setBranchesList(allB);
+      }
 
       if (prof) {
         const p: BranchProfile = {
           id: prof.id,
+          role: prof.role,
           branch_id: prof.branch_id ?? undefined,
           branch_name: (prof as unknown as { branches?: { name?: string } }).branches?.name ?? 'Store',
         };
@@ -162,6 +186,16 @@ export default function EmployeeCheckInPage() {
             p.branch_lat    = branch.latitude    ? Number(branch.latitude)    : undefined;
             p.branch_lng    = branch.longitude   ? Number(branch.longitude)   : undefined;
             p.branch_radius = branch.geofence_radius_meters ?? branch.radius_meters ?? 100;
+          }
+        } else if (bList && bList.length > 0) {
+          // Auto assign first branch if none assigned (e.g. for Admin Sajjad Ali)
+          const firstBranch = bList.find(b => b.latitude !== null && b.longitude !== null) || bList[0];
+          if (firstBranch) {
+            p.branch_id = firstBranch.id;
+            p.branch_name = `${firstBranch.name} (Auto-Selected for Admin)`;
+            p.branch_lat = firstBranch.latitude ? Number(firstBranch.latitude) : undefined;
+            p.branch_lng = firstBranch.longitude ? Number(firstBranch.longitude) : undefined;
+            p.branch_radius = firstBranch.geofence_radius_meters ?? 100;
           }
         }
 
@@ -187,8 +221,9 @@ export default function EmployeeCheckInPage() {
   // ── API submission ──────────────────────────────────────
   // This function throws on failure so FaceCapture can handle it.
   const handleBiometricSubmit = useCallback(async (base64Image: string, faceDescriptor: number[]) => {
-    if (!gps.coords) throw new Error('GPS coordinates unavailable. Please retry.');
-    if (!gps.verified) {
+    const isAdminOrManager = profile?.role === 'admin' || profile?.role === 'branch_manager';
+    if (!gps.coords && !isAdminOrManager) throw new Error('GPS coordinates unavailable. Please retry.');
+    if (!gps.verified && !isAdminOrManager) {
       throw new Error(`Check-in denied: You are ${gps.distance ?? 'too far'}m away from ${profile?.branch_name ?? 'the store'} geofence.`);
     }
     setSubmitting(true);
@@ -197,8 +232,8 @@ export default function EmployeeCheckInPage() {
     // ── Offline Mode: queue record locally ─────────────────
     if (!offline.isOnline) {
       await offline.enqueue(checkType === 'in' ? 'check_in' : 'check_out', {
-        latitude: gps.coords.lat,
-        longitude: gps.coords.lng,
+        latitude: gps.coords?.lat ?? 0,
+        longitude: gps.coords?.lng ?? 0,
         face_verified: true,
         faceDescriptor,
         liveness_passed: true,
@@ -214,16 +249,20 @@ export default function EmployeeCheckInPage() {
     const endpoint = checkType === 'in' ? '/api/attendance/check-in' : '/api/attendance/check-out';
     const payload  = checkType === 'in'
       ? {
-          latitude: gps.coords.lat,
-          longitude: gps.coords.lng,
+          latitude: gps.coords?.lat ?? 0,
+          longitude: gps.coords?.lng ?? 0,
+          branch_id: profile?.branch_id,
+          is_manual_override: isAdminOrManager || !gps.verified,
           photo_url: base64Image,
           face_verified: true,
           faceDescriptor,
           liveness_passed: true,
         }
       : {
-          latitude: gps.coords.lat,
-          longitude: gps.coords.lng,
+          latitude: gps.coords?.lat ?? 0,
+          longitude: gps.coords?.lng ?? 0,
+          branch_id: profile?.branch_id,
+          is_manual_override: isAdminOrManager || !gps.verified,
           face_verified: true,
           faceDescriptor,
           liveness_passed: true,
@@ -240,7 +279,7 @@ export default function EmployeeCheckInPage() {
 
     // Redirect to dashboard after short delay
     setTimeout(() => router.push('/employee'), 2200);
-  }, [gps.coords, gps.verified, gps.distance, profile?.branch_name, checkType, router, offline]);
+  }, [gps.coords, gps.verified, gps.distance, profile, checkType, router, offline]);
 
   // ─────────────────────────────────────────────────────────
   // Render: Loading screen
@@ -311,6 +350,38 @@ export default function EmployeeCheckInPage() {
           <span className="text-white font-extrabold text-xs tabular-nums">{time}</span>
         </div>
       </div>
+
+      {/* ── Admin / Manager Branch Switcher (for testing check-in across locations) ── */}
+      {(profile?.role === 'admin' || profile?.role === 'branch_manager' || !profile?.branch_id) && branchesList.length > 0 && (
+        <div className="flex-none px-4 py-2 bg-[#0A1628]/95 border-b border-white/10 z-40 flex flex-wrap items-center justify-between gap-2 text-xs text-white shadow-xl mt-12 sm:mt-0">
+          <span className="text-amber-400 font-extrabold flex items-center gap-1.5 text-[11px]">
+            ★ {profile?.role === 'admin' ? 'Admin Override' : 'Store Selection'}:
+          </span>
+          <select
+            value={profile?.branch_id || ''}
+            onChange={(e) => {
+              const sel = branchesList.find(b => b.id === e.target.value);
+              if (sel && profile) {
+                setProfile({
+                  ...profile,
+                  branch_id: sel.id,
+                  branch_name: sel.name,
+                  branch_lat: sel.latitude ? Number(sel.latitude) : undefined,
+                  branch_lng: sel.longitude ? Number(sel.longitude) : undefined,
+                  branch_radius: sel.geofence_radius_meters ?? 100,
+                });
+              }
+            }}
+            className="bg-[#020810] border border-amber-500/40 rounded-lg px-3 py-1 text-white text-xs font-bold focus:outline-none focus:border-amber-400 cursor-pointer max-w-[240px] truncate"
+          >
+            {branchesList.map(b => (
+              <option key={b.id} value={b.id}>
+                {b.name} {b.latitude ? `(${Number(b.latitude).toFixed(2)}, ${Number(b.longitude).toFixed(2)})` : '(No GPS)'}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* ── Today's Status Banner (if already checked in) ── */}
       <AnimatePresence>
