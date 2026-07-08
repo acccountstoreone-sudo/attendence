@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Store, MapPin, Phone, Globe, UserCheck, ChevronLeft, Building2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { LocationMapViewer } from '@/components/admin/LocationMapViewer';
 
 interface Branch {
   id: string;
@@ -172,29 +173,24 @@ export default function BranchDetailsPage({ params }: { params: Promise<{ id: st
         </Card>
 
         <Card className="bg-slate-900 border-slate-800 p-6 shadow-xl">
-          <h4 className="text-sm font-semibold text-[#D2A02A] uppercase tracking-wider mb-4">Geofence Settings</h4>
+          <h4 className="text-sm font-semibold text-[#D2A02A] uppercase tracking-wider mb-4">Geofence Settings & Map</h4>
           {branch.latitude && branch.longitude ? (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                  <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Latitude</div>
-                  <div className="text-sm font-bold text-white">{branch.latitude.toFixed(6)}</div>
-                </div>
-                <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                  <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Longitude</div>
-                  <div className="text-sm font-bold text-white">{branch.longitude.toFixed(6)}</div>
-                </div>
-              </div>
-              <div className="inline-flex items-center px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 text-sm font-medium border border-emerald-500/20">
-                <Globe className="w-4 h-4 mr-2" />
-                Active Radius: {branch.geofence_radius_meters} meters
-              </div>
+              <LocationMapViewer
+                latitude={branch.latitude}
+                longitude={branch.longitude}
+                radiusMeters={branch.geofence_radius_meters}
+                branchName={branch.name}
+              />
             </div>
           ) : (
             <div className="h-full flex flex-col justify-center items-center py-6 text-center">
               <Globe className="w-10 h-10 text-slate-700 mb-2" />
               <p className="text-sm font-medium text-slate-400">GPS Coordinates Not Set</p>
               <p className="text-xs text-slate-500 mt-1">Biometric check-in requires a geofence.</p>
+              <Button size="sm" variant="outline" className="mt-4" onClick={() => router.push(`/admin/branches/${branch.id}/edit`)}>
+                Set Location on Map
+              </Button>
             </div>
           )}
         </Card>

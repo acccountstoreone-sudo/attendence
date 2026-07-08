@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Store, MapPin, Phone, Globe, Lock, Unlock } from 'lucide-react';
+import { LocationMapPicker } from '@/components/admin/LocationMapPicker';
 
 interface BranchFormProps {
   initialData?: {
@@ -93,7 +94,7 @@ export function BranchForm({ initialData }: BranchFormProps) {
   };
 
   return (
-    <Card className="max-w-2xl bg-[#061224] border-[#1E293B] p-6 shadow-2xl">
+    <Card className="max-w-4xl mx-auto bg-[#061224] border-[#1E293B] p-6 sm:p-8 shadow-2xl">
       <form onSubmit={handleSave} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
@@ -133,26 +134,44 @@ export function BranchForm({ initialData }: BranchFormProps) {
           </div>
         </div>
 
-        <div className="border-t border-[#1E293B] pt-5 space-y-4">
-          <div className="flex items-center space-x-2">
-            <Globe className="w-5 h-5 text-[#D2A02A]" />
-            <p className="text-sm font-bold text-[#D2A02A] uppercase tracking-wider">GPS Geofence Configuration</p>
+        <div className="border-t border-[#1E293B] pt-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Globe className="w-5 h-5 text-[#D2A02A]" />
+              <p className="text-sm font-bold text-[#D2A02A] uppercase tracking-wider">GPS Geofence & Map Selection</p>
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Latitude</label>
-              <input value={form.latitude} onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value }))}
-                type="number" step="any" placeholder="23.8103" className="w-full px-4 py-3 bg-[#040A15] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all" />
+
+          {/* Interactive Map Picker Component */}
+          <LocationMapPicker
+            latitude={form.latitude ? Number(form.latitude) : null}
+            longitude={form.longitude ? Number(form.longitude) : null}
+            radiusMeters={Number(form.geofence_radius_meters) || 100}
+            onLocationChange={(lat, lng) => {
+              setForm((f) => ({ ...f, latitude: String(lat), longitude: String(lng) }));
+            }}
+          />
+
+          <div className="bg-[#040A15] p-4 rounded-xl border border-[#1E293B] space-y-3">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              Fine-Tune Coordinates or Radius Manually
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Longitude</label>
-              <input value={form.longitude} onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value }))}
-                type="number" step="any" placeholder="90.4125" className="w-full px-4 py-3 bg-[#040A15] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Radius (m)</label>
-              <input value={form.geofence_radius_meters} onChange={(e) => setForm((f) => ({ ...f, geofence_radius_meters: e.target.value }))}
-                type="number" min="10" max="1000" className="w-full px-4 py-3 bg-[#040A15] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Latitude</label>
+                <input value={form.latitude} onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value }))}
+                  type="number" step="any" placeholder="23.8103" className="w-full px-4 py-3 bg-[#061224] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all font-mono" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Longitude</label>
+                <input value={form.longitude} onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value }))}
+                  type="number" step="any" placeholder="90.4125" className="w-full px-4 py-3 bg-[#061224] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all font-mono" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Radius (m)</label>
+                <input value={form.geofence_radius_meters} onChange={(e) => setForm((f) => ({ ...f, geofence_radius_meters: e.target.value }))}
+                  type="number" min="10" max="2000" className="w-full px-4 py-3 bg-[#061224] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all font-mono" />
+              </div>
             </div>
           </div>
         </div>
