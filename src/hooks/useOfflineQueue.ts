@@ -101,7 +101,7 @@ export function useOfflineQueue() {
     const onOffline = () => setIsOnline(false);
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
-    refreshCount();
+    setTimeout(() => refreshCount(), 0);
     return () => {
       window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);

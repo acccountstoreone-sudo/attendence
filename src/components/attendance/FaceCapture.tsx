@@ -131,6 +131,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const [hasCam, setHasCam] = useState<boolean|null>(null);
   // Track challenge index for rendering (ref alone doesn't trigger re-render)
   const [chIdx, setChIdx]   = useState<0|1>(0);
+  const [chsState, setChsState] = useState<[Challenge,Challenge]>(['blink','smile']);
 
   // Synced phase setter keeps ref + state in sync
   const setPhase = useCallback((p: Phase) => {
@@ -195,6 +196,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     stopLoop();
     const challenges = pickTwo();
     chsRef.current   = challenges;
+    setChsState(challenges);
     chIdxRef.current = 0;
     okCntRef.current = 0;
     setChIdx(0);
@@ -396,8 +398,9 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     return () => {
       mountedRef.current = false;
       stopLoop();
-      if (videoRef.current?.srcObject) {
-        (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+      const videoEl = videoRef.current;
+      if (videoEl?.srcObject) {
+        (videoEl.srcObject as MediaStream).getTracks().forEach(t => t.stop());
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -407,7 +410,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const gpsOk         = gpsStatus === 'inside';
   const isProcessing  = ['motion','extract','submit'].includes(phase);
   const isRunning     = ['challenge','between'].includes(phase);
-  const currentChConf = (isRunning || phase==='between') ? CONF[chsRef.current[chIdx]] : null;
+  const currentChConf = (isRunning || phase==='between') ? CONF[chsState[chIdx]] : null;
 
   // ─────────────────────────────────────────────────────
   // Render

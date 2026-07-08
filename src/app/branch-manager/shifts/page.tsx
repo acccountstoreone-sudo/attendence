@@ -84,8 +84,8 @@ export default function BranchManagerShiftsPage() {
     setLoading(false);
   }, [branchId, supabase]);
 
-  useEffect(() => { getBranch(); }, [getBranch]);
-  useEffect(() => { if (branchId) loadData(); }, [branchId, loadData]);
+  useEffect(() => { setTimeout(() => getBranch(), 0); }, [getBranch]);
+  useEffect(() => { if (branchId) setTimeout(() => loadData(), 0); }, [branchId, loadData]);
 
   const handleAddShift = async (e: React.FormEvent) => {
     e.preventDefault();

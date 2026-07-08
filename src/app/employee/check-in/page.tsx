@@ -52,7 +52,7 @@ function useGPS(branch: BranchProfile | null) {
     );
   }, [branch]);
 
-  useEffect(() => { check(); }, [check]);
+  useEffect(() => { setTimeout(() => check(), 0); }, [check]);
 
   return {
     status,

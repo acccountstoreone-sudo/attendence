@@ -20,7 +20,7 @@ interface SalarySetting {
     id: string;
     full_name: string;
     employee_id?: string;
-    branches?: any;
+    branches?: { name?: string } | Array<{ name?: string }> | null;
   };
 }
 
@@ -29,7 +29,7 @@ interface Employee {
   full_name: string;
   employee_id?: string;
   branch_id?: string;
-  branches?: any;
+  branches?: { name?: string } | Array<{ name?: string }> | null;
 }
 
 const defaultForm = { user_id: '', base_salary: 0, house_rent_allowance: 0, medical_allowance: 0, transport_allowance: 0 };
@@ -53,12 +53,12 @@ export default function AdminSalarySettingsPage() {
       supabase.from('profiles').select('id, full_name, employee_id, branch_id, branches!branch_id(name)').eq('role', 'employee').eq('is_active', true).order('full_name'),
     ]);
     const settingsJson = await settingsRes.json();
-    if (settingsJson.success) setSettings((settingsJson.data ?? []) as any);
-    if (!empsRes.error) setEmployees((empsRes.data ?? []) as any);
+    if (settingsJson.success) setSettings((settingsJson.data ?? []) as unknown as SalarySetting[]);
+    if (!empsRes.error) setEmployees((empsRes.data ?? []) as unknown as Employee[]);
     setLoading(false);
   }, [supabase]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { setTimeout(() => loadData(), 0); }, [loadData]);
 
   const employeesWithoutSalary = employees.filter((e) => !settings.find((s) => s.user_id === e.id));
 
@@ -98,7 +98,7 @@ export default function AdminSalarySettingsPage() {
   const filtered = settings.filter((s) =>
     s.profiles?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
     s.profiles?.employee_id?.toLowerCase().includes(search.toLowerCase()) ||
-    s.profiles?.branches?.name?.toLowerCase().includes(search.toLowerCase())
+    (Array.isArray(s.profiles?.branches) ? s.profiles.branches[0]?.name : s.profiles?.branches?.name)?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -249,7 +249,7 @@ export default function AdminSalarySettingsPage() {
                       <p className="text-white font-semibold">{s.profiles?.full_name}</p>
                       {s.profiles?.employee_id && <Badge variant="info">{s.profiles.employee_id}</Badge>}
                     </div>
-                    <p className="text-slate-400 text-xs">{s.profiles?.branches?.name ?? 'No branch'}</p>
+                    <p className="text-slate-400 text-xs">{(Array.isArray(s.profiles?.branches) ? s.profiles.branches[0]?.name : s.profiles?.branches?.name) ?? 'No branch'}</p>
                     <div className="mt-2 grid grid-cols-2 gap-x-4 text-xs">
                       <span className="text-slate-400">Base: <span className="text-white">৳{s.base_salary.toLocaleString()}</span></span>
                       <span className="text-slate-400">HRA: <span className="text-white">৳{s.house_rent_allowance.toLocaleString()}</span></span>

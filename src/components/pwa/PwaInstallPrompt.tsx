@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, X, Share, Smartphone, ShieldCheck } from 'lucide-react';
+import { Download, X, Share, ShieldCheck } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: Array<string>;
@@ -27,7 +27,7 @@ export function PwaInstallPrompt() {
       document.referrer.includes('android-app://');
 
     if (standalone) {
-      setIsStandalone(true);
+      setTimeout(() => setIsStandalone(true), 0);
       return;
     }
 
@@ -44,7 +44,7 @@ export function PwaInstallPrompt() {
       !standalone;
 
     if (iosDevice) {
-      setIsIOS(true);
+      setTimeout(() => setIsIOS(true), 0);
       // Show iOS prompt after a short delay
       const timer = setTimeout(() => setShowPrompt(true), 3000);
       return () => clearTimeout(timer);

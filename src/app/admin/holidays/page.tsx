@@ -38,7 +38,7 @@ export default function AdminHolidaysPage() {
     setLoading(false);
   }, [year]);
 
-  useEffect(() => { loadHolidays(); }, [loadHolidays]);
+  useEffect(() => { setTimeout(() => loadHolidays(), 0); }, [loadHolidays]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,7 +189,7 @@ export default function AdminHolidaysPage() {
       ) : holidays.length === 0 ? (
         <Card className="p-12 text-center">
           <CalendarDays className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <p className="text-slate-400">No holidays defined for {year}. Click "Add Holiday" to get started.</p>
+          <p className="text-slate-400">No holidays defined for {year}. Click &quot;Add Holiday&quot; to get started.</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -67,7 +67,7 @@ export default function AdminAnalyticsPage() {
     setLoading(false);
   }, [branchId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { setTimeout(() => load(), 0); }, [load]);
 
   const cardVariant = {
     hidden: { opacity: 0, y: 20 },

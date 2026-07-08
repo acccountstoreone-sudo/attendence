@@ -42,7 +42,7 @@ export default function AdminAttendancePage() {
         throw new Error(json.error?.message || json.error || 'Failed to fetch attendance');
       }
 
-      const formatted: AttendanceRecord[] = (json.data || []).map((item: any) => ({
+      const formatted: AttendanceRecord[] = (json.data || []).map((item: Record<string, unknown> & { profiles?: { full_name?: string }; branches?: { name?: string } }) => ({
         id: String(item.id),
         user_id: String(item.employee_id),
         full_name: item.profiles?.full_name || 'Unknown Employee',
