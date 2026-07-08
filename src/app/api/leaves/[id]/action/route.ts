@@ -82,7 +82,7 @@ export async function POST(
     }
 
     // 5. Update leave request status
-    const updatePayload: Record<string, any> = {
+    const updatePayload: Record<string, unknown> = {
       status: input.action === 'approve' ? 'approved' : 'rejected',
       updated_at: new Date().toISOString(),
     };

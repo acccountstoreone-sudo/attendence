@@ -5,6 +5,29 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+interface DutyDataPayload {
+  employee: {
+    full_name: string;
+    employee_id?: string;
+    branch_name: string;
+  };
+  period: { month: number; year: number };
+  summary: {
+    total_duty_hours: number;
+    total_overtime_hours: number;
+    total_overtime_minutes: number;
+    total_missed_days: number;
+    total_late_minutes: number;
+    total_late_hours?: number;
+    total_late_days: number;
+    total_present_days: number;
+    total_on_leave_days?: number;
+    total_off_days?: number;
+    total_holiday_days?: number;
+  };
+  daily_breakdown: Array<Record<string, unknown>>;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -48,10 +71,10 @@ export async function GET(
       headers: { cookie: request.headers.get('cookie') || '' },
     }).catch(() => null);
 
-    let dutyData: any = null;
+    let dutyData: DutyDataPayload | null = null;
     if (summaryRes && summaryRes.ok) {
       const json = await summaryRes.json();
-      if (json.success) dutyData = json.data;
+      if (json.success) dutyData = json.data as DutyDataPayload;
     }
 
     // If fetch failed or inside same process, re-run internal computation or use dutyData
@@ -71,7 +94,7 @@ export async function GET(
         employee: {
           full_name: targetProfile.full_name,
           employee_id: targetProfile.employee_id || 'PENDING',
-          branch_name: (targetProfile as any).branches?.name || 'Global HQ',
+          branch_name: (targetProfile as Record<string, unknown> & { branches?: { name?: string } }).branches?.name || 'Global HQ',
         },
         period: { month, year },
         summary: {
@@ -97,7 +120,8 @@ export async function GET(
       };
     }
 
-    const { employee, period, summary, daily_breakdown } = dutyData;
+    if (!dutyData) throw new Error('Failed to obtain duty summary data');
+    const { employee, summary, daily_breakdown } = dutyData;
     const reportTitle = `${employee.full_name.replace(/\s+/g, '_')}_Duty_Report_${month}_${year}`;
 
     let fileBuffer: Buffer;
@@ -116,22 +140,27 @@ export async function GET(
         ['Total Late Minutes', `${summary.total_late_minutes} mins (${summary.total_late_days} days)`],
         ['Total Present Days', `${summary.total_present_days} days`],
         [],
-        ['Date', 'Day of Week', 'Status', 'Check-in Time', 'Check-out Time', 'Duty Hours', 'Late (Minutes)', 'Overtime (Minutes)', 'Notes'],
+        ['Date', 'Day of Week', 'Status', 'Check-in Time', 'Check-out Time', 'Duty Hours', 'Late (Mins)', 'Late (Hrs)', 'Overtime (Mins)', 'Overtime (Hrs)', 'Right Time?', 'Face Verified?', 'Location (Lat, Lng)', 'Notes'],
       ];
 
-      const dataRows = (daily_breakdown || []).map((d: any) => [
+      const dataRows = (daily_breakdown || []).map((d: Record<string, unknown>) => [
         d.date,
         d.day_name,
-        d.status ? d.status.toUpperCase() : '',
+        d.status ? String(d.status).toUpperCase() : '',
         d.check_in_time || '--:--',
         d.check_out_time || '--:--',
         d.duty_hours || 0,
         d.late_minutes || 0,
+        d.late_hours || 0,
         d.overtime_minutes || 0,
-        `"${(d.notes || '').replace(/"/g, '""')}"`,
+        d.overtime_hours || 0,
+        d.is_right_time ? 'YES' : 'NO',
+        d.face_verified ? 'YES' : 'NO',
+        d.check_in_lat && d.check_in_lng ? `"${d.check_in_lat}, ${d.check_in_lng}"` : 'N/A',
+        `"${String(d.notes || '').replace(/"/g, '""')}"`,
       ]);
 
-      const csvString = [...headerRows.map(r => r.join(',')), ...dataRows.map((r: any) => r.join(','))].join('\r\n');
+      const csvString = [...headerRows.map(r => r.join(',')), ...dataRows.map((r: unknown[]) => r.join(','))].join('\r\n');
       fileBuffer = Buffer.from('\uFEFF' + csvString, 'utf-8'); // BOM for Excel proper UTF-8 handling
       fileName = `${reportTitle}.csv`;
       contentType = 'text/csv; charset=utf-8';
@@ -150,6 +179,7 @@ export async function GET(
         { Metric: 'Total Overtime (Minutes)', Value: summary.total_overtime_minutes },
         { Metric: 'Total Missed Days (Absent)', Value: summary.total_missed_days },
         { Metric: 'Total Late Minutes', Value: summary.total_late_minutes },
+        { Metric: 'Total Late Hours', Value: summary.total_late_hours || 0 },
         { Metric: 'Total Late Days', Value: summary.total_late_days },
         { Metric: 'Total Present Days', Value: summary.total_present_days },
         { Metric: 'Total Leave Days', Value: summary.total_on_leave_days || 0 },
@@ -159,16 +189,20 @@ export async function GET(
       XLSX.utils.book_append_sheet(workbook, summarySheet, 'Monthly Summary');
 
       // Sheet 2: Daily Breakdown
-      const dailySheetData = (daily_breakdown || []).map((d: any) => ({
+      const dailySheetData = (daily_breakdown || []).map((d: Record<string, unknown>) => ({
         Date: d.date,
         Day: d.day_name,
-        Status: d.status ? d.status.toUpperCase() : '',
+        Status: d.status ? String(d.status).toUpperCase() : '',
         'Check-In': d.check_in_time,
         'Check-Out': d.check_out_time,
         'Duty Hours': d.duty_hours,
         'Late (Mins)': d.late_minutes,
+        'Late (Hrs)': d.late_hours || 0,
         'Overtime (Mins)': d.overtime_minutes,
         'Overtime (Hrs)': d.overtime_hours,
+        'Right Time?': d.is_right_time ? 'YES' : 'NO',
+        'Face Verified?': d.face_verified ? 'YES' : 'NO',
+        'Location (Lat, Lng)': d.check_in_lat && d.check_in_lng ? `${d.check_in_lat}, ${d.check_in_lng}` : 'N/A',
         Notes: d.notes,
       }));
       const dailySheet = XLSX.utils.json_to_sheet(dailySheetData);
@@ -226,16 +260,16 @@ export async function GET(
       });
 
       // Table Data
-      const head = [['Date', 'Day', 'Status', 'Check-In', 'Check-Out', 'Duty Hrs', 'Late (m)', 'OT (m)', 'Notes']];
-      const body = (daily_breakdown || []).map((d: any) => [
+      const head = [['Date', 'Day', 'Status', 'In / Out', 'Duty', 'Late/Right', 'Overtime', 'Face/Loc', 'Notes']];
+      const body = (daily_breakdown || []).map((d: Record<string, unknown>) => [
         d.date,
-        d.day_name.slice(0, 3),
-        d.status ? d.status.toUpperCase() : '',
-        d.check_in_time || '--:--',
-        d.check_out_time || '--:--',
-        String(d.duty_hours || 0),
-        String(d.late_minutes || 0),
-        String(d.overtime_minutes || 0),
+        String(d.day_name || '').slice(0, 3),
+        d.status ? String(d.status).toUpperCase() : '',
+        `${d.check_in_time || '--:--'} to ${d.check_out_time || '--:--'}`,
+        `${d.duty_hours || 0}h`,
+        d.is_right_time ? 'Right Time' : `${d.late_minutes || 0}m late`,
+        d.overtime_minutes ? `${d.overtime_hours}h (${d.overtime_minutes}m)` : '0m',
+        `${d.face_verified ? '✓ Face' : '✗ Face'} | ${d.check_in_lat && d.check_in_lng ? `${Number(d.check_in_lat).toFixed(2)}, ${Number(d.check_in_lng).toFixed(2)}` : 'No GPS'}`,
         d.notes || '',
       ]);
 
@@ -246,24 +280,24 @@ export async function GET(
         startY: 65,
         theme: 'grid',
         headStyles: { fillColor: primaryColor, textColor: accentColor, fontStyle: 'bold' },
-        styles: { font: 'helvetica', fontSize: 9, cellPadding: 3.5 },
+        styles: { font: 'helvetica', fontSize: 8, cellPadding: 3 },
         columnStyles: {
-          0: { cellWidth: 26 },
-          1: { cellWidth: 16 },
-          2: { cellWidth: 26 },
-          3: { cellWidth: 26 },
-          4: { cellWidth: 26 },
-          5: { cellWidth: 20, halign: 'center' },
-          6: { cellWidth: 20, halign: 'center' },
-          7: { cellWidth: 20, halign: 'center' },
+          0: { cellWidth: 22 },
+          1: { cellWidth: 14 },
+          2: { cellWidth: 22 },
+          3: { cellWidth: 36 },
+          4: { cellWidth: 16, halign: 'center' },
+          5: { cellWidth: 24, halign: 'center' },
+          6: { cellWidth: 24, halign: 'center' },
+          7: { cellWidth: 38 },
           8: { cellWidth: 'auto' },
         },
-        didParseCell: function (data: any) {
-          if (data.section === 'body' && data.column.index === 2) {
-            const st = data.cell.raw;
-            if (st === 'MISSED' || st === 'ABSENT') data.cell.styles.textColor = [225, 29, 72];
-            else if (st === 'LATE') data.cell.styles.textColor = [217, 119, 6];
-            else if (st === 'PRESENT') data.cell.styles.textColor = [16, 185, 129];
+        didParseCell: function (data: Record<string, unknown> & { section?: string; column?: { index?: number }; cell?: { raw?: unknown; styles: { textColor?: number[] } } }) {
+          if (data.section === 'body' && data.column?.index === 2) {
+            const st = data.cell?.raw;
+            if (st === 'MISSED' || st === 'ABSENT') { if (data.cell) data.cell.styles.textColor = [225, 29, 72]; }
+            else if (st === 'LATE') { if (data.cell) data.cell.styles.textColor = [217, 119, 6]; }
+            else if (st === 'PRESENT') { if (data.cell) data.cell.styles.textColor = [16, 185, 129]; }
           }
         }
       });

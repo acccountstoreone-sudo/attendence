@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       requestedISO = `${input.date}T${input.requested_time}:00.000+06:00`;
     }
 
-    const payload: Record<string, any> = {
+    const payload: Record<string, unknown> = {
       employee_id: user.id,
       branch_id: user.branch_id,
       record_id: input.record_id || null,

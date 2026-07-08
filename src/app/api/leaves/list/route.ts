@@ -51,22 +51,22 @@ export async function GET(request: NextRequest) {
     const { data: profiles } = userIds.length > 0
       ? await supabase.from('profiles').select('id, full_name, email, role, employee_id').in('id', userIds)
       : { data: [] };
-    const profMap: Record<string, any> = {};
-    (profiles || []).forEach((p) => { profMap[p.id] = p; });
+    const profMap: Record<string, Record<string, unknown>> = {};
+    (profiles || []).forEach((p) => { profMap[p.id] = p as unknown as Record<string, unknown>; });
 
     // Fetch branches
     const { data: branches } = branchIds.length > 0
       ? await supabase.from('branches').select('id, name, code').in('id', branchIds)
       : { data: [] };
-    const branchMap: Record<string, any> = {};
-    (branches || []).forEach((b) => { branchMap[b.id] = b; });
+    const branchMap: Record<string, Record<string, unknown>> = {};
+    (branches || []).forEach((b) => { branchMap[b.id] = b as unknown as Record<string, unknown>; });
 
     // Fetch leave types
     const { data: leaveTypes } = leaveTypeIds.length > 0
       ? await supabase.from('leave_types').select('id, code, name').in('id', leaveTypeIds)
       : { data: [] };
-    const typeMap: Record<string, any> = {};
-    (leaveTypes || []).forEach((t) => { typeMap[t.id] = t; });
+    const typeMap: Record<string, Record<string, unknown>> = {};
+    (leaveTypes || []).forEach((t) => { typeMap[t.id] = t as unknown as Record<string, unknown>; });
 
     // Enrich leaves
     const enriched = leaves.map((l) => {

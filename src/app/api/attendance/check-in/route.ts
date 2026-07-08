@@ -54,17 +54,19 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // 3b. Verify against stored face descriptor
-    const { data: profile } = await supabase.from('profiles').select('face_descriptor').eq('id', user.id).single();
+    // 3b. Verify against stored face descriptor & reverification status
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
     
-    if (!profile || !profile.face_descriptor) {
+    if (!profile || !profile.face_descriptor || profile.face_enrolled === false || (profile as Record<string, unknown>).requires_face_reverification === true) {
       return NextResponse.json(
         {
           success: false,
           data: null,
           error: {
-            code: 'BIOMETRIC_ENROLLMENT_MISSING',
-            message: 'No facial biometric data found for this employee. Please register your face first.',
+            code: 'BIOMETRIC_REVERIFICATION_REQUIRED',
+            message: (profile as Record<string, unknown>)?.requires_face_reverification
+              ? 'Admin has cancelled and reset your face verification. You must re-verify your face right now before checking in.'
+              : 'No facial biometric data found for this employee. Please enroll and verify your face first before checking in.',
           },
           timestamp: new Date().toISOString(),
         },
@@ -103,7 +105,7 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         );
       }
-    } catch (err) {
+    } catch {
       return NextResponse.json({ success: false, data: null, error: { code: 'BIOMETRIC_ERROR', message: 'Error processing facial comparison.' } }, { status: 500 });
     }
 
@@ -268,6 +270,23 @@ export async function POST(request: NextRequest) {
 
     if (insertErr || !newRecord) {
       throw new Error(`Database Insert Failed: ${insertErr?.message}`);
+    }
+
+    // Update live location and first verified location if not yet set
+    const locUpdate: Record<string, unknown> = {
+      last_known_latitude: payload.latitude,
+      last_known_longitude: payload.longitude,
+      last_location_updated_at: new Date().toISOString(),
+    };
+    if (!(profile as Record<string, unknown>).first_verified_at) {
+      locUpdate.first_verified_latitude = payload.latitude;
+      locUpdate.first_verified_longitude = payload.longitude;
+      locUpdate.first_verified_at = new Date().toISOString();
+    }
+    try {
+      await supabase.from('profiles').update(locUpdate).eq('id', user.id);
+    } catch {
+      // Ignore non-fatal location update errors
     }
 
     return NextResponse.json(

@@ -132,9 +132,9 @@ export default function AdminReportsPage() {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Export error:', err);
-      alert(`Export failed: ${err.message || 'Please try again.'}`);
+      alert(`Export failed: ${err instanceof Error ? err.message : 'Please try again.'}`);
     } finally {
       setExporting(null);
     }

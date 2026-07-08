@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
 import {
   Clock,
@@ -18,13 +17,17 @@ import {
   Building2,
   User,
   ArrowLeft,
-  Filter,
   Search,
   RefreshCw,
-  Info,
+  MapPin,
+  ShieldAlert,
+  ShieldCheck,
+  Camera,
+  Navigation,
+  LocateFixed,
+  ExternalLink,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface DailyLog {
   date: string;
@@ -34,9 +37,17 @@ interface DailyLog {
   check_out_time: string;
   duty_hours: number;
   late_minutes: number;
+  late_hours?: number;
   overtime_minutes: number;
   overtime_hours: number;
   notes: string;
+  face_verified?: boolean;
+  face_match_score?: number | null;
+  check_in_lat?: number | null;
+  check_in_lng?: number | null;
+  check_out_lat?: number | null;
+  check_out_lng?: number | null;
+  is_right_time?: boolean;
 }
 
 interface DutySummaryData {
@@ -51,6 +62,17 @@ interface DutySummaryData {
     employee_id?: string;
     branch_name: string;
     branch_code?: string;
+    created_at?: string;
+    facial_id?: string | null;
+    face_enrolled?: boolean;
+    requires_face_reverification?: boolean;
+    face_reset_at?: string | null;
+    last_known_latitude?: number | null;
+    last_known_longitude?: number | null;
+    last_location_updated_at?: string | null;
+    first_verified_latitude?: number | null;
+    first_verified_longitude?: number | null;
+    first_verified_at?: string | null;
   };
   period: {
     month: number;
@@ -73,6 +95,16 @@ interface DutySummaryData {
     total_overtime_hours: number;
     total_late_minutes: number;
     total_late_hours: number;
+    today_status?: string;
+    today_duty_hours?: number;
+    today_late_minutes?: number;
+    today_late_hours?: number;
+    today_overtime_minutes?: number;
+    today_overtime_hours?: number;
+    today_face_verified?: boolean;
+    today_check_in_time?: string;
+    today_check_out_time?: string;
+    today_location?: { lat: number; lng: number } | null;
   };
   daily_breakdown: DailyLog[];
 }
@@ -93,6 +125,36 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
   const [exporting, setExporting] = useState<'csv' | 'excel' | 'pdf' | null>(null);
   const [filterTab, setFilterTab] = useState<'all' | 'present' | 'late' | 'missed' | 'overtime'>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [refreshIndex, setRefreshIndex] = useState<number>(0);
+  const [resettingFace, setResettingFace] = useState<boolean>(false);
+  const [resetSuccessMsg, setResetSuccessMsg] = useState<string | null>(null);
+  const [showMapModal, setShowMapModal] = useState<{ lat: number; lng: number; title: string; subtitle?: string } | null>(null);
+
+  const handleResetFaceVerification = async () => {
+    if (!data?.employee?.id) return;
+    const confirmReset = window.confirm(
+      `Are you sure you want to cancel and reset biometric face verification for ${data.employee.full_name}?\n\nThis will immediately revoke their current face enrollment and send a notification requiring them to re-verify their face right now before checking in.`
+    );
+    if (!confirmReset) return;
+
+    setResettingFace(true);
+    setResetSuccessMsg(null);
+    try {
+      const res = await fetch(`/api/employees/${data.employee.id}/reset-face-verification`, {
+        method: 'POST',
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json?.error?.message || 'Failed to reset face verification.');
+      }
+      setResetSuccessMsg(`Face verification cancelled successfully! Employee notified.`);
+      setRefreshIndex((prev) => prev + 1);
+    } catch (err: unknown) {
+      alert(`Error resetting face verification: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setResettingFace(false);
+    }
+  };
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -101,26 +163,33 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
 
   const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - i);
 
-  const fetchDutyData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/reports/employee/${employeeId}/duty-summary?month=${month}&year=${year}`);
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || 'Failed to calculate monthly duty profile.');
-      }
-      setData(json.data);
-    } catch (err: any) {
-      setError(err.message || 'Error fetching report.');
-    } finally {
-      setLoading(false);
-    }
-  }, [employeeId, month, year]);
-
   useEffect(() => {
-    fetchDutyData();
-  }, [fetchDutyData]);
+    let mounted = true;
+    const fetchDutyData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/reports/employee/${employeeId}/duty-summary?month=${month}&year=${year}`);
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.error?.message || 'Failed to calculate monthly duty profile.');
+        }
+        if (mounted) setData(json.data);
+      } catch (err: unknown) {
+        if (mounted) setError(err instanceof Error ? err.message : 'Error fetching report.');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    queueMicrotask(() => {
+      fetchDutyData();
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [employeeId, month, year, refreshIndex]);
 
   const handleExport = async (format: 'csv' | 'excel' | 'pdf') => {
     setExporting(format);
@@ -154,8 +223,8 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
       } else {
         throw new Error('No downloadable file returned.');
       }
-    } catch (err: any) {
-      alert(`Export error: ${err.message}`);
+    } catch (err: unknown) {
+      alert(`Export error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setExporting(null);
     }
@@ -309,7 +378,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={fetchDutyData}
+            onClick={() => setRefreshIndex((prev) => prev + 1)}
             disabled={loading}
             className="text-slate-400 hover:text-white p-2 border border-[#1E293B] rounded-xl"
             title="Refresh Data"
@@ -375,10 +444,233 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
           <AlertCircle className="w-12 h-12 text-rose-400 mx-auto mb-3" />
           <h3 className="text-lg font-semibold text-rose-300">Calculation Error</h3>
           <p className="text-sm text-slate-400 mt-1 mb-4">{error}</p>
-          <Button onClick={fetchDutyData} variant="outline" size="sm">Try Again</Button>
+          <Button onClick={() => setRefreshIndex((prev) => prev + 1)} variant="outline" size="sm">Try Again</Button>
         </div>
       ) : data ? (
         <>
+          {resetSuccessMsg && (
+            <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-4 py-3 rounded-xl flex items-center justify-between text-sm animate-in fade-in">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                <span>{resetSuccessMsg}</span>
+              </div>
+              <button onClick={() => setResetSuccessMsg(null)} className="text-xs text-slate-400 hover:text-white underline">Dismiss</button>
+            </div>
+          )}
+
+          {/* Today's Real-time Duty Spotlight Card */}
+          {month === currentDate.getMonth() + 1 && year === currentDate.getFullYear() && (
+            <div className="bg-gradient-to-r from-amber-500/15 via-[#0A101C] to-cyan-500/15 border border-amber-500/30 rounded-2xl p-5 relative overflow-hidden shadow-2xl">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-amber-500/20 pb-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 animate-pulse">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-white text-base">Today&apos;s Real-Time Duty Spotlight</h3>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500 text-slate-950">LIVE</span>
+                    </div>
+                    <p className="text-xs text-slate-300 mt-0.5">Instant attendance, punctuality, and face/GPS status for today ({new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Dhaka', month: 'short', day: 'numeric', year: 'numeric' })})</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                    data.summary.today_status === 'present' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
+                    data.summary.today_status === 'late' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
+                    data.summary.today_status === 'half_day' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' :
+                    'bg-slate-800 text-slate-400 border border-slate-700'
+                  }`}>
+                    Today: {data.summary.today_status || 'Upcoming'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-center sm:text-left">
+                <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
+                  <p className="text-[11px] font-medium text-slate-400">Check-In Time</p>
+                  <p className="text-sm font-bold text-white mt-1">{data.summary.today_check_in_time || '--:--'}</p>
+                </div>
+
+                <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
+                  <p className="text-[11px] font-medium text-slate-400">Check-Out Time</p>
+                  <p className="text-sm font-bold text-white mt-1">{data.summary.today_check_out_time || '--:--'}</p>
+                </div>
+
+                <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
+                  <p className="text-[11px] font-medium text-slate-400">Duty Hours Today</p>
+                  <p className="text-sm font-bold text-amber-400 mt-1">{data.summary.today_duty_hours || 0} hrs</p>
+                </div>
+
+                <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
+                  <p className="text-[11px] font-medium text-slate-400">Punctuality</p>
+                  {data.summary.today_late_minutes && data.summary.today_late_minutes > 0 ? (
+                    <p className="text-sm font-bold text-rose-400 mt-1">{data.summary.today_late_minutes}m late ({data.summary.today_late_hours}h)</p>
+                  ) : data.summary.today_check_in_time !== '--:--' ? (
+                    <p className="text-sm font-bold text-emerald-400 mt-1">✓ Right Time</p>
+                  ) : (
+                    <p className="text-sm font-bold text-slate-500 mt-1">Not Check In</p>
+                  )}
+                </div>
+
+                <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
+                  <p className="text-[11px] font-medium text-slate-400">Today Overtime</p>
+                  <p className="text-sm font-bold text-emerald-400 mt-1">{data.summary.today_overtime_minutes || 0}m ({data.summary.today_overtime_hours || 0}h)</p>
+                </div>
+
+                <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B] flex flex-col justify-between">
+                  <p className="text-[11px] font-medium text-slate-400">Biometric & GPS</p>
+                  <div className="flex items-center justify-between gap-1 mt-1">
+                    <span className={`text-xs font-bold ${data.summary.today_face_verified ? 'text-emerald-400' : 'text-slate-400'}`}>
+                      {data.summary.today_face_verified ? '✓ Face' : '✗ Face'}
+                    </span>
+                    {data.summary.today_location ? (
+                      <button
+                        onClick={() => setShowMapModal({
+                          lat: data.summary.today_location!.lat,
+                          lng: data.summary.today_location!.lng,
+                          title: `Today Check-In Location (${data.employee.full_name})`,
+                          subtitle: `Time: ${data.summary.today_check_in_time}`,
+                        })}
+                        className="text-[11px] font-bold text-cyan-400 hover:underline flex items-center gap-0.5"
+                      >
+                        <MapPin className="w-3 h-3" /> GPS
+                      </button>
+                    ) : (
+                      <span className="text-[11px] text-slate-500">No GPS</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Admin & Management Control Center Card */}
+          <div className="bg-[#0A101C] border border-[#1E293B] rounded-2xl p-5 shadow-xl">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              {/* Left: Registration & Biometric Status */}
+              <div className="space-y-3 flex-1">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-cyan-400" />
+                  <h3 className="font-bold text-white text-base">Employee Profile & Biometric Verification Center</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="bg-[#141E33]/80 p-3 rounded-xl border border-[#1E293B]">
+                    <span className="text-[11px] font-medium text-slate-400 block">App Registration Date</span>
+                    <span className="text-xs font-bold text-slate-200 mt-1 block">
+                      {data.employee.created_at ? new Date(data.employee.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'long', day: 'numeric',
+                      }) : 'Date Not Recorded'}
+                    </span>
+                  </div>
+
+                  <div className="bg-[#141E33]/80 p-3 rounded-xl border border-[#1E293B]">
+                    <span className="text-[11px] font-medium text-slate-400 block">Biometric KYC Status</span>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className={`text-xs font-bold flex items-center gap-1.5 ${
+                        data.employee.requires_face_reverification
+                          ? 'text-rose-400 animate-pulse'
+                          : data.employee.face_enrolled
+                          ? 'text-emerald-400'
+                          : 'text-amber-400'
+                      }`}>
+                        {data.employee.requires_face_reverification
+                          ? <><ShieldAlert className="w-3.5 h-3.5" /> Reverification Required (Cancelled)</>
+                          : data.employee.face_enrolled
+                          ? <><CheckCircle2 className="w-3.5 h-3.5" /> Verified & Active</>
+                          : <><AlertCircle className="w-3.5 h-3.5" /> Not Enrolled Yet</>}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Middle: Now Location vs First Verified Location */}
+              <div className="space-y-3 flex-1 border-t lg:border-t-0 lg:border-l border-[#1E293B] pt-4 lg:pt-0 lg:pl-6">
+                <div className="flex items-center gap-2">
+                  <LocateFixed className="w-5 h-5 text-amber-400" />
+                  <h3 className="font-bold text-white text-base">Live GPS Coordinates & Verification Tracking</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="bg-[#141E33]/80 p-3 rounded-xl border border-[#1E293B] relative group">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-medium text-slate-400">Now Location (Live)</span>
+                      {data.employee.last_known_latitude && data.employee.last_known_longitude && (
+                        <button
+                          onClick={() => setShowMapModal({
+                            lat: data.employee.last_known_latitude!,
+                            lng: data.employee.last_known_longitude!,
+                            title: `Now Location — Live GPS (${data.employee.full_name})`,
+                            subtitle: data.employee.last_location_updated_at ? `Last Updated: ${new Date(data.employee.last_location_updated_at).toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}` : undefined,
+                          })}
+                          className="text-[11px] font-bold text-amber-400 hover:underline flex items-center gap-1"
+                        >
+                          <MapPin className="w-3 h-3" /> View Map
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-xs font-mono font-bold text-slate-200 mt-1">
+                      {data.employee.last_known_latitude && data.employee.last_known_longitude
+                        ? `${data.employee.last_known_latitude.toFixed(5)}, ${data.employee.last_known_longitude.toFixed(5)}`
+                        : 'No Live GPS Received'}
+                    </p>
+                    {data.employee.last_location_updated_at && (
+                      <p className="text-[10px] text-slate-500 mt-0.5">Updated: {new Date(data.employee.last_location_updated_at).toLocaleTimeString('en-US', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit' })}</p>
+                    )}
+                  </div>
+
+                  <div className="bg-[#141E33]/80 p-3 rounded-xl border border-[#1E293B] relative group">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-medium text-slate-400">First Verified Location</span>
+                      {data.employee.first_verified_latitude && data.employee.first_verified_longitude && (
+                        <button
+                          onClick={() => setShowMapModal({
+                            lat: data.employee.first_verified_latitude!,
+                            lng: data.employee.first_verified_longitude!,
+                            title: `First Verified Check-in Location (${data.employee.full_name})`,
+                            subtitle: data.employee.first_verified_at ? `Verified on: ${new Date(data.employee.first_verified_at).toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}` : undefined,
+                          })}
+                          className="text-[11px] font-bold text-cyan-400 hover:underline flex items-center gap-1"
+                        >
+                          <MapPin className="w-3 h-3" /> View Map
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-xs font-mono font-bold text-slate-200 mt-1">
+                      {data.employee.first_verified_latitude && data.employee.first_verified_longitude
+                        ? `${data.employee.first_verified_latitude.toFixed(5)}, ${data.employee.first_verified_longitude.toFixed(5)}`
+                        : 'No Initial GPS Logged'}
+                    </p>
+                    {data.employee.first_verified_at && (
+                      <p className="text-[10px] text-slate-500 mt-0.5">Date: {new Date(data.employee.first_verified_at).toLocaleDateString()}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Actions */}
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0 border-t lg:border-t-0 lg:border-l border-[#1E293B] pt-4 lg:pt-0 lg:pl-6 justify-center">
+                <Button
+                  onClick={handleResetFaceVerification}
+                  disabled={resettingFace || data.employee.requires_face_reverification}
+                  variant={data.employee.requires_face_reverification ? 'outline' : 'danger'}
+                  className="w-full text-xs font-semibold flex items-center justify-center gap-2 py-2"
+                >
+                  {resettingFace ? <Spinner size="sm" /> : <ShieldAlert className="w-4 h-4" />}
+                  {data.employee.requires_face_reverification ? 'Already Cancelled / Waiting Re-verify' : 'Cancel & Reset Face Verification'}
+                </Button>
+                <Button
+                  onClick={() => setRefreshIndex(prev => prev + 1)}
+                  variant="outline"
+                  className="w-full text-xs font-semibold flex items-center justify-center gap-2 py-2 border-[#1E293B] hover:bg-slate-800"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+                  Refresh Location & Status
+                </Button>
+              </div>
+            </div>
+          </div>
+
           {/* 6 KPI Cards Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {/* 1. Duty Hours */}
@@ -505,21 +797,22 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[#0E1726]/80 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-[#1E293B]">
-                    <th className="py-3.5 px-5">Date</th>
-                    <th className="py-3.5 px-5">Day</th>
-                    <th className="py-3.5 px-5">Status</th>
-                    <th className="py-3.5 px-5">Check-In</th>
-                    <th className="py-3.5 px-5">Check-Out</th>
-                    <th className="py-3.5 px-5 text-center">Duty Hours</th>
-                    <th className="py-3.5 px-5 text-center">Late (Mins)</th>
-                    <th className="py-3.5 px-5 text-center">Overtime</th>
-                    <th className="py-3.5 px-5">Notes / Remark</th>
+                    <th className="py-3.5 px-4">Date</th>
+                    <th className="py-3.5 px-4">Day</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4">Check-In</th>
+                    <th className="py-3.5 px-4">Check-Out</th>
+                    <th className="py-3.5 px-4 text-center">Duty Hours</th>
+                    <th className="py-3.5 px-4 text-center">Punctuality</th>
+                    <th className="py-3.5 px-4 text-center">Overtime</th>
+                    <th className="py-3.5 px-4 text-center">Face & GPS</th>
+                    <th className="py-3.5 px-4">Notes / Remark</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1E293B]/60 text-xs">
                   {filteredLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="py-16 text-center text-slate-500">
+                      <td colSpan={10} className="py-16 text-center text-slate-500">
                         No daily logs found matching the selected filter.
                       </td>
                     </tr>
@@ -529,31 +822,68 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                         key={log.date}
                         className={`hover:bg-[#141E33]/60 transition-colors ${log.status === 'missed' ? 'bg-rose-500/[0.03]' : log.status === 'late' ? 'bg-amber-500/[0.03]' : ''}`}
                       >
-                        <td className="py-3.5 px-5 font-mono font-medium text-slate-200">{log.date}</td>
-                        <td className="py-3.5 px-5 text-slate-400">{log.day_name}</td>
-                        <td className="py-3.5 px-5">{getStatusBadge(log.status, log.late_minutes, log.overtime_minutes)}</td>
-                        <td className="py-3.5 px-5 font-mono text-slate-300">{log.check_in_time}</td>
-                        <td className="py-3.5 px-5 font-mono text-slate-300">{log.check_out_time}</td>
-                        <td className="py-3.5 px-5 text-center font-bold text-slate-200">
+                        <td className="py-3.5 px-4 font-mono font-medium text-slate-200">{log.date}</td>
+                        <td className="py-3.5 px-4 text-slate-400">{log.day_name}</td>
+                        <td className="py-3.5 px-4">{getStatusBadge(log.status, log.late_minutes, log.overtime_minutes)}</td>
+                        <td className="py-3.5 px-4 font-mono text-slate-300">{log.check_in_time}</td>
+                        <td className="py-3.5 px-4 font-mono text-slate-300">{log.check_out_time}</td>
+                        <td className="py-3.5 px-4 text-center font-bold text-slate-200">
                           {log.duty_hours > 0 ? `${log.duty_hours}h` : '-'}
                         </td>
-                        <td className="py-3.5 px-5 text-center font-mono">
-                          {log.late_minutes > 0 ? (
-                            <span className="text-amber-400 font-bold">+{log.late_minutes}m</span>
+                        <td className="py-3.5 px-4 text-center font-mono">
+                          {log.is_right_time ? (
+                            <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/20 text-[11px]">
+                              Right Time
+                            </span>
+                          ) : log.late_minutes > 0 ? (
+                            <span className="text-amber-400 font-bold text-[11px]">+{log.late_minutes}m ({log.late_hours}h)</span>
                           ) : (
                             <span className="text-slate-600">-</span>
                           )}
                         </td>
-                        <td className="py-3.5 px-5 text-center font-mono">
+                        <td className="py-3.5 px-4 text-center font-mono">
                           {log.overtime_minutes > 0 ? (
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/20">
+                            <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/20 text-[11px]">
                               +{log.overtime_hours}h ({log.overtime_minutes}m)
                             </span>
                           ) : (
                             <span className="text-slate-600">-</span>
                           )}
                         </td>
-                        <td className="py-3.5 px-5 text-slate-400">{log.notes}</td>
+                        <td className="py-3.5 px-4 text-center">
+                          {log.check_in_time !== '--:--' && log.status !== 'upcoming' && log.status !== 'holiday' && log.status !== 'off_day' ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <span
+                                title={log.face_verified ? 'Verified with facial biometrics' : 'Face verification not matched or bypassed'}
+                                className={`px-1.5 py-0.5 rounded font-bold text-[10px] ${
+                                  log.face_verified
+                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                    : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                                }`}
+                              >
+                                {log.face_verified ? '✓ Face' : '✗ Face'}
+                              </span>
+                              {log.check_in_lat && log.check_in_lng ? (
+                                <button
+                                  onClick={() => setShowMapModal({
+                                    lat: log.check_in_lat!,
+                                    lng: log.check_in_lng!,
+                                    title: `Check-in GPS Location (${log.date})`,
+                                    subtitle: `Coordinates: ${log.check_in_lat!.toFixed(5)}, ${log.check_in_lng!.toFixed(5)} | Check-in: ${log.check_in_time}`,
+                                  })}
+                                  className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold text-[10px] hover:bg-cyan-500/30 flex items-center gap-1"
+                                >
+                                  <MapPin className="w-2.5 h-2.5" /> GPS
+                                </button>
+                              ) : (
+                                <span className="text-[10px] text-slate-500">No GPS</span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-600 text-[11px]">-</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-400">{log.notes}</td>
                       </tr>
                     ))
                   )}
@@ -563,6 +893,64 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
           </div>
         </>
       ) : null}
+
+      {/* Interactive Map Modal */}
+      {showMapModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#0E1726] border border-[#1E293B] rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
+            <div className="p-4 border-b border-[#1E293B] flex items-center justify-between bg-[#141E33]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm">{showMapModal.title}</h3>
+                  {showMapModal.subtitle && <p className="text-[11px] text-slate-400">{showMapModal.subtitle}</p>}
+                </div>
+              </div>
+              <button
+                onClick={() => setShowMapModal(null)}
+                className="w-8 h-8 rounded-lg bg-[#0A101C] border border-[#1E293B] text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-4 bg-[#0A101C]">
+              {/* Embedded OpenStreetMap / Leaflet preview or Google Maps iframe */}
+              <div className="w-full h-80 rounded-xl overflow-hidden border border-[#1E293B] bg-slate-900 relative">
+                <iframe
+                  title="GPS Location Map"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${showMapModal.lng - 0.005}%2C${showMapModal.lat - 0.005}%2C${showMapModal.lng + 0.005}%2C${showMapModal.lat + 0.005}&layer=mapnik&marker=${showMapModal.lat}%2C${showMapModal.lng}`}
+                />
+              </div>
+
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
+                <div className="text-xs font-mono text-slate-300">
+                  <span className="text-slate-500">Lat:</span> {showMapModal.lat.toFixed(6)}, <span className="text-slate-500">Lng:</span> {showMapModal.lng.toFixed(6)}
+                </div>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${showMapModal.lat},${showMapModal.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 flex items-center gap-1.5 shadow"
+                  >
+                    Open in Google Maps <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                  <Button onClick={() => setShowMapModal(null)} variant="outline" size="sm" className="text-xs">
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

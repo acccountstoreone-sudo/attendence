@@ -95,7 +95,9 @@ export default function StoreSettingsPage() {
   }, []);
 
   useEffect(() => {
-    loadAllData();
+    queueMicrotask(() => {
+      loadAllData();
+    });
   }, [loadAllData]);
 
   // Handle GPS location detection

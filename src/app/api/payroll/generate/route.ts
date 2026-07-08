@@ -122,8 +122,8 @@ export async function POST(request: NextRequest) {
             }
           });
         }
-      } catch (err: any) {
-        results.push({ user_id: employee.id, full_name: employee.full_name, status: 'error', reason: err.message });
+      } catch (err: unknown) {
+        results.push({ user_id: employee.id, full_name: employee.full_name, status: 'error', reason: err instanceof Error ? err.message : String(err) });
       }
     }
 

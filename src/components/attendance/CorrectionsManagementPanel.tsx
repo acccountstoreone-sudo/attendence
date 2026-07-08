@@ -55,15 +55,17 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
         throw new Error(data.error?.message || data.error || 'Failed to fetch correction requests');
       }
       setCorrections(data.data || []);
-    } catch (err: any) {
-      setError(err.message || 'An error occurred fetching correction requests.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred fetching correction requests.');
     } finally {
       setLoading(false);
     }
   }, [statusTab]);
 
   useEffect(() => {
-    fetchCorrections();
+    queueMicrotask(() => {
+      fetchCorrections();
+    });
   }, [fetchCorrections]);
 
   const handleQuickAction = async (id: string, action: 'approve' | 'reject', note?: string) => {
@@ -81,8 +83,8 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
       await fetchCorrections();
       setNoteModalReq(null);
       setReviewerNote('');
-    } catch (err: any) {
-      alert(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      alert(`Error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setActingId(null);
     }
@@ -249,7 +251,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                           </div>
                           <div className="pt-2">
                             <p className="text-sm text-slate-200 bg-slate-900/80 border border-slate-800 p-3 rounded-xl italic">
-                              "{c.reason}"
+                              &quot;{c.reason}&quot;
                             </p>
                           </div>
                           {c.reviewer_note && (

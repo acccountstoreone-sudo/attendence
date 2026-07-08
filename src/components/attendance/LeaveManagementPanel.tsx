@@ -59,15 +59,17 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
         throw new Error(data.error?.message || data.error || 'Failed to fetch leave requests');
       }
       setLeaves(data.data || []);
-    } catch (err: any) {
-      setError(err.message || 'An error occurred fetching leave requests.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred fetching leave requests.');
     } finally {
       setLoading(false);
     }
   }, [statusTab]);
 
   useEffect(() => {
-    fetchLeaves();
+    queueMicrotask(() => {
+      fetchLeaves();
+    });
   }, [fetchLeaves]);
 
   const handleQuickAction = async (id: string, action: 'approve' | 'reject', note?: string) => {
@@ -86,8 +88,8 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
       await fetchLeaves();
       setNoteModalLeave(null);
       setReviewerNote('');
-    } catch (err: any) {
-      alert(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      alert(`Error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setActingId(null);
     }
@@ -241,7 +243,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                           </div>
                           <div className="pt-2">
                             <p className="text-sm text-slate-200 bg-slate-900/80 border border-slate-800 p-3 rounded-xl italic">
-                              "{l.reason}"
+                              &quot;{l.reason}&quot;
                             </p>
                           </div>
                           {l.reviewer_note && (

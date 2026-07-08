@@ -49,14 +49,14 @@ export async function GET(request: NextRequest) {
     const { data: profiles } = userIds.length > 0
       ? await supabase.from('profiles').select('id, full_name, email, role, employee_id').in('id', userIds)
       : { data: [] };
-    const profMap: Record<string, any> = {};
-    (profiles || []).forEach((p) => { profMap[p.id] = p; });
+    const profMap: Record<string, Record<string, unknown>> = {};
+    (profiles || []).forEach((p) => { profMap[p.id] = p as unknown as Record<string, unknown>; });
 
     const { data: branches } = branchIds.length > 0
       ? await supabase.from('branches').select('id, name, code').in('id', branchIds)
       : { data: [] };
-    const branchMap: Record<string, any> = {};
-    (branches || []).forEach((b) => { branchMap[b.id] = b; });
+    const branchMap: Record<string, Record<string, unknown>> = {};
+    (branches || []).forEach((b) => { branchMap[b.id] = b as unknown as Record<string, unknown>; });
 
     const enriched = corrections.map((c) => {
       const prof = profMap[c.employee_id] || {};

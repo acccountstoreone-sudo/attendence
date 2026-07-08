@@ -79,7 +79,11 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
     );
   }, [branch, loadingProfile]);
 
-  useEffect(() => { check(); }, [check]);
+  useEffect(() => {
+    queueMicrotask(() => {
+      check();
+    });
+  }, [check]);
 
   return {
     status,

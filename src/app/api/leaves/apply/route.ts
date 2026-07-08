@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Insert Leave Request
-    const insertPayload: Record<string, any> = {
+    const insertPayload: Record<string, unknown> = {
       user_id: user.id,
       employee_id: user.id,
       branch_id: user.branch_id,
@@ -124,11 +124,13 @@ export async function POST(request: NextRequest) {
       status: 'pending'
     };
 
-    let { data: requestRecord, error: reqErr } = await supabase
+    const { data: initialRecord, error: reqErr } = await supabase
       .from('leave_requests')
       .insert(insertPayload)
       .select()
       .single();
+
+    let requestRecord = initialRecord;
 
     if (reqErr) {
       // Fallback if one of the columns doesn't exist in active schema

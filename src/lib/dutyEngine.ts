@@ -12,6 +12,17 @@ export interface DutySummaryResult {
     employee_id?: string;
     branch_name: string;
     branch_code: string;
+    created_at?: string;
+    facial_id?: string | null;
+    face_enrolled?: boolean;
+    requires_face_reverification?: boolean;
+    face_reset_at?: string | null;
+    last_known_latitude?: number | null;
+    last_known_longitude?: number | null;
+    last_location_updated_at?: string | null;
+    first_verified_latitude?: number | null;
+    first_verified_longitude?: number | null;
+    first_verified_at?: string | null;
   };
   period: {
     month: number;
@@ -34,6 +45,16 @@ export interface DutySummaryResult {
     total_overtime_hours: number;
     total_late_minutes: number;
     total_late_hours: number;
+    today_status?: string;
+    today_duty_hours?: number;
+    today_late_minutes?: number;
+    today_late_hours?: number;
+    today_overtime_minutes?: number;
+    today_overtime_hours?: number;
+    today_face_verified?: boolean;
+    today_check_in_time?: string;
+    today_check_out_time?: string;
+    today_location?: { lat: number; lng: number } | null;
   };
   daily_breakdown: Array<{
     date: string;
@@ -43,9 +64,17 @@ export interface DutySummaryResult {
     check_out_time: string;
     duty_hours: number;
     late_minutes: number;
+    late_hours: number;
     overtime_minutes: number;
     overtime_hours: number;
     notes: string;
+    face_verified: boolean;
+    face_match_score?: number | null;
+    check_in_lat?: number | null;
+    check_in_lng?: number | null;
+    check_out_lat?: number | null;
+    check_out_lng?: number | null;
+    is_right_time: boolean;
   }>;
 }
 
@@ -54,7 +83,7 @@ export interface DutySummaryResult {
  * for an employee across any given month and year.
  */
 export async function computeEmployeeDutySummary(
-  supabase: SupabaseClient<any, 'public', any>,
+  supabase: SupabaseClient,
   targetEmployeeId: string,
   month: number,
   year: number
@@ -62,7 +91,7 @@ export async function computeEmployeeDutySummary(
   // 1. Fetch Target Profile
   const { data: targetProfile, error: profErr } = await supabase
     .from('profiles')
-    .select('id, full_name, email, phone, photo_url, role, branch_id, employee_id, created_at, branches(name, code)')
+    .select('*, branches(name, code)')
     .eq('id', targetEmployeeId)
     .single();
 
@@ -194,6 +223,17 @@ export async function computeEmployeeDutySummary(
   let totalOvertimeMinutes = 0;
   let totalLateMinutes = 0;
 
+  let todayStatus = 'upcoming';
+  let todayDutyHours = 0;
+  let todayLateMinutes = 0;
+  let todayLateHours = 0;
+  let todayOvertimeMinutes = 0;
+  let todayOvertimeHours = 0;
+  let todayFaceVerified = false;
+  let todayCheckInTime = '--:--';
+  let todayCheckOutTime = '--:--';
+  let todayLocation: { lat: number; lng: number } | null = null;
+
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   for (let day = 1; day <= daysInMonthCount; day++) {
@@ -280,6 +320,24 @@ export async function computeEmployeeDutySummary(
       totalDutyHours += dutyHours;
       totalOvertimeMinutes += otMins;
 
+      const isVerified = Boolean(firstLog.face_match_score !== null && firstLog.face_match_score !== undefined || firstLog.face_verified || (targetProfile as Record<string, unknown>).face_enrolled);
+      const rightTime = (lateMins === 0 && evaluatedStatus === 'present');
+
+      if (dateStr === currentDhakaDateStr) {
+        todayStatus = evaluatedStatus;
+        todayDutyHours = Number(dutyHours.toFixed(2));
+        todayLateMinutes = lateMins;
+        todayLateHours = Number((lateMins / 60).toFixed(2));
+        todayOvertimeMinutes = otMins;
+        todayOvertimeHours = Number((otMins / 60).toFixed(2));
+        todayFaceVerified = isVerified;
+        todayCheckInTime = checkInFormatted;
+        todayCheckOutTime = checkOutFormatted || 'Working...';
+        if (firstLog.check_in_lat && firstLog.check_in_lng) {
+          todayLocation = { lat: Number(firstLog.check_in_lat), lng: Number(firstLog.check_in_lng) };
+        }
+      }
+
       dailyBreakdown.push({
         date: dateStr,
         day_name: dayName,
@@ -288,9 +346,17 @@ export async function computeEmployeeDutySummary(
         check_out_time: checkOutFormatted || (dateStr === currentDhakaDateStr ? 'Working...' : '--:--'),
         duty_hours: Number(dutyHours.toFixed(2)),
         late_minutes: lateMins,
+        late_hours: Number((lateMins / 60).toFixed(2)),
         overtime_minutes: otMins,
         overtime_hours: Number((otMins / 60).toFixed(2)),
-        notes: evaluatedStatus === 'late' ? `${lateMins} mins late` : otMins > 0 ? `${otMins} mins overtime` : 'Checked In',
+        notes: evaluatedStatus === 'late' ? `${lateMins} mins late` : otMins > 0 ? `${otMins} mins overtime` : 'Checked In right time',
+        face_verified: isVerified,
+        face_match_score: firstLog.face_match_score ? Number(firstLog.face_match_score) : null,
+        check_in_lat: firstLog.check_in_lat ? Number(firstLog.check_in_lat) : null,
+        check_in_lng: firstLog.check_in_lng ? Number(firstLog.check_in_lng) : null,
+        check_out_lat: checkOutLog.check_out_lat ? Number(checkOutLog.check_out_lat) : null,
+        check_out_lng: checkOutLog.check_out_lng ? Number(checkOutLog.check_out_lng) : null,
+        is_right_time: rightTime,
       });
     } else {
       if (isFutureDay) {
@@ -302,9 +368,12 @@ export async function computeEmployeeDutySummary(
           check_out_time: '--:--',
           duty_hours: 0,
           late_minutes: 0,
+          late_hours: 0,
           overtime_minutes: 0,
           overtime_hours: 0,
           notes: 'Upcoming Day',
+          face_verified: false,
+          is_right_time: false,
         });
       } else if (holidayMatch) {
         totalHolidayDays++;
@@ -316,9 +385,12 @@ export async function computeEmployeeDutySummary(
           check_out_time: '--:--',
           duty_hours: 0,
           late_minutes: 0,
+          late_hours: 0,
           overtime_minutes: 0,
           overtime_hours: 0,
           notes: `Holiday: ${holidayMatch.name}`,
+          face_verified: false,
+          is_right_time: false,
         });
       } else if (isOffDay) {
         totalOffDays++;
@@ -330,9 +402,12 @@ export async function computeEmployeeDutySummary(
           check_out_time: '--:--',
           duty_hours: 0,
           late_minutes: 0,
+          late_hours: 0,
           overtime_minutes: 0,
           overtime_hours: 0,
           notes: 'Weekly Off Day',
+          face_verified: false,
+          is_right_time: false,
         });
       } else if (leaveMatch) {
         totalOnLeaveDays++;
@@ -345,9 +420,12 @@ export async function computeEmployeeDutySummary(
           check_out_time: '--:--',
           duty_hours: 0,
           late_minutes: 0,
+          late_hours: 0,
           overtime_minutes: 0,
           overtime_hours: 0,
           notes: `Approved Leave (${(leaveMatch.type || 'Leave').toUpperCase()})`,
+          face_verified: false,
+          is_right_time: false,
         });
       } else if (dateStr < joinDateDhaka) {
         dailyBreakdown.push({
@@ -358,9 +436,12 @@ export async function computeEmployeeDutySummary(
           check_out_time: '--:--',
           duty_hours: 0,
           late_minutes: 0,
+          late_hours: 0,
           overtime_minutes: 0,
           overtime_hours: 0,
           notes: 'Before Joining Date',
+          face_verified: false,
+          is_right_time: false,
         });
       } else {
         totalWorkingDays++;
@@ -373,26 +454,43 @@ export async function computeEmployeeDutySummary(
           check_out_time: '--:--',
           duty_hours: 0,
           late_minutes: 0,
+          late_hours: 0,
           overtime_minutes: 0,
           overtime_hours: 0,
           notes: 'Absent / Missed Duty',
+          face_verified: false,
+          is_right_time: false,
         });
       }
     }
   }
 
+  const profileRec = targetProfile as Record<string, unknown>;
+  const branchesRec = profileRec.branches as { name?: string; code?: string } | undefined;
+
   return {
     employee: {
-      id: targetProfile.id,
-      full_name: targetProfile.full_name,
-      email: targetProfile.email,
-      phone: targetProfile.phone,
-      photo_url: targetProfile.photo_url,
-      role: targetProfile.role,
-      branch_id: targetProfile.branch_id,
-      employee_id: targetProfile.employee_id,
-      branch_name: (targetProfile as unknown as { branches?: { name?: string; code?: string } }).branches?.name || 'Global HQ',
-      branch_code: (targetProfile as unknown as { branches?: { code?: string } }).branches?.code || 'HQ',
+      id: profileRec.id as string,
+      full_name: profileRec.full_name as string,
+      email: profileRec.email as string | undefined,
+      phone: profileRec.phone as string | undefined,
+      photo_url: profileRec.photo_url as string | undefined,
+      role: profileRec.role as string | undefined,
+      branch_id: profileRec.branch_id as string | undefined,
+      employee_id: profileRec.employee_id as string | undefined,
+      branch_name: branchesRec?.name || 'Global HQ',
+      branch_code: branchesRec?.code || 'HQ',
+      created_at: profileRec.created_at as string | undefined,
+      facial_id: (profileRec.facial_id as string | null) ?? null,
+      face_enrolled: Boolean(profileRec.face_enrolled),
+      requires_face_reverification: Boolean(profileRec.requires_face_reverification),
+      face_reset_at: (profileRec.face_reset_at as string | null) ?? null,
+      last_known_latitude: profileRec.last_known_latitude ? Number(profileRec.last_known_latitude) : null,
+      last_known_longitude: profileRec.last_known_longitude ? Number(profileRec.last_known_longitude) : null,
+      last_location_updated_at: (profileRec.last_location_updated_at as string | null) ?? null,
+      first_verified_latitude: profileRec.first_verified_latitude ? Number(profileRec.first_verified_latitude) : null,
+      first_verified_longitude: profileRec.first_verified_longitude ? Number(profileRec.first_verified_longitude) : null,
+      first_verified_at: (profileRec.first_verified_at as string | null) ?? null,
     },
     period: { month, year, work_start_time: workStartTime, work_end_time: workEndTime, late_grace_minutes: lateGraceMinutes },
     summary: {
@@ -409,6 +507,16 @@ export async function computeEmployeeDutySummary(
       total_overtime_hours: Number((totalOvertimeMinutes / 60).toFixed(2)),
       total_late_minutes: totalLateMinutes,
       total_late_hours: Number((totalLateMinutes / 60).toFixed(2)),
+      today_status: todayStatus,
+      today_duty_hours: todayDutyHours,
+      today_late_minutes: todayLateMinutes,
+      today_late_hours: todayLateHours,
+      today_overtime_minutes: todayOvertimeMinutes,
+      today_overtime_hours: todayOvertimeHours,
+      today_face_verified: todayFaceVerified,
+      today_check_in_time: todayCheckInTime,
+      today_check_out_time: todayCheckOutTime,
+      today_location: todayLocation,
     },
     daily_breakdown: dailyBreakdown,
   };
