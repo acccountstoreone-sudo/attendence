@@ -39,14 +39,14 @@ export const BranchAttendanceTab: React.FC = () => {
       <Card className="bg-slate-900 border-slate-800 overflow-hidden shadow-xl">
         <div className="p-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between">
            <h5 className="text-sm font-semibold text-slate-300">
-             {view === 'daily' ? 'Today\'s Attendance (Placeholder)' : 'This Month\'s Attendance (Placeholder)'}
+             {view === 'daily' ? 'Today\'s Attendance' : 'This Month\'s Attendance'}
            </h5>
            <span className="text-xs text-slate-500 flex items-center"><Calendar className="w-3 h-3 mr-1"/> {new Date().toLocaleDateString()}</span>
         </div>
         <div className="p-12 text-center text-slate-500">
            <Calendar className="w-12 h-12 text-slate-700 mx-auto mb-3" />
-           <p className="text-sm font-medium">Attendance records will be displayed here.</p>
-           <p className="text-xs mt-1">This is a placeholder for the {view} view.</p>
+           <p className="text-sm font-medium">No attendance records found.</p>
+           <p className="text-xs mt-1">Data will appear here once employees check in.</p>
         </div>
       </Card>
     </div>

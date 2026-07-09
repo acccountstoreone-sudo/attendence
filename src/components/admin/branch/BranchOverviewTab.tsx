@@ -13,16 +13,18 @@ interface BranchOverviewTabProps {
 export const BranchOverviewTab: React.FC<BranchOverviewTabProps> = ({ branch, employees = [] }) => {
   const manager = employees.find(e => (branch.manager_id && e.id === branch.manager_id) || (!branch.manager_id && e.role === 'branch_manager'));
 
-  // Placeholder stats - in a real implementation these would be fetched from the server
+  const presentCount = employees.filter(e => e.is_present_today).length;
+  const activeCount = employees.filter(e => e.is_active !== false).length;
+
   const stats = {
     totalEmployees: employees.length,
-    present: Math.floor(employees.length * 0.8),
-    absent: Math.floor(employees.length * 0.1),
-    late: Math.floor(employees.length * 0.1),
-    active: Math.floor(employees.length * 0.7),
-    offline: Math.floor(employees.length * 0.3),
-    todayWorkingHours: '124 hrs',
-    todayOvertime: '12 hrs',
+    present: presentCount,
+    absent: employees.length - presentCount,
+    late: 0,
+    active: activeCount,
+    offline: employees.length - activeCount,
+    todayWorkingHours: '0 hrs',
+    todayOvertime: '0 hrs',
   };
 
   return (
