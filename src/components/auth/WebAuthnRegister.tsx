@@ -28,11 +28,13 @@ export function WebAuthnRegister() {
       let attResp;
       try {
         attResp = await startRegistration({ optionsJSON: options });
-      } catch (e: any) {
-        if (e.name === 'NotAllowedError') {
-           throw new Error('Registration cancelled or timed out.');
-        } else if (e.name === 'NotSupportedError') {
-           throw new Error('Your device does not support fingerprint/biometric registration on the web.');
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          if (e.name === 'NotAllowedError') {
+             throw new Error('Registration cancelled or timed out.');
+          } else if (e.name === 'NotSupportedError') {
+             throw new Error('Your device does not support fingerprint/biometric registration on the web.');
+          }
         }
         throw e;
       }
@@ -55,9 +57,13 @@ export function WebAuthnRegister() {
       } else {
         throw new Error('Verification failed on the server.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || 'An unexpected error occurred during fingerprint setup.');
+      if (err instanceof Error) {
+        setError(err.message || 'An unexpected error occurred during fingerprint setup.');
+      } else {
+        setError('An unexpected error occurred during fingerprint setup.');
+      }
     } finally {
       setLoading(false);
     }

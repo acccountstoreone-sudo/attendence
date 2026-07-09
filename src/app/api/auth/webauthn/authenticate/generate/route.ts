@@ -36,8 +36,11 @@ export async function POST(req: NextRequest) {
     await supabase.from('profiles').update({ webauthn_challenge: options.challenge }).eq('id', user.id);
 
     return NextResponse.json(options);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Authentication generation error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

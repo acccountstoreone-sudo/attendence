@@ -391,8 +391,8 @@ export default function EmployeeCheckInPage() {
       let asseResp;
       try {
         asseResp = await startAuthentication({ optionsJSON: options });
-      } catch (e: any) {
-        if (e.name === 'NotAllowedError') throw new Error('Authentication cancelled.');
+      } catch (e: unknown) {
+        if (e instanceof Error && e.name === 'NotAllowedError') throw new Error('Authentication cancelled.');
         throw e;
       }
 
@@ -432,9 +432,13 @@ export default function EmployeeCheckInPage() {
       }
 
       setTimeout(() => router.push('/employee'), 2200);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setSubmitting(false);
-      setSubmitError(err.message || 'Fingerprint check-in failed');
+      if (err instanceof Error) {
+        setSubmitError(err.message || 'Fingerprint check-in failed');
+      } else {
+        setSubmitError('Fingerprint check-in failed');
+      }
     }
   }, [gps.coords, gps.verified, gps.distance, profile, checkType, router]);
 

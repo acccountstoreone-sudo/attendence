@@ -58,9 +58,12 @@ export async function POST(req: NextRequest) {
             transports: credential.transports,
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Verification error:', error);
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      if (error instanceof Error) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+      return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 400 });
     }
 
     const { verified, authenticationInfo } = verification;
@@ -78,8 +81,11 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ verified: false }, { status: 400 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Authentication verification error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
