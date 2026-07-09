@@ -187,7 +187,7 @@ export default function EmployeeCheckInPage() {
         .eq('id', user.id)
         .single();
 
-      let bList: any[] = [];
+      let bList: Array<{ id: string; name: string; latitude: number | null; longitude: number | null; geofence_radius_meters: number | null }> = [];
       const { data: allB } = await supabase
         .from('branches')
         .select('id, name, latitude, longitude, geofence_radius_meters')
