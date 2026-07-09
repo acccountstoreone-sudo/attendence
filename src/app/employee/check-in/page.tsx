@@ -594,7 +594,6 @@ export default function EmployeeCheckInPage() {
           gpsRefresh={gps.refresh}
           branchName={profile?.branch_name}
           isLoading={submitting}
-          checkType={checkType}
           gpsErrorMsg={gps.errorMsg}
         />
       </div>
