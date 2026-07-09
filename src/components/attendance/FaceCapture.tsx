@@ -243,7 +243,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
         if (isMet(pts, ch)) {
           okCntRef.current++;
-          if (okCntRef.current >= 3) {
+          if (okCntRef.current >= 1) { // Reduced from 3 to 1 for much faster UX
             // Challenge passed
             okCntRef.current = 0;
 
@@ -256,7 +256,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           if (mountedRef.current) setMsg(CONF[ch].label);
         }
       } catch { /* silently continue */ }
-    }, 280);
+    }, 200); // Reduced interval from 280ms to 200ms
   }, [stopLoop, setPhase, announce]);
 
   // ── Anti-spoofing + capture + extract ───────────────
@@ -269,13 +269,13 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     announce('Anti-spoofing check...', 'info');
 
     try {
-      // 1. Motion entropy: compare 2 frames 750ms apart
+      // 1. Motion entropy: compare 2 frames 250ms apart (faster than 750ms)
       const f1 = await sampleFrame(v);
-      await new Promise(r => setTimeout(r, 750));
+      await new Promise(r => setTimeout(r, 250));
       const f2 = await sampleFrame(v);
       const score = motionScore(f1, f2);
 
-      if (score < 1.8) {
+      if (score < 1.0) { // Lowered threshold since time gap is shorter
         // Near-zero motion = static photo attempt
         announce('Static image detected! Please use a live camera.', 'error');
         setTimeout(() => { if (mountedRef.current) startLiveness(); }, 2500);
@@ -290,31 +290,31 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       ctx.drawImage(v, 0, 0);
       const dataUrl = c.toDataURL('image/jpeg', 0.92);
 
-      // 3. Extract face descriptor
+      // 3. Extract face descriptor and check multiple faces simultaneously! (Saves huge inference time)
       setPhase('extract');
       announce('Analyzing biometric signature...', 'info');
 
       const img = new Image(); img.src = dataUrl;
       await new Promise<void>(r => { img.onload = () => r(); });
 
-      const result = await fa
-        .detectSingleFace(img, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }))
+      const allFaces = await fa
+        .detectAllFaces(img, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.4 }))
         .withFaceLandmarks()
-        .withFaceDescriptor();
+        .withFaceDescriptors();
 
-      if (!result) {
+      if (!allFaces || allFaces.length === 0) {
         announce('Face not clear. Restarting verification.', 'error');
         setTimeout(() => { if (mountedRef.current) startLiveness(); }, 2000);
         return;
       }
 
-      // 4. Single face check (anti-spoofing: no group photos)
-      const allFaces = await fa.detectAllFaces(img, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.4 }));
       if (allFaces.length > 1) {
         announce('Multiple faces detected. Please be alone in front of the camera.', 'error');
         setTimeout(() => { if (mountedRef.current) startLiveness(); }, 2500);
         return;
       }
+
+      const result = allFaces[0];
 
       // 5. Submit to parent
       setPhase('submit');
