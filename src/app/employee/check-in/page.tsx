@@ -13,7 +13,7 @@ import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 // ─────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────
-type GpsStatus = 'locating' | 'inside' | 'approaching' | 'outside' | 'error' | 'not_configured' | 'permission_denied' | 'timeout' | 'not_supported';
+type GpsStatus = 'locating' | 'inside' | 'approaching' | 'outside' | 'error' | 'not_configured' | 'permission_denied' | 'timeout' | 'not_supported' | 'position_unavailable';
 
 interface BranchProfile {
   id: string;
@@ -32,6 +32,7 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
   const [status, setStatus]     = useState<GpsStatus>('locating');
   const [distance, setDistance] = useState<number | null>(null);
   const [coords, setCoords]     = useState<{ lat: number; lng: number } | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string>('');
 
   const check = useCallback(() => {
     if (loadingProfile) {
@@ -42,6 +43,7 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
 
     if (!branch) {
       setStatus('error');
+      setErrorMsg('User profile or store location could not be loaded.');
       return;
     }
     if (branch.branch_lat === undefined || branch.branch_lng === undefined || branch.branch_lat === null || branch.branch_lng === null) {
@@ -81,10 +83,16 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
       }
       if (err.code === err.PERMISSION_DENIED) {
         setStatus('permission_denied');
+        setErrorMsg('Permission denied.');
+      } else if (err.code === err.POSITION_UNAVAILABLE) {
+        setStatus('position_unavailable');
+        setErrorMsg(`Position unavailable (Code 2). ${err.message}`);
       } else if (err.code === err.TIMEOUT) {
         setStatus('timeout');
+        setErrorMsg('Location request timed out.');
       } else {
         setStatus('error');
+        setErrorMsg(`GPS Error (Code ${err.code}): ${err.message || 'Unknown error'}`);
       }
     };
 
@@ -114,6 +122,7 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
     status,
     distance,
     coords,
+    errorMsg,
     refresh: check,
     verified: status === 'inside' || isAdminOrManager || Boolean(coords),
   };
@@ -172,9 +181,9 @@ export default function EmployeeCheckInPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
 
-      const { data: prof } = await supabase
+      const { data: prof, error: profErr } = await supabase
         .from('profiles')
-        .select('id, branch_id, role, branches(name)')
+        .select('id, branch_id, role')
         .eq('id', user.id)
         .single();
 
@@ -189,11 +198,17 @@ export default function EmployeeCheckInPage() {
       }
 
       if (prof) {
+        let detectedBranchName = 'Store';
+        if (prof.branch_id && bList) {
+          const matchingBranch = bList.find(b => b.id === prof.branch_id);
+          if (matchingBranch) detectedBranchName = matchingBranch.name;
+        }
+
         const p: BranchProfile = {
           id: prof.id,
           role: prof.role,
           branch_id: prof.branch_id ?? undefined,
-          branch_name: (prof as unknown as { branches?: { name?: string } }).branches?.name ?? 'Store',
+          branch_name: detectedBranchName,
         };
 
         if (prof.branch_id) {
@@ -244,6 +259,8 @@ export default function EmployeeCheckInPage() {
         }
 
         setProfile(p);
+      } else {
+        setSubmitError(`Failed to load your profile. ${profErr ? profErr.message : 'No profile found in database.'}`);
       }
 
       try {
@@ -502,6 +519,7 @@ export default function EmployeeCheckInPage() {
           branchName={profile?.branch_name}
           isLoading={submitting}
           checkType={checkType}
+          gpsErrorMsg={gps.errorMsg}
         />
       </div>
 

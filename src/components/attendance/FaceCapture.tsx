@@ -16,12 +16,13 @@ export interface FaceCaptureProps {
   /** Called on successful liveness + capture. Throws on API failure. */
   onCapture: (image: string, descriptor: number[]) => Promise<void>;
   gpsVerified: boolean;
-  gpsStatus: 'locating' | 'inside' | 'approaching' | 'outside' | 'error' | 'not_configured' | 'permission_denied' | 'timeout' | 'not_supported';
+  gpsStatus: 'locating' | 'inside' | 'approaching' | 'outside' | 'error' | 'not_configured' | 'permission_denied' | 'timeout' | 'not_supported' | 'position_unavailable';
   gpsDistance: number | null;
   gpsRefresh: () => void;
   branchName?: string;
   isLoading?: boolean;
   checkType?: 'in' | 'out';
+  gpsErrorMsg?: string;
 }
 
 type Challenge = 'blink' | 'smile' | 'turn_right';
@@ -87,11 +88,11 @@ function say(text: string): void {
   } catch { /* ignore */ }
 }
 
-/** Pick 2 random unique challenges */
-function pickTwo(): [Challenge, Challenge] {
+/** Pick 1 random challenge */
+function pickOne(): [Challenge] {
   const all: Challenge[] = ['blink', 'smile', 'turn_right'];
   all.sort(() => Math.random() - 0.5);
-  return [all[0], all[1]];
+  return [all[0]];
 }
 
 const CONF: Record<Challenge, {
@@ -109,7 +110,7 @@ const CONF: Record<Challenge, {
 
 export const FaceCapture: React.FC<FaceCaptureProps> = ({
   onCapture, gpsVerified, gpsStatus, gpsDistance, gpsRefresh,
-  branchName, checkType='in'
+  branchName, checkType='in', gpsErrorMsg
 }) => {
   // ── Refs (mutable, no re-render needed) ──────────────
   const videoRef   = useRef<HTMLVideoElement|null>(null);
@@ -117,8 +118,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const faRef      = useRef<typeof import('@vladmandic/face-api')|null>(null);
   const timerRef   = useRef<ReturnType<typeof setInterval>|null>(null);
   const okCntRef   = useRef(0);
-  const chsRef     = useRef<[Challenge,Challenge]>(['blink','smile']);
-  const chIdxRef   = useRef<0|1>(0);
+  const chsRef     = useRef<[Challenge]>(['blink']);
+  const chIdxRef   = useRef<0>(0);
   const phRef      = useRef<Phase>('init');
   const mountedRef = useRef(true);
   const isCapturingRef = useRef(false);
@@ -131,8 +132,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const [camErr, setCamErr] = useState('');
   const [_hasCam, setHasCam] = useState<boolean|null>(null);
   // Track challenge index for rendering (ref alone doesn't trigger re-render)
-  const [chIdx, setChIdx]   = useState<0|1>(0);
-  const [chsState, setChsState] = useState<[Challenge,Challenge]>(['blink','smile']);
+  const [chIdx, setChIdx]   = useState<0>(0);
+  const [chsState, setChsState] = useState<[Challenge]>(['blink']);
 
   // Synced phase setter keeps ref + state in sync
   const setPhase = useCallback((p: Phase) => {
@@ -195,7 +196,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   // ── Liveness loop ────────────────────────────────────
   const startLiveness = useCallback(() => {
     stopLoop();
-    const challenges = pickTwo();
+    const challenges = pickOne();
     chsRef.current   = challenges;
     setChsState(challenges);
     chIdxRef.current = 0;
@@ -219,7 +220,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
       try {
         const det = await fa
-          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.75 }))
+          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }))
           .withFaceLandmarks();
 
         if (!det) {
@@ -228,10 +229,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           return;
         }
 
-        // Anti-spoofing: face area must be at least 8% of frame
+        // Anti-spoofing: face area must be at least 5% of frame (relaxed for usability)
         const { width:fw, height:fh } = det.detection.box;
         const frameArea = (v.videoWidth||640) * (v.videoHeight||640);
-        if ((fw*fh)/frameArea < 0.08) {
+        if ((fw*fh)/frameArea < 0.05) {
           if (mountedRef.current) setMsg('Move closer to the camera.');
           return;
         }
@@ -246,27 +247,9 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
             // Challenge passed
             okCntRef.current = 0;
 
-            if (idx === 0) {
-              // Move to challenge 2
-              chIdxRef.current = 1;
-              setChIdx(1);
-              phRef.current = 'between';
-              _setPhase('between');
-              const next = chsRef.current[1];
-              say(`Well done! Now, ${CONF[next].spoken.toLowerCase()}`);
-              if (mountedRef.current) setMsg(`✓ Done! Now: ${CONF[next].label}`);
-
-              setTimeout(() => {
-                if (!mountedRef.current) return;
-                phRef.current = 'challenge';
-                _setPhase('challenge');
-                announce(CONF[next].spoken, 'info');
-              }, 1600);
-            } else {
-              // Both challenges passed → motion check
-              stopLoop();
-              setPhase('motion');
-            }
+            // Only 1 challenge required now → move to motion check
+            stopLoop();
+            setPhase('motion');
           }
         } else {
           okCntRef.current = 0;
@@ -315,7 +298,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       await new Promise<void>(r => { img.onload = () => r(); });
 
       const result = await fa
-        .detectSingleFace(img, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.75 }))
+        .detectSingleFace(img, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }))
         .withFaceLandmarks()
         .withFaceDescriptor();
 
@@ -326,7 +309,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       }
 
       // 4. Single face check (anti-spoofing: no group photos)
-      const allFaces = await fa.detectAllFaces(img, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }));
+      const allFaces = await fa.detectAllFaces(img, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.4 }));
       if (allFaces.length > 1) {
         announce('Multiple faces detected. Please be alone in front of the camera.', 'error');
         setTimeout(() => { if (mountedRef.current) startLiveness(); }, 2500);
@@ -372,8 +355,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         announce('Location request timed out. Move to a clearer area and refresh.', 'warn');
       } else if (gpsStatus === 'not_supported') {
         announce('GPS is not supported on this browser (requires HTTPS).', 'error');
+      } else if (gpsStatus === 'position_unavailable') {
+        announce(`Location unavailable: ${gpsErrorMsg || 'Please enable device location services.'}`, 'error');
       } else if (gpsStatus === 'error') {
-        announce('GPS error occurred. Please tap refresh.', 'warn');
+        announce(`GPS error: ${gpsErrorMsg || 'Please tap refresh.'}`, 'warn');
       } else if (gpsStatus === 'locating') {
         announce('Detecting location...', 'info');
       } else {
@@ -406,8 +391,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           announce('Location request timed out. Move to a clearer area and refresh.', 'warn');
         } else if (gpsStatus === 'not_supported') {
           announce('GPS is not supported on this browser (requires HTTPS).', 'error');
+        } else if (gpsStatus === 'position_unavailable') {
+          announce(`Location unavailable: ${gpsErrorMsg || 'Please enable device location services.'}`, 'error');
         } else if (gpsStatus === 'error') {
-          announce('GPS error occurred. Please tap refresh.', 'warn');
+          announce(`GPS error: ${gpsErrorMsg || 'Please tap refresh.'}`, 'warn');
         } else if (gpsStatus === 'locating') {
           announce('Detecting location...', 'info');
         } else {
@@ -466,7 +453,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               : gpsStatus === 'permission_denied' ? 'Location Access Denied — Allow & Refresh'
               : gpsStatus === 'timeout'           ? 'Location Timeout — Tap refresh'
               : gpsStatus === 'not_supported'     ? 'GPS requires HTTPS — Access Denied'
-              : gpsStatus === 'error'             ? 'GPS Error — Tap refresh'
+              : gpsStatus === 'position_unavailable' ? `Location Unavailable: ${gpsErrorMsg || 'Turn on device GPS'}`
+              : gpsStatus === 'error'             ? `GPS Error: ${gpsErrorMsg || 'Tap refresh'}`
               : `${gpsDistance ?? '—'}m away from ${branchName ?? 'store'}`}
           </span>
           {(!gpsOk && gpsStatus !== 'locating') && (
@@ -573,14 +561,9 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         {isRunning && (
           <div className="flex space-x-3 mt-4">
             <motion.div
-              animate={{ scale: chIdx === 0 ? [1,1.3,1] : 1 }}
-              transition={{ repeat: chIdx===0 ? Infinity : 0, duration: 1.2 }}
-              className={`w-3 h-3 rounded-full ${chIdx === 0 ? 'bg-emerald-400 shadow-[0_0_10px_#34D399]' : 'bg-slate-700'}`}
-            />
-            <motion.div
-              animate={{ scale: chIdx === 1 ? [1,1.3,1] : 1 }}
-              transition={{ repeat: chIdx===1 ? Infinity : 0, duration: 1.2 }}
-              className={`w-3 h-3 rounded-full ${chIdx === 1 ? 'bg-blue-400 shadow-[0_0_10px_#60A5FA]' : 'bg-slate-700'}`}
+              animate={{ scale: [1,1.3,1] }}
+              transition={{ repeat: Infinity, duration: 1.2 }}
+              className={`w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_#34D399]`}
             />
           </div>
         )}
@@ -606,8 +589,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
                 ? 'Location request timed out. Tap refresh to try again.'
                 : gpsStatus === 'not_supported'
                 ? 'GPS is not supported by your browser. Please access the site using HTTPS.'
+                : gpsStatus === 'position_unavailable'
+                ? `Location Unavailable: ${gpsErrorMsg || 'Please turn on your device location services.'}`
                 : gpsStatus === 'error'
-                ? 'GPS Error occurred. Please tap refresh.'
+                ? `GPS Error: ${gpsErrorMsg || 'Please tap refresh.'}`
                 : gpsStatus === 'locating'
                   ? 'Detecting your location...'
                   : `You are ${gpsDistance}m from ${branchName}. Move inside the store.`}
@@ -632,7 +617,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               </div>
               <div className="flex-1">
                 <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold uppercase tracking-widest text-slate-900 mb-1" style={{ background: currentChConf.color }}>
-                  Step {chIdx + 1} of 2
+                  Liveness Check
                 </span>
                 <h3 className="text-white font-extrabold text-base sm:text-lg leading-tight drop-shadow">
                   {currentChConf.label}
