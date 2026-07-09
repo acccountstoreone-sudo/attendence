@@ -26,8 +26,7 @@ export async function POST(req: NextRequest) {
     const options = await generateRegistrationOptions({
       rpName: getRPName(),
       rpID: getRPID(),
-      userID: user.id, // Must be Uint8Array, simplewebauthn expects string here in newer versions but let's cast if needed. 
-                       // Actually userID expects Uint8Array or string depending on version. Let's encode string to Uint8Array.
+      userID: new Uint8Array(Buffer.from(user.id)),
       userName: profile.employee_id || user.email || 'employee',
       // Don't prompt users for their authenticator if they've already registered it
       excludeCredentials: existingCredentials?.map(cred => ({
