@@ -40,7 +40,8 @@ export async function POST(req: NextRequest) {
     const { verified, registrationInfo } = verification;
 
     if (verified && registrationInfo) {
-      const { credentialID, credentialPublicKey, counter, credentialDeviceType } = registrationInfo;
+      const { credential, credentialDeviceType } = registrationInfo;
+      const { id: credentialID, publicKey: credentialPublicKey, counter } = credential;
 
       // Save to database. credentialPublicKey is Uint8Array, we need to convert to Buffer for bytea postgres column
       const publicKeyBuffer = Buffer.from(credentialPublicKey);

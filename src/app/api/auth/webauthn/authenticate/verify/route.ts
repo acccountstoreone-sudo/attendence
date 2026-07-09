@@ -51,9 +51,9 @@ export async function POST(req: NextRequest) {
         expectedChallenge,
         expectedOrigin: getExpectedOrigin(),
         expectedRPID: getRPID(),
-        authenticator: {
-            credentialID: credential.credential_id,
-            credentialPublicKey: pubKeyBuffer,
+        credential: {
+            id: credential.credential_id,
+            publicKey: new Uint8Array(pubKeyBuffer),
             counter: Number(credential.counter),
             transports: credential.transports,
         }
