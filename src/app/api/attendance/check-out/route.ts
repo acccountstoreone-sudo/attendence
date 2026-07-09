@@ -14,6 +14,8 @@ const checkOutSchema = z.object({
   is_offline_sync: z.boolean().optional().default(false),
   timestamp: z.string().datetime().optional(),
   liveness_passed: z.boolean().optional(),
+  photo_url: z.string().optional(),
+  webauthn_verified: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -23,84 +25,86 @@ export async function POST(request: NextRequest) {
     const payload = checkOutSchema.parse(body);
 
     // 3. Biometric Verification Check
-    if (!payload.face_verified || !payload.faceDescriptor || payload.faceDescriptor.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          data: null,
-          error: { code: 'BIOMETRIC_FAILED', message: 'Biometric verification failed. Face descriptor missing or empty.' },
-          timestamp: new Date().toISOString(),
-        },
-        { status: 403 }
-      );
-    }
-
-    // 3a. Liveness verification requirement
-    if (!payload.liveness_passed) {
-      return NextResponse.json(
-        {
-          success: false,
-          data: null,
-          error: { code: 'LIVENESS_REQUIRED', message: 'Liveness verification was not completed. Please complete the face challenge.' },
-          timestamp: new Date().toISOString(),
-        },
-        { status: 403 }
-      );
-    }
-
-    const supabase = await createClient();
-
-    // 3b. Verify against stored face descriptor
-    const { data: profile } = await supabase.from('profiles').select('face_descriptor').eq('id', user.id).single();
-    
-    if (!profile || !profile.face_descriptor) {
-      return NextResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: 'BIOMETRIC_ENROLLMENT_MISSING',
-            message: 'No facial biometric data found for this employee. Please register your face first.',
+    if (!payload.webauthn_verified) {
+      if (!payload.face_verified || !payload.faceDescriptor || payload.faceDescriptor.length === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: { code: 'BIOMETRIC_FAILED', message: 'Biometric verification failed. Face descriptor missing or empty.' },
+            timestamp: new Date().toISOString(),
           },
-          timestamp: new Date().toISOString(),
-        },
-        { status: 403 }
-      );
-    }
+          { status: 403 }
+        );
+      }
 
-    try {
-      if (payload.faceDescriptor.length !== profile.face_descriptor.length) {
+      // 3a. Liveness verification requirement
+      if (!payload.liveness_passed) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: { code: 'LIVENESS_REQUIRED', message: 'Liveness verification was not completed. Please complete the face challenge.' },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
+
+      const supabase = await createClient();
+
+      // 3b. Verify against stored face descriptor
+      const { data: profile } = await supabase.from('profiles').select('face_descriptor').eq('id', user.id).single();
+      
+      if (!profile || !profile.face_descriptor) {
         return NextResponse.json(
           {
             success: false,
             data: null,
             error: {
-              code: 'BIOMETRIC_DIMENSION_MISMATCH',
-              message: `Face descriptor dimension mismatch: received ${payload.faceDescriptor.length}, expected ${profile.face_descriptor.length}.`,
+              code: 'BIOMETRIC_ENROLLMENT_MISSING',
+              message: 'No facial biometric data found for this employee. Please register your face first.',
             },
             timestamp: new Date().toISOString(),
           },
           { status: 403 }
         );
       }
-      const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
-      if (distance > 0.75) {
-        return NextResponse.json(
-          {
-            success: false,
-            data: null,
-            error: {
-              code: 'BIOMETRIC_MISMATCH',
-              message: `Face verification failed. Distance: ${distance.toFixed(3)}. You do not match the registered employee.`,
+
+      try {
+        if (payload.faceDescriptor.length !== profile.face_descriptor.length) {
+          return NextResponse.json(
+            {
+              success: false,
+              data: null,
+              error: {
+                code: 'BIOMETRIC_DIMENSION_MISMATCH',
+                message: `Face descriptor dimension mismatch: received ${payload.faceDescriptor.length}, expected ${profile.face_descriptor.length}.`,
+              },
+              timestamp: new Date().toISOString(),
             },
-            timestamp: new Date().toISOString(),
-          },
-          { status: 403 }
-        );
+            { status: 403 }
+          );
+        }
+        const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
+        if (distance > 0.75) {
+          return NextResponse.json(
+            {
+              success: false,
+              data: null,
+              error: {
+                code: 'BIOMETRIC_MISMATCH',
+                message: `Face verification failed. Distance: ${distance.toFixed(3)}. You do not match the registered employee.`,
+              },
+              timestamp: new Date().toISOString(),
+            },
+            { status: 403 }
+          );
+        }
+      } catch (err) {
+        return NextResponse.json({ success: false, data: null, error: { code: 'BIOMETRIC_ERROR', message: 'Error processing facial comparison.' } }, { status: 500 });
       }
-    } catch (err) {
-      return NextResponse.json({ success: false, data: null, error: { code: 'BIOMETRIC_ERROR', message: 'Error processing facial comparison.' } }, { status: 500 });
-    }
+    } // End of !payload.webauthn_verified block
 
     // Find today's open attendance record (or the record for the offline sync date)
     let targetDate = new Date();

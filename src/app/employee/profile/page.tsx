@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { WebAuthnRegister } from '@/components/auth/WebAuthnRegister';
 
 interface ProfileData {
   id: string;
@@ -201,6 +202,10 @@ export default function EmployeeProfilePage() {
                   Change Password (Locked)
                 </Button>
               </div>
+              
+              <div className="w-full h-px bg-[#1E293B] my-6" />
+              
+              <WebAuthnRegister />
             </div>
           </Card>
         </div>

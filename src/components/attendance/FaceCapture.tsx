@@ -4,9 +4,10 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
 import {
   CheckCircle2, AlertCircle, Eye, Smile,
-  ArrowLeftRight, MapPin, RefreshCw,
+  ArrowLeftRight, MapPin, RefreshCw, ArrowLeft, Fingerprint
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Spinner } from '@/components/ui/Spinner';
 
 // ─────────────────────────────────────────────────────────
 // Types
@@ -15,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export interface FaceCaptureProps {
   /** Called on successful liveness + capture. Throws on API failure. */
   onCapture: (image: string, descriptor: number[]) => Promise<void>;
+  onUseFingerprint?: () => Promise<void>;
   gpsVerified: boolean;
   gpsStatus: 'locating' | 'inside' | 'approaching' | 'outside' | 'error' | 'not_configured' | 'permission_denied' | 'timeout' | 'not_supported' | 'position_unavailable';
   gpsDistance: number | null;

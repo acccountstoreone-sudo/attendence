@@ -17,6 +17,7 @@ const checkInSchema = z.object({
   timestamp: z.string().datetime().optional(),
   liveness_passed: z.boolean().optional(),
   photo_url: z.string().optional(),
+  webauthn_verified: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -29,7 +30,8 @@ export async function POST(request: NextRequest) {
     const payload = checkInSchema.parse(body);
 
     // 3. Biometric + Liveness Verification Check
-    if (!payload.face_verified || !payload.faceDescriptor || payload.faceDescriptor.length === 0) {
+    if (!payload.webauthn_verified) {
+      if (!payload.face_verified || !payload.faceDescriptor || payload.faceDescriptor.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -110,6 +112,7 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ success: false, data: null, error: { code: 'BIOMETRIC_ERROR', message: 'Error processing facial comparison.' } }, { status: 500 });
     }
+    } // End of !payload.webauthn_verified block
 
     // 4. Check if user already checked in today
     const now = new Date();
