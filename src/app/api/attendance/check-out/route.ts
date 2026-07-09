@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
     const payload = checkOutSchema.parse(body);
 
     const supabase = await createClient();
+    const { data: profile } = await supabase.from('profiles').select('face_descriptor').eq('id', user.id).single();
 
     // 3. Biometric Verification Check
     if (!payload.webauthn_verified) {
@@ -54,7 +55,6 @@ export async function POST(request: NextRequest) {
       }
 
       // 3b. Verify against stored face descriptor
-      const { data: profile } = await supabase.from('profiles').select('face_descriptor').eq('id', user.id).single();
       
       if (!profile || !profile.face_descriptor) {
         return NextResponse.json(

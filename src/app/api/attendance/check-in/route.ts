@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
     const payload = checkInSchema.parse(body);
 
     const supabase = await createClient();
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 
     // 3. Biometric + Liveness Verification Check
     if (!payload.webauthn_verified) {
@@ -59,7 +60,6 @@ export async function POST(request: NextRequest) {
     }
 
     // 3b. Verify against stored face descriptor & reverification status
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
     
     if (!profile || !profile.face_descriptor || profile.face_enrolled === false || (profile as Record<string, unknown>).requires_face_reverification === true) {
       return NextResponse.json(
