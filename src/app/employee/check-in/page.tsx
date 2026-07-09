@@ -187,7 +187,7 @@ export default function EmployeeCheckInPage() {
         .eq('id', user.id)
         .single();
 
-      let bList: Array<{ id: string; name: string; latitude: number | null; longitude: number | null; geofence_radius_meters: number }> = [];
+      let bList: any[] = [];
       const { data: allB } = await supabase
         .from('branches')
         .select('id, name, latitude, longitude, geofence_radius_meters')
@@ -220,7 +220,7 @@ export default function EmployeeCheckInPage() {
           if (branch) {
             p.branch_lat    = branch.latitude    ? Number(branch.latitude)    : undefined;
             p.branch_lng    = branch.longitude   ? Number(branch.longitude)   : undefined;
-            p.branch_radius = branch.geofence_radius_meters ?? branch.radius_meters ?? 100;
+            p.branch_radius = branch.geofence_radius_meters ?? 100;
           }
         } else if (bList && bList.length > 0) {
           // Auto detect closest branch
