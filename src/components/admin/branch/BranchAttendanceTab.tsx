@@ -52,3 +52,4 @@ export const BranchAttendanceTab: React.FC = () => {
     </div>
   );
 };
+

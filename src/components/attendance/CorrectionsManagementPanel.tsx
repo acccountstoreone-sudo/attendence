@@ -38,6 +38,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
   const [corrections, setCorrections] = useState<CorrectionRequestRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [statusTab, setStatusTab] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [actingId, setActingId] = useState<string | null>(null);
@@ -78,13 +79,14 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
       });
       const result = await res.json();
       if (!res.ok || !result.success) {
-        throw new Error(result.error || `Failed to ${action} correction request`);
+        throw new Error(result.error?.message || result.error || `Failed to ${action} correction request`);
       }
+      setFeedback({ type: 'success', text: `Correction request ${action}d successfully.` });
       await fetchCorrections();
       setNoteModalReq(null);
       setReviewerNote('');
     } catch (err: unknown) {
-      alert(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      setFeedback({ type: 'error', text: err instanceof Error ? err.message : String(err) });
     } finally {
       setActingId(null);
     }
@@ -119,10 +121,10 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
   return (
     <div className="space-y-6">
       {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#0A1628]/80 border border-[#1E293B] p-6 rounded-2xl backdrop-blur-xl shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#0A1628]/80 border border-[#0a3a1e] p-6 rounded-2xl backdrop-blur-xl shadow-xl">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <UserCheck className="w-7 h-7 text-[#D2A02A]" />
+            <UserCheck className="w-7 h-7 text-[#004417]" />
             {role === 'admin' ? 'HQ Manual Corrections & Overrides' : 'Store Manual Corrections & Overrides'}
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -137,14 +139,14 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
 
       {/* Tabs & Search */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex bg-[#0A1628]/90 border border-[#1E293B] p-1 rounded-xl shadow-inner overflow-x-auto">
+        <div className="flex bg-[#0A1628]/90 border border-[#0a3a1e] p-1 rounded-xl shadow-inner overflow-x-auto">
           {(['pending', 'approved', 'rejected', 'all'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setStatusTab(tab)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold capitalize transition-all whitespace-nowrap flex items-center gap-2 ${
                 statusTab === tab
-                  ? 'bg-[#D2A02A] text-[#040A15] shadow-md'
+                  ? 'bg-[#004417] text-[#010e05] shadow-md'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -164,7 +166,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
             placeholder="Search employee, ID, branch, reason..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#0A1628]/90 border border-[#1E293B] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#D2A02A] transition-colors"
+            className="w-full bg-[#0A1628]/90 border border-[#0a3a1e] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#004417] transition-colors"
           />
         </div>
       </div>
@@ -177,13 +179,29 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
         </div>
       )}
 
+      <AnimatePresence>
+        {feedback && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className={`p-4 rounded-xl border text-sm font-medium ${
+              feedback.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <XCircle className="w-5 h-5 shrink-0" />}
+              <span>{feedback.text}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Spinner size="lg" />
           <p className="mt-3 text-sm text-slate-400">Loading correction requests...</p>
         </div>
       ) : filteredCorrections.length === 0 ? (
-        <Card className="p-12 text-center border-dashed border-[#1E293B] bg-[#0A1628]/50">
+        <Card className="p-12 text-center border-dashed border-[#0a3a1e] bg-[#0A1628]/50">
           <UserCheck className="w-12 h-12 text-slate-500 mx-auto mb-3 opacity-60" />
           <h3 className="text-lg font-semibold text-white">No Correction Requests Found</h3>
           <p className="text-sm text-slate-400 mt-1 max-w-md mx-auto">
@@ -206,7 +224,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                   exit={{ opacity: 0, scale: 0.95 }}
                 >
                   <Card className={`p-6 border transition-all ${
-                    isPending ? 'border-[#D2A02A]/40 bg-gradient-to-r from-[#0A1628] to-[#0D1E38]' :
+                    isPending ? 'border-[#004417]/40 bg-gradient-to-r from-[#0A1628] to-[#0D1E38]' :
                     isApproved ? 'border-emerald-500/30 bg-[#0A1628]/70' :
                     'border-red-500/30 bg-[#0A1628]/50'
                   }`}>
@@ -214,7 +232,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                       {/* Left: Employee details */}
                       <div className="flex items-start gap-4">
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 ${
-                          isPending ? 'bg-[#D2A02A]/20 text-[#D2A02A] border border-[#D2A02A]/30' :
+                          isPending ? 'bg-[#004417]/20 text-[#004417] border border-[#004417]/30' :
                           isApproved ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
                           'bg-red-500/20 text-red-400 border border-red-500/30'
                         }`}>
@@ -271,9 +289,9 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                             {formatTimeStr(c.original_time)}
                           </p>
                         </div>
-                        <ArrowRight className="w-5 h-5 text-[#D2A02A] shrink-0" />
+                        <ArrowRight className="w-5 h-5 text-[#004417] shrink-0" />
                         <div className="text-center">
-                          <p className="text-[10px] text-[#D2A02A] uppercase tracking-wider font-bold">Requested Time</p>
+                          <p className="text-[10px] text-[#004417] uppercase tracking-wider font-bold">Requested Time</p>
                           <p className="text-sm font-bold text-white mt-1 font-mono bg-amber-950/40 px-2.5 py-1 rounded-lg border border-amber-500/30">
                             {formatTimeStr(c.requested_time)}
                           </p>
@@ -335,7 +353,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
       {/* Review Note Modal */}
       {noteModalReq && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <Card className="w-full max-w-md p-6 bg-[#0A1628] border border-[#1E293B] shadow-2xl space-y-4">
+          <Card className="w-full max-w-md p-6 bg-[#0A1628] border border-[#0a3a1e] shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 {modalAction === 'approve' ? (
@@ -359,7 +377,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                 placeholder={modalAction === 'approve' ? 'e.g., Verified via store CCTV log.' : 'e.g., Time mismatch with store entrance log.'}
                 value={reviewerNote}
                 onChange={(e) => setReviewerNote(e.target.value)}
-                className="w-full bg-[#061224] border border-[#1E293B] rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#D2A02A]"
+                className="w-full bg-[#021a0a] border border-[#0a3a1e] rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#004417]"
               />
             </div>
             <div className="flex justify-end gap-3 pt-2">
@@ -379,3 +397,4 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
     </div>
   );
 };
+

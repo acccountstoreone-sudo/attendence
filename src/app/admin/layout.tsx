@@ -65,14 +65,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading || !userProfile) {
     return (
-      <div className="min-h-screen bg-[#040A15] flex items-center justify-center">
+      <div className="min-h-screen bg-[#010e05] flex items-center justify-center">
         <Spinner size="lg" label="Loading HQ Dashboard..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#040A15] flex">
+    <div className="min-h-screen bg-[#010e05] flex">
       <Sidebar
         role="admin"
         isCollapsed={isCollapsed}
@@ -86,7 +86,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           user={userProfile}
           onOpenMobileSidebar={() => setMobileOpen(true)}
         />
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-[#040A15] to-[#061224] relative scrollbar-thin scrollbar-thumb-[#1E293B] scrollbar-track-transparent">
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-[#010e05] to-[#021a0a] relative scrollbar-thin scrollbar-thumb-[#0a3a1e] scrollbar-track-transparent">
           <div className="absolute top-0 left-0 w-full h-[500px] bg-[radial-gradient(ellipse_at_top,rgba(210,160,42,0.05),transparent_70%)] pointer-events-none" />
           <AnimatePresence mode="wait">
             <motion.div
@@ -105,3 +105,4 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
+

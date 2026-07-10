@@ -5,6 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin, Search, Navigation, Globe, CheckCircle2, AlertCircle, RefreshCw, Crosshair, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface LocationMapPickerProps {
   latitude: number | null;
@@ -38,6 +39,8 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
   const [locationStatus, setLocationStatus] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const debouncedSearchQuery = useDebounce(searchQuery, 750);
+
   // Default coordinate (Dhaka, Bangladesh) if not provided
   const initialLat = latitude && !isNaN(latitude) ? latitude : 23.8103;
   const initialLng = longitude && !isNaN(longitude) ? longitude : 90.4125;
@@ -60,9 +63,9 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
           filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
           cursor: pointer;
         ">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#D2A02A" stroke="#040A15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#004417" stroke="#010e05" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;">
             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-            <circle cx="12" cy="10" r="3" fill="#040A15"/>
+            <circle cx="12" cy="10" r="3" fill="#010e05"/>
           </svg>
         </div>
       `,
@@ -101,9 +104,9 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
     // Create geofence radius circle around marker
     const circle = L.circle([initialLat, initialLng], {
       radius: safeRadius,
-      color: '#D2A02A',
+      color: '#004417',
       weight: 2,
-      fillColor: '#D2A02A',
+      fillColor: '#004417',
       fillOpacity: 0.18,
       dashArray: '5, 5',
     }).addTo(map);
@@ -162,48 +165,53 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
     }
   }, [latitude, longitude, safeRadius]);
 
-  // Search Address using OpenStreetMap Nominatim
-  const handleSearch = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!searchQuery.trim()) return;
-
-    setIsSearching(true);
-    setErrorMessage(null);
-    setSearchResults([]);
-
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          searchQuery
-        )}&addressdetails=1&limit=5`,
-        {
-          headers: {
-            'Accept-Language': 'en-US,en;q=0.9',
-            'User-Agent': 'AttendanceApp/1.0',
-          },
-        }
-      );
-      if (!res.ok) throw new Error('Search request failed');
-      const data: SearchResult[] = await res.json();
-
-      if (data && data.length > 0) {
-        setSearchResults(data);
-        // Automatically select the first result if only 1 or exact match
-        if (data.length === 1) {
-          selectSearchResult(data[0]);
-        }
-      } else {
-        setErrorMessage(`No locations found for "${searchQuery}". Try adding city or country name.`);
+  // Auto-search Address using OpenStreetMap Nominatim when debounced query changes
+  useEffect(() => {
+    const searchAddress = async () => {
+      if (!debouncedSearchQuery.trim()) {
+        setSearchResults([]);
+        return;
       }
-    } catch (err) {
-      console.error('Geocoding error:', err);
-      setErrorMessage('Search service unavailable right now. Please drag the pin on map directly.');
-    } finally {
-      setIsSearching(false);
-    }
-  };
+      setIsSearching(true);
+      setErrorMessage(null);
+      setSearchResults([]);
 
-  const selectSearchResult = (result: SearchResult) => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            debouncedSearchQuery
+          )}&addressdetails=1&limit=5`,
+          {
+            headers: {
+              'Accept-Language': 'en-US,en;q=0.9',
+              'User-Agent': 'AttendanceApp/1.0',
+            },
+          }
+        );
+        if (!res.ok) throw new Error('Search request failed');
+        const data: SearchResult[] = await res.json();
+
+        if (data && data.length > 0) {
+          setSearchResults(data);
+          // Automatically select the first result if only 1 or exact match
+          if (data.length === 1) {
+            selectSearchResult(data[0]);
+          }
+        } else {
+          setErrorMessage(`No locations found for "${debouncedSearchQuery}". Try adding city or country name.`);
+        }
+      } catch (err) {
+        console.error('Geocoding error:', err);
+        setErrorMessage('Search service unavailable right now. Please drag the pin on map directly.');
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    searchAddress();
+  }, [debouncedSearchQuery]);
+
+  function selectSearchResult(result: SearchResult) {
     const lat = Number(parseFloat(result.lat).toFixed(6));
     const lng = Number(parseFloat(result.lon).toFixed(6));
 
@@ -257,14 +265,14 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
   };
 
   return (
-    <div className="space-y-4 bg-[#0A1220] border border-[#1E293B] rounded-2xl p-5 shadow-2xl">
+    <div className="space-y-4 bg-[#0A1220] border border-[#0a3a1e] rounded-2xl p-5 shadow-2xl">
       {/* Fallback stylesheet import for SSR/client rendering safety */}
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
       {/* Header & Instructions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1E293B] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#0a3a1e] pb-4">
         <div>
-          <div className="flex items-center space-x-2 text-[#D2A02A] text-xs font-bold uppercase tracking-widest mb-1">
+          <div className="flex items-center space-x-2 text-[#004417] text-xs font-bold uppercase tracking-widest mb-1">
             <Sparkles className="w-4 h-4" />
             <span>Interactive Geofence Map Picker</span>
           </div>
@@ -272,7 +280,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
             Select Store Location directly on Map
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            No need to copy coordinates from Google Maps! Search area, use your GPS, or <span className="text-[#D2A02A] font-semibold">click & drag the pin</span> to set location.
+            No need to copy coordinates from Google Maps! Search area, use your GPS, or <span className="text-[#004417] font-semibold">click & drag the pin</span> to set location.
           </p>
         </div>
 
@@ -280,7 +288,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
           type="button"
           onClick={handleUseCurrentLocation}
           disabled={isLocating}
-          className="bg-[#D2A02A] hover:bg-[#b88b22] text-[#040A15] font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(210,160,42,0.3)] shrink-0 transition-all"
+          className="bg-[#004417] hover:bg-[#b88b22] text-[#010e05] font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(210,160,42,0.3)] shrink-0 transition-all"
         >
           {isLocating ? <Navigation className="w-4 h-4 animate-spin" /> : <Crosshair className="w-4 h-4" />}
           {isLocating ? 'Detecting GPS...' : 'Use My Current Location'}
@@ -288,7 +296,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
       </div>
 
       {/* Search Bar */}
-      <form onSubmit={handleSearch} className="relative">
+      <div className="relative">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
@@ -296,8 +304,13 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                }
+              }}
               placeholder="Search store address, area, road, or city (e.g., Mirpur 10, Gulshan 2, Uttara, Chittagong)..."
-              className="w-full pl-10 pr-4 py-3 bg-[#040A15] border border-[#1E293B] rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all"
             />
             {searchQuery && (
               <button
@@ -310,19 +323,18 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
             )}
           </div>
           <Button
-            type="submit"
+            type="button"
             disabled={isSearching || !searchQuery.trim()}
-            variant="secondary"
-            className="px-5 bg-[#1E293B] hover:bg-slate-700 text-white font-semibold text-sm rounded-xl shrink-0"
+            className="bg-[#0a3a1e] hover:bg-[#004417] text-white px-6 font-medium rounded-xl"
           >
-            {isSearching ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Search Map'}
+            {isSearching ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Search'}
           </Button>
         </div>
 
         {/* Search Results Dropdown */}
         {searchResults.length > 0 && (
-          <div className="absolute left-0 right-0 top-full mt-2 bg-[#061224] border border-[#1E293B] rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-[#1E293B]">
-            <div className="px-3 py-2 bg-[#040A15] text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
+          <div className="absolute left-0 right-0 top-full mt-2 bg-[#021a0a] border border-[#0a3a1e] rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-[#0a3a1e]">
+            <div className="px-3 py-2 bg-[#010e05] text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
               <span>Matching Locations ({searchResults.length})</span>
               <button
                 type="button"
@@ -337,9 +349,9 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
                 key={item.place_id}
                 type="button"
                 onClick={() => selectSearchResult(item)}
-                className="w-full px-4 py-3 text-left hover:bg-[#1E293B] transition-colors flex items-start gap-3"
+                className="w-full px-4 py-3 text-left hover:bg-[#0a3a1e] transition-colors flex items-start gap-3"
               >
-                <MapPin className="w-4 h-4 text-[#D2A02A] shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-[#004417] shrink-0 mt-0.5" />
                 <div>
                   <div className="text-sm font-semibold text-white line-clamp-1">
                     {item.display_name.split(',')[0]}
@@ -352,26 +364,26 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
             ))}
           </div>
         )}
-      </form>
+      </div>
 
       {/* Map Container */}
-      <div className="relative rounded-2xl overflow-hidden border-2 border-[#1E293B] shadow-inner group">
+      <div className="relative rounded-2xl overflow-hidden border-2 border-[#0a3a1e] shadow-inner group">
         <div
           ref={mapContainerRef}
-          className="w-full h-[380px] sm:h-[430px] bg-[#040A15] z-10 cursor-crosshair"
+          className="w-full h-[380px] sm:h-[430px] bg-[#010e05] z-10 cursor-crosshair"
         />
 
         {/* Floating instruction overlay on map */}
-        <div className="absolute top-3 right-3 z-20 bg-[#061224]/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#1E293B] shadow-lg pointer-events-none text-xs text-slate-300 flex items-center gap-1.5">
-          <Globe className="w-3.5 h-3.5 text-[#D2A02A]" />
+        <div className="absolute top-3 right-3 z-20 bg-[#021a0a]/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#0a3a1e] shadow-lg pointer-events-none text-xs text-slate-300 flex items-center gap-1.5">
+          <Globe className="w-3.5 h-3.5 text-[#004417]" />
           <span>Click anywhere or drag pin to adjust</span>
         </div>
       </div>
 
       {/* Status & Coordinate Summary */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 bg-[#040A15] px-4 py-3 rounded-xl border border-[#1E293B]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 bg-[#010e05] px-4 py-3 rounded-xl border border-[#0a3a1e]">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-[#D2A02A]/10 rounded-lg text-[#D2A02A]">
+          <div className="p-2 bg-[#004417]/10 rounded-lg text-[#004417]">
             <MapPin className="w-5 h-5" />
           </div>
           <div>
@@ -379,9 +391,9 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
               Active Geofence Pin Position
             </div>
             <div className="text-sm font-extrabold text-white flex items-center gap-3 mt-0.5">
-              <span>Lat: <span className="text-[#D2A02A] font-mono">{latitude !== null && !isNaN(latitude) ? latitude.toFixed(6) : 'Not set'}</span></span>
-              <span>Lng: <span className="text-[#D2A02A] font-mono">{longitude !== null && !isNaN(longitude) ? longitude.toFixed(6) : 'Not set'}</span></span>
-              <span className="text-xs px-2 py-0.5 bg-[#1E293B] text-slate-300 rounded-md font-sans">
+              <span>Lat: <span className="text-[#004417] font-mono">{latitude !== null && !isNaN(latitude) ? latitude.toFixed(6) : 'Not set'}</span></span>
+              <span>Lng: <span className="text-[#004417] font-mono">{longitude !== null && !isNaN(longitude) ? longitude.toFixed(6) : 'Not set'}</span></span>
+              <span className="text-xs px-2 py-0.5 bg-[#0a3a1e] text-slate-300 rounded-md font-sans">
                 Radius: {safeRadius}m
               </span>
             </div>
@@ -406,3 +418,4 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
     </div>
   );
 };
+

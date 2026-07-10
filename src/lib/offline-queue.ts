@@ -134,3 +134,4 @@ export function setupOfflineSyncListener(onSyncComplete?: (result: { synced: num
   window.addEventListener('online', handleOnline);
   return () => window.removeEventListener('online', handleOnline);
 }
+

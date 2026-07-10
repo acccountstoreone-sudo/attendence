@@ -13,3 +13,4 @@ export function getEuclideanDistance(descriptor1: number[], descriptor2: number[
   }
   return Math.sqrt(sum);
 }
+

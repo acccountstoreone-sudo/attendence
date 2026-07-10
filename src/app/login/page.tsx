@@ -117,14 +117,14 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row relative bg-[#040A15] overflow-x-hidden font-sans" suppressHydrationWarning={true}>
+    <div className="min-h-screen w-full flex flex-col md:flex-row relative bg-[#010e05] overflow-x-hidden font-sans" suppressHydrationWarning={true}>
       
       {/* LEFT PANEL: BRANDING (Navy Blue Background with 3D animation) */}
-      <div className="w-full md:w-[45%] flex flex-col justify-between p-8 md:p-14 relative bg-[#061224] border-b md:border-b-0 md:border-r border-[#1E293B]/50 order-1 z-10 overflow-hidden">
+      <div className="w-full md:w-[45%] flex flex-col justify-between p-8 md:p-14 relative bg-[#021a0a] border-b md:border-b-0 md:border-r border-[#0a3a1e]/50 order-1 z-10 overflow-hidden">
         
         {/* Subtle Background Glow */}
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#D2A02A_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
-        <div className="absolute top-[30%] left-[20%] w-[50%] h-[50%] bg-[#D2A02A]/10 rounded-full filter blur-[120px] pointer-events-none z-0" />
+        <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
+        <div className="absolute top-[30%] left-[20%] w-[50%] h-[50%] bg-[#004417]/10 rounded-full filter blur-[120px] pointer-events-none z-0" />
 
         {/* 3D Canvas rendering premium abstract gold particles/globe */}
         <Abstract3DBackground />
@@ -137,7 +137,7 @@ function LoginPageContent() {
           className="relative z-10 flex flex-col items-start select-none w-full"
         >
            <div className="text-4xl md:text-5xl font-serif tracking-widest flex items-baseline">
-             <span className="text-[#D2A02A] font-bold text-5xl md:text-6xl mr-1">A</span>
+             <span className="text-green-400 font-bold text-5xl md:text-6xl mr-1">A</span>
              <span className="text-white font-semibold">NCHOR</span>
            </div>
            <div className="text-white tracking-[0.6em] text-[10px] md:text-xs font-light uppercase flex items-center gap-3 opacity-70 mt-1 ml-1">
@@ -155,13 +155,13 @@ function LoginPageContent() {
             className="flex items-center gap-6 mb-8"
           >
             {/* Holographic Icon HUD */}
-            <div className="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-[#0F172A]/80 backdrop-blur-md border border-[#1E293B] shadow-[0_0_30px_rgba(210,160,42,0.15)] overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#D2A02A]/20 to-transparent opacity-50" />
-              <ScanFace className="w-10 h-10 text-[#D2A02A] z-10 drop-shadow-[0_0_10px_rgba(210,160,42,0.8)]" />
-              <div className="absolute top-0 left-0 w-full h-[2px] bg-[#D2A02A] opacity-50 animate-[scan_2s_ease-in-out_infinite]" />
+            <div className="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-[#012410]/80 backdrop-blur-md border border-[#0a3a1e] shadow-[0_0_30px_rgba(0,68,23,0.2)] overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#004417]/20 to-transparent opacity-50" />
+              <ScanFace className="w-10 h-10 text-green-400 z-10 drop-shadow-[0_0_10px_rgba(74,222,128,0.6)]" />
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-green-400 opacity-50 animate-[scan_2s_ease-in-out_infinite]" />
             </div>
             
-            <div className="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-[#0F172A]/80 backdrop-blur-md border border-[#1E293B] shadow-[0_0_30px_rgba(12,43,106,0.3)]">
+            <div className="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-[#012410]/80 backdrop-blur-md border border-[#0a3a1e] shadow-[0_0_30px_rgba(0,68,23,0.2)]">
               <Orbit className="absolute w-16 h-16 text-[#64748B]/30 animate-[spin_10s_linear_infinite]" />
               <MapPin className="w-10 h-10 text-white z-10 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
             </div>
@@ -175,7 +175,7 @@ function LoginPageContent() {
           >
             <h2 className="text-2xl md:text-3xl font-light text-white mb-4 leading-snug">
               Precision Tracking with <br/>
-              <span className="font-bold text-[#D2A02A]">AI Face ID & Geo-fencing</span>
+              <span className="font-bold text-green-400">AI Face ID & Geo-fencing</span>
             </h2>
             <p className="text-white leading-relaxed text-[13px] md:text-sm font-light opacity-90">
               Anchor Fashion&apos;s advanced attendance grid exclusively verifies identities via 3D facial recognition, synchronized instantly with military-grade GPS positioning.
@@ -188,18 +188,18 @@ function LoginPageContent() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.8 }}
-          className="relative z-10 pt-6 border-t border-[#1E293B] flex items-center justify-between text-xs text-[#475569]"
+          className="relative z-10 pt-6 border-t border-[#0a3a1e] flex items-center justify-between text-xs text-green-700"
         >
           <span>© Anchor Fashion HQ</span>
-          <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#D2A02A]" /> Enterprise Secured</span>
+          <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-green-400" /> Enterprise Secured</span>
         </motion.div>
       </div>
 
       {/* RIGHT PANEL: AUTH FORM (Darker Navy Background) */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-[#040A15] text-white order-2">
+      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-[#010e05] text-white order-2">
         
         {/* Glow Backdrops */}
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#D2A02A]/10 rounded-full filter blur-[150px] pointer-events-none" />
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#004417]/10 rounded-full filter blur-[150px] pointer-events-none" />
         
         {/* Auth Container */}
         <motion.div 
@@ -213,11 +213,11 @@ function LoginPageContent() {
               initial={{ rotate: -90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               transition={{ duration: 0.7, delay: 0.4, type: 'spring' }}
-              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#061224]/80 backdrop-blur-md border border-[#1E293B] shadow-2xl mb-6 text-[#D2A02A] relative overflow-hidden"
+              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#021a0a]/80 backdrop-blur-md border border-[#0a3a1e] shadow-2xl mb-6 text-green-400 relative overflow-hidden"
             >
                <ScanFace className="w-8 h-8 relative z-10" />
                {/* Scan line effect inside the icon box */}
-               <div className="absolute top-0 left-0 w-full h-[1px] bg-[#D2A02A]/60 shadow-[0_0_8px_#D2A02A] animate-[scan_3s_ease-in-out_infinite]" />
+               <div className="absolute top-0 left-0 w-full h-[1px] bg-green-400/60 shadow-[0_0_8px_#4ade80] animate-[scan_3s_ease-in-out_infinite]" />
             </motion.div>
             <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Portal Access</h2>
             <p className="text-[13px] text-[#64748B]">Authenticate to manage workforce and locations.</p>
@@ -242,7 +242,7 @@ function LoginPageContent() {
           </AnimatePresence>
 
           {/* FORM */}
-          <form onSubmit={handleLogin} className="space-y-5 bg-[#061224]/80 backdrop-blur-xl border border-[#1E293B] p-6 sm:p-8 rounded-2xl shadow-2xl">
+          <form onSubmit={handleLogin} className="space-y-5 bg-[#021a0a]/80 backdrop-blur-xl border border-[#0a3a1e] p-6 sm:p-8 rounded-2xl shadow-2xl">
             <div>
               <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-2">Corporate Email</label>
               <div className="relative">
@@ -254,7 +254,7 @@ function LoginPageContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@anchorfashion.com"
-                  className="w-full bg-[#040A15]/50 border border-[#1E293B] hover:border-[#334155] rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-[#475569] focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all disabled:opacity-50"
+                  className="w-full bg-[#010e05]/50 border border-[#0a3a1e] hover:border-[#1a5c30] rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-green-900 focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all disabled:opacity-50"
                 />
               </div>
             </div>
@@ -262,7 +262,7 @@ function LoginPageContent() {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase">Password</label>
-                <button type="button" onClick={handleForgotPassword} className="text-[11px] text-[#D2A02A] hover:text-white transition-colors">Forgot?</button>
+                <button type="button" onClick={handleForgotPassword} className="text-[11px] text-green-400 hover:text-white transition-colors">Forgot?</button>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
@@ -273,7 +273,7 @@ function LoginPageContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full bg-[#040A15]/50 border border-[#1E293B] hover:border-[#334155] rounded-xl py-3 pl-11 pr-11 text-sm text-white placeholder-[#475569] focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all disabled:opacity-50"
+                  className="w-full bg-[#010e05]/50 border border-[#0a3a1e] hover:border-[#1a5c30] rounded-xl py-3 pl-11 pr-11 text-sm text-white placeholder-green-900 focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all disabled:opacity-50"
                 />
                 <button
                   type="button"
@@ -288,16 +288,16 @@ function LoginPageContent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-[#D2A02A] to-[#C08F1E] hover:from-[#DFB13C] hover:to-[#C08F1E] hover:shadow-lg hover:shadow-[#D2A02A]/20 transition-all text-[#040A15] font-bold py-3.5 rounded-xl text-[13px] tracking-wider uppercase mt-4 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-55 active:scale-95"
+              className="w-full bg-gradient-to-r from-[#004417] to-[#006622] hover:from-[#005c1f] hover:to-[#008833] hover:shadow-lg hover:shadow-[#004417]/30 transition-all text-white font-bold py-3.5 rounded-xl text-[13px] tracking-wider uppercase mt-4 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-55 active:scale-95"
             >
               {loading ? (
-                <div className="w-4 h-4 border-2 border-[#040A15] border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : 'Access Dashboard'}
             </button>
             
             <div className="mt-6 text-center text-[12px] text-[#94A3B8] pt-2">
               New employee?{' '}
-              <a href="/register" className="text-[#D2A02A] hover:text-white font-bold transition-colors">
+              <a href="/register" className="text-green-400 hover:text-white font-bold transition-colors">
                 Enroll Identity & Biometrics
               </a>
             </div>
@@ -310,8 +310,9 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#040A15] flex items-center justify-center text-white font-sans">Loading Portal...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#010e05] flex items-center justify-center text-white font-sans">Loading Portal...</div>}>
       <LoginPageContent />
     </Suspense>
   );
 }
+

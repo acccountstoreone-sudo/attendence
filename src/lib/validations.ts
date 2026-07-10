@@ -110,3 +110,4 @@ export type CreateEmployeeInput = z.infer<typeof createEmployeeSchema>;
 export type UpdateEmployeeInput = z.infer<typeof updateEmployeeSchema>;
 export type CreateBranchInput = z.infer<typeof createBranchSchema>;
 export type ReportQueryInput = z.infer<typeof reportQuerySchema>;
+

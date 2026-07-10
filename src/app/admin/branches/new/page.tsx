@@ -8,7 +8,7 @@ export default function NewBranchPage() {
     <div className="space-y-8 pb-12 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <div className="flex items-center space-x-2 text-[#D2A02A] text-xs font-bold uppercase tracking-widest mb-1">
+        <div className="flex items-center space-x-2 text-[#004417] text-xs font-bold uppercase tracking-widest mb-1">
           <Store className="w-4 h-4" />
           <span>Retail Network Management</span>
         </div>
@@ -24,3 +24,4 @@ export default function NewBranchPage() {
     </div>
   );
 }
+

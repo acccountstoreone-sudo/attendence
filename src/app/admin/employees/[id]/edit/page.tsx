@@ -27,7 +27,7 @@ export default async function EditEmployeePage({ params }: { params: Promise<{ i
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back to Employees
         </Link>
-        <div className="flex items-center space-x-2 text-[#D2A02A] text-xs font-bold uppercase tracking-widest mb-1">
+        <div className="flex items-center space-x-2 text-[#004417] text-xs font-bold uppercase tracking-widest mb-1">
           <Users className="w-4 h-4" />
           <span>Edit Profile</span>
         </div>

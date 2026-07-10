@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card';
 
 export default function OfflineFallbackPage() {
   return (
-    <div className="min-h-screen bg-[#040A15] flex items-center justify-center p-4 text-white font-sans">
+    <div className="min-h-screen bg-[#010e05] flex items-center justify-center p-4 text-white font-sans">
       <Card className="max-w-md w-full p-8 text-center bg-[#081226]/90 border-slate-800 shadow-2xl backdrop-blur-xl rounded-2xl">
         <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-6">
           <WifiOff className="w-8 h-8 text-amber-500 animate-pulse" />
@@ -42,3 +42,4 @@ export default function OfflineFallbackPage() {
     </div>
   );
 }
+

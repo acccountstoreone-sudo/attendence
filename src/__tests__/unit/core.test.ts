@@ -204,3 +204,4 @@ describe('offlineQueue', () => {
     expect(queue.find((a) => a.id === id)).toBeUndefined();
   });
 });
+

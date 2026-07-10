@@ -90,14 +90,14 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
   }, [branchLatitude, branchLongitude]);
 
   return (
-    <Card className="bg-[#061224] border-[#1E293B] p-4">
+    <Card className="bg-[#021a0a] border-[#0a3a1e] p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div
             className={`p-2.5 rounded-xl shrink-0 ${
-              status === 'inside' ? 'bg-[#D2A02A]/20 text-[#D2A02A]' :
+              status === 'inside' ? 'bg-[#004417]/20 text-[#004417]' :
               status === 'approaching' ? 'bg-amber-500/20 text-amber-400' :
-              status === 'outside' || status === 'error' ? 'bg-rose-500/20 text-rose-400' : 'bg-[#D2A02A]/10 text-[#D2A02A]'
+              status === 'outside' || status === 'error' ? 'bg-rose-500/20 text-rose-400' : 'bg-[#004417]/10 text-[#004417]'
             }`}
           >
             {status === 'locating' ? (
@@ -128,7 +128,7 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
         <button
           onClick={checkPosition}
           title="Refresh GPS"
-          className="p-2 rounded-lg bg-[#040A15] hover:bg-[#1E293B] text-slate-300 hover:text-[#D2A02A] transition-colors"
+          className="p-2 rounded-lg bg-[#010e05] hover:bg-[#0a3a1e] text-slate-300 hover:text-[#004417] transition-colors"
         >
           <RefreshCw className={`w-4 h-4 ${status === 'locating' ? 'animate-spin' : ''}`} />
         </button>
@@ -136,11 +136,11 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
 
       {/* Distance Status Metrics */}
       {distance !== null && status !== 'error' && (
-        <div className="mt-3 pt-3 border-t border-[#1E293B] flex items-center justify-between text-xs">
+        <div className="mt-3 pt-3 border-t border-[#0a3a1e] flex items-center justify-between text-xs">
           <span className="text-slate-400 font-medium">Current Proximity:</span>
           <span
             className={`font-extrabold ${
-              status === 'inside' ? 'text-[#D2A02A]' : status === 'approaching' ? 'text-amber-400' : 'text-rose-400'
+              status === 'inside' ? 'text-[#004417]' : status === 'approaching' ? 'text-amber-400' : 'text-rose-400'
             }`}
           >
             {distance} meters away {status === 'inside' ? `(✓ Inside ${geofenceRadius}m zone)` : `(✖ Requires within ${geofenceRadius}m)`}
@@ -150,7 +150,7 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
 
       {/* Error Message */}
       {status === 'error' && (
-        <div className="mt-3 pt-3 border-t border-[#1E293B] text-rose-300 bg-rose-950/40 p-2 rounded-lg flex items-start space-x-2">
+        <div className="mt-3 pt-3 border-t border-[#0a3a1e] text-rose-300 bg-rose-950/40 p-2 rounded-lg flex items-start space-x-2">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>{errorMessage}</span>
         </div>
@@ -158,3 +158,4 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
     </Card>
   );
 };
+

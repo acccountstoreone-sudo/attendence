@@ -213,7 +213,7 @@ export default function BranchManagerProfilePage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1E293B] pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#0a3a1e] pb-6">
         <div>
           <div className="flex items-center space-x-2.5">
             <Store className="w-6 h-6 text-blue-400" />
@@ -235,10 +235,10 @@ export default function BranchManagerProfilePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column: Avatar & Summary */}
-        <Card className="bg-[#0A101C] border-[#1E293B] p-6 col-span-1 flex flex-col items-center text-center shadow-lg relative overflow-hidden">
+        <Card className="bg-[#0A101C] border-[#0a3a1e] p-6 col-span-1 flex flex-col items-center text-center shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
           
-          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-4 border-[#040A15] shadow-2xl mb-4">
+          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-4 border-[#010e05] shadow-2xl mb-4">
             <span className="text-3xl font-extrabold text-white">
               {(profile.full_name || 'M').charAt(0).toUpperCase()}
             </span>
@@ -247,7 +247,7 @@ export default function BranchManagerProfilePage() {
           <p className="text-xs text-blue-400 font-extrabold uppercase tracking-widest mt-1">
             Branch Manager
           </p>
-          <div className="w-full h-px bg-[#1E293B] my-6" />
+          <div className="w-full h-px bg-[#0a3a1e] my-6" />
           <div className="w-full space-y-3.5 text-left">
             <div className="flex items-center space-x-3 text-sm text-slate-300">
               <Building2 className="w-4 h-4 text-blue-400 shrink-0" />
@@ -272,8 +272,8 @@ export default function BranchManagerProfilePage() {
         <div className="col-span-1 md:col-span-2 space-y-6">
           
           {/* Form 1: Edit Profile */}
-          <Card className="bg-[#0A101C] border-[#1E293B] p-6 shadow-lg">
-            <div className="flex items-center space-x-2 text-slate-100 mb-6 pb-4 border-b border-[#1E293B]">
+          <Card className="bg-[#0A101C] border-[#0a3a1e] p-6 shadow-lg">
+            <div className="flex items-center space-x-2 text-slate-100 mb-6 pb-4 border-b border-[#0a3a1e]">
               <User className="w-5 h-5 text-blue-400" />
               <h3 className="font-bold text-base">Personal Information</h3>
             </div>
@@ -301,7 +301,7 @@ export default function BranchManagerProfilePage() {
                   <Input
                     value={profile.employee_id || 'BM-STORE'}
                     disabled
-                    className="bg-[#040A15]/60 border-[#1E293B] text-slate-400 font-mono cursor-not-allowed"
+                    className="bg-[#010e05]/60 border-[#0a3a1e] text-slate-400 font-mono cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -311,7 +311,7 @@ export default function BranchManagerProfilePage() {
                   <Input
                     value={profile.email || ''}
                     disabled
-                    className="bg-[#040A15]/60 border-[#1E293B] text-slate-400 cursor-not-allowed"
+                    className="bg-[#010e05]/60 border-[#0a3a1e] text-slate-400 cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -326,7 +326,7 @@ export default function BranchManagerProfilePage() {
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter full name"
                     required
-                    className="bg-[#040A15] border-[#1E293B] text-white focus:border-blue-500"
+                    className="bg-[#010e05] border-[#0a3a1e] text-white focus:border-blue-500"
                   />
                 </div>
                 <div>
@@ -337,7 +337,7 @@ export default function BranchManagerProfilePage() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+880 1XXX-XXXXXX"
-                    className="bg-[#040A15] border-[#1E293B] text-white focus:border-blue-500"
+                    className="bg-[#010e05] border-[#0a3a1e] text-white focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -357,8 +357,8 @@ export default function BranchManagerProfilePage() {
           </Card>
 
           {/* Form 2: Change Password */}
-          <Card className="bg-[#0A101C] border-[#1E293B] p-6 shadow-lg">
-            <div className="flex items-center space-x-2 text-slate-100 mb-6 pb-4 border-b border-[#1E293B]">
+          <Card className="bg-[#0A101C] border-[#0a3a1e] p-6 shadow-lg">
+            <div className="flex items-center space-x-2 text-slate-100 mb-6 pb-4 border-b border-[#0a3a1e]">
               <ShieldCheck className="w-5 h-5 text-blue-400" />
               <h3 className="font-bold text-base">Account Security & Password</h3>
             </div>
@@ -396,7 +396,7 @@ export default function BranchManagerProfilePage() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Min 6 characters"
-                    className="bg-[#040A15] border-[#1E293B] text-white focus:border-blue-500"
+                    className="bg-[#010e05] border-[#0a3a1e] text-white focus:border-blue-500"
                   />
                 </div>
                 <div>
@@ -408,7 +408,7 @@ export default function BranchManagerProfilePage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Repeat new password"
-                    className="bg-[#040A15] border-[#1E293B] text-white focus:border-blue-500"
+                    className="bg-[#010e05] border-[#0a3a1e] text-white focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -418,7 +418,7 @@ export default function BranchManagerProfilePage() {
                   type="submit"
                   disabled={changingPassword || !newPassword}
                   variant="outline"
-                  className="border-[#1E293B] hover:border-blue-500 text-slate-200 hover:text-blue-400 font-bold"
+                  className="border-[#0a3a1e] hover:border-blue-500 text-slate-200 hover:text-blue-400 font-bold"
                   icon={changingPassword ? undefined : <Key className="w-4 h-4" />}
                 >
                   {changingPassword ? 'Updating Password...' : 'Update Password'}
@@ -432,3 +432,4 @@ export default function BranchManagerProfilePage() {
     </div>
   );
 }
+

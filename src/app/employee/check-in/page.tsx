@@ -542,7 +542,7 @@ export default function EmployeeCheckInPage() {
             </div>
 
             {/* Check-in / Check-out Toggle */}
-            <div className="flex bg-[#040A15] p-1 rounded-xl border border-white/15 shadow-inner">
+            <div className="flex bg-[#010e05] p-1 rounded-xl border border-white/15 shadow-inner">
               {(['in','out'] as const).map(t => (
                 <button
                   key={t}
@@ -614,3 +614,4 @@ export default function EmployeeCheckInPage() {
     </div>
   );
 }
+

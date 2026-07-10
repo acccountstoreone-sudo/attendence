@@ -21,7 +21,7 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h4 className="text-lg font-bold text-white flex items-center">
-          <Settings className="w-5 h-5 mr-2 text-[#D2A02A]" /> Branch Configuration
+          <Settings className="w-5 h-5 mr-2 text-[#004417]" /> Branch Configuration
         </h4>
         <Button variant="secondary" onClick={() => router.push(`/admin/branches/${branch.id}/edit`)}>
           Edit Settings
@@ -31,7 +31,7 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Geofence & Location */}
         <Card className="bg-slate-900 border-slate-800 p-6 shadow-xl">
-          <h4 className="text-sm font-semibold text-[#D2A02A] uppercase tracking-wider mb-4 flex items-center">
+          <h4 className="text-sm font-semibold text-[#004417] uppercase tracking-wider mb-4 flex items-center">
             <MapPin className="w-4 h-4 mr-2" /> Geofence Settings & Map
           </h4>
           {branch.latitude && branch.longitude ? (
@@ -58,7 +58,7 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
 
         {/* Office Timings & Rules */}
         <Card className="bg-slate-900 border-slate-800 p-6 shadow-xl">
-           <h4 className="text-sm font-semibold text-[#D2A02A] uppercase tracking-wider mb-4 flex items-center">
+           <h4 className="text-sm font-semibold text-[#004417] uppercase tracking-wider mb-4 flex items-center">
             <Clock className="w-4 h-4 mr-2" /> Office Timings & Rules
           </h4>
           
@@ -101,3 +101,4 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
     </div>
   );
 };
+

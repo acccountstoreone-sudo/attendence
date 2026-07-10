@@ -10,3 +10,4 @@ export default function AdminCorrectionsPage() {
     </div>
   );
 }
+

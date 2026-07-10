@@ -50,10 +50,10 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
       hideHeader
       noPadding
     >
-      <div className="flex flex-col md:flex-row min-h-[650px] bg-[#061224] rounded-2xl overflow-hidden">
+      <div className="flex flex-col md:flex-row min-h-[650px] bg-[#021a0a] rounded-2xl overflow-hidden">
         
         {/* Left Pane: User Details & Verification Status */}
-        <div className="w-full md:w-[350px] lg:w-[400px] border-r border-[#1E293B] bg-[#040A15]/50 p-8 flex flex-col">
+        <div className="w-full md:w-[350px] lg:w-[400px] border-r border-[#0a3a1e] bg-[#010e05]/50 p-8 flex flex-col">
           <div className="flex items-center gap-3 mb-8">
             <div className="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
               <ShieldCheck className="w-6 h-6" />
@@ -100,7 +100,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
               </div>
             </div>
 
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-[#1E293B] to-transparent my-6" />
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-[#0a3a1e] to-transparent my-6" />
 
             {/* Verification Status */}
             <div>
@@ -114,7 +114,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                   <span className="text-xs text-slate-300 font-medium">Face Enrollment</span>
                   <Badge status="present" variant="solid" className="text-[10px]">Captured</Badge>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-[#1E293B]/30 border border-[#1E293B]">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#0a3a1e]/30 border border-[#0a3a1e]">
                   <span className="text-xs text-slate-300 font-medium">Document Scan</span>
                   {isMissingBoth ? (
                     <Badge status="absent" variant="solid" className="text-[10px]">Missing</Badge>
@@ -128,21 +128,21 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
         </div>
 
         {/* Right Pane: Document Viewer */}
-        <div className="flex-1 flex flex-col bg-[#061224] relative">
+        <div className="flex-1 flex flex-col bg-[#021a0a] relative">
           {/* Top Bar */}
-          <div className="h-16 border-b border-[#1E293B] flex items-center justify-between px-6 bg-[#061224]/80 backdrop-blur-sm z-10">
+          <div className="h-16 border-b border-[#0a3a1e] flex items-center justify-between px-6 bg-[#021a0a]/80 backdrop-blur-sm z-10">
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-slate-400" />
               <span className="text-sm font-semibold text-slate-200">Document Inspector</span>
             </div>
             
             {/* Tab Switcher */}
-            <div className="flex p-1 bg-[#040A15] border border-[#1E293B] rounded-lg">
+            <div className="flex p-1 bg-[#010e05] border border-[#0a3a1e] rounded-lg">
               <button 
                 onClick={() => setActiveTab('front')}
                 className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
                   activeTab === 'front' 
-                    ? 'bg-[#1E293B] text-white shadow-sm' 
+                    ? 'bg-[#0a3a1e] text-white shadow-sm' 
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -152,7 +152,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                 onClick={() => setActiveTab('back')}
                 className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
                   activeTab === 'back' 
-                    ? 'bg-[#1E293B] text-white shadow-sm' 
+                    ? 'bg-[#0a3a1e] text-white shadow-sm' 
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -187,7 +187,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-[#1E293B] rounded-2xl max-w-sm mx-auto">
+                  <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-[#0a3a1e] rounded-2xl max-w-sm mx-auto">
                     <AlertTriangle className="w-12 h-12 text-slate-500 mb-4" />
                     <p className="text-slate-300 font-bold mb-2">Document Missing</p>
                     <p className="text-xs text-slate-500">The employee did not upload the {activeTab} side of their National ID.</p>
@@ -198,7 +198,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
           </div>
 
           {/* Action Footer */}
-          <div className="p-6 border-t border-[#1E293B] bg-[#061224] flex items-center justify-between">
+          <div className="p-6 border-t border-[#0a3a1e] bg-[#021a0a] flex items-center justify-between">
             <Button 
               variant="ghost" 
               className="text-slate-400 hover:text-white"
@@ -222,7 +222,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
               </Button>
               <Button 
                 variant="primary" 
-                className="bg-gradient-to-r from-[#D2A02A] to-[#B08015] hover:from-[#C08F1E] hover:to-[#9F700B] text-black font-extrabold border-none shadow-[0_0_15px_rgba(210,160,42,0.3)] hover:shadow-[0_0_25px_rgba(210,160,42,0.5)] transition-all px-6"
+                className="bg-gradient-to-r from-[#004417] to-[#B08015] hover:from-[#006622] hover:to-[#9F700B] text-black font-extrabold border-none shadow-[0_0_15px_rgba(210,160,42,0.3)] hover:shadow-[0_0_25px_rgba(210,160,42,0.5)] transition-all px-6"
                 onClick={async () => {
                   await onApprove(employee.id, 'approve');
                   onClose();
@@ -240,3 +240,4 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
     </Modal>
   );
 };
+

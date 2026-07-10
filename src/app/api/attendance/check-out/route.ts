@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { data: profile } = await supabase.from('profiles').select('face_descriptor').eq('id', user.id).single();
 
-    // 3. Biometric Verification Check
+    // 3. Biometric Verification Check (face match only — no liveness challenge required)
     if (!payload.webauthn_verified) {
       if (!payload.face_verified || !payload.faceDescriptor || payload.faceDescriptor.length === 0) {
         return NextResponse.json(
@@ -35,19 +35,6 @@ export async function POST(request: NextRequest) {
             success: false,
             data: null,
             error: { code: 'BIOMETRIC_FAILED', message: 'Biometric verification failed. Face descriptor missing or empty.' },
-            timestamp: new Date().toISOString(),
-          },
-          { status: 403 }
-        );
-      }
-
-      // 3a. Liveness verification requirement
-      if (!payload.liveness_passed) {
-        return NextResponse.json(
-          {
-            success: false,
-            data: null,
-            error: { code: 'LIVENESS_REQUIRED', message: 'Liveness verification was not completed. Please complete the face challenge.' },
             timestamp: new Date().toISOString(),
           },
           { status: 403 }
@@ -247,3 +234,4 @@ export async function POST(request: NextRequest) {
     return handleApiError(error);
   }
 }
+

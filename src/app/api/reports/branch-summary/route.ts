@@ -78,6 +78,14 @@ export async function GET(request: NextRequest) {
        const attendanceRate = Math.min(100, Math.max(0, (totalPresent / totalDays) * 100));
        const punctualityRate = totalPresent > 0 ? (present / totalPresent) * 100 : 0;
 
+       const { count: presentTodayCount } = await supabase
+         .from('attendance_records')
+         .select('*', { count: 'exact', head: true })
+         .eq('branch_id', branch.id)
+         .eq('status', 'present')
+         .gte('check_in_time', new Date(new Date().setHours(0,0,0,0)).toISOString())
+         .lte('check_in_time', new Date(new Date().setHours(23,59,59,999)).toISOString());
+
        return {
          branch_id: branch.id,
          branch_name: branch.name,
@@ -87,7 +95,9 @@ export async function GET(request: NextRequest) {
          late_days: late,
          absent_days: totalAbsences,
          attendance_rate: attendanceRate,
-         punctuality_rate: punctualityRate
+         punctuality_rate: punctualityRate,
+         total_staff: totalStaff,
+         present_today: presentTodayCount || 0
        };
     }));
 
@@ -100,3 +110,4 @@ export async function GET(request: NextRequest) {
     return handleApiError(error);
   }
 }
+

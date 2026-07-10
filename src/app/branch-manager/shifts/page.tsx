@@ -364,3 +364,4 @@ export default function BranchManagerShiftsPage() {
     </div>
   );
 }
+

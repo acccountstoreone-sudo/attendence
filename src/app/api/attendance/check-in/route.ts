@@ -15,7 +15,7 @@ const checkInSchema = z.object({
   is_manual_override: z.boolean().optional(),
   is_offline_sync: z.boolean().optional().default(false),
   timestamp: z.string().datetime().optional(),
-  liveness_passed: z.boolean().optional(),
+  liveness_passed: z.boolean().optional(), // kept for backward compat but no longer required
   photo_url: z.string().optional(),
   webauthn_verified: z.boolean().optional(),
 });
@@ -32,86 +32,71 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 
-    // 3. Biometric + Liveness Verification Check
+    // 3. Biometric Verification Check (face match only — no liveness challenge required)
     if (!payload.webauthn_verified) {
       if (!payload.face_verified || !payload.faceDescriptor || payload.faceDescriptor.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          data: null,
-          error: { code: 'BIOMETRIC_FAILED', message: 'Biometric verification failed. Face descriptor missing or empty.' },
-          timestamp: new Date().toISOString(),
-        },
-        { status: 403 }
-      );
-    }
-
-    // 3a. Require liveness challenge to have been completed
-    if (!payload.liveness_passed) {
-      return NextResponse.json(
-        {
-          success: false,
-          data: null,
-          error: { code: 'LIVENESS_REQUIRED', message: 'Liveness verification was not completed. Please complete the face challenge.' },
-          timestamp: new Date().toISOString(),
-        },
-        { status: 403 }
-      );
-    }
-
-    // 3b. Verify against stored face descriptor & reverification status
-    
-    if (!profile || !profile.face_descriptor || profile.face_enrolled === false || (profile as Record<string, unknown>).requires_face_reverification === true) {
-      return NextResponse.json(
-        {
-          success: false,
-          data: null,
-          error: {
-            code: 'BIOMETRIC_REVERIFICATION_REQUIRED',
-            message: (profile as Record<string, unknown>)?.requires_face_reverification
-              ? 'Admin has cancelled and reset your face verification. You must re-verify your face right now before checking in.'
-              : 'No facial biometric data found for this employee. Please enroll and verify your face first before checking in.',
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: { code: 'BIOMETRIC_FAILED', message: 'Biometric verification failed. Face descriptor missing or empty.' },
+            timestamp: new Date().toISOString(),
           },
-          timestamp: new Date().toISOString(),
-        },
-        { status: 403 }
-      );
-    }
+          { status: 403 }
+        );
+      }
 
-    try {
-      // Bug 5 fix: Validate descriptor length before comparison to avoid silent mismatch on empty arrays
-      if (payload.faceDescriptor.length !== profile.face_descriptor.length) {
+      // Verify against stored face descriptor & reverification status
+      if (!profile || !profile.face_descriptor || profile.face_enrolled === false || (profile as Record<string, unknown>).requires_face_reverification === true) {
         return NextResponse.json(
           {
             success: false,
             data: null,
             error: {
-              code: 'BIOMETRIC_DIMENSION_MISMATCH',
-              message: `Face descriptor dimension mismatch: received ${payload.faceDescriptor.length}, expected ${profile.face_descriptor.length}.`,
+              code: 'BIOMETRIC_REVERIFICATION_REQUIRED',
+              message: (profile as Record<string, unknown>)?.requires_face_reverification
+                ? 'Admin has cancelled and reset your face verification. You must re-verify your face right now before checking in.'
+                : 'No facial biometric data found for this employee. Please enroll and verify your face first before checking in.',
             },
             timestamp: new Date().toISOString(),
           },
           { status: 403 }
         );
       }
-      const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
-      if (distance > 0.75) {
-        return NextResponse.json(
-          {
-            success: false,
-            data: null,
-            error: {
-              code: 'BIOMETRIC_MISMATCH',
-              message: `Face verification failed. Distance: ${distance.toFixed(3)}. You do not match the registered employee.`,
+
+      try {
+        if (payload.faceDescriptor.length !== profile.face_descriptor.length) {
+          return NextResponse.json(
+            {
+              success: false,
+              data: null,
+              error: {
+                code: 'BIOMETRIC_DIMENSION_MISMATCH',
+                message: `Face descriptor dimension mismatch: received ${payload.faceDescriptor.length}, expected ${profile.face_descriptor.length}.`,
+              },
+              timestamp: new Date().toISOString(),
             },
-            timestamp: new Date().toISOString(),
-          },
-          { status: 403 }
-        );
+            { status: 403 }
+          );
+        }
+        const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
+        if (distance > 0.75) {
+          return NextResponse.json(
+            {
+              success: false,
+              data: null,
+              error: {
+                code: 'BIOMETRIC_MISMATCH',
+                message: `Face verification failed. Distance: ${distance.toFixed(3)}. You do not match the registered employee.`,
+              },
+              timestamp: new Date().toISOString(),
+            },
+            { status: 403 }
+          );
+        }
+      } catch {
+        return NextResponse.json({ success: false, data: null, error: { code: 'BIOMETRIC_ERROR', message: 'Error processing facial comparison.' } }, { status: 500 });
       }
-    } catch {
-      return NextResponse.json({ success: false, data: null, error: { code: 'BIOMETRIC_ERROR', message: 'Error processing facial comparison.' } }, { status: 500 });
-    }
     } // End of !payload.webauthn_verified block
 
     // 4. Check if user already checked in today
@@ -283,12 +268,36 @@ export async function POST(request: NextRequest) {
         face_verified: payload.face_verified,
         status: 'present', // Will be evaluated/overridden by trigger trg_calculate_attendance_status
         is_manual_override: !geo.within || Boolean(payload.is_manual_override),
+        approval_status: 'pending', // Requires Branch Manager approval before counting
       })
       .select()
       .single();
 
     if (insertErr || !newRecord) {
       throw new Error(`Database Insert Failed: ${insertErr?.message}`);
+    }
+
+    // Notify Branch Manager about pending check-in approval
+    try {
+      const { data: branchManager } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('branch_id', targetBranchId)
+        .eq('role', 'branch_manager')
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (branchManager) {
+        await supabase.from('notifications').insert({
+          user_id: branchManager.id,
+          title: '⏳ Attendance Approval Required',
+          message: `${profile?.full_name || 'An employee'} has checked in at ${branch.name} at ${new Date(checkInTime).toLocaleTimeString('en-BD', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dhaka' })}. Please approve or reject.`,
+          type: 'attendance_approval',
+          action_url: '/branch-manager/attendance',
+        });
+      }
+    } catch {
+      // Non-fatal: notification failure should not block check-in
     }
 
     // Update live location and first verified location if not yet set
@@ -316,7 +325,7 @@ export async function POST(request: NextRequest) {
           distance_meters: geo.distance,
           branch_name: branch.name,
         },
-        message: `Check-in successful at ${branch.name} (${newRecord.status.toUpperCase()}).`,
+        message: `Check-in successful at ${branch.name}. Pending Branch Manager approval.`,
         timestamp: new Date().toISOString(),
       },
       { status: 201 }
@@ -325,3 +334,4 @@ export async function POST(request: NextRequest) {
     return handleApiError(error);
   }
 }
+

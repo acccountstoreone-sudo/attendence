@@ -121,3 +121,4 @@ export function useRealtimeNotifications(userId: string | undefined) {
     refetch: fetchNotifications,
   };
 }
+

@@ -124,7 +124,7 @@ export default function BroadcastPage() {
         )}
       </AnimatePresence>
 
-      <Card className="bg-[#061224] border-[#1E293B] p-6 shadow-2xl">
+      <Card className="bg-[#021a0a] border-[#0a3a1e] p-6 shadow-2xl">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <div className="flex justify-between items-center mb-2">
@@ -139,7 +139,7 @@ export default function BroadcastPage() {
               maxLength={TITLE_MAX}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., URGENT: Store Policy Update"
-              className="w-full px-4 py-3 bg-[#040A15] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
+              className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
             />
           </div>
           <div>
@@ -156,7 +156,7 @@ export default function BroadcastPage() {
               onChange={(e) => setMessage(e.target.value)}
               rows={5}
               placeholder="Details of your broadcast..."
-              className="w-full px-4 py-3 bg-[#040A15] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all resize-none"
+              className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all resize-none"
             />
           </div>
 
@@ -166,7 +166,7 @@ export default function BroadcastPage() {
             <span>This will send a notification to <strong>all active staff members</strong>. Use with caution.</span>
           </div>
 
-          <div className="pt-4 flex justify-end space-x-3 border-t border-[#1E293B]">
+          <div className="pt-4 flex justify-end space-x-3 border-t border-[#0a3a1e]">
             <Button type="button" variant="secondary" onClick={() => router.push('/admin')}>
               Cancel
             </Button>
@@ -197,7 +197,7 @@ export default function BroadcastPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#061224] border border-rose-500/30 rounded-2xl shadow-2xl p-6 max-w-md w-full"
+              className="bg-[#021a0a] border border-rose-500/30 rounded-2xl shadow-2xl p-6 max-w-md w-full"
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
@@ -208,7 +208,7 @@ export default function BroadcastPage() {
                   <p className="text-xs text-slate-400">This action cannot be undone.</p>
                 </div>
               </div>
-              <div className="bg-[#040A15] rounded-xl p-4 border border-[#1E293B] mb-5 space-y-2">
+              <div className="bg-[#010e05] rounded-xl p-4 border border-[#0a3a1e] mb-5 space-y-2">
                 <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">Title</p>
                 <p className="text-white font-semibold text-sm">{title}</p>
                 <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mt-2">Message</p>
@@ -232,3 +232,4 @@ export default function BroadcastPage() {
     </div>
   );
 }
+

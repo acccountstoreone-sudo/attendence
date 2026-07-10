@@ -102,14 +102,14 @@ export default function AdminSettingsPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#061224] p-6 rounded-3xl border border-[#1E293B] shadow-2xl relative overflow-hidden"
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#021a0a] p-6 rounded-3xl border border-[#0a3a1e] shadow-2xl relative overflow-hidden"
       >
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#D2A02A_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
 
         <div className="relative z-10 pointer-events-none">
           <div className="flex items-center space-x-2">
-            <Settings className="w-5 h-5 text-[#D2A02A]" />
-            <span className="px-3 py-1 rounded-full bg-[#D2A02A]/20 border border-[#D2A02A]/30 text-[#D2A02A] text-xs font-bold uppercase tracking-widest">
+            <Settings className="w-5 h-5 text-[#004417]" />
+            <span className="px-3 py-1 rounded-full bg-[#004417]/20 border border-[#004417]/30 text-[#004417] text-xs font-bold uppercase tracking-widest">
               System Configuration
             </span>
           </div>
@@ -155,8 +155,8 @@ export default function AdminSettingsPage() {
               onClick={() => setActiveTab(tab.key)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${
                 activeTab === tab.key
-                  ? 'bg-[#D2A02A]/20 text-[#D2A02A] border border-[#D2A02A]/30'
-                  : 'text-slate-400 hover:bg-[#1E293B] hover:text-white border border-transparent'
+                  ? 'bg-[#004417]/20 text-[#004417] border border-[#004417]/30'
+                  : 'text-slate-400 hover:bg-[#0a3a1e] hover:text-white border border-transparent'
               }`}
             >
               {tab.icon}
@@ -167,7 +167,7 @@ export default function AdminSettingsPage() {
 
         {/* Configuration Forms */}
         <div className="md:col-span-3">
-          <Card className="bg-[#061224] border-[#1E293B] shadow-2xl">
+          <Card className="bg-[#021a0a] border-[#0a3a1e] shadow-2xl">
             <form onSubmit={handleSave} className="space-y-6">
 
               {activeTab === 'general' && (
@@ -184,7 +184,7 @@ export default function AdminSettingsPage() {
                         required
                         value={profile.name}
                         onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
-                        className="w-full bg-[#040A15] border border-[#1E293B] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#D2A02A] transition-colors"
+                        className="w-full bg-[#010e05] border border-[#0a3a1e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#004417] transition-colors"
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -193,7 +193,7 @@ export default function AdminSettingsPage() {
                         rows={2}
                         value={profile.hq_address}
                         onChange={(e) => setProfile((p) => ({ ...p, hq_address: e.target.value }))}
-                        className="w-full bg-[#040A15] border border-[#1E293B] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#D2A02A] resize-none transition-colors"
+                        className="w-full bg-[#010e05] border border-[#0a3a1e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#004417] resize-none transition-colors"
                       />
                     </div>
                   </div>
@@ -214,7 +214,7 @@ export default function AdminSettingsPage() {
                         required
                         value={profile.working_hours_start}
                         onChange={(e) => setProfile((p) => ({ ...p, working_hours_start: e.target.value }))}
-                        className="w-full bg-[#040A15] border border-[#1E293B] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#D2A02A] transition-colors"
+                        className="w-full bg-[#010e05] border border-[#0a3a1e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#004417] transition-colors"
                       />
                     </div>
                     <div>
@@ -224,7 +224,7 @@ export default function AdminSettingsPage() {
                         required
                         value={profile.working_hours_end}
                         onChange={(e) => setProfile((p) => ({ ...p, working_hours_end: e.target.value }))}
-                        className="w-full bg-[#040A15] border border-[#1E293B] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#D2A02A] transition-colors"
+                        className="w-full bg-[#010e05] border border-[#0a3a1e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#004417] transition-colors"
                       />
                     </div>
                     <div>
@@ -236,7 +236,7 @@ export default function AdminSettingsPage() {
                         max={120}
                         value={profile.grace_period_minutes}
                         onChange={(e) => setProfile((p) => ({ ...p, grace_period_minutes: Number(e.target.value) }))}
-                        className="w-full bg-[#040A15] border border-[#1E293B] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#D2A02A] transition-colors"
+                        className="w-full bg-[#010e05] border border-[#0a3a1e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#004417] transition-colors"
                       />
                     </div>
                     <div>
@@ -249,7 +249,7 @@ export default function AdminSettingsPage() {
                         step={0.5}
                         value={profile.overtime_multiplier}
                         onChange={(e) => setProfile((p) => ({ ...p, overtime_multiplier: Number(e.target.value) }))}
-                        className="w-full bg-[#040A15] border border-[#1E293B] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#D2A02A] transition-colors"
+                        className="w-full bg-[#010e05] border border-[#0a3a1e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#004417] transition-colors"
                       />
                     </div>
                   </div>
@@ -275,14 +275,14 @@ export default function AdminSettingsPage() {
                         enabled: true,
                       },
                     ].map((item) => (
-                      <div key={item.title} className="flex items-center justify-between p-4 bg-[#040A15] border border-[#1E293B] rounded-xl">
+                      <div key={item.title} className="flex items-center justify-between p-4 bg-[#010e05] border border-[#0a3a1e] rounded-xl">
                         <div>
                           <p className="text-sm font-bold text-white">{item.title}</p>
                           <p className="text-xs text-slate-400 mt-0.5">{item.desc}</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input type="checkbox" defaultChecked={item.enabled} className="sr-only peer" />
-                          <div className="w-11 h-6 bg-[#1E293B] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#D2A02A]"></div>
+                          <div className="w-11 h-6 bg-[#0a3a1e] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#004417]"></div>
                         </label>
                       </div>
                     ))}
@@ -294,11 +294,11 @@ export default function AdminSettingsPage() {
                 </motion.div>
               )}
 
-              <div className="pt-6 border-t border-[#1E293B] flex justify-end">
+              <div className="pt-6 border-t border-[#0a3a1e] flex justify-end">
                 <Button
                   type="submit"
                   variant="primary"
-                  className="bg-[#D2A02A] text-[#040A15] hover:bg-[#C08F1E] font-bold border-none"
+                  className="bg-[#004417] text-[#010e05] hover:bg-[#006622] font-bold border-none"
                   icon={<Save className="w-4 h-4" />}
                   isLoading={loading}
                 >
@@ -312,3 +312,4 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+

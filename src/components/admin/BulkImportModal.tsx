@@ -113,7 +113,7 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-2xl bg-[#0F172A] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-2xl bg-[#012410] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/50">
@@ -255,3 +255,4 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
     </div>
   );
 }
+

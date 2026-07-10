@@ -14,7 +14,7 @@ export default function EmployeeDashboardPage() {
   const supabase = useMemo(() => createClient(), []);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<{ full_name: string; branch_name: string } | null>(null);
-  const [todayRecord, setTodayRecord] = useState<{ check_in_time?: string; check_out_time?: string; status?: string } | null>(null);
+  const [todayRecord, setTodayRecord] = useState<{ check_in_time?: string; check_out_time?: string; status?: string; approval_status?: string; overtime_minutes?: number } | null>(null);
   // B6 fix: Store real leave balance
   const [leaveBalance, setLeaveBalance] = useState<{ available: number; total: number } | null>(null);
 
@@ -81,10 +81,10 @@ export default function EmployeeDashboardPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
       {/* Welcome Banner */}
-      <div className="bg-[#061224] p-8 rounded-3xl border border-[#D2A02A]/20 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#D2A02A_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
+      <div className="bg-[#021a0a] p-8 rounded-3xl border border-[#004417]/20 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
         <div className="relative z-10">
-          <div className="flex items-center space-x-2 text-[#D2A02A] text-xs font-bold uppercase tracking-wider">
+          <div className="flex items-center space-x-2 text-[#004417] text-xs font-bold uppercase tracking-wider">
             <MapPin className="w-4 h-4" />
             <span>{profile?.branch_name}</span>
           </div>
@@ -99,8 +99,8 @@ export default function EmployeeDashboardPage() {
         <Button
           size="lg"
           variant="primary"
-          icon={<Clock className="w-5 h-5 text-[#040A15]" />}
-          className="relative z-10 shadow-xl shadow-[#D2A02A]/20 bg-[#D2A02A] text-[#040A15] hover:bg-[#C08F1E] font-bold border-none disabled:opacity-60 disabled:cursor-not-allowed"
+          icon={<Clock className="w-5 h-5 text-[#010e05]" />}
+          className="relative z-10 shadow-xl shadow-[#004417]/20 bg-[#004417] text-[#010e05] hover:bg-[#006622] font-bold border-none disabled:opacity-60 disabled:cursor-not-allowed"
           onClick={() => router.push('/employee/check-in')}
           disabled={!!(todayRecord?.check_in_time && todayRecord.check_out_time)}
         >
@@ -114,53 +114,81 @@ export default function EmployeeDashboardPage() {
 
       {/* Today's Shift Status Card */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-[#061224] border-[#1E293B] col-span-2">
-          <div className="flex items-center justify-between border-b border-[#1E293B] pb-4 mb-6">
-            <div className="flex items-center space-x-2">
-              <ShieldCheck className="w-5 h-5 text-[#D2A02A]" />
-              <h3 className="text-lg font-bold text-white">Today&apos;s Attendance Status</h3>
+        <Card className="bg-[#021a0a] border-[#0a3a1e] col-span-2">
+            <div className="flex items-center justify-between border-b border-[#0a3a1e] pb-4 mb-6">
+              <div className="flex items-center space-x-2">
+                <ShieldCheck className="w-5 h-5 text-[#004417]" />
+                <h3 className="text-lg font-bold text-white">Today&apos;s Attendance Status</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge
+                  status={todayRecord?.status === 'late' ? 'late' : todayRecord?.status === 'present' ? 'present' : 'pending'}
+                />
+                {todayRecord?.approval_status === 'pending' && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold animate-pulse">
+                    ⏳ Awaiting BM Approval
+                  </span>
+                )}
+                {todayRecord?.approval_status === 'approved' && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+                    ✅ Approved
+                  </span>
+                )}
+                {todayRecord?.approval_status === 'rejected' && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-bold">
+                    ❌ Rejected by BM
+                  </span>
+                )}
+              </div>
             </div>
-            <Badge
-              status={todayRecord?.status === 'late' ? 'late' : todayRecord?.status === 'present' ? 'present' : 'pending'}
-            />
-          </div>
 
-          <div className="grid grid-cols-2 gap-6 text-center">
-            <div className="bg-[#040A15]/60 p-4 rounded-2xl border border-[#1E293B]">
-              <p className="text-xs font-bold uppercase text-slate-400 mb-1">Check-In Timestamp</p>
-              <p className="text-xl font-extrabold text-[#D2A02A]">
-                {todayRecord?.check_in_time
-                  ? new Date(todayRecord.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                  : '--:--'}
-              </p>
-            </div>
+            <div className="grid grid-cols-2 gap-6 text-center">
+              <div className="bg-[#010e05]/60 p-4 rounded-2xl border border-[#0a3a1e]">
+                <p className="text-xs font-bold uppercase text-slate-400 mb-1">Check-In Timestamp</p>
+                <p className="text-xl font-extrabold text-[#004417]">
+                  {todayRecord?.check_in_time
+                    ? new Date(todayRecord.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : '--:--'}
+                </p>
+              </div>
 
-            <div className="bg-[#040A15]/60 p-4 rounded-2xl border border-[#1E293B]">
-              <p className="text-xs font-bold uppercase text-slate-400 mb-1">Check-Out Timestamp</p>
-              <p className="text-xl font-extrabold text-[#D2A02A]/70">
-                {todayRecord?.check_out_time
-                  ? new Date(todayRecord.check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                  : '--:--'}
-              </p>
+              <div className="bg-[#010e05]/60 p-4 rounded-2xl border border-[#0a3a1e]">
+                <p className="text-xs font-bold uppercase text-slate-400 mb-1">Check-Out Timestamp</p>
+                <p className="text-xl font-extrabold text-[#004417]/70">
+                  {todayRecord?.check_out_time
+                    ? new Date(todayRecord.check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : '--:--'}
+                </p>
+              </div>
+
+              {todayRecord?.overtime_minutes && todayRecord.overtime_minutes > 0 ? (
+                <div className="col-span-2 bg-amber-950/30 p-3 rounded-2xl border border-amber-800/30">
+                  <p className="text-xs font-bold uppercase text-amber-400/70 mb-0.5">Overtime</p>
+                  <p className="text-lg font-extrabold text-amber-400">
+                    {Math.floor(todayRecord.overtime_minutes / 60) > 0
+                      ? `${Math.floor(todayRecord.overtime_minutes / 60)}h ${todayRecord.overtime_minutes % 60}m`
+                      : `${todayRecord.overtime_minutes}m`}
+                  </p>
+                </div>
+              ) : null}
             </div>
-          </div>
         </Card>
 
         {/* Leave Balance & Quick Action */}
-        <Card className="bg-[#061224] border-[#1E293B] flex flex-col justify-between">
+        <Card className="bg-[#021a0a] border-[#0a3a1e] flex flex-col justify-between">
           <div>
-            <div className="flex items-center space-x-2 text-[#D2A02A] mb-2">
+            <div className="flex items-center space-x-2 text-[#004417] mb-2">
               <Calendar className="w-5 h-5" />
               <h3 className="text-lg font-bold text-white">Leave Balance</h3>
             </div>
             <p className="text-xs text-slate-400">Annual Paid Leave Allocation</p>
             {leaveBalance?.total === 0 ? (
-              <div className="mt-4 p-3 border border-dashed border-[#1E293B] rounded-xl text-xs text-slate-500 text-center">
+              <div className="mt-4 p-3 border border-dashed border-[#0a3a1e] rounded-xl text-xs text-slate-500 text-center">
                 No leave allocations active.
               </div>
             ) : (
               <div className="mt-4 flex items-baseline space-x-2">
-                <span className="text-4xl font-extrabold text-[#D2A02A]">{leaveBalance?.available || 0}</span>
+                <span className="text-4xl font-extrabold text-[#004417]">{leaveBalance?.available || 0}</span>
                 <span className="text-sm font-bold text-slate-500">/ {leaveBalance?.total || 0} Days Available</span>
               </div>
             )}
@@ -170,7 +198,7 @@ export default function EmployeeDashboardPage() {
           <Button
             size="sm"
             variant="outline"
-            className="w-full mt-6 border-[#D2A02A]/30 text-[#D2A02A] hover:bg-[#D2A02A]/10"
+            className="w-full mt-6 border-[#004417]/30 text-[#004417] hover:bg-[#004417]/10"
             onClick={() => router.push('/employee/leaves')}
           >
             Request Leave
@@ -180,3 +208,4 @@ export default function EmployeeDashboardPage() {
     </div>
   );
 }
+

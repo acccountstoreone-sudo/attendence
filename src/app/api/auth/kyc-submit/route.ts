@@ -82,3 +82,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: msg || 'Internal server error during document upload.' }, { status: 500 });
   }
 }
+

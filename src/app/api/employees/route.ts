@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 const createEmployeeSchema = z.object({
   email: z.string().email('Invalid email address.'),
-  password: z.string().min(8, 'Password must be at least 8 characters.').default('Anchor2026!'),
+  password: z.string().min(8, 'Password must be at least 8 characters.').optional(),
   full_name: z.string().min(2, 'Full name is required.'),
   role: z.enum(['admin', 'branch_manager', 'employee']).default('employee'),
   branch_id: z.string().uuid().nullable().optional(),
@@ -56,9 +56,32 @@ export async function GET(request: NextRequest) {
 
     if (error) throw new Error(`Failed to fetch employees: ${error.message}`);
 
+    const employeeList = employees || [];
+    
+    // Fetch today's attendance for these employees
+    if (employeeList.length > 0) {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+      
+      const { data: attendanceData } = await supabase
+        .from('attendance_records')
+        .select('employee_id')
+        .in('employee_id', employeeList.map(e => e.id))
+        .gte('check_in_time', todayStart.toISOString())
+        .lte('check_in_time', todayEnd.toISOString());
+        
+      const presentIds = new Set(attendanceData?.map(a => a.employee_id) || []);
+      
+      employeeList.forEach(e => {
+        e.is_present_today = presentIds.has(e.id);
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      data: employees || [],
+      data: employeeList,
       meta: {
         total_count: count || 0,
         page,
@@ -103,9 +126,10 @@ export async function POST(request: NextRequest) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
+    const generatedPassword = payload.password || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '!';
     const { data: authData, error: authErr } = await adminClient.auth.admin.createUser({
       email: payload.email,
-      password: payload.password || 'Anchor2026!',
+      password: generatedPassword,
       email_confirm: true, // Auto-confirm so they can log in immediately
     });
 
@@ -158,6 +182,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         data: newProfile,
+        generatedPassword: !payload.password ? generatedPassword : null,
         message: `Employee '${newProfile.full_name}' onboarded successfully.`,
         timestamp: new Date().toISOString(),
       },
@@ -167,3 +192,4 @@ export async function POST(request: NextRequest) {
     return handleApiError(error);
   }
 }
+

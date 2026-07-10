@@ -45,7 +45,7 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
               )}
             </div>
             <h2 className="text-xl font-bold text-white">{employee.full_name}</h2>
-            <p className="text-[#D2A02A] text-sm font-medium mt-1 uppercase tracking-wider">{employee.role.replace('_', ' ')}</p>
+            <p className="text-[#004417] text-sm font-medium mt-1 uppercase tracking-wider">{employee.role.replace('_', ' ')}</p>
             <div className="flex items-center justify-center space-x-2 mt-3">
               <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300">
                 ID: {employee.employee_id || employee.id.slice(0,8)}
@@ -76,7 +76,7 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
         {/* Right Column - Attendance & History */}
         <div className="md:col-span-2 space-y-6">
           <Card className="bg-slate-900 border-slate-800 p-6">
-             <h4 className="text-lg font-bold text-white mb-4 flex items-center"><Calendar className="w-5 h-5 mr-2 text-[#D2A02A]" /> Attendance Summary</h4>
+             <h4 className="text-lg font-bold text-white mb-4 flex items-center"><Calendar className="w-5 h-5 mr-2 text-[#004417]" /> Attendance Summary</h4>
              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                <div className="bg-slate-950 p-4 rounded-lg text-center">
                  <p className="text-xs text-slate-400">Total Present</p>
@@ -98,7 +98,7 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
           </Card>
 
           <Card className="bg-slate-900 border-slate-800 p-6">
-             <h4 className="text-lg font-bold text-white mb-4 flex items-center"><Clock className="w-5 h-5 mr-2 text-[#D2A02A]" /> Recent History</h4>
+             <h4 className="text-lg font-bold text-white mb-4 flex items-center"><Clock className="w-5 h-5 mr-2 text-[#004417]" /> Recent History</h4>
              <div className="space-y-4">
                {/* Placeholder List */}
                {[1, 2, 3].map((i) => (
@@ -111,7 +111,7 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
                       </div>
                     </div>
                     <div className="mt-2 sm:mt-0 text-left sm:text-right">
-                      <p className="text-sm font-bold text-[#D2A02A]">09:00 AM</p>
+                      <p className="text-sm font-bold text-[#004417]">09:00 AM</p>
                       <p className="text-xs text-slate-500">Today</p>
                     </div>
                  </div>
@@ -124,3 +124,4 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
     </div>
   );
 };
+

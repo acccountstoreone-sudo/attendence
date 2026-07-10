@@ -66,8 +66,8 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-1.5">
-                        <Circle className={`w-2.5 h-2.5 fill-current ${emp.is_active !== false ? 'text-emerald-500' : 'text-slate-500'}`} />
-                        <span className="text-xs font-medium text-slate-300">{emp.is_active !== false ? 'Active' : 'Offline'}</span>
+                        <Circle className={`w-2.5 h-2.5 fill-current ${emp.is_present_today ? 'text-emerald-500' : 'text-slate-500'}`} />
+                        <span className="text-xs font-medium text-slate-300">{emp.is_present_today ? 'Active' : 'Offline'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -99,3 +99,4 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
     </div>
   );
 };
+

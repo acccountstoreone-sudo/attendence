@@ -144,3 +144,4 @@ export function handleApiError(error: unknown): NextResponse {
     { status: isUnauth ? 401 : isForbidden ? 403 : isRateLimit ? 429 : 500 }
   );
 }
+

@@ -22,7 +22,7 @@ export const BranchReportsTab: React.FC = () => {
             <Card key={idx} className="bg-slate-900 border-slate-800 p-6 flex flex-col h-full shadow-xl">
               <div className="flex items-start space-x-4 mb-4">
                  <div className="p-3 bg-slate-950 rounded-lg">
-                   <FileText className="w-6 h-6 text-[#D2A02A]" />
+                   <FileText className="w-6 h-6 text-[#004417]" />
                  </div>
                  <div>
                    <h5 className="text-md font-bold text-white">{report.title}</h5>
@@ -48,3 +48,4 @@ export const BranchReportsTab: React.FC = () => {
     </div>
   );
 };
+

@@ -39,24 +39,24 @@ export const BranchTile: React.FC<BranchTileProps> = ({
       variant="interactive"
       onClick={onClick}
       className={cn(
-        'relative overflow-hidden group flex flex-col justify-between border-[#1E293B] bg-[#040A15]',
+        'relative overflow-hidden group flex flex-col justify-between border-[#0a3a1e] bg-[#010e05]',
         alertCount > 0 && 'border-rose-500/40 shadow-lg shadow-rose-900/10'
       )}
     >
       {/* Decorative Glow */}
-      <div className="absolute -top-12 -right-12 w-28 h-28 bg-[#D2A02A]/10 rounded-full blur-2xl group-hover:bg-[#D2A02A]/20 transition-all pointer-events-none" />
+      <div className="absolute -top-12 -right-12 w-28 h-28 bg-[#004417]/10 rounded-full blur-2xl group-hover:bg-[#004417]/20 transition-all pointer-events-none" />
 
       {/* Top Header */}
       <div>
         <div className="flex items-start justify-between gap-2 mb-3">
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-extrabold text-[#D2A02A] bg-[#061224] border border-[#D2A02A]/30 px-2 py-0.5 rounded-md tracking-wider">
+              <span className="text-xs font-extrabold text-[#004417] bg-[#021a0a] border border-[#004417]/30 px-2 py-0.5 rounded-md tracking-wider">
                 {code}
               </span>
               <Badge status={isActive ? 'active' : 'inactive'} />
             </div>
-            <h3 className="text-lg font-bold text-white mt-2 group-hover:text-[#D2A02A] transition-colors">
+            <h3 className="text-lg font-bold text-white mt-2 group-hover:text-[#004417] transition-colors">
               {name}
             </h3>
           </div>
@@ -78,8 +78,8 @@ export const BranchTile: React.FC<BranchTileProps> = ({
       </div>
 
       {/* Live Metrics Grid */}
-      <div className="grid grid-cols-3 gap-2 pt-4 border-t border-[#1E293B] text-center relative z-10">
-        <div className="bg-[#061224] p-2 rounded-xl border border-[#1E293B]">
+      <div className="grid grid-cols-3 gap-2 pt-4 border-t border-[#0a3a1e] text-center relative z-10">
+        <div className="bg-[#021a0a] p-2 rounded-xl border border-[#0a3a1e]">
           <div className="flex items-center justify-center space-x-1 text-emerald-400 mb-0.5">
             <CheckCircle className="w-3.5 h-3.5" />
             <span className="text-sm font-extrabold">{onlineCount}</span>
@@ -87,7 +87,7 @@ export const BranchTile: React.FC<BranchTileProps> = ({
           <p className="text-[10px] uppercase font-bold text-slate-400">Present</p>
         </div>
 
-        <div className="bg-[#061224] p-2 rounded-xl border border-[#1E293B]">
+        <div className="bg-[#021a0a] p-2 rounded-xl border border-[#0a3a1e]">
           <div className="flex items-center justify-center space-x-1 text-amber-400 mb-0.5">
             <Clock className="w-3.5 h-3.5" />
             <span className="text-sm font-extrabold">{lateCount}</span>
@@ -95,8 +95,8 @@ export const BranchTile: React.FC<BranchTileProps> = ({
           <p className="text-[10px] uppercase font-bold text-slate-400">Late</p>
         </div>
 
-        <div className="bg-[#061224] p-2 rounded-xl border border-[#1E293B]">
-          <div className="flex items-center justify-center space-x-1 text-[#D2A02A] mb-0.5">
+        <div className="bg-[#021a0a] p-2 rounded-xl border border-[#0a3a1e]">
+          <div className="flex items-center justify-center space-x-1 text-[#004417] mb-0.5">
             <Users className="w-3.5 h-3.5" />
             <span className="text-sm font-extrabold">{attendanceRate}%</span>
           </div>
@@ -113,3 +113,4 @@ export const BranchTile: React.FC<BranchTileProps> = ({
     </Card>
   );
 };
+

@@ -38,7 +38,7 @@ function ParticleSwarm() {
       <Points ref={ref} positions={particlesArray} stride={3} frustumCulled={false}>
         <PointMaterial
           transparent
-          color="#D2A02A" // Anchor Fashion Gold
+          color="#00aa44" // Anchor Fashion Brand Green
           size={0.03}
           sizeAttenuation={true}
           depthWrite={false}
@@ -65,7 +65,7 @@ function WireframeGlobe() {
       <mesh ref={meshRef}>
         <icosahedronGeometry args={[1.8, 1]} />
         <meshBasicMaterial 
-          color="#D2A02A" 
+          color="#004417" 
           wireframe 
           transparent 
           opacity={0.15} 
@@ -86,3 +86,4 @@ export default function Abstract3DBackground() {
     </div>
   );
 }
+

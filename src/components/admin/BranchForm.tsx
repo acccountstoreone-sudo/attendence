@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { MapPin, Phone, Globe, Lock, Unlock } from 'lucide-react';
+import { MapPin, Phone, Globe, Lock, Unlock, CheckCircle2, XCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { LocationMapPicker } from '@/components/admin/LocationMapPicker';
 
 interface BranchFormProps {
@@ -25,6 +26,7 @@ interface BranchFormProps {
 export function BranchForm({ initialData }: BranchFormProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [form, setForm] = useState({
     name: initialData?.name || '',
     code: initialData?.code || '',
@@ -40,6 +42,7 @@ export function BranchForm({ initialData }: BranchFormProps) {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setFeedback(null);
     try {
       const payload = {
         name: form.name,
@@ -83,30 +86,48 @@ export function BranchForm({ initialData }: BranchFormProps) {
         }
       }
 
-      alert('Branch location and details saved successfully!');
-      router.refresh();
-      router.push('/admin/branches');
+      setFeedback({ type: 'success', text: 'Branch location and details saved successfully!' });
+      setTimeout(() => {
+        router.refresh();
+        router.push('/admin/branches');
+      }, 1500);
     } catch (err: unknown) {
       console.error('Save error:', err);
-      alert(`Failed to save branch: ${err instanceof Error ? err.message : String(err)}`);
+      setFeedback({ type: 'error', text: `Failed to save branch: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Card className="max-w-4xl mx-auto bg-[#061224] border-[#1E293B] p-6 sm:p-8 shadow-2xl">
+    <Card className="max-w-4xl mx-auto bg-[#021a0a] border-[#0a3a1e] p-6 sm:p-8 shadow-2xl">
+      <AnimatePresence>
+        {feedback && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className={`mb-6 p-4 rounded-xl border text-sm font-medium ${
+              feedback.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <XCircle className="w-5 h-5 shrink-0" />}
+              <span>{feedback.text}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <form onSubmit={handleSave} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Store Name *</label>
             <input required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="e.g., Anchor Fashion Mirpur" className="w-full px-4 py-3 bg-[#040A15] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all" />
+              placeholder="e.g., Anchor Fashion Mirpur" className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all" />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Branch Code *</label>
             <input required value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
-              placeholder="e.g., AF-MIR-01" className="w-full px-4 py-3 bg-[#040A15] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all" />
+              placeholder="e.g., AF-MIR-01" className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all" />
           </div>
         </div>
 
@@ -115,7 +136,7 @@ export function BranchForm({ initialData }: BranchFormProps) {
           <div className="relative">
             <MapPin className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
             <input value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-              placeholder="House, Road, Area..." className="w-full pl-10 pr-4 py-3 bg-[#040A15] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all" />
+              placeholder="House, Road, Area..." className="w-full pl-10 pr-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all" />
           </div>
         </div>
 
@@ -123,23 +144,23 @@ export function BranchForm({ initialData }: BranchFormProps) {
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">City</label>
             <input value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-              placeholder="e.g., Dhaka" className="w-full px-4 py-3 bg-[#040A15] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all" />
+              placeholder="e.g., Dhaka" className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all" />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Store Phone</label>
             <div className="relative">
               <Phone className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
               <input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                placeholder="+880 1xxx-xxxxxx" className="w-full pl-10 pr-4 py-3 bg-[#040A15] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all" />
+                placeholder="+880 1xxx-xxxxxx" className="w-full pl-10 pr-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all" />
             </div>
           </div>
         </div>
 
-        <div className="border-t border-[#1E293B] pt-6 space-y-6">
+        <div className="border-t border-[#0a3a1e] pt-6 space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Globe className="w-5 h-5 text-[#D2A02A]" />
-              <p className="text-sm font-bold text-[#D2A02A] uppercase tracking-wider">GPS Geofence & Map Selection</p>
+              <Globe className="w-5 h-5 text-[#004417]" />
+              <p className="text-sm font-bold text-[#004417] uppercase tracking-wider">GPS Geofence & Map Selection</p>
             </div>
           </div>
 
@@ -153,7 +174,7 @@ export function BranchForm({ initialData }: BranchFormProps) {
             }}
           />
 
-          <div className="bg-[#040A15] p-4 rounded-xl border border-[#1E293B] space-y-3">
+          <div className="bg-[#010e05] p-4 rounded-xl border border-[#0a3a1e] space-y-3">
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
               Fine-Tune Coordinates or Radius Manually
             </div>
@@ -161,29 +182,29 @@ export function BranchForm({ initialData }: BranchFormProps) {
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Latitude</label>
                 <input value={form.latitude} onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value }))}
-                  type="number" step="any" placeholder="23.8103" className="w-full px-4 py-3 bg-[#061224] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all font-mono" />
+                  type="number" step="any" placeholder="23.8103" className="w-full px-4 py-3 bg-[#021a0a] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all font-mono" />
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Longitude</label>
                 <input value={form.longitude} onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value }))}
-                  type="number" step="any" placeholder="90.4125" className="w-full px-4 py-3 bg-[#061224] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all font-mono" />
+                  type="number" step="any" placeholder="90.4125" className="w-full px-4 py-3 bg-[#021a0a] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all font-mono" />
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Radius (m)</label>
                 <input value={form.geofence_radius_meters} onChange={(e) => setForm((f) => ({ ...f, geofence_radius_meters: e.target.value }))}
-                  type="number" min="10" max="2000" className="w-full px-4 py-3 bg-[#061224] border border-[#1E293B] rounded-xl text-sm text-white focus:outline-none focus:border-[#D2A02A] focus:ring-1 focus:ring-[#D2A02A] transition-all font-mono" />
+                  type="number" min="10" max="2000" className="w-full px-4 py-3 bg-[#021a0a] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all font-mono" />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-3 pt-2 bg-[#040A15] p-4 rounded-xl border border-[#1E293B]">
+        <div className="flex items-center space-x-3 pt-2 bg-[#010e05] p-4 rounded-xl border border-[#0a3a1e]">
           <input
             type="checkbox"
             id="is_active_branch"
             checked={form.is_active}
             onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-            className="w-5 h-5 rounded border-[#1E293B] text-[#D2A02A] focus:ring-[#D2A02A]"
+            className="w-5 h-5 rounded border-[#0a3a1e] text-[#004417] focus:ring-[#004417]"
           />
           <label htmlFor="is_active_branch" className="text-sm font-medium text-white flex items-center cursor-pointer">
             {form.is_active ? <Unlock className="w-4 h-4 mr-2 text-emerald-400" /> : <Lock className="w-4 h-4 mr-2 text-rose-400" />}
@@ -191,7 +212,7 @@ export function BranchForm({ initialData }: BranchFormProps) {
           </label>
         </div>
 
-        <div className="flex justify-end space-x-3 pt-6 border-t border-[#1E293B]">
+        <div className="flex justify-end space-x-3 pt-6 border-t border-[#0a3a1e]">
           <Button type="button" variant="secondary" onClick={() => router.push('/admin/branches')}>
             Cancel
           </Button>
@@ -203,3 +224,4 @@ export function BranchForm({ initialData }: BranchFormProps) {
     </Card>
   );
 }
+

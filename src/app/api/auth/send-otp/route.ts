@@ -50,7 +50,7 @@ export async function POST(request: Request) {
               <h2 style="color: #0C2B6A;">Verify Your Identity</h2>
               <p>Hello,</p>
               <p>Please use the following 6-digit code to complete your Anchor Fashion registration:</p>
-              <h1 style="color: #D2A02A; letter-spacing: 5px;">${otpCode}</h1>
+              <h1 style="color: #004417; letter-spacing: 5px;">${otpCode}</h1>
               <p>This code will expire in 10 minutes.</p>
               <br/>
               <p style="font-size: 12px; color: #666;">If you didn't request this, please ignore this email.</p>
@@ -75,3 +75,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: msg || 'Internal server error' }, { status: 500 });
   }
 }
+

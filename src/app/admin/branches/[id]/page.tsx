@@ -47,11 +47,10 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
         const res = await fetch(`/api/employees?branch_id=${id}`);
         if (res.ok) {
           const json = await res.json();
-          // Map backend data to our frontend type, adding mock status for UI demonstration
           const mapped: BranchEmployee[] = (json.data || []).map((e: Record<string, unknown>) => ({
             ...e,
-            is_active: Math.random() > 0.3, // Mock active status
-            is_present_today: Math.random() > 0.2 // Mock present status
+            is_active: e.is_active as boolean,
+            is_present_today: !!e.is_present_today
           }));
           setEmployees(mapped);
         }
@@ -74,7 +73,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D2A02A]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#004417]"></div>
       </div>
     );
   }
@@ -84,7 +83,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
       <div className="text-center py-12">
         <Store className="w-12 h-12 text-slate-600 mx-auto mb-4" />
         <h2 className="text-xl font-bold text-white mb-2">Branch Not Found</h2>
-        <button onClick={() => router.push('/admin/branches')} className="text-[#D2A02A] hover:underline">Go Back</button>
+        <button onClick={() => router.push('/admin/branches')} className="text-[#004417] hover:underline">Go Back</button>
       </div>
     );
   }
@@ -106,7 +105,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
           <Link href="/admin/branches" className="flex items-center text-slate-400 hover:text-white transition-colors text-sm mb-2 w-fit">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back to All Branches
           </Link>
-          <div className="flex items-center space-x-2 text-[#D2A02A] text-xs font-bold uppercase tracking-widest mb-1">
+          <div className="flex items-center space-x-2 text-[#004417] text-xs font-bold uppercase tracking-widest mb-1">
             <Store className="w-4 h-4" />
             <span>Workspace</span>
           </div>
@@ -140,7 +139,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
          </div>
          <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-400">Attendance %</span>
-            <span className="text-lg font-bold text-[#D2A02A]">
+            <span className="text-lg font-bold text-[#004417]">
               {employees.length > 0 ? Math.round((employees.filter(e => e.is_present_today).length / employees.length) * 100) : 0}%
             </span>
          </div>
@@ -155,7 +154,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
               onClick={() => setActiveTab(tab.id as TabType)}
               className={`flex items-center px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
                 activeTab === tab.id || (tab.id === 'employees' && activeTab === 'profile')
-                  ? 'bg-[#D2A02A]/10 text-[#D2A02A] shadow-sm'
+                  ? 'bg-[#004417]/10 text-[#004417] shadow-sm'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >

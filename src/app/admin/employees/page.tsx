@@ -23,6 +23,7 @@ import {
   Upload,
   FileText,
   Clock,
+  Fingerprint,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -93,6 +94,7 @@ export default function AdminEmployeesPage() {
   const openAddModal = () => router.push('/admin/employees/new');
   const openEditModal = (emp: Employee) => router.push(`/admin/employees/${emp.id}/edit`);
   const openDutyReport = (emp: Employee) => router.push(`/admin/employees/${emp.id}/duty-report`);
+  const openBiometrics = (emp: Employee) => router.push(`/admin/employees/${emp.id}/biometrics`);
 
   // Bug 10 fix: Handle API errors, show feedback toast, track loading state per row
   const toggleActive = async (emp: Employee) => {
@@ -112,7 +114,7 @@ export default function AdminEmployeesPage() {
         type: 'success',
         text: `${emp.full_name} has been ${!emp.is_active ? 'restored' : 'suspended'} successfully.`,
       });
-      await loadData();
+      setEmployees(prev => prev.map(e => e.id === emp.id ? { ...e, is_active: !e.is_active } : e));
     } catch (err: unknown) {
       setFeedback({ type: 'error', text: (err as Error).message || 'Failed to update status.' });
     } finally {
@@ -140,8 +142,8 @@ export default function AdminEmployeesPage() {
 
   const filteredEmployees = employees.filter((e) => {
     const matchesSearch =
-      e.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      e.email.toLowerCase().includes(searchTerm.toLowerCase());
+      (e.full_name ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (e.email ?? '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || e.role === roleFilter;
     // Bug 17 fix: Filter by active/inactive based on toggle
     const matchesActive = showInactive ? !e.is_active : e.is_active;
@@ -185,16 +187,16 @@ export default function AdminEmployeesPage() {
 
       {/* Pending Identity Enrollments */}
       {pendingApprovals.length > 0 && (
-        <div className="bg-[#0A101C] border border-[#1E293B] rounded-xl overflow-hidden">
+        <div className="bg-[#0A101C] border border-[#0a3a1e] rounded-xl overflow-hidden">
           <div className="bg-amber-500/10 border-b border-amber-500/20 px-5 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2 text-amber-500">
               <Shield className="w-4 h-4" />
               <span className="text-sm font-medium">Action Required: {pendingApprovals.length} Pending KYC Verification{pendingApprovals.length > 1 ? 's' : ''}</span>
             </div>
           </div>
-          <div className="divide-y divide-[#1E293B]">
+          <div className="divide-y divide-[#0a3a1e]">
              {pendingApprovals.map(emp => (
-               <div key={emp.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 gap-4 hover:bg-[#1E293B]/30 transition-colors">
+               <div key={emp.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 gap-4 hover:bg-[#0a3a1e]/30 transition-colors">
                  <div className="flex gap-4 items-center">
                    <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-medium text-sm shrink-0">
                      {emp.full_name.charAt(0)}
@@ -252,7 +254,7 @@ export default function AdminEmployeesPage() {
       />
 
       {/* Minimal Filters */}
-      <div className="flex flex-wrap gap-3 items-center justify-between bg-[#040A15] p-2 rounded-xl border border-[#1E293B]">
+      <div className="flex flex-wrap gap-3 items-center justify-between bg-[#010e05] p-2 rounded-xl border border-[#0a3a1e]">
         <div className="flex flex-wrap gap-3 items-center flex-1">
           <div className="relative flex-1 min-w-[240px]">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
@@ -265,14 +267,14 @@ export default function AdminEmployeesPage() {
             />
           </div>
 
-          <div className="h-6 w-px bg-[#1E293B]" />
+          <div className="h-6 w-px bg-[#0a3a1e]" />
 
           <div className="flex gap-1">
             {(['all', 'employee', 'branch_manager'] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => setRoleFilter(r)}
-                className={`px-3 py-1.5 rounded-lg transition-colors text-xs font-medium capitalize ${roleFilter === r ? 'bg-[#1E293B] text-slate-200' : 'text-slate-500 hover:text-slate-300'}`}
+                className={`px-3 py-1.5 rounded-lg transition-colors text-xs font-medium capitalize ${roleFilter === r ? 'bg-[#0a3a1e] text-slate-200' : 'text-slate-500 hover:text-slate-300'}`}
               >
                 {r === 'all' ? 'All' : r === 'branch_manager' ? 'Managers' : 'Staff'}
               </button>
@@ -285,7 +287,7 @@ export default function AdminEmployeesPage() {
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             showInactive
               ? 'bg-rose-500/10 text-rose-400'
-              : 'text-slate-500 hover:text-slate-300 hover:bg-[#1E293B]/50'
+              : 'text-slate-500 hover:text-slate-300 hover:bg-[#0a3a1e]/50'
           }`}
         >
           {showInactive ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
@@ -295,15 +297,15 @@ export default function AdminEmployeesPage() {
 
       {/* Minimal Employee Table */}
       {loading ? (
-        <div className="flex items-center justify-center py-20 border border-[#1E293B] rounded-xl bg-[#040A15]">
+        <div className="flex items-center justify-center py-20 border border-[#0a3a1e] rounded-xl bg-[#010e05]">
           <Spinner size="md" />
         </div>
       ) : (
-        <div className="bg-[#040A15] border border-[#1E293B] rounded-xl overflow-hidden">
+        <div className="bg-[#010e05] border border-[#0a3a1e] rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#0A101C] text-slate-500 text-xs border-b border-[#1E293B]">
+                <tr className="bg-[#0A101C] text-slate-500 text-xs border-b border-[#0a3a1e]">
                   <th className="py-3 px-5 font-medium">Name</th>
                   <th className="py-3 px-5 font-medium">Role</th>
                   <th className="py-3 px-5 font-medium">Branch</th>
@@ -312,7 +314,7 @@ export default function AdminEmployeesPage() {
                   <th className="py-3 px-5 font-medium text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1E293B]">
+              <tbody className="divide-y divide-[#0a3a1e]">
                 {filteredEmployees.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-slate-500 text-sm">
@@ -321,7 +323,7 @@ export default function AdminEmployeesPage() {
                   </tr>
                 ) : (
                   filteredEmployees.map((emp) => (
-                    <tr key={emp.id} className="hover:bg-[#1E293B]/20 transition-colors">
+                    <tr key={emp.id} className="hover:bg-[#0a3a1e]/20 transition-colors">
                       <td className="py-3 px-5">
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 text-xs shrink-0">
@@ -370,6 +372,16 @@ export default function AdminEmployeesPage() {
                             <FileText className="w-3.5 h-3.5" />
                             Duty Report
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-blue-400 border-blue-500/30 hover:bg-blue-500/10 px-2.5 text-xs gap-1"
+                            onClick={() => openBiometrics(emp)}
+                            title="Manage Biometrics"
+                          >
+                            <Fingerprint className="w-3.5 h-3.5" />
+                            Biometrics
+                          </Button>
                           <Button size="sm" variant="ghost" className="text-slate-400 hover:text-slate-200 px-2" onClick={() => openEditModal(emp)}>
                             Edit
                           </Button>
@@ -404,3 +416,4 @@ export default function AdminEmployeesPage() {
     </div>
   );
 }
+

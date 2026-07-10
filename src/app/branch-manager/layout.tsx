@@ -63,14 +63,14 @@ export default function BranchManagerLayout({ children }: { children: React.Reac
 
   if (loading || !userProfile) {
     return (
-      <div className="min-h-screen bg-[#040A15] flex items-center justify-center">
+      <div className="min-h-screen bg-[#010e05] flex items-center justify-center">
         <Spinner size="lg" label="Loading Store Dashboard..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#040A15] flex">
+    <div className="min-h-screen bg-[#010e05] flex">
       {/* Sidebar hidden on mobile for branch manager */}
       <div className="hidden md:block">
         <Sidebar
@@ -96,3 +96,4 @@ export default function BranchManagerLayout({ children }: { children: React.Reac
     </div>
   );
 }
+

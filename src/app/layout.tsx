@@ -16,7 +16,7 @@ import type { Metadata } from "next";
 import { PwaInstallPrompt } from "@/components/pwa/PwaInstallPrompt";
 
 export const viewport: Viewport = {
-  themeColor: "#040A15",
+  themeColor: "#004417",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -56,3 +56,4 @@ export default function RootLayout({
     </html>
   );
 }
+

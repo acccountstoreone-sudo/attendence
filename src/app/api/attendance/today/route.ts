@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
         checked_in: true,
         checked_out: !!record.check_out_time,
         status: record.status,
+        approval_status: record.approval_status || 'pending',
         check_in_time: record.check_in_time,
         check_out_time: record.check_out_time,
         overtime_minutes: record.overtime_minutes || 0,
@@ -71,3 +72,4 @@ export async function GET(request: NextRequest) {
     return handleApiError(error);
   }
 }
+

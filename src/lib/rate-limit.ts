@@ -70,3 +70,4 @@ export function checkRateLimit(identifier: string, config: RateLimitConfig): { a
     resetInSeconds: Math.ceil((tracker.resetTime - now) / 1000),
   };
 }
+

@@ -3,12 +3,13 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Lock, Mail, User, IdCard, AlertTriangle, Check, ShieldCheck, ScanFace, MapPin, Orbit, Camera, ArrowRight, RefreshCw, Upload, X } from 'lucide-react';
+import { Lock, Mail, User, IdCard, AlertTriangle, Check, ShieldCheck, ScanFace, MapPin, Orbit, Camera, ArrowRight, RefreshCw, Upload, X, Fingerprint } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Abstract3DBackground from '@/components/Abstract3DBackground';
 import Webcam from 'react-webcam';
+import { startRegistration } from '@simplewebauthn/browser';
 
-type Step = 'basic_info' | 'otp' | 'kyc' | 'face_scan' | 'pending';
+type Step = 'basic_info' | 'otp' | 'kyc' | 'face_scan' | 'fingerprint_scan' | 'pending';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function RegisterPage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const urlStep = params.get('step') as Step;
-      if (urlStep && ['basic_info', 'otp', 'kyc', 'face_scan', 'pending'].includes(urlStep)) {
+      if (urlStep && ['basic_info', 'otp', 'kyc', 'face_scan', 'fingerprint_scan', 'pending'].includes(urlStep)) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setStep(urlStep);
       }
@@ -371,9 +372,7 @@ export default function RegisterPage() {
       const data = await res.json();
       if (!res.ok) throw data.error || data;
 
-      // Clear local storage so next user starts fresh
-      localStorage.removeItem('anchor_register_form');
-      setStep('pending');
+      setStep('fingerprint_scan');
 
     } catch (err: unknown) {
       console.error('KYC Submit Error:', err);
@@ -384,14 +383,69 @@ export default function RegisterPage() {
     }
   };
 
+  const handleFingerprintSetup = async () => {
+    setLoading(true);
+    setFeedback(null);
+    try {
+      // 1. Get options from server
+      const resp = await fetch('/api/auth/webauthn/register/generate', { method: 'POST' });
+      if (!resp.ok) {
+        const d = await resp.json();
+        throw new Error(d.error || 'Failed to generate fingerprint options.');
+      }
+      const options = await resp.json();
+
+      // 2. Pass options to browser authenticator
+      let asseResp;
+      try {
+        asseResp = await startRegistration({ optionsJSON: options });
+      } catch (e: unknown) {
+        if (e instanceof Error && e.name === 'NotAllowedError') {
+           throw new Error('Registration cancelled. You can skip this step for now.');
+        }
+        throw e;
+      }
+
+      // 3. Verify on server
+      const verifyResp = await fetch('/api/auth/webauthn/register/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(asseResp),
+      });
+
+      if (!verifyResp.ok) {
+         const d = await verifyResp.json();
+         throw new Error(d.error || 'Fingerprint verification failed.');
+      }
+
+      const verifyData = await verifyResp.json();
+      if (!verifyData.verified) throw new Error('Invalid fingerprint registration.');
+
+      // Clear local storage so next user starts fresh
+      localStorage.removeItem('anchor_register_form');
+      setStep('pending');
+    } catch (err: unknown) {
+      console.error('Fingerprint setup error:', err);
+      const msg = err instanceof Error ? err.message : 'Fingerprint setup failed.';
+      setFeedback({ type: 'error', message: msg });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const skipFingerprint = () => {
+    localStorage.removeItem('anchor_register_form');
+    setStep('pending');
+  };
+
 
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row relative bg-[#040A15] overflow-x-hidden font-sans" suppressHydrationWarning={true}>
+    <div className="min-h-screen w-full flex flex-col md:flex-row relative bg-[#010e05] overflow-x-hidden font-sans" suppressHydrationWarning={true}>
       
       {/* LEFT PANEL: BRANDING */}
-      <div className="w-full md:w-[45%] flex flex-col justify-between p-8 md:p-14 relative bg-[#061224] border-b md:border-b-0 md:border-r border-[#1E293B]/50 order-1 z-10 overflow-hidden">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#D2A02A_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
-        <div className="absolute top-[30%] left-[20%] w-[50%] h-[50%] bg-[#D2A02A]/10 rounded-full filter blur-[120px] pointer-events-none z-0" />
+      <div className="w-full md:w-[45%] flex flex-col justify-between p-8 md:p-14 relative bg-[#021a0a] border-b md:border-b-0 md:border-r border-[#0a3a1e]/50 order-1 z-10 overflow-hidden">
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
+        <div className="absolute top-[30%] left-[20%] w-[50%] h-[50%] bg-[#004417]/10 rounded-full filter blur-[120px] pointer-events-none z-0" />
         <Abstract3DBackground />
 
         <motion.div 
@@ -400,7 +454,7 @@ export default function RegisterPage() {
           className="relative z-10 flex flex-col items-start select-none w-full"
         >
            <div className="text-4xl md:text-5xl font-serif tracking-widest flex items-baseline">
-             <span className="text-[#D2A02A] font-bold text-5xl md:text-6xl mr-1">A</span>
+             <span className="text-[#004417] font-bold text-5xl md:text-6xl mr-1">A</span>
              <span className="text-white font-semibold">NCHOR</span>
            </div>
            <div className="text-white tracking-[0.6em] text-[10px] md:text-xs font-light uppercase flex items-center gap-3 opacity-70 mt-1 ml-1">
@@ -415,12 +469,12 @@ export default function RegisterPage() {
             transition={{ duration: 1, delay: 0.3 }}
             className="flex items-center gap-6 mb-8"
           >
-            <div className="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-[#0F172A]/80 backdrop-blur-md border border-[#1E293B] shadow-[0_0_30px_rgba(210,160,42,0.15)] overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#D2A02A]/20 to-transparent opacity-50" />
-              <ScanFace className="w-10 h-10 text-[#D2A02A] z-10 drop-shadow-[0_0_10px_rgba(210,160,42,0.8)]" />
-              <div className="absolute top-0 left-0 w-full h-[2px] bg-[#D2A02A] opacity-50 animate-[scan_2s_ease-in-out_infinite]" />
+            <div className="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-[#012410]/80 backdrop-blur-md border border-[#0a3a1e] shadow-[0_0_30px_rgba(210,160,42,0.15)] overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#004417]/20 to-transparent opacity-50" />
+              <ScanFace className="w-10 h-10 text-[#004417] z-10 drop-shadow-[0_0_10px_rgba(210,160,42,0.8)]" />
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-[#004417] opacity-50 animate-[scan_2s_ease-in-out_infinite]" />
             </div>
-            <div className="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-[#0F172A]/80 backdrop-blur-md border border-[#1E293B] shadow-[0_0_30px_rgba(12,43,106,0.3)]">
+            <div className="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-[#012410]/80 backdrop-blur-md border border-[#0a3a1e] shadow-[0_0_30px_rgba(12,43,106,0.3)]">
               <Orbit className="absolute w-16 h-16 text-[#64748B]/30 animate-[spin_10s_linear_infinite]" />
               <MapPin className="w-10 h-10 text-white z-10 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
             </div>
@@ -429,7 +483,7 @@ export default function RegisterPage() {
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.5 }} className="max-w-md">
             <h2 className="text-2xl md:text-3xl font-light text-white mb-4 leading-snug">
               Employee Onboarding & <br/>
-              <span className="font-bold text-[#D2A02A]">Identity Enrollment</span>
+              <span className="font-bold text-[#004417]">Identity Enrollment</span>
             </h2>
             <p className="text-white leading-relaxed text-[13px] md:text-sm font-light opacity-90">
               Anchor Fashion requires all employees to securely enroll their NID and 3D facial biometrics to access the enterprise attendance grid.
@@ -437,23 +491,23 @@ export default function RegisterPage() {
           </motion.div>
         </div>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.8 }} className="relative z-10 pt-6 border-t border-[#1E293B] flex items-center justify-between text-xs text-[#475569]">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.8 }} className="relative z-10 pt-6 border-t border-[#0a3a1e] flex items-center justify-between text-xs text-[#475569]">
           <span>© Anchor Fashion HQ</span>
-          <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#D2A02A]" /> Enterprise Secured</span>
+          <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#004417]" /> Enterprise Secured</span>
         </motion.div>
       </div>
 
       {/* RIGHT PANEL: FORM */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-[#040A15] text-white order-2">
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#D2A02A]/10 rounded-full filter blur-[150px] pointer-events-none" />
+      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-[#010e05] text-white order-2">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#004417]/10 rounded-full filter blur-[150px] pointer-events-none" />
         
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md relative z-10">
           
           <div className="mb-8 flex flex-col items-center">
             {/* Step Indicators */}
             <div className="flex gap-2 mb-6">
-              {['basic_info', 'otp', 'kyc', 'face_scan'].map((s) => (
-                 <div key={s} className={`h-1.5 w-12 rounded-full transition-colors duration-500 ${step === s ? 'bg-[#D2A02A]' : 'bg-[#1E293B]'}`} />
+              {['basic_info', 'otp', 'kyc', 'face_scan', 'fingerprint_scan'].map((s) => (
+                 <div key={s} className={`h-1.5 w-10 sm:w-12 rounded-full transition-colors duration-500 ${step === s ? 'bg-[#004417]' : 'bg-[#0a3a1e]'}`} />
               ))}
             </div>
             
@@ -462,6 +516,7 @@ export default function RegisterPage() {
               {step === 'otp' && 'Email Verification'}
               {step === 'kyc' && 'KYC Setup'}
               {step === 'face_scan' && 'Biometric Enrollment'}
+              {step === 'fingerprint_scan' && 'Passkey Setup'}
               {step === 'pending' && 'Registration Complete'}
             </h2>
             <p className="text-[13px] text-[#64748B] text-center max-w-[80%]">
@@ -469,6 +524,7 @@ export default function RegisterPage() {
               {step === 'otp' && `We sent a 6-digit code to ${formData.email}`}
               {step === 'kyc' && 'Provide your National Identity number for background checks.'}
               {step === 'face_scan' && 'Look directly at the camera to capture your 3D facial matrix.'}
+              {step === 'fingerprint_scan' && 'Set up your device fingerprint or face ID for faster check-ins.'}
               {step === 'pending' && 'Your profile is awaiting Branch Manager approval.'}
             </p>
           </div>
@@ -484,7 +540,7 @@ export default function RegisterPage() {
             )}
           </AnimatePresence>
 
-          <div className="bg-[#061224]/80 backdrop-blur-xl border border-[#1E293B] p-6 sm:p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+          <div className="bg-[#021a0a]/80 backdrop-blur-xl border border-[#0a3a1e] p-6 sm:p-8 rounded-2xl shadow-2xl relative overflow-hidden">
             
             {/* STEP 1: Basic Info */}
             {step === 'basic_info' && (
@@ -493,38 +549,38 @@ export default function RegisterPage() {
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Full Name</label>
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                    <input type="text" name="fullName" required value={formData.fullName} onChange={handleInputChange} className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#D2A02A] focus:outline-none text-white" />
+                    <input type="text" name="fullName" required value={formData.fullName} onChange={handleInputChange} className="w-full bg-[#010e05]/50 border border-[#0a3a1e] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#004417] focus:outline-none text-white" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Email</label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                    <input type="email" name="email" required value={formData.email} onChange={handleInputChange} className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#D2A02A] focus:outline-none text-white" />
+                    <input type="email" name="email" required value={formData.email} onChange={handleInputChange} className="w-full bg-[#010e05]/50 border border-[#0a3a1e] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#004417] focus:outline-none text-white" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Password</label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                    <input type="password" name="password" required value={formData.password} onChange={handleInputChange} className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#D2A02A] focus:outline-none text-white" />
+                    <input type="password" name="password" required value={formData.password} onChange={handleInputChange} className="w-full bg-[#010e05]/50 border border-[#0a3a1e] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#004417] focus:outline-none text-white" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Confirm Password</label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                    <input type="password" name="confirmPassword" required value={formData.confirmPassword} onChange={handleInputChange} className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#D2A02A] focus:outline-none text-white" />
+                    <input type="password" name="confirmPassword" required value={formData.confirmPassword} onChange={handleInputChange} className="w-full bg-[#010e05]/50 border border-[#0a3a1e] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#004417] focus:outline-none text-white" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Branch</label>
                   <div className="relative">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                    <select name="branchId" required value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: e.target.value })} className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-3 pl-11 pr-10 text-sm focus:border-[#D2A02A] focus:outline-none text-white appearance-none">
-                      <option value="" disabled className="bg-[#061224] text-white">Select your branch</option>
+                    <select name="branchId" required value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: e.target.value })} className="w-full bg-[#010e05]/50 border border-[#0a3a1e] rounded-xl py-3 pl-11 pr-10 text-sm focus:border-[#004417] focus:outline-none text-white appearance-none">
+                      <option value="" disabled className="bg-[#021a0a] text-white">Select your branch</option>
                       {branches.map(b => (
-                        <option key={b.id} value={b.id} className="bg-[#061224] text-white">{b.name}</option>
+                        <option key={b.id} value={b.id} className="bg-[#021a0a] text-white">{b.name}</option>
                       ))}
                     </select>
                     {/* Custom chevron to indicate dropdown since appearance-none removes it */}
@@ -533,7 +589,7 @@ export default function RegisterPage() {
                     </div>
                   </div>
                 </div>
-                <button type="submit" disabled={loading} className="w-full bg-[#D2A02A] hover:bg-[#C08F1E] text-[#040A15] font-bold py-3.5 rounded-xl mt-4 flex items-center justify-center gap-2">
+                <button type="submit" disabled={loading} className="w-full bg-[#004417] hover:bg-[#006622] text-[#010e05] font-bold py-3.5 rounded-xl mt-4 flex items-center justify-center gap-2">
                   {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"/> : 'Continue Registration'}
                 </button>
               </form>
@@ -544,9 +600,9 @@ export default function RegisterPage() {
               <form onSubmit={handleOtpSubmit} className="space-y-6">
                 <div>
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-2 text-center">Enter 6-Digit Code</label>
-                  <input type="text" name="otp" required maxLength={6} value={formData.otp} onChange={handleInputChange} className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-4 text-center text-2xl tracking-[1em] focus:border-[#D2A02A] focus:outline-none text-white" />
+                  <input type="text" name="otp" required maxLength={6} value={formData.otp} onChange={handleInputChange} className="w-full bg-[#010e05]/50 border border-[#0a3a1e] rounded-xl py-4 text-center text-2xl tracking-[1em] focus:border-[#004417] focus:outline-none text-white" />
                 </div>
-                <button type="submit" disabled={loading} className="w-full bg-[#D2A02A] hover:bg-[#C08F1E] text-[#040A15] font-bold py-3.5 rounded-xl flex items-center justify-center">
+                <button type="submit" disabled={loading} className="w-full bg-[#004417] hover:bg-[#006622] text-[#010e05] font-bold py-3.5 rounded-xl flex items-center justify-center">
                   {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"/> : 'Verify Email'}
                 </button>
               </form>
@@ -555,8 +611,8 @@ export default function RegisterPage() {
             {/* STEP 3: KYC Document Upload */}
             {step === 'kyc' && (
               <form onSubmit={handleKycSubmit} className="space-y-6">
-                <div className="bg-[#061224] border border-[#1E293B] p-4 rounded-xl text-xs text-slate-300 leading-relaxed">
-                  <p className="font-bold text-[#D2A02A] mb-1">Government Identity Verification</p>
+                <div className="bg-[#021a0a] border border-[#0a3a1e] p-4 rounded-xl text-xs text-slate-300 leading-relaxed">
+                  <p className="font-bold text-[#004417] mb-1">Government Identity Verification</p>
                   <p>Please upload clear copies of both the Front and Back sides of your National ID (NID). Accepted formats: Image (JPG, PNG) or PDF. Maximum size: 5MB per file.</p>
                 </div>
 
@@ -564,7 +620,7 @@ export default function RegisterPage() {
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">National ID Number (NID) *</label>
                   <div className="relative">
                     <IdCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                    <input type="text" name="nid" required value={formData.nid} onChange={handleInputChange} placeholder="e.g. 1990123456789" className="w-full bg-[#040A15]/50 border border-[#1E293B] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#D2A02A] focus:outline-none text-white" />
+                    <input type="text" name="nid" required value={formData.nid} onChange={handleInputChange} placeholder="e.g. 1990123456789" className="w-full bg-[#010e05]/50 border border-[#0a3a1e] rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#004417] focus:outline-none text-white" />
                   </div>
                 </div>
 
@@ -572,7 +628,7 @@ export default function RegisterPage() {
                   {/* Front Copy */}
                   <div>
                     <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-2">NID Front Side Copy *</label>
-                    <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${nidFront ? 'border-emerald-500/50 bg-emerald-950/20' : 'border-[#1E293B] hover:border-[#D2A02A]/50 bg-[#040A15]/50'}`}>
+                    <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${nidFront ? 'border-emerald-500/50 bg-emerald-950/20' : 'border-[#0a3a1e] hover:border-[#004417]/50 bg-[#010e05]/50'}`}>
                       <input
                         type="file"
                         required={!nidFront}
@@ -581,7 +637,7 @@ export default function RegisterPage() {
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       />
                       <div className="flex items-center space-x-3">
-                        <div className={`p-2.5 rounded-lg ${nidFront ? 'bg-emerald-500/20 text-emerald-400' : 'bg-[#1E293B] text-slate-400'}`}>
+                        <div className={`p-2.5 rounded-lg ${nidFront ? 'bg-emerald-500/20 text-emerald-400' : 'bg-[#0a3a1e] text-slate-400'}`}>
                           {nidFront ? <Check className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -600,7 +656,7 @@ export default function RegisterPage() {
                   {/* Back Copy */}
                   <div>
                     <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-2">NID Back Side Copy *</label>
-                    <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${nidBack ? 'border-emerald-500/50 bg-emerald-950/20' : 'border-[#1E293B] hover:border-[#D2A02A]/50 bg-[#040A15]/50'}`}>
+                    <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${nidBack ? 'border-emerald-500/50 bg-emerald-950/20' : 'border-[#0a3a1e] hover:border-[#004417]/50 bg-[#010e05]/50'}`}>
                       <input
                         type="file"
                         required={!nidBack}
@@ -609,7 +665,7 @@ export default function RegisterPage() {
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       />
                       <div className="flex items-center space-x-3">
-                        <div className={`p-2.5 rounded-lg ${nidBack ? 'bg-emerald-500/20 text-emerald-400' : 'bg-[#1E293B] text-slate-400'}`}>
+                        <div className={`p-2.5 rounded-lg ${nidBack ? 'bg-emerald-500/20 text-emerald-400' : 'bg-[#0a3a1e] text-slate-400'}`}>
                           {nidBack ? <Check className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -626,7 +682,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <button type="submit" disabled={!nidFront || !nidBack} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all ${(!nidFront || !nidBack) ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-[#D2A02A] hover:bg-[#C08F1E] text-[#040A15] shadow-lg shadow-[#D2A02A]/20'}`}>
+                <button type="submit" disabled={!nidFront || !nidBack} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all ${(!nidFront || !nidBack) ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-[#004417] hover:bg-[#006622] text-[#010e05] shadow-lg shadow-[#004417]/20'}`}>
                   Proceed to Biometrics <ArrowRight className="w-4 h-4" />
                 </button>
               </form>
@@ -635,22 +691,22 @@ export default function RegisterPage() {
             {/* STEP 4: Face Scan */}
             {step === 'face_scan' && (
               <div className="space-y-6 flex flex-col items-center">
-                <div className="relative w-full aspect-square rounded-2xl overflow-hidden border-2 border-[#1E293B] bg-black">
+                <div className="relative w-full aspect-square rounded-2xl overflow-hidden border-2 border-[#0a3a1e] bg-black">
                   {!faceImage ? (
                      <>
                         <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" className="w-full h-full object-cover" mirrored />
                         {/* Overlay Scanning HUD */}
-                        <div className={`absolute inset-0 border-4 rounded-2xl transition-colors duration-300 ${faceDetected ? 'border-green-500' : 'border-[#D2A02A]'}`} />
+                        <div className={`absolute inset-0 border-4 rounded-2xl transition-colors duration-300 ${faceDetected ? 'border-green-500' : 'border-[#004417]'}`} />
                         
                         <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap z-10 shadow-xl">
                           {faceDetected ? <span className="text-green-400 font-bold tracking-wider">{faceMessage}</span> : <span className="text-yellow-400 animate-pulse">{faceMessage}</span>}
                         </div>
 
-                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] border transition-colors duration-300 rounded-full ${faceDetected ? 'border-green-500 shadow-[0_0_20px_#22c55e]' : 'border-[#D2A02A]/40'}`} />
+                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] border transition-colors duration-300 rounded-full ${faceDetected ? 'border-green-500 shadow-[0_0_20px_#22c55e]' : 'border-[#004417]/40'}`} />
                         
                         {scanning && (
-                          <div className="absolute inset-0 bg-[#D2A02A]/20">
-                             <div className="w-full h-1 bg-[#D2A02A] shadow-[0_0_15px_#D2A02A] animate-[scan_2s_ease-in-out_infinite]" />
+                          <div className="absolute inset-0 bg-[#004417]/20">
+                             <div className="w-full h-1 bg-[#004417] shadow-[0_0_15px_#004417] animate-[scan_2s_ease-in-out_infinite]" />
                           </div>
                         )}
                      </>
@@ -665,12 +721,32 @@ export default function RegisterPage() {
                   </button>
                 ) : (
                   <div className="flex gap-3 w-full">
-                     <button onClick={() => setFaceImage(null)} className="flex-1 bg-transparent border border-[#1E293B] text-white hover:bg-[#1E293B] font-bold py-3.5 rounded-xl">Retake</button>
-                     <button onClick={handleFinalSubmit} disabled={loading} className="flex-1 bg-[#D2A02A] hover:bg-[#C08F1E] text-[#040A15] font-bold py-3.5 rounded-xl flex justify-center items-center">
-                       {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"/> : 'Submit Enrollment'}
+                     <button onClick={() => setFaceImage(null)} className="flex-1 bg-transparent border border-[#0a3a1e] text-white hover:bg-[#0a3a1e] font-bold py-3.5 rounded-xl">Retake</button>
+                     <button onClick={handleFinalSubmit} disabled={loading} className="flex-1 bg-[#004417] hover:bg-[#006622] text-[#010e05] font-bold py-3.5 rounded-xl flex justify-center items-center">
+                       {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"/> : 'Continue'}
                      </button>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* STEP 4b: Fingerprint Scan */}
+            {step === 'fingerprint_scan' && (
+              <div className="flex flex-col items-center text-center py-6">
+                <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center border border-blue-500/20 mb-6 relative">
+                   <Fingerprint className="w-10 h-10 text-blue-400" />
+                   <div className="absolute inset-0 border-2 border-blue-500/30 rounded-full animate-ping" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Enable Quick Check-in</h3>
+                <p className="text-sm text-[#94A3B8] mb-8">
+                  Set up your device fingerprint or face recognition. This will allow you to quickly check-in and check-out every day without always needing a camera scan.
+                </p>
+                <button onClick={handleFingerprintSetup} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 mb-4">
+                  {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/> : <><Fingerprint className="w-4 h-4" /> Set Up Device Biometrics</>}
+                </button>
+                <button onClick={skipFingerprint} disabled={loading} className="w-full bg-transparent text-slate-400 hover:text-white font-bold py-3 rounded-xl transition-all text-sm">
+                  Skip for now
+                </button>
               </div>
             )}
 
@@ -684,7 +760,7 @@ export default function RegisterPage() {
                 <p className="text-sm text-[#94A3B8] mb-8">
                   Your identity documents and biometric scan have been securely transmitted. You will be able to log in once your Branch Manager approves your request.
                 </p>
-                <button onClick={() => router.push('/login')} className="w-full bg-transparent border border-[#1E293B] hover:border-[#D2A02A] text-white font-bold py-3.5 rounded-xl transition-all">
+                <button onClick={() => router.push('/login')} className="w-full bg-transparent border border-[#0a3a1e] hover:border-[#004417] text-white font-bold py-3.5 rounded-xl transition-all">
                   Return to Login
                 </button>
               </div>
@@ -695,3 +771,4 @@ export default function RegisterPage() {
     </div>
   );
 }
+

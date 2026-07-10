@@ -38,7 +38,7 @@ export const BranchOverviewTab: React.FC<BranchOverviewTabProps> = ({ branch, em
           </div>
           <div className="flex flex-col space-y-1">
             <span className="text-sm text-slate-400">Branch Manager</span>
-            <span className="text-xl font-semibold text-[#D2A02A]">
+            <span className="text-xl font-semibold text-[#004417]">
               {manager ? manager.full_name : 'No Manager Assigned'}
             </span>
           </div>
@@ -60,7 +60,7 @@ export const BranchOverviewTab: React.FC<BranchOverviewTabProps> = ({ branch, em
   );
 };
 
-function StatCard({ icon, label, value, color = "text-[#D2A02A]" }: { icon: React.ReactNode, label: string, value: string | number, color?: string }) {
+function StatCard({ icon, label, value, color = "text-[#004417]" }: { icon: React.ReactNode, label: string, value: string | number, color?: string }) {
   return (
     <Card className="bg-slate-900 border-slate-800 p-4 flex flex-col justify-center items-center text-center">
       <div className={`p-3 rounded-full bg-slate-950 mb-3 ${color}`}>
@@ -71,3 +71,4 @@ function StatCard({ icon, label, value, color = "text-[#D2A02A]" }: { icon: Reac
     </Card>
   );
 }
+

@@ -126,10 +126,10 @@ export default function AdminAnalyticsPage() {
               </h2>
               <ResponsiveContainer width="100%" height={240}>
                 <LineChart data={data.monthly_trend} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#0a3a1e" />
                   <XAxis dataKey="month" tick={{ fill: '#94A3B8', fontSize: 11 }} />
                   <YAxis tick={{ fill: '#94A3B8', fontSize: 11 }} />
-                  <Tooltip contentStyle={{ background: '#0F172A', border: '1px solid #1E293B', borderRadius: 8 }} labelStyle={{ color: '#F8FAFC' }} />
+                  <Tooltip contentStyle={{ background: '#012410', border: '1px solid #0a3a1e', borderRadius: 8 }} labelStyle={{ color: '#F8FAFC' }} />
                   <Legend iconSize={10} wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
                   <Line type="monotone" dataKey="present" stroke="#22C55E" strokeWidth={2} dot={false} name="Present" />
                   <Line type="monotone" dataKey="late" stroke="#F59E0B" strokeWidth={2} dot={false} name="Late" />
@@ -223,3 +223,4 @@ export default function AdminAnalyticsPage() {
     </div>
   );
 }
+

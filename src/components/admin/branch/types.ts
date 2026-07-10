@@ -28,3 +28,4 @@ export interface BranchEmployee {
   is_active?: boolean;
   is_present_today?: boolean;
 }
+

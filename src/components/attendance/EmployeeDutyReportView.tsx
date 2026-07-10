@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Clock,
   TrendingUp,
@@ -119,13 +120,12 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
   const [year, setYear] = useState<number>(currentDate.getFullYear());
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<DutySummaryData | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState<'csv' | 'excel' | 'pdf' | null>(null);
   const [filterTab, setFilterTab] = useState<'all' | 'present' | 'late' | 'missed' | 'overtime'>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [refreshIndex, setRefreshIndex] = useState<number>(0);
   const [resettingFace, setResettingFace] = useState<boolean>(false);
-  const [resetSuccessMsg, setResetSuccessMsg] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showMapModal, setShowMapModal] = useState<{ lat: number; lng: number; title: string; subtitle?: string } | null>(null);
 
   const handleResetFaceVerification = async () => {
@@ -136,7 +136,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
     if (!confirmReset) return;
 
     setResettingFace(true);
-    setResetSuccessMsg(null);
+    setFeedback(null);
     try {
       const res = await fetch(`/api/employees/${data.employee.id}/reset-face-verification`, {
         method: 'POST',
@@ -145,10 +145,10 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
       if (!res.ok || !json.success) {
         throw new Error(json?.error?.message || 'Failed to reset face verification.');
       }
-      setResetSuccessMsg(`Face verification cancelled successfully! Employee notified.`);
+      setFeedback({ type: 'success', text: `Face verification cancelled successfully! Employee notified.` });
       setRefreshIndex((prev) => prev + 1);
     } catch (err: unknown) {
-      alert(`Error resetting face verification: ${err instanceof Error ? err.message : String(err)}`);
+      setFeedback({ type: 'error', text: `Error resetting face verification: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
       setResettingFace(false);
     }
@@ -174,7 +174,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
         }
         if (mounted) setData(json.data);
       } catch (err: unknown) {
-        if (mounted) setError(err instanceof Error ? err.message : 'Error fetching report.');
+        if (mounted) setFeedback({ type: 'error', text: err instanceof Error ? err.message : 'Error fetching report.' });
       } finally {
         if (mounted) setLoading(false);
       }
@@ -222,7 +222,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
         throw new Error('No downloadable file returned.');
       }
     } catch (err: unknown) {
-      alert(`Export error: ${err instanceof Error ? err.message : String(err)}`);
+      setFeedback({ type: 'error', text: `Export error: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
       setExporting(null);
     }
@@ -437,24 +437,24 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
           <Spinner size="lg" />
           <p className="text-sm text-slate-400 mt-3 animate-pulse">Calculating duty hours, overtime, and punctuality breakdown...</p>
         </div>
-      ) : error ? (
-        <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-8 text-center">
-          <AlertCircle className="w-12 h-12 text-rose-400 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-rose-300">Calculation Error</h3>
-          <p className="text-sm text-slate-400 mt-1 mb-4">{error}</p>
-          <Button onClick={() => setRefreshIndex((prev) => prev + 1)} variant="outline" size="sm">Try Again</Button>
-        </div>
       ) : data ? (
         <>
-          {resetSuccessMsg && (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-4 py-3 rounded-xl flex items-center justify-between text-sm animate-in fade-in">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span>{resetSuccessMsg}</span>
-              </div>
-              <button onClick={() => setResetSuccessMsg(null)} className="text-xs text-slate-400 hover:text-white underline">Dismiss</button>
-            </div>
-          )}
+          <AnimatePresence>
+            {feedback && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className={`p-4 rounded-xl border text-sm font-medium ${
+                  feedback.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <XCircle className="w-5 h-5 shrink-0" />}
+                  <span>{feedback.text}</span>
+                  <button onClick={() => setFeedback(null)} className="ml-auto opacity-70 hover:opacity-100">X</button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Today's Real-time Duty Spotlight Card */}
           {month === currentDate.getMonth() + 1 && year === currentDate.getFullYear() && (

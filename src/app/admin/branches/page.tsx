@@ -114,14 +114,14 @@ export default function AdminBranchesPage() {
 
   const filtered = branches.filter(
     (b) =>
-      b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.code.toLowerCase().includes(searchTerm.toLowerCase())
+      (b.name ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (b.code ?? '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#061224] via-blue-950/20 to-[#061224] p-6 rounded-3xl border border-[#1E293B] shadow-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#021a0a] via-blue-950/20 to-[#021a0a] p-6 rounded-3xl border border-[#0a3a1e] shadow-2xl">
         <div>
           <div className="flex items-center space-x-2 text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">
             <Store className="w-4 h-4" />
@@ -216,7 +216,7 @@ export default function AdminBranchesPage() {
                     <button
                       onClick={() => toggleActive(branch)}
                       disabled={togglingId === branch.id}
-                      className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${branch.is_active ? 'bg-[#1E293B] hover:bg-rose-900/50 hover:text-rose-400 text-slate-400' : 'bg-[#1E293B] hover:bg-emerald-900/50 hover:text-emerald-400 text-slate-400'}`}
+                      className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${branch.is_active ? 'bg-[#0a3a1e] hover:bg-rose-900/50 hover:text-rose-400 text-slate-400' : 'bg-[#0a3a1e] hover:bg-emerald-900/50 hover:text-emerald-400 text-slate-400'}`}
                       title={branch.is_active ? 'Deactivate' : 'Activate'}
                     >
                       {togglingId === branch.id
@@ -276,3 +276,4 @@ export default function AdminBranchesPage() {
     </div>
   );
 }
+

@@ -12,6 +12,7 @@ const updateEmployeeSchema = z.object({
   facial_id: z.string().nullable().optional(),
   employee_id: z.string().nullable().optional(),
   is_active: z.boolean().optional(),
+  password: z.string().min(8, 'Password must be at least 8 characters.').optional(),
 });
 
 export async function GET(
@@ -99,10 +100,6 @@ export async function PUT(
     const newBranchId = payload.branch_id !== undefined ? payload.branch_id : oldProfile.branch_id;
     const newIsActive = payload.is_active !== undefined ? payload.is_active : oldProfile.is_active;
 
-    if (newIsActive && newRole !== 'admin' && !newBranchId) {
-      throw new Error('VALIDATION_ERROR: Cannot activate an employee without assigning them to a store/branch first.');
-    }
-
     const { createClient: createAdminClient } = await import('@supabase/supabase-js');
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceRoleKey) {
@@ -114,9 +111,24 @@ export async function PUT(
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
+    if (payload.password) {
+      const { error: authErr } = await adminClient.auth.admin.updateUserById(targetId, {
+        password: payload.password
+      });
+      if (authErr) {
+        throw new Error(`Failed to update user password: ${authErr.message}`);
+      }
+    }
+
+    if (newIsActive && newRole !== 'admin' && !newBranchId) {
+      throw new Error('VALIDATION_ERROR: Cannot activate an employee without assigning them to a store/branch first.');
+    }
+
+    const { password, ...profilePayload } = payload;
+
     const { data: updatedProfile, error: updateErr } = await adminClient
       .from('profiles')
-      .update(payload)
+      .update(profilePayload)
       .eq('id', targetId)
       .select()
       .single();

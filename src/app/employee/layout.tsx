@@ -68,14 +68,14 @@ export default function EmployeeLayout({ children }: { children: React.ReactNode
 
   if (loading || !userProfile) {
     return (
-      <div className="min-h-screen bg-[#040A15] flex items-center justify-center">
+      <div className="min-h-screen bg-[#010e05] flex items-center justify-center">
         <Spinner size="lg" label="Loading Staff Dashboard..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#040A15] flex">
+    <div className="min-h-screen bg-[#010e05] flex">
       {/* Sidebar hidden on mobile for employees */}
       <div className="hidden md:block">
         <Sidebar
@@ -101,3 +101,4 @@ export default function EmployeeLayout({ children }: { children: React.ReactNode
     </div>
   );
 }
+
