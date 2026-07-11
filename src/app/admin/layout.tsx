@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -65,14 +65,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading || !userProfile) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center" suppressHydrationWarning>
         <Spinner size="lg" label="Loading HQ Dashboard..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white flex">
+    <div className="min-h-screen bg-white flex" suppressHydrationWarning>
       <Sidebar
         role="admin"
         isCollapsed={isCollapsed}
