@@ -444,7 +444,7 @@ export default function RegisterPage() {
       
       {/* LEFT PANEL: BRANDING */}
       <div className="w-full md:w-[45%] flex flex-col justify-between p-8 md:p-14 relative bg-white border-b md:border-b-0 md:border-r border-slate-200/50 order-1 z-10 overflow-hidden">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#1dbf73_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
         <div className="absolute top-[30%] left-[20%] w-[50%] h-[50%] bg-[#1dbf73]/10 rounded-full filter blur-[120px] pointer-events-none z-0" />
         <Abstract3DBackground />
 
@@ -589,7 +589,7 @@ export default function RegisterPage() {
                     </div>
                   </div>
                 </div>
-                <button type="submit" disabled={loading} className="w-full bg-[#1dbf73] hover:bg-[#16965a] text-[#010e05] font-bold py-3.5 rounded-xl mt-4 flex items-center justify-center gap-2">
+                <button type="submit" disabled={loading} className="w-full bg-[#1dbf73] hover:bg-[#16965a] text-[#ffffff] font-bold py-3.5 rounded-xl mt-4 flex items-center justify-center gap-2">
                   {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"/> : 'Continue Registration'}
                 </button>
               </form>
@@ -602,7 +602,7 @@ export default function RegisterPage() {
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-2 text-center">Enter 6-Digit Code</label>
                   <input type="text" name="otp" required maxLength={6} value={formData.otp} onChange={handleInputChange} className="w-full bg-white/50 border border-slate-200 rounded-xl py-4 text-center text-2xl tracking-[1em] focus:border-[#1dbf73] focus:outline-none text-slate-900" />
                 </div>
-                <button type="submit" disabled={loading} className="w-full bg-[#1dbf73] hover:bg-[#16965a] text-[#010e05] font-bold py-3.5 rounded-xl flex items-center justify-center">
+                <button type="submit" disabled={loading} className="w-full bg-[#1dbf73] hover:bg-[#16965a] text-[#ffffff] font-bold py-3.5 rounded-xl flex items-center justify-center">
                   {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"/> : 'Verify Email'}
                 </button>
               </form>
@@ -682,7 +682,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <button type="submit" disabled={!nidFront || !nidBack} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all ${(!nidFront || !nidBack) ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-[#1dbf73] hover:bg-[#16965a] text-[#010e05] shadow-lg shadow-[#004417]/20'}`}>
+                <button type="submit" disabled={!nidFront || !nidBack} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all ${(!nidFront || !nidBack) ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-[#1dbf73] hover:bg-[#16965a] text-[#ffffff] shadow-lg shadow-[#1dbf73]/20'}`}>
                   Proceed to Biometrics <ArrowRight className="w-4 h-4" />
                 </button>
               </form>
@@ -706,7 +706,7 @@ export default function RegisterPage() {
                         
                         {scanning && (
                           <div className="absolute inset-0 bg-[#1dbf73]/10">
-                             <div className="w-full h-1 bg-[#1dbf73] shadow-[0_0_15px_#004417] animate-[scan_2s_ease-in-out_infinite]" />
+                             <div className="w-full h-1 bg-[#1dbf73] shadow-[0_0_15px_#1dbf73] animate-[scan_2s_ease-in-out_infinite]" />
                           </div>
                         )}
                      </>
@@ -722,7 +722,7 @@ export default function RegisterPage() {
                 ) : (
                   <div className="flex gap-3 w-full">
                      <button onClick={() => setFaceImage(null)} className="flex-1 bg-transparent border border-slate-200 text-slate-900 hover:bg-slate-100 font-bold py-3.5 rounded-xl">Retake</button>
-                     <button onClick={handleFinalSubmit} disabled={loading} className="flex-1 bg-[#1dbf73] hover:bg-[#16965a] text-[#010e05] font-bold py-3.5 rounded-xl flex justify-center items-center">
+                     <button onClick={handleFinalSubmit} disabled={loading} className="flex-1 bg-[#1dbf73] hover:bg-[#16965a] text-[#ffffff] font-bold py-3.5 rounded-xl flex justify-center items-center">
                        {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"/> : 'Continue'}
                      </button>
                   </div>

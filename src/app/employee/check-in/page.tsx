@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FaceCapture } from '@/components/attendance/FaceCapture';
@@ -460,7 +460,7 @@ export default function EmployeeCheckInPage() {
   // ─────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#020810]">
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-slate-50">
         <Spinner size="lg" label="Initializing Biometric System..." />
       </div>
     );
@@ -504,7 +504,7 @@ export default function EmployeeCheckInPage() {
       {/* ── Minimal Floating Back Button for Mobile View (since top bar is hidden) ── */}
       <button
         onClick={() => router.push('/employee')}
-        className="sm:hidden absolute top-3.5 left-3.5 z-50 p-2.5 rounded-full bg-[#0A1628]/90 hover:bg-[#0A1628] border border-slate-300 text-slate-900 backdrop-blur-sm shadow-2xl active:scale-95"
+        className="sm:hidden absolute top-3.5 left-3.5 z-50 p-2.5 rounded-full bg-white/90 hover:bg-white border border-slate-200 text-slate-700 backdrop-blur-sm shadow-lg active:scale-95"
         style={{ top: 'max(0.8rem, env(safe-area-inset-top))' }}
       >
         <ArrowLeft className="w-5 h-5" />
@@ -514,7 +514,7 @@ export default function EmployeeCheckInPage() {
       <div className="flex-none hidden sm:flex items-center justify-between px-4 pt-4 pb-3 bg-gradient-to-b from-[#020810]/95 to-transparent z-40 backdrop-blur-md" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
         <button
           onClick={() => router.push('/employee')}
-          className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 text-slate-900 transition-all active:scale-95 shadow-lg"
+          className="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-all active:scale-95 shadow-sm"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -527,7 +527,7 @@ export default function EmployeeCheckInPage() {
         </div>
 
         {/* Live Clock */}
-        <div className="flex items-center space-x-1.5 bg-white/10 border border-white/15 rounded-2xl px-3.5 py-2 shadow-lg">
+        <div className="flex items-center space-x-1.5 bg-slate-100 border border-slate-200 rounded-2xl px-3.5 py-2 shadow-sm">
           <Clock className="w-4 h-4 text-blue-400 animate-pulse shrink-0" />
           <span className="text-slate-900 font-extrabold text-xs tabular-nums">{time}</span>
         </div>
@@ -555,7 +555,7 @@ export default function EmployeeCheckInPage() {
             </div>
 
             {/* Check-in / Check-out Toggle */}
-            <div className="flex bg-white p-1 rounded-xl border border-white/15 shadow-inner">
+            <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200 shadow-inner">
               {(['in','out'] as const).map(t => (
                 <button
                   key={t}

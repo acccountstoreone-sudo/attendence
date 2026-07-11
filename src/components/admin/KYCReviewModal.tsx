@@ -100,7 +100,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
               </div>
             </div>
 
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-[#0a3a1e] to-transparent my-6" />
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-[#f1f5f9] to-transparent my-6" />
 
             {/* Verification Status */}
             <div>

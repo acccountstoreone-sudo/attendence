@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -404,7 +404,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
             {/* Corner brackets */}
             {['tl', 'tr', 'bl', 'br'].map(pos => (
               <div key={pos} className={`absolute w-7 h-7 z-10 pointer-events-none drop-shadow
-                ${faceDetected || phase === 'success' ? 'border-emerald-400' : 'border-white/80'}
+                ${faceDetected || phase === 'success' ? 'border-[#1dbf73]' : 'border-white/80'}
                 ${pos === 'tl' ? 'top-5 left-5 border-t-2 border-l-2 rounded-tl-xl'
                 : pos === 'tr' ? 'top-5 right-5 border-t-2 border-r-2 rounded-tr-xl'
                 : pos === 'bl' ? 'bottom-5 left-5 border-b-2 border-l-2 rounded-bl-xl'
@@ -478,7 +478,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
                 : { scale: [1, 1.2, 1] }
               }
               transition={{ repeat: Infinity, duration: faceDetected ? 0.8 : 1.5 }}
-              className={`w-3 h-3 rounded-full ${faceDetected ? 'bg-emerald-400 shadow-[0_0_10px_#34D399]' : 'bg-blue-400 shadow-[0_0_8px_#60A5FA]'}`}
+              className={`w-3 h-3 rounded-full ${faceDetected ? 'bg-[#1dbf73] shadow-[0_0_10px_#34D399]' : 'bg-blue-400 shadow-[0_0_8px_#60A5FA]'}`}
             />
             <span className={`text-xs font-bold ${faceDetected ? 'text-[#1dbf73]' : 'text-blue-300'}`}>
               {faceDetected ? 'Face Detected' : 'Scanning...'}

@@ -63,9 +63,9 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
           filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
           cursor: pointer;
         ">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#004417" stroke="#010e05" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#1dbf73" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;">
             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-            <circle cx="12" cy="10" r="3" fill="#010e05"/>
+            <circle cx="12" cy="10" r="3" fill="#ffffff"/>
           </svg>
         </div>
       `,
@@ -104,9 +104,9 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
     // Create geofence radius circle around marker
     const circle = L.circle([initialLat, initialLng], {
       radius: safeRadius,
-      color: '#004417',
+      color: '#1dbf73',
       weight: 2,
-      fillColor: '#004417',
+      fillColor: '#1dbf73',
       fillOpacity: 0.18,
       dashArray: '5, 5',
     }).addTo(map);
@@ -288,7 +288,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
           type="button"
           onClick={handleUseCurrentLocation}
           disabled={isLocating}
-          className="bg-[#1dbf73] hover:bg-[#b88b22] text-[#010e05] font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(210,160,42,0.3)] shrink-0 transition-all"
+          className="bg-[#1dbf73] hover:bg-[#b88b22] text-[#ffffff] font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(210,160,42,0.3)] shrink-0 transition-all"
         >
           {isLocating ? <Navigation className="w-4 h-4 animate-spin" /> : <Crosshair className="w-4 h-4" />}
           {isLocating ? 'Detecting GPS...' : 'Use My Current Location'}

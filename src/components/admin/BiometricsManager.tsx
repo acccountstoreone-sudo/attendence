@@ -70,7 +70,7 @@ export function BiometricsManager({ employee, webauthnCredentials }: { employee:
             </div>
             {employee.face_enrolled ? (
               <span className="px-2.5 py-1 bg-[#1dbf73]/10 text-[#1dbf73] text-xs font-medium rounded-full border border-emerald-500/20 flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Enrolled
+                <div className="w-1.5 h-1.5 rounded-full bg-[#1dbf73]" /> Enrolled
               </span>
             ) : (
               <span className="px-2.5 py-1 bg-amber-500/10 text-amber-400 text-xs font-medium rounded-full border border-amber-500/20 flex items-center gap-1.5">

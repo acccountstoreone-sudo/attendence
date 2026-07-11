@@ -71,7 +71,7 @@ export const Badge: React.FC<BadgeProps> = ({
   }
 
   const dotColor =
-    variant === 'success' || status === 'present' || status === 'active' || status === 'success' ? 'bg-emerald-400' :
+    variant === 'success' || status === 'present' || status === 'active' || status === 'success' ? 'bg-[#1dbf73]' :
     variant === 'warning' || status === 'late' || status === 'warning' ? 'bg-amber-400' :
     variant === 'error' || status === 'absent' || status === 'inactive' || status === 'error' ? 'bg-rose-400' :
     variant === 'info' || status === 'half_day' || status === 'info' ? 'bg-indigo-400' : 'bg-slate-400';

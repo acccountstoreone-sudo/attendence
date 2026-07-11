@@ -45,12 +45,12 @@
   --color-rose-accent: var(--rose);
   --color-amber-accent: var(--amber);
 
-  --color-[#010e05]: #f8fafc;
-  --color-[#021a0a]: #ffffff;
-  --color-[#004417]: #1dbf73;
-  --color-[#006622]: #16965a;
-  --color-[#0a3a1e]: #e2e8f0;
-  --color-[#012410]: #f1f5f9;
+  --color-[#ffffff]: #f8fafc;
+  --color-[#ffffff]: #ffffff;
+  --color-[#1dbf73]: #1dbf73;
+  --color-[#16965a]: #16965a;
+  --color-[#f1f5f9]: #e2e8f0;
+  --color-[#f1f5f9]: #f1f5f9;
 }
 
 body {
@@ -63,57 +63,10 @@ body {
     color 0.3s ease;
 }
 
-/* ── Universal Theme Overrides for #1dbf73 & White Theme across ALL Pages ── */
+/* ── Page-level background & text defaults ── */
+/* Let Tailwind classes handle the actual colors — these are fallback anchors only */
 
-/* Background overrides */
-[class*="bg-white"], [class*="bg-white"], [class*="bg-white"] {
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
-}
-
-[class*="bg-white"] {
-  background-color: var(--card) !important;
-  color: var(--card-foreground) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  border-color: var(--border) !important;
-}
-
-/* Primary #1dbf73 overrides */
-[class*="bg-[#1dbf73]"], [class*="bg-[#00551e]"], [class*="bg-[#16965a]"] {
-  background-color: #1dbf73 !important;
-  color: #ffffff !important;
-}
-
-[class*="from-[#1dbf73]"] {
-  --tw-gradient-from: #1dbf73 !important;
-  --tw-gradient-to: #16965a !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
-}
-
-[class*="to-[#16965a]"], [class*="to-[#16965a]"] {
-  --tw-gradient-to: #16965a !important;
-}
-
-[class*="from-[#1dbf73]"] {
-  --tw-gradient-from: #1dbf73 !important;
-}
-
-/* Secondary & Muted overrides */
-[class*="bg-[#0a3a1e]"], [class*="bg-[#012410]"] {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
-}
-
-/* Border overrides — only truly dark borders */
-[class*="border-[#0a3a1e]"], [class*="border-white/5"] {
-  border-color: #e2e8f0 !important;
-}
-
-/* Text color: legacy dark green accent → brand green */
-[class*="text-[#00aa44]"], [class*="text-[#00cc55]"], [class*="text-[#004417]"] {
-  color: #1dbf73 !important;
-}
-
+/* Keep scrollbar & interactive accent colors on brand green */
 
 /* Glassmorphism Styles */
 .glass-panel {

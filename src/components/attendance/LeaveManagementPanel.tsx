@@ -137,7 +137,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
               onClick={() => setStatusTab(tab)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold capitalize transition-all whitespace-nowrap flex items-center gap-2 ${
                 statusTab === tab
-                  ? 'bg-[#1dbf73] text-[#010e05] shadow-md'
+                  ? 'bg-[#1dbf73] text-[#ffffff] shadow-md'
                   : 'text-slate-400 hover:text-slate-900'
               }`}
             >

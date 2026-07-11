@@ -123,7 +123,7 @@ function LoginPageContent() {
       <div className="w-full md:w-[45%] flex flex-col justify-between p-8 md:p-14 relative bg-white border-b md:border-b-0 md:border-r border-slate-200/50 order-1 z-10 overflow-hidden">
         
         {/* Subtle Background Glow */}
-        <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
+        <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#1dbf73_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
         <div className="absolute top-[30%] left-[20%] w-[50%] h-[50%] bg-[#1dbf73]/10 rounded-full filter blur-[120px] pointer-events-none z-0" />
 
         {/* 3D Canvas rendering premium abstract gold particles/globe */}
@@ -158,7 +158,7 @@ function LoginPageContent() {
             <div className="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-slate-100/80 backdrop-blur-md border border-slate-200 shadow-[0_0_30px_rgba(0,68,23,0.2)] overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-[#1dbf73]/20 to-transparent opacity-50" />
               <ScanFace className="w-10 h-10 text-[#1dbf73] z-10" />
-              <div className="absolute top-0 left-0 w-full h-[2px] bg-green-400 opacity-50 animate-[scan_2s_ease-in-out_infinite]" />
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-[#1dbf73] opacity-50 animate-[scan_2s_ease-in-out_infinite]" />
             </div>
             
             <div className="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-slate-100/80 backdrop-blur-md border border-slate-200 shadow-[0_0_30px_rgba(0,68,23,0.2)]">
@@ -217,7 +217,7 @@ function LoginPageContent() {
             >
                <ScanFace className="w-8 h-8 relative z-10" />
                {/* Scan line effect inside the icon box */}
-               <div className="absolute top-0 left-0 w-full h-[1px] bg-green-400/60 shadow-[0_0_8px_#4ade80] animate-[scan_3s_ease-in-out_infinite]" />
+               <div className="absolute top-0 left-0 w-full h-[1px] bg-[#1dbf73]/60 shadow-[0_0_8px_#4ade80] animate-[scan_3s_ease-in-out_infinite]" />
             </motion.div>
             <h2 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Portal Access</h2>
             <p className="text-[13px] text-[#64748B]">Authenticate to manage workforce and locations.</p>

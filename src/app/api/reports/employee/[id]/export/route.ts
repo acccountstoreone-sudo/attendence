@@ -217,7 +217,7 @@ export async function GET(
       // PDF Format (`format === 'pdf'`)
       const doc = new jsPDF('landscape');
       const primaryColor: [number, number, number] = [10, 16, 28]; // #0A101C
-      const accentColor: [number, number, number] = [210, 160, 42]; // #004417
+      const accentColor: [number, number, number] = [210, 160, 42]; // #1dbf73
       const whiteColor: [number, number, number] = [255, 255, 255];
 
       // Header Banner

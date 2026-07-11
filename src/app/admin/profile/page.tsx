@@ -240,8 +240,8 @@ export default function AdminProfilePage() {
         <Card className="bg-[#0A101C] border-slate-200 p-6 col-span-1 flex flex-col items-center text-center shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#1dbf73]/10 rounded-full blur-2xl pointer-events-none" />
           
-          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#1dbf73] to-[#16965a] flex items-center justify-center border-4 border-[#010e05] shadow-2xl mb-4">
-            <span className="text-3xl font-extrabold text-[#010e05]">
+          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#1dbf73] to-[#16965a] flex items-center justify-center border-4 border-[#ffffff] shadow-2xl mb-4">
+            <span className="text-3xl font-extrabold text-[#ffffff]">
               {(profile.full_name || 'A').charAt(0).toUpperCase()}
             </span>
           </div>
@@ -349,7 +349,7 @@ export default function AdminProfilePage() {
                   type="submit"
                   disabled={savingProfile}
                   variant="primary"
-                  className="bg-gradient-to-r from-[#1dbf73] to-[#16965a] hover:from-[#16965a] hover:to-[#A87B18] text-[#010e05] font-bold px-6 shadow-[0_0_20px_rgba(210,160,42,0.3)]"
+                  className="bg-gradient-to-r from-[#1dbf73] to-[#16965a] hover:from-[#16965a] hover:to-[#A87B18] text-[#ffffff] font-bold px-6 shadow-[0_0_20px_rgba(210,160,42,0.3)]"
                   icon={savingProfile ? undefined : <Save className="w-4 h-4" />}
                 >
                   {savingProfile ? 'Saving Changes...' : 'Save Changes'}

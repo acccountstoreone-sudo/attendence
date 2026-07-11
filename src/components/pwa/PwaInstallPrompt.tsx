@@ -119,7 +119,7 @@ export function PwaInstallPrompt() {
                 <span className="text-xs font-extrabold uppercase tracking-wider text-blue-400">
                   Official Mobile App
                 </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1dbf73] animate-pulse" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mt-0.5">
                 Install Attendance Portal

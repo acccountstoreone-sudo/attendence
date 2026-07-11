@@ -261,12 +261,12 @@ export default function BranchManagerDashboardPage() {
             </div>
             <div className="flex -space-x-2">
               {pendingApprovals.slice(0, 3).map((emp) => (
-                <div key={emp.id} className="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#021a0a] flex items-center justify-center text-xs font-medium text-slate-300">
+                <div key={emp.id} className="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#ffffff] flex items-center justify-center text-xs font-medium text-slate-300">
                   {emp.full_name.charAt(0)}
                 </div>
               ))}
               {pendingApprovals.length > 3 && (
-                <div className="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#021a0a] flex items-center justify-center text-xs font-medium text-slate-400">
+                <div className="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#ffffff] flex items-center justify-center text-xs font-medium text-slate-400">
                   +{pendingApprovals.length - 3}
                 </div>
               )}

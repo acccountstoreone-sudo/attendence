@@ -346,7 +346,7 @@ export default function AdminDutyHoursPage() {
                     icon={saving ? undefined : <Save className="w-4 h-4 text-slate-900" />}
                     onClick={handleSave}
                     disabled={saving}
-                    className="bg-[#1dbf73] text-[#010e05] hover:bg-[#16965a] border-none"
+                    className="bg-[#1dbf73] text-[#ffffff] hover:bg-[#16965a] border-none"
                   >
                     {saving ? 'Saving...' : 'Save Duty Hours'}
                   </Button>

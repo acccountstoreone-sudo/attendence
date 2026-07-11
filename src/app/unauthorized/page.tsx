@@ -41,7 +41,7 @@ export default function UnauthorizedPage() {
 
       <div className="relative z-10 w-full max-w-md">
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-16 h-16 bg-white border border-slate-200 rounded-2xl flex items-center justify-center mb-4 shadow-xl shadow-[#004417]/10">
+          <div className="w-16 h-16 bg-white border border-slate-200 rounded-2xl flex items-center justify-center mb-4 shadow-xl shadow-[#1dbf73]/10">
             <ShieldAlert className="w-8 h-8 text-rose-500" />
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
@@ -53,7 +53,7 @@ export default function UnauthorizedPage() {
         </div>
 
         <Card className="bg-white border-slate-200 p-6 shadow-2xl relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:20px_20px] mix-blend-overlay z-0" />
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#1dbf73_1px,transparent_1px)] [background-size:20px_20px] mix-blend-overlay z-0" />
           
           <div className="relative z-10 space-y-4">
             <p className="text-slate-300 text-sm text-center font-medium">
@@ -71,7 +71,7 @@ export default function UnauthorizedPage() {
 
             <Button
               variant="primary"
-              className="w-full bg-[#1dbf73] text-[#010e05] hover:bg-[#16965a] font-bold border-none"
+              className="w-full bg-[#1dbf73] text-[#ffffff] hover:bg-[#16965a] font-bold border-none"
               onClick={handleReturn}
               icon={<ArrowLeft className="w-4 h-4" />}
             >

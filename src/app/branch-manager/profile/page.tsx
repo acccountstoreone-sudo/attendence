@@ -238,7 +238,7 @@ export default function BranchManagerProfilePage() {
         <Card className="bg-[#0A101C] border-slate-200 p-6 col-span-1 flex flex-col items-center text-center shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
           
-          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-4 border-[#010e05] shadow-2xl mb-4">
+          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-4 border-[#ffffff] shadow-2xl mb-4">
             <span className="text-3xl font-extrabold text-slate-900">
               {(profile.full_name || 'M').charAt(0).toUpperCase()}
             </span>

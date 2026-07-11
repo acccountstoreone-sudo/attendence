@@ -82,7 +82,7 @@ export default function EmployeeDashboardPage() {
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
       {/* Welcome Banner */}
       <div className="bg-white p-8 rounded-3xl border border-[#1dbf73]/20 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#1dbf73_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
         <div className="relative z-10">
           <div className="flex items-center space-x-2 text-[#1dbf73] text-xs font-bold uppercase tracking-wider">
             <MapPin className="w-4 h-4" />
@@ -99,8 +99,8 @@ export default function EmployeeDashboardPage() {
         <Button
           size="lg"
           variant="primary"
-          icon={<Clock className="w-5 h-5 text-[#010e05]" />}
-          className="relative z-10 shadow-xl shadow-[#004417]/20 bg-[#1dbf73] text-[#010e05] hover:bg-[#16965a] font-bold border-none disabled:opacity-60 disabled:cursor-not-allowed"
+          icon={<Clock className="w-5 h-5 text-[#ffffff]" />}
+          className="relative z-10 shadow-xl shadow-[#1dbf73]/20 bg-[#1dbf73] text-[#ffffff] hover:bg-[#16965a] font-bold border-none disabled:opacity-60 disabled:cursor-not-allowed"
           onClick={() => router.push('/employee/check-in')}
           disabled={!!(todayRecord?.check_in_time && todayRecord.check_out_time)}
         >

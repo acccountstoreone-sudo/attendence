@@ -133,7 +133,7 @@ export default function EmployeeProfilePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column: Avatar & Summary */}
         <Card className="bg-[#0A101C] border-slate-200 p-6 col-span-1 flex flex-col items-center text-center shadow-lg">
-          <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center border-4 border-[#010e05] shadow-xl mb-4">
+          <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center border-4 border-[#ffffff] shadow-xl mb-4">
             <span className="text-3xl font-bold text-slate-300">
               {(profile.full_name || '?').charAt(0).toUpperCase()}
             </span>

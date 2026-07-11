@@ -267,7 +267,7 @@ export default function EmployeeLeavePage() {
             disabled={submitting || balances.length === 0 || !leaveType}
             variant="primary"
             size="lg"
-            className="w-full bg-[#1dbf73] text-[#010e05] hover:bg-[#16965a] font-extrabold border-none py-4 shadow-lg shadow-[#004417]/20 disabled:opacity-50"
+            className="w-full bg-[#1dbf73] text-[#ffffff] hover:bg-[#16965a] font-extrabold border-none py-4 shadow-lg shadow-[#1dbf73]/20 disabled:opacity-50"
           >
             {submitting ? 'Submitting Request...' : 'Submit Leave Application'}
           </Button>

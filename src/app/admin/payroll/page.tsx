@@ -106,7 +106,7 @@ export default function AdminPayrollDashboard() {
         transition={{ duration: 0.6, ease: 'easeOut' }}
         className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-2xl relative overflow-hidden"
       >
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#1dbf73_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
         <div className="relative z-10 pointer-events-none">
           <div className="flex items-center space-x-2 mb-1">
             <DollarSign className="w-5 h-5 text-[#1dbf73]" />
