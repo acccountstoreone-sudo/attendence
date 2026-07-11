@@ -33,7 +33,7 @@ export const Spinner: React.FC<SpinnerProps> = ({
         {/* Outer Spinning Ring */}
         <div
           className={cn(
-            'rounded-full border-4 border-slate-800 border-t-blue-500 border-r-indigo-500 animate-spin shadow-lg shadow-blue-500/20',
+            'rounded-full border-4 border-slate-200 border-t-blue-500 border-r-indigo-500 animate-spin shadow-lg shadow-blue-500/20',
             sizes[size]
           )}
         />

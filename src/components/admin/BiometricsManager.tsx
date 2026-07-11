@@ -122,13 +122,13 @@ export function BiometricsManager({ employee, webauthnCredentials }: { employee:
                </div>
             ) : (
                webauthnCredentials.map((cred: any) => (
-                 <div key={cred.id} className="flex items-center justify-between p-4 bg-[#0A101C] border border-slate-200 rounded-xl hover:border-blue-500/30 transition-colors">
+                 <div key={cred.id} className="flex items-center justify-between p-4 bg-[#ffffff] border border-slate-200 rounded-xl hover:border-blue-500/30 transition-colors">
                    <div className="flex items-center gap-3 overflow-hidden">
                      <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
                        <Smartphone className="w-5 h-5 text-blue-400" />
                      </div>
                      <div className="min-w-0">
-                       <p className="text-sm font-medium text-slate-200 truncate">{cred.device_type === 'singleDevice' ? 'Single Device (Phone/Mac)' : 'Security Key'}</p>
+                       <p className="text-sm font-medium text-slate-700 truncate">{cred.device_type === 'singleDevice' ? 'Single Device (Phone/Mac)' : 'Security Key'}</p>
                        <p className="text-xs text-slate-500 truncate">ID: {cred.credential_id.substring(0, 16)}...</p>
                        <p className="text-[10px] text-slate-600 mt-0.5">Added: {new Date(cred.created_at).toLocaleString()}</p>
                      </div>

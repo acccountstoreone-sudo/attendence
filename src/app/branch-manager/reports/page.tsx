@@ -136,7 +136,7 @@ export default function BranchManagerReportsPage() {
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-blue-950/30 to-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-white via-blue-950/30 to-slate-50 p-6 rounded-3xl border border-slate-200 shadow-2xl">
         <div>
           <div className="flex items-center space-x-2 text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">
             <BarChart3 className="w-4 h-4" />
@@ -186,7 +186,7 @@ export default function BranchManagerReportsPage() {
       </div>
 
       {/* Quick Access to Individual Store Employee Month-wise Duty & Overtime Reports */}
-      <div className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-amber-500/10 border border-amber-500/30 rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
+      <div className="bg-gradient-to-r from-amber-500/10 via-white to-amber-500/10 border border-amber-500/30 rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400">
             <UserCheck className="w-6 h-6" />
@@ -207,7 +207,7 @@ export default function BranchManagerReportsPage() {
       </div>
 
       {/* Filter Bar */}
-      <Card className="bg-slate-900 border-slate-800 p-4">
+      <Card className="bg-white border-slate-200 p-4">
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex flex-col space-y-1 min-w-[160px]">
             <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
@@ -217,7 +217,7 @@ export default function BranchManagerReportsPage() {
               <select
                 value={filter.month}
                 onChange={(e) => setFilter((f) => ({ ...f, month: Number(e.target.value) }))}
-                className="w-full appearance-none bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-900 px-3 py-2 pr-8 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full appearance-none bg-white border border-slate-200 rounded-xl text-sm text-slate-900 px-3 py-2 pr-8 focus:outline-none focus:border-blue-500 transition-colors"
               >
                 {months.map((m, i) => (
                   <option key={m} value={i + 1}>{m}</option>
@@ -233,7 +233,7 @@ export default function BranchManagerReportsPage() {
               <select
                 value={filter.year}
                 onChange={(e) => setFilter((f) => ({ ...f, year: Number(e.target.value) }))}
-                className="w-full appearance-none bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-900 px-3 py-2 pr-8 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full appearance-none bg-white border border-slate-200 rounded-xl text-sm text-slate-900 px-3 py-2 pr-8 focus:outline-none focus:border-blue-500 transition-colors"
               >
                 {years.map((y) => (
                   <option key={y} value={y}>{y}</option>
@@ -269,7 +269,7 @@ export default function BranchManagerReportsPage() {
       {/* Summary KPI Tiles */}
       {hasLoaded && storeData && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
+          <Card className="bg-gradient-to-br from-white to-slate-50 border-slate-200">
             <p className="text-xs font-bold uppercase text-slate-400">Attendance Rate</p>
             <div className="flex items-center space-x-2 mt-1">
               <p className={`text-2xl font-extrabold ${storeData.attendance_rate >= 90 ? 'text-[#1dbf73]' : storeData.attendance_rate >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
@@ -282,7 +282,7 @@ export default function BranchManagerReportsPage() {
               )}
             </div>
           </Card>
-          <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
+          <Card className="bg-gradient-to-br from-white to-slate-50 border-slate-200">
             <p className="text-xs font-bold uppercase text-slate-400">Punctuality Rate</p>
             <div className="flex items-center space-x-2 mt-1">
               <p className={`text-2xl font-extrabold ${storeData.punctuality_rate >= 85 ? 'text-[#1dbf73]' : storeData.punctuality_rate >= 70 ? 'text-amber-400' : 'text-rose-400'}`}>
@@ -295,11 +295,11 @@ export default function BranchManagerReportsPage() {
               )}
             </div>
           </Card>
-          <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
+          <Card className="bg-gradient-to-br from-white to-slate-50 border-slate-200">
             <p className="text-xs font-bold uppercase text-slate-400">Total Absences</p>
             <p className="text-2xl font-extrabold text-rose-400 mt-1">{storeData.absent_days}</p>
           </Card>
-          <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
+          <Card className="bg-gradient-to-br from-white to-slate-50 border-slate-200">
             <p className="text-xs font-bold uppercase text-slate-400">Late Arrivals</p>
             <p className="text-2xl font-extrabold text-amber-400 mt-1">{storeData.late_days}</p>
           </Card>
@@ -308,7 +308,7 @@ export default function BranchManagerReportsPage() {
 
       {/* Store Data Table */}
       {!hasLoaded ? (
-        <Card className="p-16 text-center border-slate-800 border-dashed">
+        <Card className="p-16 text-center border-slate-200 border-dashed">
           <BarChart3 className="w-16 h-16 text-slate-700 mx-auto mb-4" />
           <h3 className="text-lg font-bold text-slate-400">Select Period & Generate Report</h3>
           <p className="text-sm text-slate-500 mt-1">
@@ -320,15 +320,15 @@ export default function BranchManagerReportsPage() {
           <Spinner size="lg" label="Fetching Store Attendance Data..." />
         </div>
       ) : !storeData ? (
-        <Card className="p-12 text-center border-slate-800">
+        <Card className="p-12 text-center border-slate-200">
           <p className="text-slate-400 font-semibold">No report data found for selected period.</p>
         </Card>
       ) : (
-        <Card className="p-0 overflow-hidden border-slate-800">
+        <Card className="p-0 overflow-hidden border-slate-200">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-900/80 text-slate-400 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-800">
+                <tr className="bg-white/80 text-slate-400 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200">
                   <th className="py-4 px-5">Branch</th>
                   <th className="py-4 px-5 text-center">Working Days</th>
                   <th className="py-4 px-5 text-center">Present</th>
@@ -341,7 +341,7 @@ export default function BranchManagerReportsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                  <tr className="hover:bg-slate-900/40 transition-colors">
+                  <tr className="hover:bg-white/40 transition-colors">
                     <td className="py-4 px-5">
                       <div>
                         <span className="text-xs font-extrabold text-blue-400 bg-blue-950/60 border border-blue-800/60 px-2 py-0.5 rounded-md mr-2">
@@ -350,7 +350,7 @@ export default function BranchManagerReportsPage() {
                         <span className="font-bold text-slate-900">{storeData.branch_name}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-5 text-center text-slate-300 font-semibold">{storeData.total_days}</td>
+                    <td className="py-4 px-5 text-center text-slate-600 font-semibold">{storeData.total_days}</td>
                     <td className="py-4 px-5 text-center font-bold text-[#1dbf73]">{storeData.present_days}</td>
                     <td className="py-4 px-5 text-center font-bold text-amber-400">{storeData.late_days}</td>
                     <td className="py-4 px-5 text-center font-bold text-rose-400">{storeData.absent_days}</td>
@@ -360,7 +360,7 @@ export default function BranchManagerReportsPage() {
                           {storeData.attendance_rate.toFixed(1)}%
                         </span>
                         {/* Mini Progress Bar */}
-                        <div className="w-20 h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
+                        <div className="w-20 h-1.5 bg-slate-50 rounded-full mt-1 overflow-hidden">
                           <div
                             className={`h-full rounded-full ${storeData.attendance_rate >= 90 ? 'bg-[#1dbf73]' : storeData.attendance_rate >= 75 ? 'bg-amber-500' : 'bg-rose-500'}`}
                             style={{ width: `${storeData.attendance_rate}%` }}

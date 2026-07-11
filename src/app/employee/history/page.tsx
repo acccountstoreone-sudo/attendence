@@ -177,7 +177,7 @@ export default function EmployeeHistoryPage() {
   return (
     <div className="space-y-8 pb-12 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-blue-950/30 to-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-white via-blue-950/30 to-slate-50 p-6 rounded-3xl border border-slate-200 shadow-2xl">
         <div>
           <div className="flex items-center space-x-2 text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">
             <History className="w-4 h-4" />
@@ -189,7 +189,7 @@ export default function EmployeeHistoryPage() {
       </div>
 
       {/* Date Filter */}
-      <Card className="bg-slate-900 border-slate-800 p-4">
+      <Card className="bg-white border-slate-200 p-4">
         <div className="flex items-center gap-3">
           <div className="relative">
             <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
@@ -197,7 +197,7 @@ export default function EmployeeHistoryPage() {
               type="date"
               value={searchDate}
               onChange={(e) => handleDateChange(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-blue-500 transition-colors"
+              className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
           {searchDate && (
@@ -222,11 +222,11 @@ export default function EmployeeHistoryPage() {
           <Spinner size="lg" label="Fetching Attendance History..." />
         </div>
       ) : !error && (
-        <Card className="p-0 overflow-hidden border-slate-800">
+        <Card className="p-0 overflow-hidden border-slate-200">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-900/80 text-slate-400 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-800">
+                <tr className="bg-white/80 text-slate-400 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200">
                   <th className="py-4 px-5">Date</th>
                   <th className="py-4 px-5 text-center">Status</th>
                   <th className="py-4 px-5">Check-In</th>
@@ -273,7 +273,7 @@ export default function EmployeeHistoryPage() {
                         : 'Unknown Date';
 
                     return (
-                      <tr key={rec.id} className="hover:bg-slate-900/40 transition-colors">
+                      <tr key={rec.id} className="hover:bg-white/40 transition-colors">
                         <td className="py-4 px-5">
                           <div className="flex items-center space-x-2">
                             <Calendar className="w-4 h-4 text-slate-500 shrink-0" />
@@ -310,7 +310,7 @@ export default function EmployeeHistoryPage() {
                             </div>
                           ) : <span className="text-slate-500 text-xs italic">Still On Shift</span>}
                         </td>
-                        <td className="py-4 px-5 text-slate-300 font-semibold text-sm">{hoursWorked}</td>
+                        <td className="py-4 px-5 text-slate-600 font-semibold text-sm">{hoursWorked}</td>
                         <td className="py-4 px-5">
                           <div className="flex items-center space-x-1.5 text-xs text-slate-400">
                             {rec.check_in_method === 'biometric' ? (
@@ -341,7 +341,7 @@ export default function EmployeeHistoryPage() {
           </div>
 
           {/* Pagination */}
-          <div className="p-4 border-t border-slate-800/80 flex items-center justify-between">
+          <div className="p-4 border-t border-slate-200/80 flex items-center justify-between">
             <span className="text-xs text-slate-400">Showing page <strong className="text-slate-900">{page}</strong> of <strong className="text-slate-900">{totalPages}</strong></span>
             <div className="flex items-center space-x-2">
               <Button
@@ -369,16 +369,16 @@ export default function EmployeeHistoryPage() {
 
       {/* Correction Modal */}
       {isCorrectionModalOpen && selectedRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-6 border-b border-slate-800/60 bg-slate-950/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200/60 bg-white/50">
               <div>
                 <h3 className="text-lg font-extrabold text-slate-900">Request Correction</h3>
                 <p className="text-sm text-slate-400">For {selectedRecord.date || 'this record'}</p>
               </div>
               <button
                 onClick={() => setIsCorrectionModalOpen(false)}
-                className="p-2 text-slate-400 hover:text-slate-900 bg-slate-800/50 hover:bg-slate-700 rounded-full transition-colors"
+                className="p-2 text-slate-400 hover:text-slate-900 bg-slate-50/50 hover:bg-slate-100 rounded-full transition-colors"
                 disabled={isSubmitting}
               >
                 <X className="w-5 h-5" />
@@ -409,7 +409,7 @@ export default function EmployeeHistoryPage() {
                         value="check_in"
                         checked={correctionType === 'check_in'}
                         onChange={() => setCorrectionType('check_in')}
-                        className="text-blue-500 focus:ring-blue-500 bg-slate-800 border-slate-600"
+                        className="text-blue-500 focus:ring-blue-500 bg-slate-50 border-slate-600"
                         disabled={isSubmitting}
                       />
                       Check-In Time
@@ -421,7 +421,7 @@ export default function EmployeeHistoryPage() {
                         value="check_out"
                         checked={correctionType === 'check_out'}
                         onChange={() => setCorrectionType('check_out')}
-                        className="text-blue-500 focus:ring-blue-500 bg-slate-800 border-slate-600"
+                        className="text-blue-500 focus:ring-blue-500 bg-slate-50 border-slate-600"
                         disabled={isSubmitting}
                       />
                       Check-Out Time
@@ -437,7 +437,7 @@ export default function EmployeeHistoryPage() {
                     onChange={(e) => setRequestedTime(e.target.value)}
                     required
                     disabled={isSubmitting}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                   />
                 </div>
 
@@ -451,12 +451,12 @@ export default function EmployeeHistoryPage() {
                     minLength={5}
                     rows={3}
                     disabled={isSubmitting}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none placeholder:text-slate-600"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none placeholder:text-slate-600"
                   />
                 </div>
               </div>
 
-              <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-800/80">
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-200/80">
                 <Button 
                   type="button" 
                   variant="ghost" 

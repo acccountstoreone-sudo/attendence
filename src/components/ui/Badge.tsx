@@ -50,8 +50,8 @@ export const Badge: React.FC<BadgeProps> = ({
       outline: 'border border-blue-500 text-blue-400',
     },
     pending: {
-      subtle: 'bg-slate-800 text-slate-300 border border-slate-700',
-      solid: 'bg-slate-700 text-slate-900',
+      subtle: 'bg-slate-50 text-slate-600 border border-slate-200',
+      solid: 'bg-slate-100 text-slate-900',
       outline: 'border border-slate-600 text-slate-400',
     },
   };

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 export const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
     <div className="relative w-full overflow-auto rounded-xl border border-slate-200">
-      <table ref={ref} className={cn('w-full caption-bottom text-sm text-left text-slate-300', className)} {...props} />
+      <table ref={ref} className={cn('w-full caption-bottom text-sm text-left text-slate-600', className)} {...props} />
     </div>
   )
 );
@@ -12,7 +12,7 @@ Table.displayName = 'Table';
 
 export const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
   ({ className, ...props }, ref) => (
-    <thead ref={ref} className={cn('bg-white/5 text-slate-200 border-b border-slate-200 uppercase text-xs tracking-wider', className)} {...props} />
+    <thead ref={ref} className={cn('bg-white/5 text-slate-700 border-b border-slate-200 uppercase text-xs tracking-wider', className)} {...props} />
   )
 );
 TableHeader.displayName = 'TableHeader';
@@ -33,7 +33,7 @@ TableRow.displayName = 'TableRow';
 
 export const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<HTMLTableCellElement>>(
   ({ className, ...props }, ref) => (
-    <th ref={ref} className={cn('h-12 px-4 text-left align-middle font-semibold text-slate-300 [&:has([role=checkbox])]:pr-0', className)} {...props} />
+    <th ref={ref} className={cn('h-12 px-4 text-left align-middle font-semibold text-slate-600 [&:has([role=checkbox])]:pr-0', className)} {...props} />
   )
 );
 TableHead.displayName = 'TableHead';

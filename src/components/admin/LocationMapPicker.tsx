@@ -265,7 +265,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
   };
 
   return (
-    <div className="space-y-4 bg-[#0A1220] border border-slate-200 rounded-2xl p-5 shadow-2xl">
+    <div className="space-y-4 bg-[#ffffff] border border-slate-200 rounded-2xl p-5 shadow-2xl">
       {/* Fallback stylesheet import for SSR/client rendering safety */}
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
@@ -374,7 +374,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         />
 
         {/* Floating instruction overlay on map */}
-        <div className="absolute top-3 right-3 z-20 bg-white backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-200 shadow-lg pointer-events-none text-xs text-slate-300 flex items-center gap-1.5">
+        <div className="absolute top-3 right-3 z-20 bg-white backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-200 shadow-lg pointer-events-none text-xs text-slate-600 flex items-center gap-1.5">
           <Globe className="w-3.5 h-3.5 text-[#1dbf73]" />
           <span>Click anywhere or drag pin to adjust</span>
         </div>
@@ -393,7 +393,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
             <div className="text-sm font-extrabold text-slate-900 flex items-center gap-3 mt-0.5">
               <span>Lat: <span className="text-[#1dbf73] font-mono">{latitude !== null && !isNaN(latitude) ? latitude.toFixed(6) : 'Not set'}</span></span>
               <span>Lng: <span className="text-[#1dbf73] font-mono">{longitude !== null && !isNaN(longitude) ? longitude.toFixed(6) : 'Not set'}</span></span>
-              <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-300 rounded-md font-sans">
+              <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md font-sans">
                 Radius: {safeRadius}m
               </span>
             </div>

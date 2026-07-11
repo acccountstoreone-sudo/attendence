@@ -10,10 +10,10 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     const baseStyles = 'rounded-2xl p-6 transition-all duration-200';
     
     const variants = {
-      elevated: 'bg-slate-50 backdrop-blur-sm border border-slate-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] text-slate-100',
-      bordered: 'bg-transparent border border-slate-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] text-slate-100',
-      interactive: 'bg-slate-50 backdrop-blur-sm border border-slate-200 hover:border-slate-300 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_12px_40px_rgba(0,0,0,0.6)] cursor-pointer text-slate-100 transform hover:-translate-y-1 transition-all duration-300',
-      glass: 'bg-slate-50 backdrop-blur-sm border border-slate-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_20px_40px_rgba(0,0,0,0.5)] text-slate-100',
+      elevated: 'bg-slate-50 backdrop-blur-sm border border-slate-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] text-slate-900',
+      bordered: 'bg-transparent border border-slate-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] text-slate-900',
+      interactive: 'bg-slate-50 backdrop-blur-sm border border-slate-200 hover:border-slate-300 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_12px_40px_rgba(0,0,0,0.6)] cursor-pointer text-slate-900 transform hover:-translate-y-1 transition-all duration-300',
+      glass: 'bg-slate-50 backdrop-blur-sm border border-slate-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_20px_40px_rgba(0,0,0,0.5)] text-slate-900',
     };
 
     return (

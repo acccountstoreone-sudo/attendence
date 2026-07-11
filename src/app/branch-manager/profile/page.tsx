@@ -235,7 +235,7 @@ export default function BranchManagerProfilePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column: Avatar & Summary */}
-        <Card className="bg-[#0A101C] border-slate-200 p-6 col-span-1 flex flex-col items-center text-center shadow-lg relative overflow-hidden">
+        <Card className="bg-[#ffffff] border-slate-200 p-6 col-span-1 flex flex-col items-center text-center shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
           
           <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-4 border-[#ffffff] shadow-2xl mb-4">
@@ -249,19 +249,19 @@ export default function BranchManagerProfilePage() {
           </p>
           <div className="w-full h-px bg-slate-100 my-6" />
           <div className="w-full space-y-3.5 text-left">
-            <div className="flex items-center space-x-3 text-sm text-slate-300">
+            <div className="flex items-center space-x-3 text-sm text-slate-600">
               <Building2 className="w-4 h-4 text-blue-400 shrink-0" />
               <span className="font-semibold">{profile.branch_name}</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-slate-300">
+            <div className="flex items-center space-x-3 text-sm text-slate-600">
               <Mail className="w-4 h-4 text-slate-400 shrink-0" />
               <span className="truncate text-slate-400">{profile.email || 'No email registered'}</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-slate-300">
+            <div className="flex items-center space-x-3 text-sm text-slate-600">
               <Phone className="w-4 h-4 text-slate-400 shrink-0" />
               <span>{profile.phone || 'No phone set'}</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-slate-300">
+            <div className="flex items-center space-x-3 text-sm text-slate-600">
               <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
               <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
             </div>
@@ -272,8 +272,8 @@ export default function BranchManagerProfilePage() {
         <div className="col-span-1 md:col-span-2 space-y-6">
           
           {/* Form 1: Edit Profile */}
-          <Card className="bg-[#0A101C] border-slate-200 p-6 shadow-lg">
-            <div className="flex items-center space-x-2 text-slate-100 mb-6 pb-4 border-b border-slate-200">
+          <Card className="bg-[#ffffff] border-slate-200 p-6 shadow-lg">
+            <div className="flex items-center space-x-2 text-slate-900 mb-6 pb-4 border-b border-slate-200">
               <User className="w-5 h-5 text-blue-400" />
               <h3 className="font-bold text-base">Personal Information</h3>
             </div>
@@ -318,7 +318,7 @@ export default function BranchManagerProfilePage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                     Full Name <span className="text-rose-500">*</span>
                   </label>
                   <Input
@@ -330,7 +330,7 @@ export default function BranchManagerProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                     Phone Number
                   </label>
                   <Input
@@ -357,8 +357,8 @@ export default function BranchManagerProfilePage() {
           </Card>
 
           {/* Form 2: Change Password */}
-          <Card className="bg-[#0A101C] border-slate-200 p-6 shadow-lg">
-            <div className="flex items-center space-x-2 text-slate-100 mb-6 pb-4 border-b border-slate-200">
+          <Card className="bg-[#ffffff] border-slate-200 p-6 shadow-lg">
+            <div className="flex items-center space-x-2 text-slate-900 mb-6 pb-4 border-b border-slate-200">
               <ShieldCheck className="w-5 h-5 text-blue-400" />
               <h3 className="font-bold text-base">Account Security & Password</h3>
             </div>
@@ -388,7 +388,7 @@ export default function BranchManagerProfilePage() {
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                     New Password
                   </label>
                   <Input
@@ -400,7 +400,7 @@ export default function BranchManagerProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                     Confirm New Password
                   </label>
                   <Input
@@ -418,7 +418,7 @@ export default function BranchManagerProfilePage() {
                   type="submit"
                   disabled={changingPassword || !newPassword}
                   variant="outline"
-                  className="border-slate-200 hover:border-blue-500 text-slate-200 hover:text-blue-400 font-bold"
+                  className="border-slate-200 hover:border-blue-500 text-slate-700 hover:text-blue-400 font-bold"
                   icon={changingPassword ? undefined : <Key className="w-4 h-4" />}
                 >
                   {changingPassword ? 'Updating Password...' : 'Update Password'}

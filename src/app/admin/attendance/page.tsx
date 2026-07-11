@@ -142,7 +142,7 @@ export default function AdminAttendancePage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-slate-200 bg-white/50 text-slate-300 hover:bg-slate-100 hover:text-slate-900"
+            className="border-slate-200 bg-white/50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             icon={<RefreshCw className="w-4 h-4" />}
             onClick={fetchAttendance}
           >
@@ -151,7 +151,7 @@ export default function AdminAttendancePage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-slate-200 bg-white/50 text-slate-300 hover:bg-slate-100 hover:text-slate-900"
+            className="border-slate-200 bg-white/50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             icon={<Download className="w-4 h-4" />}
             onClick={handleExport}
             disabled={filteredRecords.length === 0}
@@ -186,7 +186,7 @@ export default function AdminAttendancePage() {
                 value={selectedDate}
                 max={getLocalDateString()}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="bg-transparent text-sm text-slate-300 focus:outline-none"
+                className="bg-transparent text-sm text-slate-600 focus:outline-none"
               />
             </div>
 
@@ -195,7 +195,7 @@ export default function AdminAttendancePage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-white border border-slate-200 text-slate-300 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-[#1dbf73]"
+                className="bg-white border border-slate-200 text-slate-600 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-[#1dbf73]"
               >
                 <option value="all">All Statuses</option>
                 <option value="present">Present (On-Time)</option>
@@ -256,17 +256,17 @@ export default function AdminAttendancePage() {
                           </div>
                         </td>
                         <td className="py-4 px-6">
-                          <div className="flex items-center text-slate-300 text-sm">
+                          <div className="flex items-center text-slate-600 text-sm">
                             <MapPin className="w-4 h-4 text-[#1dbf73]/60 mr-2 shrink-0" />
                             {rec.branch_name}
                           </div>
                         </td>
-                        <td className="py-4 px-6 text-slate-300 font-mono text-xs">
+                        <td className="py-4 px-6 text-slate-600 font-mono text-xs">
                           {rec.check_in_time
                             ? new Date(rec.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                             : <span className="text-slate-500">—</span>}
                         </td>
-                        <td className="py-4 px-6 text-slate-300 font-mono text-xs">
+                        <td className="py-4 px-6 text-slate-600 font-mono text-xs">
                           {rec.check_out_time
                             ? new Date(rec.check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                             : <span className="text-slate-500 italic">Not checked out</span>}

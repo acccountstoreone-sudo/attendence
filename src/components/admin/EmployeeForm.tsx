@@ -107,7 +107,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
               <span>{feedback.text}</span>
             </div>
             {feedback.details && (
-              <div className="mt-3 ml-8 p-3 bg-slate-900/30 rounded border border-emerald-500/30 text-[#1dbf73] font-mono tracking-wider break-all select-all">
+              <div className="mt-3 ml-8 p-3 bg-white/30 rounded border border-emerald-500/30 text-[#1dbf73] font-mono tracking-wider break-all select-all">
                 {feedback.details}
               </div>
             )}

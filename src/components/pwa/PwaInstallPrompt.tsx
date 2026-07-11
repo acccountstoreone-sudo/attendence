@@ -94,14 +94,14 @@ export function PwaInstallPrompt() {
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-[420px] z-50 pointer-events-auto"
       >
-        <div className="bg-[#0A1628]/95 backdrop-blur-sm border border-blue-500/30 rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.7)] text-slate-900 relative overflow-hidden">
+        <div className="bg-[#ffffff]/95 backdrop-blur-sm border border-blue-500/30 rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.7)] text-slate-900 relative overflow-hidden">
           {/* Subtle glowing ambient light */}
           <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
 
           {/* Close button */}
           <button
             onClick={handleDismiss}
-            className="absolute top-4 right-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-slate-900 transition-all active:scale-95"
+            className="absolute top-4 right-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-slate-600 hover:text-slate-900 transition-all active:scale-95"
             aria-label="Close install banner"
           >
             <X className="w-4 h-4" />
@@ -124,7 +124,7 @@ export function PwaInstallPrompt() {
               <h3 className="text-base font-bold text-slate-900 mt-0.5">
                 Install Attendance Portal
               </h3>
-              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                 Add to your phone Home Screen for instant 1-tap biometric face check-in & offline geofence sync!
               </p>
             </div>

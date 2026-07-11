@@ -96,7 +96,7 @@ export default function AdminHolidaysPage() {
         </div>
         <div className="flex items-center gap-3">
           {/* Year picker */}
-          <div className="flex items-center gap-1 bg-slate-800 rounded-lg border border-slate-700 px-3 py-2">
+          <div className="flex items-center gap-1 bg-slate-50 rounded-lg border border-slate-200 px-3 py-2">
             <button onClick={() => setYear((y) => y - 1)} className="text-slate-400 hover:text-slate-900 px-1">‹</button>
             <span className="text-slate-900 font-semibold w-12 text-center">{year}</span>
             <button onClick={() => setYear((y) => y + 1)} className="text-slate-400 hover:text-slate-900 px-1">›</button>
@@ -131,7 +131,7 @@ export default function AdminHolidaysPage() {
       <AnimatePresence>
         {showForm && (
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
-            <Card className="p-5 border border-indigo-500/30 bg-slate-800/60 backdrop-blur">
+            <Card className="p-5 border border-indigo-500/30 bg-slate-50/60 backdrop-blur">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Add New Holiday</h2>
               <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
@@ -143,7 +143,7 @@ export default function AdminHolidaysPage() {
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="e.g., Eid-ul-Adha"
-                    className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
@@ -154,11 +154,11 @@ export default function AdminHolidaysPage() {
                     required
                     value={form.holiday_date}
                     onChange={(e) => setForm({ ...form, holiday_date: e.target.value })}
-                    className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div className="flex flex-col justify-end">
-                  <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer mb-3">
+                  <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer mb-3">
                     <input
                       id="holiday-recurring-checkbox"
                       type="checkbox"
@@ -197,14 +197,14 @@ export default function AdminHolidaysPage() {
             const monthHolidays = byMonth[idx];
             if (!monthHolidays?.length) return null;
             return (
-              <Card key={idx} className="p-4 bg-slate-800/60">
+              <Card key={idx} className="p-4 bg-slate-50/60">
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">{monthName} {year}</h3>
                 <div className="space-y-2">
                   {monthHolidays.map((h) => (
                     <motion.div
                       key={h.id}
                       layout
-                      className="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-700/50 border border-slate-700"
+                      className="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-100/50 border border-slate-200"
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-indigo-400 font-bold text-sm w-6 text-center">

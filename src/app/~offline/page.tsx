@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card';
 export default function OfflineFallbackPage() {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4 text-slate-900 font-sans">
-      <Card className="max-w-md w-full p-8 text-center bg-[#081226]/90 border-slate-800 shadow-2xl backdrop-blur-sm rounded-2xl">
+      <Card className="max-w-md w-full p-8 text-center bg-[#ffffff]/90 border-slate-200 shadow-2xl backdrop-blur-sm rounded-2xl">
         <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-6">
           <WifiOff className="w-8 h-8 text-amber-500 animate-pulse" />
         </div>
@@ -32,7 +32,7 @@ export default function OfflineFallbackPage() {
           <Button
             variant="outline"
             onClick={() => window.history.back()}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 border-slate-700 hover:bg-slate-800"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 border-slate-200 hover:bg-slate-50"
           >
             <ArrowLeft className="w-4 h-4" />
             Go Back

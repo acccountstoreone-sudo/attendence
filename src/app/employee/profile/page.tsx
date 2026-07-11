@@ -120,7 +120,7 @@ export default function EmployeeProfilePage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-100 tracking-tight">My Profile</h1>
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">My Profile</h1>
           <p className="text-sm text-slate-400 mt-1">
             View your personal information and account settings.
           </p>
@@ -132,9 +132,9 @@ export default function EmployeeProfilePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column: Avatar & Summary */}
-        <Card className="bg-[#0A101C] border-slate-200 p-6 col-span-1 flex flex-col items-center text-center shadow-lg">
+        <Card className="bg-[#ffffff] border-slate-200 p-6 col-span-1 flex flex-col items-center text-center shadow-lg">
           <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center border-4 border-[#ffffff] shadow-xl mb-4">
-            <span className="text-3xl font-bold text-slate-300">
+            <span className="text-3xl font-bold text-slate-600">
               {(profile.full_name || '?').charAt(0).toUpperCase()}
             </span>
           </div>
@@ -144,11 +144,11 @@ export default function EmployeeProfilePage() {
           </p>
           <div className="w-full h-px bg-slate-100 my-6" />
           <div className="w-full space-y-3 text-left">
-            <div className="flex items-center space-x-3 text-sm text-slate-300">
+            <div className="flex items-center space-x-3 text-sm text-slate-600">
               <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
               <span className="truncate">{profile.branch_name}</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-slate-300">
+            <div className="flex items-center space-x-3 text-sm text-slate-600">
               <Calendar className="w-4 h-4 text-slate-500 shrink-0" />
               <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
             </div>
@@ -157,39 +157,39 @@ export default function EmployeeProfilePage() {
 
         {/* Right Column: Details & Settings */}
         <div className="col-span-1 md:col-span-2 space-y-6">
-          <Card className="bg-[#0A101C] border-slate-200 p-6 shadow-lg">
-            <div className="flex items-center space-x-2 text-slate-100 mb-6 pb-4 border-b border-slate-200">
+          <Card className="bg-[#ffffff] border-slate-200 p-6 shadow-lg">
+            <div className="flex items-center space-x-2 text-slate-900 mb-6 pb-4 border-b border-slate-200">
               <User className="w-5 h-5 text-slate-400" />
               <h3 className="font-semibold text-base">Personal Information</h3>
             </div>
             <div className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
                 <span className="text-sm font-medium text-slate-500">Employee ID</span>
-                <span className="text-sm text-slate-200 sm:col-span-2 font-medium">{profile.employee_id || 'Not assigned'}</span>
+                <span className="text-sm text-slate-700 sm:col-span-2 font-medium">{profile.employee_id || 'Not assigned'}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
                 <span className="text-sm font-medium text-slate-500">Full Name</span>
-                <span className="text-sm text-slate-200 sm:col-span-2 font-medium">{profile.full_name}</span>
+                <span className="text-sm text-slate-700 sm:col-span-2 font-medium">{profile.full_name}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
                 <span className="text-sm font-medium text-slate-500">Email Address</span>
                 <div className="sm:col-span-2 flex items-center space-x-2">
                   <Mail className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm text-slate-200">{profile.email || 'Not available'}</span>
+                  <span className="text-sm text-slate-700">{profile.email || 'Not available'}</span>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
                 <span className="text-sm font-medium text-slate-500">Phone Number</span>
                 <div className="sm:col-span-2 flex items-center space-x-2">
                   <Phone className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm text-slate-200">{profile.phone || 'Not provided'}</span>
+                  <span className="text-sm text-slate-700">{profile.phone || 'Not provided'}</span>
                 </div>
               </div>
             </div>
           </Card>
 
-          <Card className="bg-[#0A101C] border-slate-200 p-6 shadow-lg">
-            <div className="flex items-center space-x-2 text-slate-100 mb-6 pb-4 border-b border-slate-200">
+          <Card className="bg-[#ffffff] border-slate-200 p-6 shadow-lg">
+            <div className="flex items-center space-x-2 text-slate-900 mb-6 pb-4 border-b border-slate-200">
               <ShieldCheck className="w-5 h-5 text-slate-400" />
               <h3 className="font-semibold text-base">Account Security</h3>
             </div>
@@ -198,7 +198,7 @@ export default function EmployeeProfilePage() {
                 To update your password or edit your personal details, please contact your Branch Manager or HQ Administrator. This ensures all employee records remain verified and secure.
               </p>
               <div className="pt-2">
-                <Button variant="outline" size="sm" className="border-slate-200 text-slate-300 cursor-not-allowed opacity-50" icon={<Key className="w-4 h-4" />}>
+                <Button variant="outline" size="sm" className="border-slate-200 text-slate-600 cursor-not-allowed opacity-50" icon={<Key className="w-4 h-4" />}>
                   Change Password (Locked)
                 </Button>
               </div>

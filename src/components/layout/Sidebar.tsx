@@ -217,7 +217,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile Drawer */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex animate-in fade-in duration-200">
-          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={onCloseMobile} />
+          <div className="fixed inset-0 bg-white/80 backdrop-blur-sm" onClick={onCloseMobile} />
           <div className="relative w-72 h-full z-10 animate-in slide-in-from-left duration-300">
             {sidebarContent}
           </div>

@@ -67,17 +67,17 @@ export const BiometricConsentModal: React.FC<BiometricConsentModalProps> = ({
           <div>
             <p className="text-sm font-bold text-slate-900">Anchor Fashion ERP — Privacy Notice</p>
             <p className="text-xs text-blue-300">অ্যাঙ্কর ফ্যাশন ERP — গোপনীয়তা বিজ্ঞপ্তি</p>
-            <p className="text-xs text-slate-400 mt-0.5">For: <strong className="text-slate-200">{employeeName}</strong></p>
+            <p className="text-xs text-slate-400 mt-0.5">For: <strong className="text-slate-700">{employeeName}</strong></p>
           </div>
         </div>
 
         {/* Consent Points — Bilingual */}
         <div className="space-y-3">
           {consentPoints.map((point, i) => (
-            <div key={i} className="flex items-start space-x-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80">
+            <div key={i} className="flex items-start space-x-3 p-3 bg-white/60 rounded-xl border border-slate-200/80">
               <div className="mt-0.5">{point.icon}</div>
               <div>
-                <p className="text-xs font-semibold text-slate-200">{point.en}</p>
+                <p className="text-xs font-semibold text-slate-700">{point.en}</p>
                 <p className="text-xs text-slate-400 mt-0.5 font-normal">{point.bn}</p>
               </div>
             </div>
@@ -85,12 +85,12 @@ export const BiometricConsentModal: React.FC<BiometricConsentModalProps> = ({
         </div>
 
         {/* Legal Notice */}
-        <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 text-[11px] text-slate-400 leading-relaxed">
+        <div className="bg-white/80 p-4 rounded-xl border border-slate-200 text-[11px] text-slate-400 leading-relaxed">
           <p>
-            <strong className="text-slate-200">Legal Basis / আইনী ভিত্তি:</strong> This collection is authorized under the Bangladesh Labour Act 2006 (Section 15), the Digital Security Act, and internal Anchor Fashion HR Policy v2.0.
+            <strong className="text-slate-700">Legal Basis / আইনী ভিত্তি:</strong> This collection is authorized under the Bangladesh Labour Act 2006 (Section 15), the Digital Security Act, and internal Anchor Fashion HR Policy v2.0.
           </p>
           <p className="mt-1">
-            <strong className="text-slate-200">Data Retention / ডেটা সংরক্ষণ:</strong> Attendance records retained for 7 years per labor law. Biometric templates purged after employment ends + 90 days.
+            <strong className="text-slate-700">Data Retention / ডেটা সংরক্ষণ:</strong> Attendance records retained for 7 years per labor law. Biometric templates purged after employment ends + 90 days.
           </p>
         </div>
 
@@ -99,11 +99,11 @@ export const BiometricConsentModal: React.FC<BiometricConsentModalProps> = ({
           className="flex items-start space-x-3 p-4 bg-blue-950/30 border border-blue-500/30 rounded-xl cursor-pointer"
           onClick={() => setIsChecked(!isChecked)}
         >
-          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${isChecked ? 'bg-blue-600 border-blue-600' : 'border-slate-600 bg-slate-950'}`}>
+          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${isChecked ? 'bg-blue-600 border-blue-600' : 'border-slate-600 bg-white'}`}>
             {isChecked && <CheckCircle2 className="w-3.5 h-3.5 text-slate-900" />}
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-200">
+            <p className="text-xs font-bold text-slate-700">
               I have read, understood, and voluntarily consent to biometric data processing for attendance purposes.
             </p>
             <p className="text-xs text-slate-400 mt-0.5">

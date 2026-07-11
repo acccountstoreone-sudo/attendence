@@ -611,7 +611,7 @@ export default function RegisterPage() {
             {/* STEP 3: KYC Document Upload */}
             {step === 'kyc' && (
               <form onSubmit={handleKycSubmit} className="space-y-6">
-                <div className="bg-white border border-slate-200 p-4 rounded-xl text-xs text-slate-300 leading-relaxed">
+                <div className="bg-white border border-slate-200 p-4 rounded-xl text-xs text-slate-600 leading-relaxed">
                   <p className="font-bold text-[#1dbf73] mb-1">Government Identity Verification</p>
                   <p>Please upload clear copies of both the Front and Back sides of your National ID (NID). Accepted formats: Image (JPG, PNG) or PDF. Maximum size: 5MB per file.</p>
                 </div>
@@ -682,7 +682,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <button type="submit" disabled={!nidFront || !nidBack} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all ${(!nidFront || !nidBack) ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-[#1dbf73] hover:bg-[#16965a] text-[#ffffff] shadow-lg shadow-[#1dbf73]/20'}`}>
+                <button type="submit" disabled={!nidFront || !nidBack} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all ${(!nidFront || !nidBack) ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : 'bg-[#1dbf73] hover:bg-[#16965a] text-[#ffffff] shadow-lg shadow-[#1dbf73]/20'}`}>
                   Proceed to Biometrics <ArrowRight className="w-4 h-4" />
                 </button>
               </form>
@@ -716,7 +716,7 @@ export default function RegisterPage() {
                 </div>
 
                 {!faceImage ? (
-                  <button onClick={captureFace} disabled={scanning || !faceDetected} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${(!faceDetected || scanning) ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-[#1dbf73] hover:bg-[#16965a] text-slate-900 shadow-[0_0_20px_rgba(34,197,94,0.4)]'}`}>
+                  <button onClick={captureFace} disabled={scanning || !faceDetected} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${(!faceDetected || scanning) ? 'bg-slate-100 text-gray-400 cursor-not-allowed' : 'bg-[#1dbf73] hover:bg-[#16965a] text-slate-900 shadow-[0_0_20px_rgba(34,197,94,0.4)]'}`}>
                     {scanning ? <><RefreshCw className="w-4 h-4 animate-spin"/> Processing...</> : <><Camera className="w-4 h-4"/> {faceDetected ? 'Capture Face ID' : 'Searching for Face...'}</>}
                   </button>
                 ) : (

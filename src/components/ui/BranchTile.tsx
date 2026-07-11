@@ -107,7 +107,7 @@ export const BranchTile: React.FC<BranchTileProps> = ({
       {/* Footer Staff info */}
       <div className="mt-3 text-right">
         <span className="text-[11px] text-slate-500 font-medium">
-          Total Store Staff: <strong className="text-slate-300">{staffCount}</strong>
+          Total Store Staff: <strong className="text-slate-600">{staffCount}</strong>
         </span>
       </div>
     </Card>

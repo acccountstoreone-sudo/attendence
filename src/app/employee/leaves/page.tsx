@@ -131,7 +131,7 @@ export default function EmployeeLeavePage() {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => router.push('/employee')}
-            className="p-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-300 hover:text-[#1dbf73] transition-colors"
+            className="p-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-600 hover:text-[#1dbf73] transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -204,12 +204,12 @@ export default function EmployeeLeavePage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">Leave Type</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Leave Type</label>
             <select
               value={leaveType}
               onChange={(e) => setLeaveType(e.target.value)}
               disabled={submitting || balances.length === 0}
-              className="w-full bg-white border border-slate-200 hover:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-all"
+              className="w-full bg-white border border-slate-200 hover:border-slate-200 rounded-xl py-3 px-4 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-all"
             >
               {balances.length === 0 && (
                 <option value="" disabled className="bg-white text-slate-500">
@@ -226,31 +226,31 @@ export default function EmployeeLeavePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">Start Date</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Start Date</label>
               <input
                 type="date"
                 required
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 disabled={submitting}
-                className="w-full bg-white border border-slate-200 hover:border-slate-700 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-all"
+                className="w-full bg-white border border-slate-200 hover:border-slate-200 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-all"
               />
             </div>
             <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">End Date</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">End Date</label>
               <input
                 type="date"
                 required
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 disabled={submitting}
-                className="w-full bg-white border border-slate-200 hover:border-slate-700 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-all"
+                className="w-full bg-white border border-slate-200 hover:border-slate-200 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-all"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">Reason / Justification</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Reason / Justification</label>
             <textarea
               rows={4}
               required
@@ -258,7 +258,7 @@ export default function EmployeeLeavePage() {
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               disabled={submitting}
-              className="w-full bg-white border border-slate-200 hover:border-slate-700 rounded-xl p-4 text-sm text-slate-900 placeholder-slate-600 focus:outline-none focus:border-[#1dbf73] transition-all"
+              className="w-full bg-white border border-slate-200 hover:border-slate-200 rounded-xl p-4 text-sm text-slate-900 placeholder-slate-600 focus:outline-none focus:border-[#1dbf73] transition-all"
             />
           </div>
 

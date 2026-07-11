@@ -178,7 +178,7 @@ export default function AdminSettingsPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Company Name</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Company Name</label>
                       <input
                         type="text"
                         required
@@ -188,7 +188,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Headquarters Address</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Headquarters Address</label>
                       <textarea
                         rows={2}
                         value={profile.hq_address}
@@ -208,7 +208,7 @@ export default function AdminSettingsPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Default Shift Start</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Default Shift Start</label>
                       <input
                         type="time"
                         required
@@ -218,7 +218,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Default Shift End</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Default Shift End</label>
                       <input
                         type="time"
                         required
@@ -228,7 +228,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Late Grace Period (Mins)</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Late Grace Period (Mins)</label>
                       <input
                         type="number"
                         required
@@ -240,7 +240,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Overtime Multiplier (×)</label>
+                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Overtime Multiplier (×)</label>
                       <input
                         type="number"
                         required

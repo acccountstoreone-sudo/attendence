@@ -128,7 +128,7 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
         <button
           onClick={checkPosition}
           title="Refresh GPS"
-          className="p-2 rounded-lg bg-white hover:bg-slate-100 text-slate-300 hover:text-[#1dbf73] transition-colors"
+          className="p-2 rounded-lg bg-white hover:bg-slate-100 text-slate-600 hover:text-[#1dbf73] transition-colors"
         >
           <RefreshCw className={`w-4 h-4 ${status === 'locating' ? 'animate-spin' : ''}`} />
         </button>

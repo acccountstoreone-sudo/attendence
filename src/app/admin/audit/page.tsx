@@ -172,7 +172,7 @@ export default function AdminAuditPage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-slate-200 bg-white/50 backdrop-blur-md text-slate-300 hover:bg-slate-100 hover:text-slate-900"
+            className="border-slate-200 bg-white/50 backdrop-blur-md text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             icon={<RefreshCw className="w-4 h-4" />}
             onClick={fetchLogs}
           >
@@ -181,7 +181,7 @@ export default function AdminAuditPage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-slate-200 bg-white/50 backdrop-blur-md text-slate-300 hover:bg-slate-100 hover:text-slate-900"
+            className="border-slate-200 bg-white/50 backdrop-blur-md text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             icon={<Download className="w-4 h-4" />}
             onClick={handleExport}
           >
@@ -211,7 +211,7 @@ export default function AdminAuditPage() {
             <select
               value={filterSeverity}
               onChange={(e) => setFilterSeverity(e.target.value)}
-              className="bg-white border border-slate-200 text-slate-300 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-[#1dbf73]"
+              className="bg-white border border-slate-200 text-slate-600 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-[#1dbf73]"
             >
               <option value="all">All Events</option>
               <option value="critical">Critical (Security)</option>
@@ -266,7 +266,7 @@ export default function AdminAuditPage() {
                             </div>
                           </td>
                           <td className="py-4 px-6">
-                            <div className="flex flex-col font-mono text-slate-300">
+                            <div className="flex flex-col font-mono text-slate-600">
                               <span>{new Date(log.created_at).toLocaleDateString()} {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
                               <span className="text-xs text-slate-500 mt-0.5">IP: {log.ip_address || 'Internal'}</span>
                             </div>
@@ -279,7 +279,7 @@ export default function AdminAuditPage() {
                             <p className="font-bold text-[#1dbf73] text-xs uppercase tracking-wider mb-0.5">{log.action}</p>
                             {log.table_name && (
                               <p className="text-slate-400 text-sm leading-snug">
-                                Table: <span className="font-mono text-slate-300">{log.table_name}</span>
+                                Table: <span className="font-mono text-slate-600">{log.table_name}</span>
                                 {log.record_id && <span className="text-slate-500"> · ID: {log.record_id.slice(0, 8)}...</span>}
                               </p>
                             )}

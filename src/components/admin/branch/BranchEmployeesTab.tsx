@@ -18,7 +18,7 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
         <h4 className="text-lg font-bold text-slate-900">Employees ({employees.length})</h4>
       </div>
       
-      <Card className="bg-slate-900 border-slate-800 overflow-hidden shadow-xl">
+      <Card className="bg-white border-slate-200 overflow-hidden shadow-xl">
         {employees.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
             <UserCheck className="w-12 h-12 text-slate-700 mx-auto mb-3" />
@@ -27,7 +27,7 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
+              <thead className="bg-white text-slate-400 border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Employee</th>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">ID & Phone</th>
@@ -39,10 +39,10 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
               </thead>
               <tbody className="divide-y divide-slate-800">
                 {employees.map((emp) => (
-                  <tr key={emp.id} className="hover:bg-slate-800/30 transition-colors">
+                  <tr key={emp.id} className="hover:bg-slate-50/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
                           {emp.profile_picture ? (
                             <img src={emp.profile_picture} alt={emp.full_name} className="w-full h-full object-cover" />
                           ) : (
@@ -56,18 +56,18 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-slate-300">{emp.employee_id || 'N/A'}</div>
+                      <div className="text-slate-600">{emp.employee_id || 'N/A'}</div>
                       <div className="text-xs text-slate-500 mt-1">{emp.phone || 'No phone'}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate-600">
                         {emp.role.replace(/_/g, ' ')}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-1.5">
                         <Circle className={`w-2.5 h-2.5 fill-current ${emp.is_present_today ? 'text-[#1dbf73]' : 'text-slate-500'}`} />
-                        <span className="text-xs font-medium text-slate-300">{emp.is_present_today ? 'Active' : 'Offline'}</span>
+                        <span className="text-xs font-medium text-slate-600">{emp.is_present_today ? 'Active' : 'Offline'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">

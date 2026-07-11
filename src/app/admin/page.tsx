@@ -69,7 +69,7 @@ const CircularProgress = ({ percentage, color }: { percentage: number; color: st
           stroke="currentColor"
           strokeWidth="4"
           fill="transparent"
-          className="text-slate-200"
+          className="text-slate-700"
         />
         <circle
           cx="24"
@@ -430,7 +430,7 @@ export default function AdminDashboardPage() {
 
       {/* Active Users Modal */}
       {showActiveUsersModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-sm">
           <div className="bg-white border border-slate-200 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
             <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-white">
               <div className="flex items-center gap-3">

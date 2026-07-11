@@ -113,15 +113,15 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-2xl bg-slate-100 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-2xl bg-slate-100 border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white/50">
           <div className="flex items-center gap-2.5">
             <Upload className="w-5 h-5 text-indigo-400" />
             <h2 className="text-lg font-semibold text-slate-900">Bulk Onboard Staff (CSV)</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-800 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -129,7 +129,7 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
         {/* Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-6 text-sm">
           {/* Step 1: Template download */}
-          <div className="bg-slate-800/40 border border-slate-700/60 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="bg-slate-50/40 border border-slate-200/60 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <h3 className="font-medium text-slate-900">Need a formatting template?</h3>
               <p className="text-xs text-slate-400 mt-0.5">Download our pre-formatted CSV template with standard headers.</p>
@@ -151,7 +151,7 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
               />
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-8 text-center cursor-pointer transition-colors bg-slate-900/40 hover:bg-slate-900/60"
+                className="border-2 border-dashed border-slate-200 hover:border-indigo-500 rounded-xl p-8 text-center cursor-pointer transition-colors bg-white/40 hover:bg-white/60"
               >
                 <FileText className="w-10 h-10 text-indigo-400 mx-auto mb-3" />
                 {file ? (
@@ -193,18 +193,18 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-[#1dbf73]/10 border border-emerald-500/20 rounded-xl p-4 text-center">
                   <p className="text-2xl font-bold text-[#1dbf73]">{results.success_count}</p>
-                  <p className="text-xs text-slate-300 mt-0.5">Added Successfully</p>
+                  <p className="text-xs text-slate-600 mt-0.5">Added Successfully</p>
                 </div>
                 <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 text-center">
                   <p className="text-2xl font-bold text-rose-400">{results.error_count}</p>
-                  <p className="text-xs text-slate-300 mt-0.5">Failed to Add</p>
+                  <p className="text-xs text-slate-600 mt-0.5">Failed to Add</p>
                 </div>
               </div>
 
-              <div className="border border-slate-800 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
+              <div className="border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-900 text-slate-400 text-xs border-b border-slate-800">
+                    <tr className="bg-white text-slate-400 text-xs border-b border-slate-200">
                       <th className="p-3 font-medium">Name</th>
                       <th className="p-3 font-medium">Email</th>
                       <th className="p-3 font-medium">Status</th>
@@ -212,7 +212,7 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 text-xs">
                     {results.results.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-slate-800/30">
+                      <tr key={idx} className="hover:bg-slate-50/30">
                         <td className="p-3 font-medium text-slate-900">{row.full_name}</td>
                         <td className="p-3 text-slate-400">{row.email}</td>
                         <td className="p-3">
@@ -236,7 +236,7 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-800 bg-slate-900/50 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-slate-200 bg-white/50 flex items-center justify-end gap-3">
           <Button variant="secondary" onClick={onClose} disabled={uploading}>
             {results ? 'Done' : 'Cancel'}
           </Button>

@@ -205,7 +205,7 @@ export default function AdminPayrollDashboard() {
                   variant="outline"
                   icon={<Download className="w-4 h-4" />}
                   onClick={handleExport}
-                  className="border-slate-200 text-slate-300 hover:bg-slate-100 hover:text-slate-900"
+                  className="border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 >
                   Export CSV
                 </Button>
@@ -241,8 +241,8 @@ export default function AdminPayrollDashboard() {
                         </td>
                         {res.status === 'success' && res.data ? (
                           <>
-                            <td className="py-3 px-5 text-right text-slate-300">{res.data.total_payable_days}</td>
-                            <td className="py-3 px-5 text-right text-slate-300">৳{res.data.gross_salary.toLocaleString()}</td>
+                            <td className="py-3 px-5 text-right text-slate-600">{res.data.total_payable_days}</td>
+                            <td className="py-3 px-5 text-right text-slate-600">৳{res.data.gross_salary.toLocaleString()}</td>
                             <td className="py-3 px-5 text-right text-rose-400">-৳{res.data.deductions.toLocaleString()}</td>
                             <td className="py-3 px-5 text-right font-bold text-[#1dbf73]">৳{res.data.net_payable.toLocaleString()}</td>
                           </>

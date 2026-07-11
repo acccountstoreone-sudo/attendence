@@ -73,28 +73,28 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                   <User className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs text-slate-500 font-medium">Full Legal Name</p>
-                    <p className="text-sm font-bold text-slate-100">{employee.full_name}</p>
+                    <p className="text-sm font-bold text-slate-900">{employee.full_name}</p>
                   </div>
                 </div>
                 <div className="flex gap-4 items-start">
                   <Mail className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs text-slate-500 font-medium">Email Address</p>
-                    <p className="text-sm font-bold text-slate-100 truncate max-w-[200px]" title={employee.email}>{employee.email}</p>
+                    <p className="text-sm font-bold text-slate-900 truncate max-w-[200px]" title={employee.email}>{employee.email}</p>
                   </div>
                 </div>
                 <div className="flex gap-4 items-start">
                   <Building2 className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs text-slate-500 font-medium">Assigned Branch</p>
-                    <p className="text-sm font-bold text-slate-100">{employee.branch_name || 'Global / Unassigned'}</p>
+                    <p className="text-sm font-bold text-slate-900">{employee.branch_name || 'Global / Unassigned'}</p>
                   </div>
                 </div>
                 <div className="flex gap-4 items-start">
                   <CreditCard className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs text-slate-500 font-medium">National ID Number</p>
-                    <p className="text-sm font-bold text-slate-100">{employee.nid || 'Not Provided'}</p>
+                    <p className="text-sm font-bold text-slate-900">{employee.nid || 'Not Provided'}</p>
                   </div>
                 </div>
               </div>
@@ -107,15 +107,15 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
               <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3">Automated Checks</p>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 rounded-xl bg-[#1dbf73]/5 border border-emerald-500/10">
-                  <span className="text-xs text-slate-300 font-medium">Liveness Check</span>
+                  <span className="text-xs text-slate-600 font-medium">Liveness Check</span>
                   <Badge status="present" variant="solid" className="text-[10px]">Passed</Badge>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/20">
-                  <span className="text-xs text-slate-300 font-medium">Face Enrollment</span>
+                  <span className="text-xs text-slate-600 font-medium">Face Enrollment</span>
                   <Badge status="present" variant="solid" className="text-[10px]">Captured</Badge>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-xl bg-slate-100/30 border border-slate-200">
-                  <span className="text-xs text-slate-300 font-medium">Document Scan</span>
+                  <span className="text-xs text-slate-600 font-medium">Document Scan</span>
                   {isMissingBoth ? (
                     <Badge status="absent" variant="solid" className="text-[10px]">Missing</Badge>
                   ) : (
@@ -133,7 +133,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
           <div className="h-16 border-b border-slate-200 flex items-center justify-between px-6 bg-white backdrop-blur-sm z-10">
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-slate-400" />
-              <span className="text-sm font-semibold text-slate-200">Document Inspector</span>
+              <span className="text-sm font-semibold text-slate-700">Document Inspector</span>
             </div>
             
             {/* Tab Switcher */}
@@ -143,7 +143,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                 className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
                   activeTab === 'front' 
                     ? 'bg-slate-100 text-slate-900 shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-200'
+                    : 'text-slate-400 hover:text-slate-700'
                 }`}
               >
                 Front Side
@@ -153,7 +153,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                 className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
                   activeTab === 'back' 
                     ? 'bg-slate-100 text-slate-900 shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-200'
+                    : 'text-slate-400 hover:text-slate-700'
                 }`}
               >
                 Back Side
@@ -162,7 +162,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
           </div>
 
           {/* Image Canvas */}
-          <div className="flex-1 relative overflow-hidden bg-[url('https://transparenttextures.com/patterns/cubes.png')] bg-[#02050A]">
+          <div className="flex-1 relative overflow-hidden bg-[url('https://transparenttextures.com/patterns/cubes.png')] bg-[#ffffff]">
             <AnimatePresence mode="wait">
               <motion.div 
                 key={activeTab}
@@ -181,7 +181,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                       className={`max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-transform duration-300 ${isZoomed ? 'scale-150 cursor-zoom-out' : 'cursor-zoom-in hover:scale-105'}`}
                       onClick={() => setIsZoomed(!isZoomed)}
                     />
-                    <div className="absolute bottom-4 right-4 bg-slate-900/40 backdrop-blur-md border border-slate-200 text-slate-900 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center gap-2">
+                    <div className="absolute bottom-4 right-4 bg-white/40 backdrop-blur-md border border-slate-200 text-slate-900 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center gap-2">
                       <Expand className="w-4 h-4" />
                       <span className="text-xs font-medium">Click to {isZoomed ? 'zoom out' : 'zoom in'}</span>
                     </div>
@@ -189,7 +189,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                 ) : (
                   <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-slate-200 rounded-2xl max-w-sm mx-auto">
                     <AlertTriangle className="w-12 h-12 text-slate-500 mb-4" />
-                    <p className="text-slate-300 font-bold mb-2">Document Missing</p>
+                    <p className="text-slate-600 font-bold mb-2">Document Missing</p>
                     <p className="text-xs text-slate-500">The employee did not upload the {activeTab} side of their National ID.</p>
                   </div>
                 )}

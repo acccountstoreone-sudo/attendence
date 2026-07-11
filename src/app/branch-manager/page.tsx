@@ -194,7 +194,7 @@ export default function BranchManagerDashboardPage() {
             <Store className="w-4 h-4 text-slate-400" />
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{storeName}</span>
           </div>
-          <h1 className="text-2xl font-semibold text-slate-100 tracking-tight">Store Console</h1>
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Store Console</h1>
           <p className="text-sm text-slate-400 mt-1">
             Supervise staff attendance, punctuality, and manual override requests.
           </p>
@@ -204,7 +204,7 @@ export default function BranchManagerDashboardPage() {
           <Button
             size="sm"
             variant="outline"
-            className="text-slate-400 hover:text-slate-900 border-slate-700"
+            className="text-slate-400 hover:text-slate-900 border-slate-200"
             icon={<RefreshCw className="w-4 h-4" />}
             onClick={() => fetchStoreDashboard()}
           >
@@ -261,12 +261,12 @@ export default function BranchManagerDashboardPage() {
             </div>
             <div className="flex -space-x-2">
               {pendingApprovals.slice(0, 3).map((emp) => (
-                <div key={emp.id} className="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#ffffff] flex items-center justify-center text-xs font-medium text-slate-300">
+                <div key={emp.id} className="w-8 h-8 rounded-full bg-slate-50 border-2 border-[#ffffff] flex items-center justify-center text-xs font-medium text-slate-600">
                   {emp.full_name.charAt(0)}
                 </div>
               ))}
               {pendingApprovals.length > 3 && (
-                <div className="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#ffffff] flex items-center justify-center text-xs font-medium text-slate-400">
+                <div className="w-8 h-8 rounded-full bg-slate-50 border-2 border-[#ffffff] flex items-center justify-center text-xs font-medium text-slate-400">
                   +{pendingApprovals.length - 3}
                 </div>
               )}
@@ -277,7 +277,7 @@ export default function BranchManagerDashboardPage() {
 
       {/* If there are pending approvals, show them in a flat list */}
       {pendingApprovals.length > 0 && (
-        <div className="bg-[#0A101C] rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-[#ffffff] rounded-xl border border-slate-200 overflow-hidden">
           <div className="bg-transparent border-b border-slate-200 px-5 py-3 flex items-center justify-between text-xs font-semibold text-slate-500 uppercase">
             <span>Pending KYC Reviews</span>
           </div>
@@ -285,7 +285,7 @@ export default function BranchManagerDashboardPage() {
              {pendingApprovals.map(emp => (
                <div key={emp.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-slate-100/20 transition-colors gap-3">
                  <div>
-                   <p className="text-slate-200 font-medium text-sm">{emp.full_name}</p>
+                   <p className="text-slate-700 font-medium text-sm">{emp.full_name}</p>
                    <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500">
                      <span>{emp.email}</span>
                      {emp.nid && !emp.nid.startsWith('doc_') && (
@@ -317,7 +317,7 @@ export default function BranchManagerDashboardPage() {
 
       {/* Clean Metric Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-[#0A101C] border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
+        <div className="bg-[#ffffff] border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
           <p className="text-xs font-medium text-slate-400">Total Staff</p>
           <div className="mt-2 text-2xl font-bold text-slate-900">
             {employees.length}
@@ -325,7 +325,7 @@ export default function BranchManagerDashboardPage() {
           <p className="text-[11px] text-slate-500 mt-1">Assigned to {storeName}</p>
         </div>
 
-        <div className="bg-[#0A101C] border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
+        <div className="bg-[#ffffff] border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
           <p className="text-xs font-medium text-[#1dbf73]">Present Today</p>
           <div className="mt-2 text-2xl font-bold text-slate-900">
             {presentCount}
@@ -335,7 +335,7 @@ export default function BranchManagerDashboardPage() {
           </p>
         </div>
 
-        <div className="bg-[#0A101C] border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
+        <div className="bg-[#ffffff] border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
           <p className="text-xs font-medium text-amber-500">Late Arrivals</p>
           <div className="mt-2 text-2xl font-bold text-slate-900">
             {lateCount}
@@ -343,7 +343,7 @@ export default function BranchManagerDashboardPage() {
           <p className="text-[11px] text-slate-500 mt-1">Arrived after grace period</p>
         </div>
 
-        <div className="bg-[#0A101C] border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
+        <div className="bg-[#ffffff] border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
           <p className="text-xs font-medium text-rose-400">Absent / Off</p>
           <div className="mt-2 text-2xl font-bold text-slate-900">
             {absentCount}
@@ -353,7 +353,7 @@ export default function BranchManagerDashboardPage() {
       </div>
 
       {/* Live Employee Status Table */}
-      <div className="bg-[#0A101C] rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-[#ffffff] rounded-xl border border-slate-200 overflow-hidden">
         <div className="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-transparent">
           <div>
             <h3 className="text-base font-semibold text-slate-900">Live Store Attendance Roster</h3>
@@ -365,7 +365,7 @@ export default function BranchManagerDashboardPage() {
               placeholder="Search staff..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-transparent border border-slate-200 rounded-lg text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition-colors"
+              className="w-full pl-9 pr-4 py-2 bg-transparent border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition-colors"
             />
           </div>
         </div>
@@ -393,11 +393,11 @@ export default function BranchManagerDashboardPage() {
                   <tr key={emp.id} className="hover:bg-slate-100/20 transition-colors">
                     <td className="py-3 px-5">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-medium text-xs shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 font-medium text-xs shrink-0">
                           {emp.full_name.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-medium text-slate-200 text-sm">{emp.full_name}</p>
+                          <p className="font-medium text-slate-700 text-sm">{emp.full_name}</p>
                           <p className="text-xs text-slate-500 mt-0.5">{emp.email}</p>
                         </div>
                       </div>
@@ -430,7 +430,7 @@ export default function BranchManagerDashboardPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-slate-400 hover:text-slate-200"
+                        className="text-slate-400 hover:text-slate-700"
                         onClick={() => router.push(`/branch-manager/corrections?user_id=${emp.id}`)}
                       >
                         Correction

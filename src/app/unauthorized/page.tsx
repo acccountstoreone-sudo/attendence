@@ -56,7 +56,7 @@ export default function UnauthorizedPage() {
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#1dbf73_1px,transparent_1px)] [background-size:20px_20px] mix-blend-overlay z-0" />
           
           <div className="relative z-10 space-y-4">
-            <p className="text-slate-300 text-sm text-center font-medium">
+            <p className="text-slate-600 text-sm text-center font-medium">
               This area is restricted to authorized personnel. Attempting to access permalinks outside of your role clearance is logged.
             </p>
 

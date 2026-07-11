@@ -185,7 +185,7 @@ export default function AdminDutyHoursPage() {
                 className={`px-3 py-2.5 rounded-xl border text-sm font-bold transition-all text-left ${
                   selectedBranchId === b.id
                     ? 'bg-blue-600/20 border-blue-500/50 text-blue-300 shadow-lg shadow-blue-950/50'
-                    : 'bg-white border-slate-200 text-slate-400 hover:border-slate-600 hover:text-slate-200'
+                    : 'bg-white border-slate-200 text-slate-400 hover:border-slate-600 hover:text-slate-700'
                 }`}
               >
                 <span className="block text-[10px] font-extrabold text-blue-400/70 uppercase tracking-wider mb-0.5">{b.code}</span>
@@ -408,14 +408,14 @@ export default function AdminDutyHoursPage() {
                                 </div>
                               </div>
                               <div className="flex flex-wrap gap-3 text-slate-400">
-                                <span>Grace: <strong className="text-slate-200">{entry.late_grace_minutes}min</strong></span>
-                                <span>OT Threshold: <strong className="text-slate-200">{entry.overtime_after_minutes}min after end</strong></span>
-                                <span>Half-day: <strong className="text-slate-200">&lt;{entry.half_day_hours}h</strong></span>
+                                <span>Grace: <strong className="text-slate-700">{entry.late_grace_minutes}min</strong></span>
+                                <span>OT Threshold: <strong className="text-slate-700">{entry.overtime_after_minutes}min after end</strong></span>
+                                <span>Half-day: <strong className="text-slate-700">&lt;{entry.half_day_hours}h</strong></span>
                                 {entry.change_reason && (
                                   <span>Reason: <strong className="text-amber-300">{entry.change_reason}</strong></span>
                                 )}
                                 {entry.profiles && (
-                                  <span>By: <strong className="text-slate-200">{entry.profiles.full_name}</strong></span>
+                                  <span>By: <strong className="text-slate-700">{entry.profiles.full_name}</strong></span>
                                 )}
                               </div>
                             </div>

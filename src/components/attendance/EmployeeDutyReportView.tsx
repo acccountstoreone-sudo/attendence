@@ -275,13 +275,13 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
         );
       case 'off_day':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800 text-slate-400 border border-slate-700 text-xs font-medium">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 text-slate-400 border border-slate-200 text-xs font-medium">
             Weekly Off Day
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800/60 text-slate-500 border border-slate-700/60 text-xs">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50/60 text-slate-500 border border-slate-200/60 text-xs">
             Upcoming
           </span>
         );
@@ -308,7 +308,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
   return (
     <div className="space-y-6">
       {/* Top Header Navigation */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#0A101C] border border-[#1E293B] p-6 rounded-2xl shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#ffffff] border border-[#ffffff] p-6 rounded-2xl shadow-xl">
         <div className="flex items-center space-x-4">
           {backUrl && (
             <Button
@@ -320,7 +320,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               <ArrowLeft className="w-5 h-5 mr-1" /> Back
             </Button>
           )}
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-slate-800 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-xl shrink-0 shadow-inner">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-slate-100 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-xl shrink-0 shadow-inner">
             {data?.employee?.full_name?.charAt(0) || <User className="w-6 h-6" />}
           </div>
           <div>
@@ -329,7 +329,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                 {data?.employee?.full_name || 'Loading Employee...'}
               </h1>
               {data?.employee?.employee_id && (
-                <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 font-mono text-xs border border-slate-700">
+                <span className="px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-mono text-xs border border-slate-200">
                   ID: {data.employee.employee_id}
                 </span>
               )}
@@ -339,7 +339,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                 <Building2 className="w-3.5 h-3.5 text-amber-400/80" />
                 {data?.employee?.branch_name || 'Assigned Branch'}
               </span>
-              <span className="capitalize px-2 py-0.5 rounded bg-slate-800/80 text-slate-300">
+              <span className="capitalize px-2 py-0.5 rounded bg-slate-50/80 text-slate-600">
                 {data?.employee?.role?.replace('_', ' ') || 'Staff'}
               </span>
             </div>
@@ -348,14 +348,14 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
 
         {/* Period Picker & Refresh */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center bg-[#141E33] border border-[#1E293B] rounded-xl p-1 shadow-inner">
+          <div className="flex items-center bg-[#f8fafc] border border-[#ffffff] rounded-xl p-1 shadow-inner">
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
-              className="bg-transparent text-slate-200 text-sm font-medium px-3 py-1.5 rounded-lg focus:outline-none focus:bg-slate-800 cursor-pointer"
+              className="bg-transparent text-slate-700 text-sm font-medium px-3 py-1.5 rounded-lg focus:outline-none focus:bg-slate-50 cursor-pointer"
             >
               {months.map((m, i) => (
-                <option key={m} value={i + 1} className="bg-[#0A101C] text-slate-200">
+                <option key={m} value={i + 1} className="bg-[#ffffff] text-slate-700">
                   {m}
                 </option>
               ))}
@@ -363,10 +363,10 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             <select
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              className="bg-transparent text-slate-200 text-sm font-medium px-3 py-1.5 rounded-lg focus:outline-none focus:bg-slate-800 border-l border-[#1E293B] cursor-pointer"
+              className="bg-transparent text-slate-700 text-sm font-medium px-3 py-1.5 rounded-lg focus:outline-none focus:bg-slate-50 border-l border-[#ffffff] cursor-pointer"
             >
               {years.map((y) => (
-                <option key={y} value={y} className="bg-[#0A101C] text-slate-200">
+                <option key={y} value={y} className="bg-[#ffffff] text-slate-700">
                   {y}
                 </option>
               ))}
@@ -378,7 +378,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             size="sm"
             onClick={() => setRefreshIndex((prev) => prev + 1)}
             disabled={loading}
-            className="text-slate-400 hover:text-slate-900 p-2 border border-[#1E293B] rounded-xl"
+            className="text-slate-400 hover:text-slate-900 p-2 border border-[#ffffff] rounded-xl"
             title="Refresh Data"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -387,13 +387,13 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
       </div>
 
       {/* Export Controls Toolbar */}
-      <div className="bg-gradient-to-r from-[#0E1726] to-[#141E33] border border-amber-500/20 rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
+      <div className="bg-gradient-to-r from-[#ffffff] to-[#f8fafc] border border-amber-500/20 rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
             <FileText className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-semibold text-slate-200 text-sm">Detailed Export & Reports</h3>
+            <h3 className="font-semibold text-slate-700 text-sm">Detailed Export & Reports</h3>
             <p className="text-xs text-slate-400">Download complete month-wise and day-wise overtime & duty analytics</p>
           </div>
         </div>
@@ -404,7 +404,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             disabled={exporting !== null || loading || !data}
             variant="outline"
             size="sm"
-            className="flex-1 md:flex-none border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs gap-1.5"
+            className="flex-1 md:flex-none border-slate-200 bg-slate-50/80 hover:bg-slate-100 text-slate-700 text-xs gap-1.5"
           >
             {exporting === 'csv' ? <Spinner size="sm" /> : <FileText className="w-3.5 h-3.5 text-sky-400" />}
             Export CSV
@@ -414,7 +414,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             disabled={exporting !== null || loading || !data}
             variant="outline"
             size="sm"
-            className="flex-1 md:flex-none border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs gap-1.5"
+            className="flex-1 md:flex-none border-slate-200 bg-slate-50/80 hover:bg-slate-100 text-slate-700 text-xs gap-1.5"
           >
             {exporting === 'excel' ? <Spinner size="sm" /> : <FileSpreadsheet className="w-3.5 h-3.5 text-[#1dbf73]" />}
             Export Excel
@@ -433,7 +433,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-28 bg-[#0A101C] rounded-2xl border border-[#1E293B]">
+        <div className="flex flex-col items-center justify-center py-28 bg-[#ffffff] rounded-2xl border border-[#ffffff]">
           <Spinner size="lg" />
           <p className="text-sm text-slate-400 mt-3 animate-pulse">Calculating duty hours, overtime, and punctuality breakdown...</p>
         </div>
@@ -458,7 +458,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
 
           {/* Today's Real-time Duty Spotlight Card */}
           {month === currentDate.getMonth() + 1 && year === currentDate.getFullYear() && (
-            <div className="bg-gradient-to-r from-amber-500/15 via-[#0A101C] to-cyan-500/15 border border-amber-500/30 rounded-2xl p-5 relative overflow-hidden shadow-2xl">
+            <div className="bg-gradient-to-r from-amber-500/15 via-[#ffffff] to-cyan-500/15 border border-amber-500/30 rounded-2xl p-5 relative overflow-hidden shadow-2xl">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-amber-500/20 pb-4 mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 animate-pulse">
@@ -469,7 +469,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                       <h3 className="font-bold text-slate-900 text-base">Today&apos;s Real-Time Duty Spotlight</h3>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500 text-slate-950">LIVE</span>
                     </div>
-                    <p className="text-xs text-slate-300 mt-0.5">Instant attendance, punctuality, and face/GPS status for today ({new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Dhaka', month: 'short', day: 'numeric', year: 'numeric' })})</p>
+                    <p className="text-xs text-slate-600 mt-0.5">Instant attendance, punctuality, and face/GPS status for today ({new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Dhaka', month: 'short', day: 'numeric', year: 'numeric' })})</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -477,7 +477,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                     data.summary.today_status === 'present' ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/40' :
                     data.summary.today_status === 'late' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
                     data.summary.today_status === 'half_day' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' :
-                    'bg-slate-800 text-slate-400 border border-slate-700'
+                    'bg-slate-50 text-slate-400 border border-slate-200'
                   }`}>
                     Today: {data.summary.today_status || 'Upcoming'}
                   </span>
@@ -485,22 +485,22 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-center sm:text-left">
-                <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
+                <div className="bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff]">
                   <p className="text-[11px] font-medium text-slate-400">Check-In Time</p>
                   <p className="text-sm font-bold text-slate-900 mt-1">{data.summary.today_check_in_time || '--:--'}</p>
                 </div>
 
-                <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
+                <div className="bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff]">
                   <p className="text-[11px] font-medium text-slate-400">Check-Out Time</p>
                   <p className="text-sm font-bold text-slate-900 mt-1">{data.summary.today_check_out_time || '--:--'}</p>
                 </div>
 
-                <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
+                <div className="bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff]">
                   <p className="text-[11px] font-medium text-slate-400">Duty Hours Today</p>
                   <p className="text-sm font-bold text-amber-400 mt-1">{data.summary.today_duty_hours || 0} hrs</p>
                 </div>
 
-                <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
+                <div className="bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff]">
                   <p className="text-[11px] font-medium text-slate-400">Punctuality</p>
                   {data.summary.today_late_minutes && data.summary.today_late_minutes > 0 ? (
                     <p className="text-sm font-bold text-rose-400 mt-1">{data.summary.today_late_minutes}m late ({data.summary.today_late_hours}h)</p>
@@ -511,12 +511,12 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                   )}
                 </div>
 
-                <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
+                <div className="bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff]">
                   <p className="text-[11px] font-medium text-slate-400">Today Overtime</p>
                   <p className="text-sm font-bold text-[#1dbf73] mt-1">{data.summary.today_overtime_minutes || 0}m ({data.summary.today_overtime_hours || 0}h)</p>
                 </div>
 
-                <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B] flex flex-col justify-between">
+                <div className="bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff] flex flex-col justify-between">
                   <p className="text-[11px] font-medium text-slate-400">Biometric & GPS</p>
                   <div className="flex items-center justify-between gap-1 mt-1">
                     <span className={`text-xs font-bold ${data.summary.today_face_verified ? 'text-[#1dbf73]' : 'text-slate-400'}`}>
@@ -544,7 +544,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
           )}
 
           {/* Admin & Management Control Center Card */}
-          <div className="bg-[#0A101C] border border-[#1E293B] rounded-2xl p-5 shadow-xl">
+          <div className="bg-[#ffffff] border border-[#ffffff] rounded-2xl p-5 shadow-xl">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
               {/* Left: Registration & Biometric Status */}
               <div className="space-y-3 flex-1">
@@ -553,16 +553,16 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                   <h3 className="font-bold text-slate-900 text-base">Employee Profile & Biometric Verification Center</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="bg-[#141E33]/80 p-3 rounded-xl border border-[#1E293B]">
+                  <div className="bg-[#f8fafc]/80 p-3 rounded-xl border border-[#ffffff]">
                     <span className="text-[11px] font-medium text-slate-400 block">App Registration Date</span>
-                    <span className="text-xs font-bold text-slate-200 mt-1 block">
+                    <span className="text-xs font-bold text-slate-700 mt-1 block">
                       {data.employee.created_at ? new Date(data.employee.created_at).toLocaleDateString('en-US', {
                         year: 'numeric', month: 'long', day: 'numeric',
                       }) : 'Date Not Recorded'}
                     </span>
                   </div>
 
-                  <div className="bg-[#141E33]/80 p-3 rounded-xl border border-[#1E293B]">
+                  <div className="bg-[#f8fafc]/80 p-3 rounded-xl border border-[#ffffff]">
                     <span className="text-[11px] font-medium text-slate-400 block">Biometric KYC Status</span>
                     <div className="flex items-center justify-between mt-1">
                       <span className={`text-xs font-bold flex items-center gap-1.5 ${
@@ -584,13 +584,13 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               </div>
 
               {/* Middle: Now Location vs First Verified Location */}
-              <div className="space-y-3 flex-1 border-t lg:border-t-0 lg:border-l border-[#1E293B] pt-4 lg:pt-0 lg:pl-6">
+              <div className="space-y-3 flex-1 border-t lg:border-t-0 lg:border-l border-[#ffffff] pt-4 lg:pt-0 lg:pl-6">
                 <div className="flex items-center gap-2">
                   <LocateFixed className="w-5 h-5 text-amber-400" />
                   <h3 className="font-bold text-slate-900 text-base">Live GPS Coordinates & Verification Tracking</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="bg-[#141E33]/80 p-3 rounded-xl border border-[#1E293B] relative group">
+                  <div className="bg-[#f8fafc]/80 p-3 rounded-xl border border-[#ffffff] relative group">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-medium text-slate-400">Now Location (Live)</span>
                       {data.employee.last_known_latitude && data.employee.last_known_longitude && (
@@ -607,7 +607,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                         </button>
                       )}
                     </div>
-                    <p className="text-xs font-mono font-bold text-slate-200 mt-1">
+                    <p className="text-xs font-mono font-bold text-slate-700 mt-1">
                       {data.employee.last_known_latitude && data.employee.last_known_longitude
                         ? `${data.employee.last_known_latitude.toFixed(5)}, ${data.employee.last_known_longitude.toFixed(5)}`
                         : 'No Live GPS Received'}
@@ -617,7 +617,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                     )}
                   </div>
 
-                  <div className="bg-[#141E33]/80 p-3 rounded-xl border border-[#1E293B] relative group">
+                  <div className="bg-[#f8fafc]/80 p-3 rounded-xl border border-[#ffffff] relative group">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-medium text-slate-400">First Verified Location</span>
                       {data.employee.first_verified_latitude && data.employee.first_verified_longitude && (
@@ -634,7 +634,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                         </button>
                       )}
                     </div>
-                    <p className="text-xs font-mono font-bold text-slate-200 mt-1">
+                    <p className="text-xs font-mono font-bold text-slate-700 mt-1">
                       {data.employee.first_verified_latitude && data.employee.first_verified_longitude
                         ? `${data.employee.first_verified_latitude.toFixed(5)}, ${data.employee.first_verified_longitude.toFixed(5)}`
                         : 'No Initial GPS Logged'}
@@ -647,7 +647,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               </div>
 
               {/* Right: Actions */}
-              <div className="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0 border-t lg:border-t-0 lg:border-l border-[#1E293B] pt-4 lg:pt-0 lg:pl-6 justify-center">
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0 border-t lg:border-t-0 lg:border-l border-[#ffffff] pt-4 lg:pt-0 lg:pl-6 justify-center">
                 <Button
                   onClick={handleResetFaceVerification}
                   disabled={resettingFace || data.employee.requires_face_reverification}
@@ -660,7 +660,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                 <Button
                   onClick={() => setRefreshIndex(prev => prev + 1)}
                   variant="outline"
-                  className="w-full text-xs font-semibold flex items-center justify-center gap-2 py-2 border-[#1E293B] hover:bg-slate-800"
+                  className="w-full text-xs font-semibold flex items-center justify-center gap-2 py-2 border-[#ffffff] hover:bg-slate-50"
                 >
                   <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
                   Refresh Location & Status
@@ -672,7 +672,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
           {/* 6 KPI Cards Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {/* 1. Duty Hours */}
-            <Card className="bg-[#0A101C]/90 border-[#1E293B] p-4 relative overflow-hidden group hover:border-amber-500/30 transition-all">
+            <Card className="bg-[#ffffff]/90 border-[#ffffff] p-4 relative overflow-hidden group hover:border-amber-500/30 transition-all">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-slate-400">Total Duty Hours</span>
                 <Clock className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
@@ -682,7 +682,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             </Card>
 
             {/* 2. Overtime */}
-            <Card className="bg-[#0A101C]/90 border-[#1E293B] p-4 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
+            <Card className="bg-[#ffffff]/90 border-[#ffffff] p-4 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-slate-400">Total Overtime</span>
                 <TrendingUp className="w-4 h-4 text-[#1dbf73] group-hover:scale-110 transition-transform" />
@@ -692,7 +692,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             </Card>
 
             {/* 3. Missed Days */}
-            <Card className="bg-[#0A101C]/90 border-rose-500/20 p-4 relative overflow-hidden group hover:border-rose-500/40 transition-all bg-gradient-to-br from-rose-500/5 to-[#0A101C]">
+            <Card className="bg-[#ffffff]/90 border-rose-500/20 p-4 relative overflow-hidden group hover:border-rose-500/40 transition-all bg-gradient-to-br from-rose-500/5 to-[#ffffff]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-rose-300">Missed / Absent</span>
                 <XCircle className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform animate-pulse" />
@@ -702,7 +702,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             </Card>
 
             {/* 4. Late Minutes & Days */}
-            <Card className="bg-[#0A101C]/90 border-amber-500/20 p-4 relative overflow-hidden group hover:border-amber-500/40 transition-all bg-gradient-to-br from-amber-500/5 to-[#0A101C]">
+            <Card className="bg-[#ffffff]/90 border-amber-500/20 p-4 relative overflow-hidden group hover:border-amber-500/40 transition-all bg-gradient-to-br from-amber-500/5 to-[#ffffff]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-amber-300">Total Late Time</span>
                 <AlertCircle className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
@@ -712,7 +712,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             </Card>
 
             {/* 5. Present Days */}
-            <Card className="bg-[#0A101C]/90 border-[#1E293B] p-4 relative overflow-hidden group hover:border-sky-500/30 transition-all">
+            <Card className="bg-[#ffffff]/90 border-[#ffffff] p-4 relative overflow-hidden group hover:border-sky-500/30 transition-all">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-slate-400">Present Days</span>
                 <CheckCircle2 className="w-4 h-4 text-sky-400 group-hover:scale-110 transition-transform" />
@@ -722,7 +722,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             </Card>
 
             {/* 6. Leave & Off Days */}
-            <Card className="bg-[#0A101C]/90 border-[#1E293B] p-4 relative overflow-hidden group hover:border-purple-500/30 transition-all">
+            <Card className="bg-[#ffffff]/90 border-[#ffffff] p-4 relative overflow-hidden group hover:border-purple-500/30 transition-all">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-slate-400">Leave & Off Days</span>
                 <Calendar className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
@@ -733,11 +733,11 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
           </div>
 
           {/* Daily Breakdown Section */}
-          <div className="bg-[#0A101C] border border-[#1E293B] rounded-2xl overflow-hidden shadow-xl">
+          <div className="bg-[#ffffff] border border-[#ffffff] rounded-2xl overflow-hidden shadow-xl">
             {/* Table Header Controls */}
-            <div className="p-5 border-b border-[#1E293B] flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="p-5 border-b border-[#ffffff] flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h3 className="font-bold text-slate-200 text-base">Day-by-Day Duty Roster ({months[month - 1]} {year})</h3>
+                <h3 className="font-bold text-slate-700 text-base">Day-by-Day Duty Roster ({months[month - 1]} {year})</h3>
                 <p className="text-xs text-slate-400 mt-0.5">Exact daily check-in, check-out, duty hours, overtime, and punctuality log</p>
               </div>
 
@@ -750,12 +750,12 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                     placeholder="Search date, status, notes..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-[#141E33] border border-[#1E293B] rounded-xl pl-9 pr-4 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/50"
+                    className="w-full bg-[#f8fafc] border border-[#ffffff] rounded-xl pl-9 pr-4 py-1.5 text-xs text-slate-700 placeholder-slate-500 focus:outline-none focus:border-amber-500/50"
                   />
                 </div>
 
                 {/* Filter Tabs */}
-                <div className="flex items-center bg-[#141E33] p-1 rounded-xl border border-[#1E293B] w-full sm:w-auto overflow-x-auto">
+                <div className="flex items-center bg-[#f8fafc] p-1 rounded-xl border border-[#ffffff] w-full sm:w-auto overflow-x-auto">
                   <button
                     onClick={() => setFilterTab('all')}
                     className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'all' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-900'}`}
@@ -794,7 +794,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[#0E1726]/80 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-[#1E293B]">
+                  <tr className="bg-[#ffffff]/80 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-[#ffffff]">
                     <th className="py-3.5 px-4">Date</th>
                     <th className="py-3.5 px-4">Day</th>
                     <th className="py-3.5 px-4">Status</th>
@@ -807,7 +807,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                     <th className="py-3.5 px-4">Notes / Remark</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#1E293B]/60 text-xs">
+                <tbody className="divide-y divide-[#ffffff]/60 text-xs">
                   {filteredLogs.length === 0 ? (
                     <tr>
                       <td colSpan={10} className="py-16 text-center text-slate-500">
@@ -818,14 +818,14 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                     filteredLogs.map((log) => (
                       <tr
                         key={log.date}
-                        className={`hover:bg-[#141E33]/60 transition-colors ${log.status === 'missed' ? 'bg-rose-500/[0.03]' : log.status === 'late' ? 'bg-amber-500/[0.03]' : ''}`}
+                        className={`hover:bg-[#f8fafc]/60 transition-colors ${log.status === 'missed' ? 'bg-rose-500/[0.03]' : log.status === 'late' ? 'bg-amber-500/[0.03]' : ''}`}
                       >
-                        <td className="py-3.5 px-4 font-mono font-medium text-slate-200">{log.date}</td>
+                        <td className="py-3.5 px-4 font-mono font-medium text-slate-700">{log.date}</td>
                         <td className="py-3.5 px-4 text-slate-400">{log.day_name}</td>
                         <td className="py-3.5 px-4">{getStatusBadge(log.status, log.late_minutes, log.overtime_minutes)}</td>
-                        <td className="py-3.5 px-4 font-mono text-slate-300">{log.check_in_time}</td>
-                        <td className="py-3.5 px-4 font-mono text-slate-300">{log.check_out_time}</td>
-                        <td className="py-3.5 px-4 text-center font-bold text-slate-200">
+                        <td className="py-3.5 px-4 font-mono text-slate-600">{log.check_in_time}</td>
+                        <td className="py-3.5 px-4 font-mono text-slate-600">{log.check_out_time}</td>
+                        <td className="py-3.5 px-4 text-center font-bold text-slate-700">
                           {log.duty_hours > 0 ? `${log.duty_hours}h` : '-'}
                         </td>
                         <td className="py-3.5 px-4 text-center font-mono">
@@ -894,9 +894,9 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
 
       {/* Interactive Map Modal */}
       {showMapModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#0E1726] border border-[#1E293B] rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-[#1E293B] flex items-center justify-between bg-[#141E33]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#ffffff] border border-[#ffffff] rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
+            <div className="p-4 border-b border-[#ffffff] flex items-center justify-between bg-[#f8fafc]">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
                   <MapPin className="w-4 h-4" />
@@ -908,15 +908,15 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               </div>
               <button
                 onClick={() => setShowMapModal(null)}
-                className="w-8 h-8 rounded-lg bg-[#0A101C] border border-[#1E293B] text-slate-400 hover:text-slate-900 flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-lg bg-[#ffffff] border border-[#ffffff] text-slate-400 hover:text-slate-900 flex items-center justify-center transition-colors"
               >
                 ✕
               </button>
             </div>
 
-            <div className="p-4 bg-[#0A101C]">
+            <div className="p-4 bg-[#ffffff]">
               {/* Embedded OpenStreetMap / Leaflet preview or Google Maps iframe */}
-              <div className="w-full h-80 rounded-xl overflow-hidden border border-[#1E293B] bg-slate-900 relative">
+              <div className="w-full h-80 rounded-xl overflow-hidden border border-[#ffffff] bg-white relative">
                 <iframe
                   title="GPS Location Map"
                   width="100%"
@@ -927,8 +927,8 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                 />
               </div>
 
-              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
-                <div className="text-xs font-mono text-slate-300">
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff]">
+                <div className="text-xs font-mono text-slate-600">
                   <span className="text-slate-500">Lat:</span> {showMapModal.lat.toFixed(6)}, <span className="text-slate-500">Lng:</span> {showMapModal.lng.toFixed(6)}
                 </div>
                 <div className="flex items-center gap-2">

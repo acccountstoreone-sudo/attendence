@@ -195,7 +195,7 @@ export default function BranchManagerAttendancePage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-slate-200 bg-white/50 text-slate-300 hover:bg-slate-100 hover:text-slate-900"
+            className="border-slate-200 bg-white/50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             icon={<RefreshCw className="w-4 h-4" />}
             onClick={fetchAttendance}
           >
@@ -204,7 +204,7 @@ export default function BranchManagerAttendancePage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-slate-200 bg-white/50 text-slate-300 hover:bg-slate-100 hover:text-slate-900"
+            className="border-slate-200 bg-white/50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             icon={<Download className="w-4 h-4" />}
             onClick={handleExport}
             disabled={filteredRecords.length === 0}
@@ -249,7 +249,7 @@ export default function BranchManagerAttendancePage() {
               className={`flex items-center gap-2 px-5 py-3.5 text-xs font-extrabold uppercase tracking-widest transition-all border-b-2 ${
                 activeTab === tab.key
                   ? 'border-[#1dbf73] text-[#1dbf73] bg-[#1dbf73]/5'
-                  : 'border-transparent text-slate-500 hover:text-slate-300'
+                  : 'border-transparent text-slate-500 hover:text-slate-600'
               }`}
             >
               {tab.icon}
@@ -283,7 +283,7 @@ export default function BranchManagerAttendancePage() {
               value={selectedDate}
               max={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`}
               onChange={e => setSelectedDate(e.target.value)}
-              className="bg-transparent text-sm text-slate-300 focus:outline-none"
+              className="bg-transparent text-sm text-slate-600 focus:outline-none"
             />
           </div>
         </div>
@@ -345,19 +345,19 @@ export default function BranchManagerAttendancePage() {
 
                         {/* Location */}
                         <td className="py-4 px-6">
-                          <div className="flex items-center text-slate-300 text-sm">
+                          <div className="flex items-center text-slate-600 text-sm">
                             <MapPin className="w-4 h-4 text-[#1dbf73]/60 mr-2 shrink-0" />
                             {rec.branch_name}
                           </div>
                         </td>
 
                         {/* Check-In */}
-                        <td className="py-4 px-6 text-slate-300 font-mono text-xs">
+                        <td className="py-4 px-6 text-slate-600 font-mono text-xs">
                           {formatTime(rec.check_in_time)}
                         </td>
 
                         {/* Check-Out */}
-                        <td className="py-4 px-6 text-slate-300 font-mono text-xs">
+                        <td className="py-4 px-6 text-slate-600 font-mono text-xs">
                           {rec.check_out_time
                             ? formatTime(rec.check_out_time)
                             : <span className="text-slate-500 italic">Not checked out</span>}

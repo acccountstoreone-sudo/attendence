@@ -120,7 +120,7 @@ export default function AdminAnalyticsPage() {
 
           {/* Month-over-Month Trend Chart */}
           <motion.div custom={4} variants={cardVariant} initial="hidden" animate="visible">
-            <Card className="p-5 bg-slate-800/60">
+            <Card className="p-5 bg-slate-50/60">
               <h2 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-indigo-400" /> 6-Month Attendance Trend
               </h2>
@@ -142,7 +142,7 @@ export default function AdminAnalyticsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Branch Leaderboard */}
             <motion.div custom={5} variants={cardVariant} initial="hidden" animate="visible">
-              <Card className="p-5 bg-slate-800/60">
+              <Card className="p-5 bg-slate-50/60">
                 <h2 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2">
                   <Trophy className="w-4 h-4 text-[#1dbf73]" /> Branch Leaderboard — {data.month_label}
                 </h2>
@@ -151,8 +151,8 @@ export default function AdminAnalyticsPage() {
                 ) : (
                   <div className="space-y-2">
                     {data.branch_leaderboard.map((b, idx) => (
-                      <div key={b.branch_id} className="flex items-center gap-3 p-2 rounded-lg bg-slate-700/40">
-                        <span className={`text-sm font-bold w-6 text-center ${idx === 0 ? 'text-amber-400' : idx === 1 ? 'text-slate-300' : idx === 2 ? 'text-orange-400' : 'text-slate-500'}`}>
+                      <div key={b.branch_id} className="flex items-center gap-3 p-2 rounded-lg bg-slate-100/40">
+                        <span className={`text-sm font-bold w-6 text-center ${idx === 0 ? 'text-amber-400' : idx === 1 ? 'text-slate-600' : idx === 2 ? 'text-orange-400' : 'text-slate-500'}`}>
                           #{idx + 1}
                         </span>
                         <div className="flex-1 min-w-0">
@@ -171,7 +171,7 @@ export default function AdminAnalyticsPage() {
 
             {/* Chronic Latecomers */}
             <motion.div custom={6} variants={cardVariant} initial="hidden" animate="visible">
-              <Card className="p-5 bg-slate-800/60">
+              <Card className="p-5 bg-slate-50/60">
                 <h2 className="text-base font-semibold text-slate-900 mb-1 flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-400" /> Chronic Latecomers
                 </h2>
@@ -197,7 +197,7 @@ export default function AdminAnalyticsPage() {
 
           {/* Absent Today */}
           <motion.div custom={7} variants={cardVariant} initial="hidden" animate="visible">
-            <Card className="p-5 bg-slate-800/60">
+            <Card className="p-5 bg-slate-50/60">
               <h2 className="text-base font-semibold text-slate-900 mb-4 flex items-center gap-2">
                 <UserX className="w-4 h-4 text-red-400" /> Not Checked In Today ({data.absent_today.length})
               </h2>

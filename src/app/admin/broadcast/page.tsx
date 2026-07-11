@@ -189,7 +189,7 @@ export default function BroadcastPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-white/40 backdrop-blur-sm p-4"
             onClick={() => setShowConfirm(false)}
           >
             <motion.div
@@ -212,7 +212,7 @@ export default function BroadcastPage() {
                 <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">Title</p>
                 <p className="text-slate-900 font-semibold text-sm">{title}</p>
                 <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mt-2">Message</p>
-                <p className="text-slate-300 text-sm leading-relaxed">{message}</p>
+                <p className="text-slate-600 text-sm leading-relaxed">{message}</p>
               </div>
               <p className="text-xs text-amber-400 text-center mb-5">
                 ⚠ This will notify every active staff member across all branches.

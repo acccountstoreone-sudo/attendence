@@ -207,7 +207,7 @@ export default function StoreSettingsPage() {
 
   if (!branchData) {
     return (
-      <Card className="bg-[#0A101C] border border-slate-200 p-8 text-center text-slate-300">
+      <Card className="bg-[#ffffff] border border-slate-200 p-8 text-center text-slate-600">
         <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-slate-900 mb-2">No Assigned Store Found</h2>
         <p className="text-sm text-slate-400">
@@ -223,7 +223,7 @@ export default function StoreSettingsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold text-slate-100 tracking-tight">
+            <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
               Store Profile, Location & Duty Timings
             </h1>
             <span className="px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono text-xs font-bold">
@@ -244,7 +244,7 @@ export default function StoreSettingsPage() {
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
             activeTab === 'location'
               ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-slate-900 shadow-lg shadow-amber-600/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50/50'
           }`}
         >
           <MapPin className="w-4 h-4 shrink-0" />
@@ -256,7 +256,7 @@ export default function StoreSettingsPage() {
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
             activeTab === 'duty'
               ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-slate-900 shadow-lg shadow-amber-600/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50/50'
           }`}
         >
           <Clock className="w-4 h-4 shrink-0" />
@@ -288,7 +288,7 @@ export default function StoreSettingsPage() {
         <form onSubmit={handleSaveLocation} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Store Profile Card */}
-            <Card className="bg-[#0A101C] border border-slate-200 p-6 rounded-xl shadow-md space-y-5">
+            <Card className="bg-[#ffffff] border border-slate-200 p-6 rounded-xl shadow-md space-y-5">
               <div className="flex items-center space-x-3 border-b border-slate-200 pb-4">
                 <div className="p-2 bg-amber-500/10 rounded-lg text-amber-400">
                   <Store className="w-5 h-5" />
@@ -304,7 +304,7 @@ export default function StoreSettingsPage() {
                 required
                 value={branchData.name}
                 onChange={(e) => setBranchData({ ...branchData, name: e.target.value })}
-                className="bg-white border-slate-200 focus:border-amber-500 text-slate-200"
+                className="bg-white border-slate-200 focus:border-amber-500 text-slate-700"
               />
 
               <div className="grid grid-cols-2 gap-4">
@@ -312,14 +312,14 @@ export default function StoreSettingsPage() {
                   label="Branch Code (Read Only)"
                   disabled
                   value={branchData.code}
-                  className="bg-slate-900/80 border-slate-200 text-slate-400 font-mono cursor-not-allowed"
+                  className="bg-white/80 border-slate-200 text-slate-400 font-mono cursor-not-allowed"
                 />
                 <Input
                   label="Contact Phone"
                   placeholder="e.g. 01712-345678"
                   value={branchData.phone}
                   onChange={(e) => setBranchData({ ...branchData, phone: e.target.value })}
-                  className="bg-white border-slate-200 focus:border-amber-500 text-slate-200"
+                  className="bg-white border-slate-200 focus:border-amber-500 text-slate-700"
                 />
               </div>
 
@@ -328,7 +328,7 @@ export default function StoreSettingsPage() {
                 placeholder="e.g. Plot 12, Road 5, Dhanmondi"
                 value={branchData.address}
                 onChange={(e) => setBranchData({ ...branchData, address: e.target.value })}
-                className="bg-white border-slate-200 focus:border-amber-500 text-slate-200"
+                className="bg-white border-slate-200 focus:border-amber-500 text-slate-700"
               />
 
               <Input
@@ -336,12 +336,12 @@ export default function StoreSettingsPage() {
                 placeholder="e.g. Dhaka"
                 value={branchData.city}
                 onChange={(e) => setBranchData({ ...branchData, city: e.target.value })}
-                className="bg-white border-slate-200 focus:border-amber-500 text-slate-200"
+                className="bg-white border-slate-200 focus:border-amber-500 text-slate-700"
               />
             </Card>
 
             {/* Geofence Settings Card */}
-            <Card className="bg-[#0A101C] border border-slate-200 p-6 rounded-xl shadow-md space-y-5 flex flex-col justify-between">
+            <Card className="bg-[#ffffff] border border-slate-200 p-6 rounded-xl shadow-md space-y-5 flex flex-col justify-between">
               <div className="space-y-5">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                   <div className="flex items-center space-x-3">
@@ -380,7 +380,7 @@ export default function StoreSettingsPage() {
                         latitude: e.target.value ? Number(e.target.value) : null,
                       })
                     }
-                    className="bg-white border-slate-200 focus:border-amber-500 text-slate-200 font-mono text-sm"
+                    className="bg-white border-slate-200 focus:border-amber-500 text-slate-700 font-mono text-sm"
                   />
                   <Input
                     label="Longitude"
@@ -394,12 +394,12 @@ export default function StoreSettingsPage() {
                         longitude: e.target.value ? Number(e.target.value) : null,
                       })
                     }
-                    className="bg-white border-slate-200 focus:border-amber-500 text-slate-200 font-mono text-sm"
+                    className="bg-white border-slate-200 focus:border-amber-500 text-slate-700 font-mono text-sm"
                   />
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between text-sm text-slate-300 mb-2">
+                  <div className="flex items-center justify-between text-sm text-slate-600 mb-2">
                     <span className="font-semibold flex items-center gap-2">
                       <Sliders className="w-4 h-4 text-amber-400" />
                       Geofence Radius (Meters)
@@ -417,7 +417,7 @@ export default function StoreSettingsPage() {
                     onChange={(e) =>
                       setBranchData({ ...branchData, geofence_radius_meters: Number(e.target.value) || 100 })
                     }
-                    className="w-full accent-amber-500 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                    className="w-full accent-amber-500 cursor-pointer h-2 bg-slate-50 rounded-lg"
                   />
                   <div className="flex justify-between text-[11px] text-slate-500 mt-1 font-mono">
                     <span>10m (Strict Retail)</span>
@@ -427,17 +427,17 @@ export default function StoreSettingsPage() {
                 </div>
               </div>
 
-              <div className="bg-slate-900/60 rounded-xl p-3.5 border border-slate-200 text-xs text-slate-400 flex items-start gap-2.5">
+              <div className="bg-white/60 rounded-xl p-3.5 border border-slate-200 text-xs text-slate-400 flex items-start gap-2.5">
                 <Info className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
                 <span>
-                  Staff must physically be within <strong className="text-slate-200 font-semibold">{branchData.geofence_radius_meters} meters</strong> of these coordinates to successfully submit biometric check-ins.
+                  Staff must physically be within <strong className="text-slate-700 font-semibold">{branchData.geofence_radius_meters} meters</strong> of these coordinates to successfully submit biometric check-ins.
                 </span>
               </div>
             </Card>
           </div>
 
           {/* Map Picker Card */}
-          <Card className="bg-[#0A101C] border border-slate-200 p-6 rounded-xl shadow-md space-y-4">
+          <Card className="bg-[#ffffff] border border-slate-200 p-6 rounded-xl shadow-md space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <h3 className="text-md font-semibold text-slate-900 flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-amber-400" />
@@ -484,7 +484,7 @@ export default function StoreSettingsPage() {
         <form onSubmit={handleSaveDuty} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Shift Timings */}
-            <Card className="bg-[#0A101C] border border-slate-200 p-6 rounded-xl shadow-md space-y-5">
+            <Card className="bg-[#ffffff] border border-slate-200 p-6 rounded-xl shadow-md space-y-5">
               <div className="flex items-center space-x-3 border-b border-slate-200 pb-4">
                 <div className="p-2 bg-amber-500/10 rounded-lg text-amber-400">
                   <Clock className="w-5 h-5" />
@@ -502,7 +502,7 @@ export default function StoreSettingsPage() {
                 required
                 value={settings.work_start_time}
                 onChange={(e) => setSettings({ ...settings, work_start_time: e.target.value })}
-                className="bg-white border-slate-200 focus:border-amber-500 text-slate-200"
+                className="bg-white border-slate-200 focus:border-amber-500 text-slate-700"
               />
               <Input
                 label="Standard Work End Time"
@@ -511,21 +511,21 @@ export default function StoreSettingsPage() {
                 required
                 value={settings.work_end_time}
                 onChange={(e) => setSettings({ ...settings, work_end_time: e.target.value })}
-                className="bg-white border-slate-200 focus:border-amber-500 text-slate-200"
+                className="bg-white border-slate-200 focus:border-amber-500 text-slate-700"
               />
 
               <div className="pt-2">
-                <p className="text-xs text-slate-400 bg-slate-900/60 p-3 rounded-lg border border-slate-200 flex items-start gap-2">
+                <p className="text-xs text-slate-400 bg-white/60 p-3 rounded-lg border border-slate-200 flex items-start gap-2">
                   <Info className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
                   <span>
-                    Staff checking in after <strong className="text-slate-200 font-semibold">{settings.work_start_time}</strong> plus the Late Grace Period below will automatically be marked as <strong className="text-rose-400 font-semibold">Late</strong>.
+                    Staff checking in after <strong className="text-slate-700 font-semibold">{settings.work_start_time}</strong> plus the Late Grace Period below will automatically be marked as <strong className="text-rose-400 font-semibold">Late</strong>.
                   </span>
                 </p>
               </div>
             </Card>
 
             {/* Grace Periods & Overtime */}
-            <Card className="bg-[#0A101C] border border-slate-200 p-6 rounded-xl shadow-md space-y-5">
+            <Card className="bg-[#ffffff] border border-slate-200 p-6 rounded-xl shadow-md space-y-5">
               <div className="flex items-center space-x-3 border-b border-slate-200 pb-4">
                 <div className="p-2 bg-[#1dbf73]/10 rounded-lg text-[#1dbf73]">
                   <Settings className="w-5 h-5" />
@@ -544,7 +544,7 @@ export default function StoreSettingsPage() {
                 required
                 value={settings.late_grace_minutes}
                 onChange={(e) => setSettings({ ...settings, late_grace_minutes: parseInt(e.target.value) || 0 })}
-                className="bg-white border-slate-200 focus:border-amber-500 text-slate-200"
+                className="bg-white border-slate-200 focus:border-amber-500 text-slate-700"
               />
               <Input
                 label="Overtime Trigger Threshold (Minutes)"
@@ -553,7 +553,7 @@ export default function StoreSettingsPage() {
                 required
                 value={settings.overtime_after_minutes}
                 onChange={(e) => setSettings({ ...settings, overtime_after_minutes: parseInt(e.target.value) || 0 })}
-                className="bg-white border-slate-200 focus:border-amber-500 text-slate-200"
+                className="bg-white border-slate-200 focus:border-amber-500 text-slate-700"
               />
               <Input
                 label="Half-Day Qualification Minimum (Hours)"
@@ -564,13 +564,13 @@ export default function StoreSettingsPage() {
                 required
                 value={settings.half_day_hours}
                 onChange={(e) => setSettings({ ...settings, half_day_hours: parseFloat(e.target.value) || 4 })}
-                className="bg-white border-slate-200 focus:border-amber-500 text-slate-200"
+                className="bg-white border-slate-200 focus:border-amber-500 text-slate-700"
               />
             </Card>
           </div>
 
           {/* Weekly Off Days */}
-          <Card className="bg-[#0A101C] border border-slate-200 p-6 rounded-xl shadow-md space-y-4">
+          <Card className="bg-[#ffffff] border border-slate-200 p-6 rounded-xl shadow-md space-y-4">
             <div className="flex items-center space-x-3 border-b border-slate-200 pb-4">
               <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
                 <CalendarDays className="w-5 h-5" />
@@ -592,7 +592,7 @@ export default function StoreSettingsPage() {
                     className={`flex items-center justify-center gap-2 p-3.5 rounded-xl border text-sm font-semibold transition-all ${
                       isSelected
                         ? 'bg-blue-500/15 border-blue-500 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]'
-                        : 'bg-white border-slate-200 text-slate-400 hover:border-slate-600 hover:text-slate-200'
+                        : 'bg-white border-slate-200 text-slate-400 hover:border-slate-600 hover:text-slate-700'
                     }`}
                   >
                     {isSelected && <CheckCircle2 className="w-4 h-4 shrink-0 text-blue-400" />}

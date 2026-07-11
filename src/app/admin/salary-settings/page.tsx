@@ -145,7 +145,7 @@ export default function AdminSalarySettingsPage() {
       <AnimatePresence>
         {(showAddForm || editingId) && (
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
-            <Card className="p-5 border border-emerald-500/30 bg-slate-800/60">
+            <Card className="p-5 border border-emerald-500/30 bg-slate-50/60">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">
                 {editingId ? 'Edit Salary' : 'Set Employee Salary'}
               </h2>
@@ -155,7 +155,7 @@ export default function AdminSalarySettingsPage() {
                     <label className="text-xs text-slate-400 mb-1 block">Employee *</label>
                     <select id="salary-employee-select" required value={form.user_id}
                       onChange={(e) => setForm({ ...form, user_id: e.target.value })}
-                      className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                      className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
                       <option value="">Select…</option>
                       {employeesWithoutSalary.map((emp) => (
                         <option key={emp.id} value={emp.id}>
@@ -176,7 +176,7 @@ export default function AdminSalarySettingsPage() {
                     <input id={id} type="number" min={0} step={0.01}
                       value={form[key as keyof typeof form]}
                       onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })}
-                      className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                      className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 ))}
@@ -200,7 +200,7 @@ export default function AdminSalarySettingsPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input id="salary-search-input" type="text" placeholder="Search by name, ID, or branch…" value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-slate-800 text-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500"
+          className="w-full bg-slate-50 text-slate-900 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500"
         />
       </div>
 
@@ -217,7 +217,7 @@ export default function AdminSalarySettingsPage() {
           {filtered.map((s) => (
             <motion.div key={s.user_id} layout>
               {editingId === s.user_id ? (
-                <Card className="p-5 border border-emerald-500/30 bg-slate-800/60">
+                <Card className="p-5 border border-emerald-500/30 bg-slate-50/60">
                   <form onSubmit={handleSave} className="grid grid-cols-2 gap-3">
                     {[
                       { key: 'base_salary', label: 'Base ৳', id: `edit-base-${s.user_id}` },
@@ -230,7 +230,7 @@ export default function AdminSalarySettingsPage() {
                         <input id={id} type="number" min={0} step={0.01}
                           value={form[key as keyof typeof form]}
                           onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })}
-                          className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                          className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
                         />
                       </div>
                     ))}
@@ -243,7 +243,7 @@ export default function AdminSalarySettingsPage() {
                   </form>
                 </Card>
               ) : (
-                <Card className="p-4 bg-slate-800/60 flex items-center justify-between gap-3">
+                <Card className="p-4 bg-slate-50/60 flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-slate-900 font-semibold">{s.profiles?.full_name}</p>

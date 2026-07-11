@@ -163,7 +163,7 @@ export default function AdminBranchesPage() {
       </AnimatePresence>
 
       {/* Search */}
-      <Card className="bg-slate-900 border-slate-800 p-4">
+      <Card className="bg-white border-slate-200 p-4">
         <div className="relative max-w-md">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
@@ -171,7 +171,7 @@ export default function AdminBranchesPage() {
             placeholder="Search branches by name or code..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
       </Card>
@@ -201,14 +201,14 @@ export default function AdminBranchesPage() {
                   <div className="flex items-center space-x-1 shrink-0">
                     <button
                       onClick={() => openDetailsModal(branch)}
-                      className="p-2 rounded-lg bg-slate-800 hover:bg-indigo-900/50 hover:text-indigo-400 text-slate-400 transition-colors"
+                      className="p-2 rounded-lg bg-slate-50 hover:bg-indigo-900/50 hover:text-indigo-400 text-slate-400 transition-colors"
                       title="View Details"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => openEditModal(branch)}
-                      className="p-2 rounded-lg bg-slate-800 hover:bg-blue-900/50 hover:text-blue-400 text-slate-400 transition-colors"
+                      className="p-2 rounded-lg bg-slate-50 hover:bg-blue-900/50 hover:text-blue-400 text-slate-400 transition-colors"
                       title="Edit Branch"
                     >
                       <Pencil className="w-4 h-4" />
@@ -252,10 +252,10 @@ export default function AdminBranchesPage() {
               </div>
 
               {/* Footer Stats */}
-              <div className="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs">
+              <div className="mt-4 pt-4 border-t border-slate-200/80 flex items-center justify-between text-xs">
                 <div className="flex items-center space-x-1.5 text-slate-400">
                   <Users className="w-3.5 h-3.5 text-blue-400" />
-                  <span><strong className="text-slate-200">{branch._staff_count || 0}</strong> Staff Assigned</span>
+                  <span><strong className="text-slate-700">{branch._staff_count || 0}</strong> Staff Assigned</span>
                 </div>
                 <div className="flex items-center space-x-1 text-slate-500">
                   <CheckCircle2 className="w-3 h-3 text-[#1dbf73]" />

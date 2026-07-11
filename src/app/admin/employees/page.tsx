@@ -170,7 +170,7 @@ export default function AdminEmployeesPage() {
             variant="secondary" 
             icon={<Upload className="w-4 h-4" />} 
             onClick={() => setBulkModalOpen(true)}
-            className="bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-slate-900 transition-colors font-medium border border-slate-700"
+            className="bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors font-medium border border-slate-200"
           >
             Bulk Import (CSV)
           </Button>
@@ -187,7 +187,7 @@ export default function AdminEmployeesPage() {
 
       {/* Pending Identity Enrollments */}
       {pendingApprovals.length > 0 && (
-        <div className="bg-[#0A101C] border border-slate-200 rounded-xl overflow-hidden">
+        <div className="bg-[#ffffff] border border-slate-200 rounded-xl overflow-hidden">
           <div className="bg-amber-500/10 border-b border-amber-500/20 px-5 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2 text-amber-500">
               <Shield className="w-4 h-4" />
@@ -198,11 +198,11 @@ export default function AdminEmployeesPage() {
              {pendingApprovals.map(emp => (
                <div key={emp.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 gap-4 hover:bg-slate-100/30 transition-colors">
                  <div className="flex gap-4 items-center">
-                   <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-medium text-sm shrink-0">
+                   <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 font-medium text-sm shrink-0">
                      {emp.full_name.charAt(0)}
                    </div>
                    <div>
-                     <p className="text-slate-200 font-medium text-sm">{emp.full_name}</p>
+                     <p className="text-slate-700 font-medium text-sm">{emp.full_name}</p>
                      <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
                        <span>{emp.email}</span>
                        <span className="text-slate-700">•</span>
@@ -217,7 +217,7 @@ export default function AdminEmployeesPage() {
                    </div>
                  </div>
                  <div className="shrink-0">
-                   <Button size="sm" variant="outline" className="text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-slate-900" onClick={() => setReviewingEmployee(emp)}>
+                   <Button size="sm" variant="outline" className="text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900" onClick={() => setReviewingEmployee(emp)}>
                      Review Application
                    </Button>
                  </div>
@@ -263,7 +263,7 @@ export default function AdminEmployeesPage() {
               placeholder="Search staff..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-transparent border-none text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-0"
+              className="w-full pl-9 pr-4 py-2 bg-transparent border-none text-sm text-slate-700 placeholder-slate-600 focus:outline-none focus:ring-0"
             />
           </div>
 
@@ -274,7 +274,7 @@ export default function AdminEmployeesPage() {
               <button
                 key={r}
                 onClick={() => setRoleFilter(r)}
-                className={`px-3 py-1.5 rounded-lg transition-colors text-xs font-medium capitalize ${roleFilter === r ? 'bg-slate-100 text-slate-200' : 'text-slate-500 hover:text-slate-300'}`}
+                className={`px-3 py-1.5 rounded-lg transition-colors text-xs font-medium capitalize ${roleFilter === r ? 'bg-slate-100 text-slate-700' : 'text-slate-500 hover:text-slate-600'}`}
               >
                 {r === 'all' ? 'All' : r === 'branch_manager' ? 'Managers' : 'Staff'}
               </button>
@@ -287,7 +287,7 @@ export default function AdminEmployeesPage() {
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             showInactive
               ? 'bg-rose-500/10 text-rose-400'
-              : 'text-slate-500 hover:text-slate-300 hover:bg-slate-100/50'
+              : 'text-slate-500 hover:text-slate-600 hover:bg-slate-100/50'
           }`}
         >
           {showInactive ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
@@ -305,7 +305,7 @@ export default function AdminEmployeesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#0A101C] text-slate-500 text-xs border-b border-slate-200">
+                <tr className="bg-[#ffffff] text-slate-500 text-xs border-b border-slate-200">
                   <th className="py-3 px-5 font-medium">Name</th>
                   <th className="py-3 px-5 font-medium">Role</th>
                   <th className="py-3 px-5 font-medium">Branch</th>
@@ -326,11 +326,11 @@ export default function AdminEmployeesPage() {
                     <tr key={emp.id} className="hover:bg-slate-100/20 transition-colors">
                       <td className="py-3 px-5">
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 text-xs shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 text-xs shrink-0">
                             {emp.full_name.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-medium text-slate-200 text-sm">{emp.full_name}</p>
+                            <p className="font-medium text-slate-700 text-sm">{emp.full_name}</p>
                             <p className="text-xs text-slate-500">{emp.email}</p>
                           </div>
                         </div>
@@ -382,7 +382,7 @@ export default function AdminEmployeesPage() {
                             <Fingerprint className="w-3.5 h-3.5" />
                             Biometrics
                           </Button>
-                          <Button size="sm" variant="ghost" className="text-slate-400 hover:text-slate-200 px-2" onClick={() => openEditModal(emp)}>
+                          <Button size="sm" variant="ghost" className="text-slate-400 hover:text-slate-700 px-2" onClick={() => openEditModal(emp)}>
                             Edit
                           </Button>
                           <Button

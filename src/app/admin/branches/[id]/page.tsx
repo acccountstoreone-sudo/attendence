@@ -117,27 +117,27 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
 
       {/* Quick Statistics Top Bar */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-         <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+         <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-400">Total Staff</span>
             <span className="text-lg font-bold text-slate-900">{employees.length}</span>
          </div>
-         <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+         <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-400">Present</span>
             <span className="text-lg font-bold text-[#1dbf73]">{employees.filter(e => e.is_present_today).length}</span>
          </div>
-         <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+         <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-400">Absent</span>
             <span className="text-lg font-bold text-red-500">{employees.filter(e => !e.is_present_today).length}</span>
          </div>
-         <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+         <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-400">Active Now</span>
             <span className="text-lg font-bold text-blue-500">{employees.filter(e => e.is_active).length}</span>
          </div>
-         <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+         <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-400">Late</span>
             <span className="text-lg font-bold text-orange-500">2</span>
          </div>
-         <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
+         <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-400">Attendance %</span>
             <span className="text-lg font-bold text-[#1dbf73]">
               {employees.length > 0 ? Math.round((employees.filter(e => e.is_present_today).length / employees.length) * 100) : 0}%
@@ -146,7 +146,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
       </div>
 
       {/* Tab Navigation */}
-      <Card className="bg-slate-900/80 border-slate-800 backdrop-blur-md p-1 sticky top-0 z-10 overflow-x-auto shadow-2xl">
+      <Card className="bg-white/80 border-slate-200 backdrop-blur-md p-1 sticky top-0 z-10 overflow-x-auto shadow-2xl">
         <div className="flex space-x-1 min-w-max">
           {tabs.map((tab) => (
             <button
@@ -155,7 +155,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
               className={`flex items-center px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
                 activeTab === tab.id || (tab.id === 'employees' && activeTab === 'profile')
                   ? 'bg-[#1dbf73]/10 text-[#1dbf73] shadow-sm'
-                  : 'text-slate-400 hover:text-slate-900 hover:bg-slate-800/50'
+                  : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50/50'
               }`}
             >
               {tab.icon}

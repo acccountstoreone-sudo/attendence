@@ -34,14 +34,14 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
         <p className="text-sm text-slate-400">Send notifications to all employees assigned to {branch.name}.</p>
       </div>
 
-      <Card className="bg-slate-900 border-slate-800 p-6 shadow-xl">
-        <div className="flex space-x-4 mb-6 border-b border-slate-800 pb-4">
+      <Card className="bg-white border-slate-200 p-6 shadow-xl">
+        <div className="flex space-x-4 mb-6 border-b border-slate-200 pb-4">
           <button
             onClick={() => setAnnouncementType('text')}
             className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               announcementType === 'text' 
                 ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/20' 
-                : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-900'
+                : 'bg-white text-slate-400 border border-slate-200 hover:text-slate-900'
             }`}
           >
             <MessageSquare className="w-4 h-4 mr-2" /> Text Announcement
@@ -51,7 +51,7 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
             className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               announcementType === 'sound' 
                 ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/20' 
-                : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-900'
+                : 'bg-white text-slate-400 border border-slate-200 hover:text-slate-900'
             }`}
           >
             <Volume2 className="w-4 h-4 mr-2" /> Sound Notification
@@ -60,11 +60,11 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-slate-300">
+            <Label className="text-slate-600">
               {announcementType === 'text' ? 'Message Content' : 'Text-to-Speech Message'}
             </Label>
             <Textarea 
-              className="bg-slate-950 border-slate-800 min-h-[120px]" 
+              className="bg-white border-slate-200 min-h-[120px]" 
               placeholder={announcementType === 'text' ? "Enter your announcement here..." : "Enter text to be played as audio..."}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -77,7 +77,7 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
           </div>
           
           <div className="pt-4 flex justify-end">
-            <Button onClick={handleSend} disabled={!message.trim()} className="bg-[#1dbf73] hover:bg-[#003311]">
+            <Button onClick={handleSend} disabled={!message.trim()} className="bg-[#1dbf73] hover:bg-[#1dbf73]">
               <Send className="w-4 h-4 mr-2" /> Send Announcement
             </Button>
           </div>
