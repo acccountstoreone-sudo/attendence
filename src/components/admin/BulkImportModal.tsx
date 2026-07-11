@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -113,15 +113,15 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-2xl bg-[#012410] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-2xl bg-slate-100 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/50">
           <div className="flex items-center gap-2.5">
             <Upload className="w-5 h-5 text-indigo-400" />
-            <h2 className="text-lg font-semibold text-white">Bulk Onboard Staff (CSV)</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Bulk Onboard Staff (CSV)</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-800 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -131,7 +131,7 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
           {/* Step 1: Template download */}
           <div className="bg-slate-800/40 border border-slate-700/60 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-medium text-white">Need a formatting template?</h3>
+              <h3 className="font-medium text-slate-900">Need a formatting template?</h3>
               <p className="text-xs text-slate-400 mt-0.5">Download our pre-formatted CSV template with standard headers.</p>
             </div>
             <Button variant="secondary" size="sm" icon={<Download className="w-4 h-4" />} onClick={handleDownloadTemplate}>
@@ -156,12 +156,12 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
                 <FileText className="w-10 h-10 text-indigo-400 mx-auto mb-3" />
                 {file ? (
                   <div>
-                    <p className="font-semibold text-white">{file.name}</p>
+                    <p className="font-semibold text-slate-900">{file.name}</p>
                     <p className="text-xs text-slate-400 mt-1">{parsedRows.length} employee row(s) ready for onboarding</p>
                   </div>
                 ) : (
                   <div>
-                    <p className="font-semibold text-white">Click to select a CSV file</p>
+                    <p className="font-semibold text-slate-900">Click to select a CSV file</p>
                     <p className="text-xs text-slate-400 mt-1">or drag and drop your staff roster (.csv) here</p>
                   </div>
                 )}
@@ -191,8 +191,8 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
           {results && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-center">
-                  <p className="text-2xl font-bold text-emerald-400">{results.success_count}</p>
+                <div className="bg-[#1dbf73]/10 border border-emerald-500/20 rounded-xl p-4 text-center">
+                  <p className="text-2xl font-bold text-[#1dbf73]">{results.success_count}</p>
                   <p className="text-xs text-slate-300 mt-0.5">Added Successfully</p>
                 </div>
                 <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 text-center">
@@ -213,11 +213,11 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
                   <tbody className="divide-y divide-slate-800/60 text-xs">
                     {results.results.map((row, idx) => (
                       <tr key={idx} className="hover:bg-slate-800/30">
-                        <td className="p-3 font-medium text-white">{row.full_name}</td>
+                        <td className="p-3 font-medium text-slate-900">{row.full_name}</td>
                         <td className="p-3 text-slate-400">{row.email}</td>
                         <td className="p-3">
                           {row.status === 'success' ? (
-                            <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                            <span className="flex items-center gap-1.5 text-[#1dbf73] font-medium">
                               <CheckCircle2 className="w-4 h-4" /> Added
                             </span>
                           ) : (
@@ -245,7 +245,7 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
               variant="primary"
               onClick={handleStartImport}
               disabled={parsedRows.length === 0 || uploading}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white border-0"
+              className="bg-indigo-600 hover:bg-indigo-500 text-slate-900 border-0"
             >
               {uploading ? <Spinner className="w-4 h-4" /> : `Import ${parsedRows.length > 0 ? `${parsedRows.length} Staff` : ''}`}
             </Button>

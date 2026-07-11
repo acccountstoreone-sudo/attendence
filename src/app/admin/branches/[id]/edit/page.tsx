@@ -23,15 +23,15 @@ export default async function EditBranchPage({ params }: { params: Promise<{ id:
     <div className="space-y-8 pb-12 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <Link href="/admin/branches" className="flex items-center text-slate-400 hover:text-white transition-colors text-sm mb-2 w-fit">
+        <Link href="/admin/branches" className="flex items-center text-slate-400 hover:text-slate-900 transition-colors text-sm mb-2 w-fit">
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back to Branches
         </Link>
-        <div className="flex items-center space-x-2 text-[#004417] text-xs font-bold uppercase tracking-widest mb-1">
+        <div className="flex items-center space-x-2 text-[#1dbf73] text-xs font-bold uppercase tracking-widest mb-1">
           <Store className="w-4 h-4" />
           <span>Edit Branch</span>
         </div>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
           {branch.name}
         </h1>
         <p className="text-sm text-slate-400">

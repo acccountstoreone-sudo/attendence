@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -158,19 +158,19 @@ export default function AdminEmployeesPage() {
       {/* Minimal Professional Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white tracking-tight">Staff Registry</h1>
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Staff Registry</h1>
           <p className="text-sm text-slate-400 mt-1">Manage employee accounts, roles, and branch assignments.</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-3 text-sm text-slate-400 mr-2">
-            <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>{activeCount} Active</span>
+            <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#1dbf73]"></div>{activeCount} Active</span>
             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-500"></div>{inactiveCount} Suspended</span>
           </div>
           <Button 
             variant="secondary" 
             icon={<Upload className="w-4 h-4" />} 
             onClick={() => setBulkModalOpen(true)}
-            className="bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white transition-colors font-medium border border-slate-700"
+            className="bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-slate-900 transition-colors font-medium border border-slate-700"
           >
             Bulk Import (CSV)
           </Button>
@@ -187,16 +187,16 @@ export default function AdminEmployeesPage() {
 
       {/* Pending Identity Enrollments */}
       {pendingApprovals.length > 0 && (
-        <div className="bg-[#0A101C] border border-[#0a3a1e] rounded-xl overflow-hidden">
+        <div className="bg-[#0A101C] border border-slate-200 rounded-xl overflow-hidden">
           <div className="bg-amber-500/10 border-b border-amber-500/20 px-5 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2 text-amber-500">
               <Shield className="w-4 h-4" />
               <span className="text-sm font-medium">Action Required: {pendingApprovals.length} Pending KYC Verification{pendingApprovals.length > 1 ? 's' : ''}</span>
             </div>
           </div>
-          <div className="divide-y divide-[#0a3a1e]">
+          <div className="divide-y divide-slate-200">
              {pendingApprovals.map(emp => (
-               <div key={emp.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 gap-4 hover:bg-[#0a3a1e]/30 transition-colors">
+               <div key={emp.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 gap-4 hover:bg-slate-100/30 transition-colors">
                  <div className="flex gap-4 items-center">
                    <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-medium text-sm shrink-0">
                      {emp.full_name.charAt(0)}
@@ -217,7 +217,7 @@ export default function AdminEmployeesPage() {
                    </div>
                  </div>
                  <div className="shrink-0">
-                   <Button size="sm" variant="outline" className="text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white" onClick={() => setReviewingEmployee(emp)}>
+                   <Button size="sm" variant="outline" className="text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-slate-900" onClick={() => setReviewingEmployee(emp)}>
                      Review Application
                    </Button>
                  </div>
@@ -236,7 +236,7 @@ export default function AdminEmployeesPage() {
             exit={{ opacity: 0 }}
             className={`flex items-center gap-3 p-4 rounded-xl border text-sm font-medium ${
               feedback.type === 'success'
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                ? 'bg-[#1dbf73]/10 border-emerald-500/20 text-[#1dbf73]'
                 : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
             }`}
           >
@@ -254,7 +254,7 @@ export default function AdminEmployeesPage() {
       />
 
       {/* Minimal Filters */}
-      <div className="flex flex-wrap gap-3 items-center justify-between bg-[#010e05] p-2 rounded-xl border border-[#0a3a1e]">
+      <div className="flex flex-wrap gap-3 items-center justify-between bg-white p-2 rounded-xl border border-slate-200">
         <div className="flex flex-wrap gap-3 items-center flex-1">
           <div className="relative flex-1 min-w-[240px]">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
@@ -267,14 +267,14 @@ export default function AdminEmployeesPage() {
             />
           </div>
 
-          <div className="h-6 w-px bg-[#0a3a1e]" />
+          <div className="h-6 w-px bg-slate-100" />
 
           <div className="flex gap-1">
             {(['all', 'employee', 'branch_manager'] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => setRoleFilter(r)}
-                className={`px-3 py-1.5 rounded-lg transition-colors text-xs font-medium capitalize ${roleFilter === r ? 'bg-[#0a3a1e] text-slate-200' : 'text-slate-500 hover:text-slate-300'}`}
+                className={`px-3 py-1.5 rounded-lg transition-colors text-xs font-medium capitalize ${roleFilter === r ? 'bg-slate-100 text-slate-200' : 'text-slate-500 hover:text-slate-300'}`}
               >
                 {r === 'all' ? 'All' : r === 'branch_manager' ? 'Managers' : 'Staff'}
               </button>
@@ -287,7 +287,7 @@ export default function AdminEmployeesPage() {
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             showInactive
               ? 'bg-rose-500/10 text-rose-400'
-              : 'text-slate-500 hover:text-slate-300 hover:bg-[#0a3a1e]/50'
+              : 'text-slate-500 hover:text-slate-300 hover:bg-slate-100/50'
           }`}
         >
           {showInactive ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
@@ -297,15 +297,15 @@ export default function AdminEmployeesPage() {
 
       {/* Minimal Employee Table */}
       {loading ? (
-        <div className="flex items-center justify-center py-20 border border-[#0a3a1e] rounded-xl bg-[#010e05]">
+        <div className="flex items-center justify-center py-20 border border-slate-200 rounded-xl bg-white">
           <Spinner size="md" />
         </div>
       ) : (
-        <div className="bg-[#010e05] border border-[#0a3a1e] rounded-xl overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#0A101C] text-slate-500 text-xs border-b border-[#0a3a1e]">
+                <tr className="bg-[#0A101C] text-slate-500 text-xs border-b border-slate-200">
                   <th className="py-3 px-5 font-medium">Name</th>
                   <th className="py-3 px-5 font-medium">Role</th>
                   <th className="py-3 px-5 font-medium">Branch</th>
@@ -314,7 +314,7 @@ export default function AdminEmployeesPage() {
                   <th className="py-3 px-5 font-medium text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#0a3a1e]">
+              <tbody className="divide-y divide-slate-200">
                 {filteredEmployees.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-slate-500 text-sm">
@@ -323,7 +323,7 @@ export default function AdminEmployeesPage() {
                   </tr>
                 ) : (
                   filteredEmployees.map((emp) => (
-                    <tr key={emp.id} className="hover:bg-[#0a3a1e]/20 transition-colors">
+                    <tr key={emp.id} className="hover:bg-slate-100/20 transition-colors">
                       <td className="py-3 px-5">
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 text-xs shrink-0">
@@ -388,7 +388,7 @@ export default function AdminEmployeesPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className={`px-2 ${emp.is_active ? 'text-slate-500 hover:text-rose-400' : 'text-slate-500 hover:text-emerald-400'}`}
+                            className={`px-2 ${emp.is_active ? 'text-slate-500 hover:text-rose-400' : 'text-slate-500 hover:text-[#1dbf73]'}`}
                             onClick={() => toggleActive(emp)}
                             disabled={togglingId === emp.id}
                           >

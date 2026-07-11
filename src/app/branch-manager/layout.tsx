@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -63,14 +63,14 @@ export default function BranchManagerLayout({ children }: { children: React.Reac
 
   if (loading || !userProfile) {
     return (
-      <div className="min-h-screen bg-[#010e05] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <Spinner size="lg" label="Loading Store Dashboard..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#010e05] flex">
+    <div className="min-h-screen bg-white flex">
       {/* Sidebar hidden on mobile for branch manager */}
       <div className="hidden md:block">
         <Sidebar

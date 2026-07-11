@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FaceCapture } from '@/components/attendance/FaceCapture';
@@ -485,7 +485,7 @@ export default function EmployeeCheckInPage() {
         {offline.isOnline && offline.pendingCount > 0 && (
           <motion.div
             initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -40, opacity: 0 }}
-            className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-blue-500/90 text-white text-xs rounded-full px-4 py-2 shadow-xl"
+            className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-blue-500/90 text-slate-900 text-xs rounded-full px-4 py-2 shadow-xl"
           >
             {offline.syncing ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
             {offline.syncing ? `Syncing ${offline.pendingCount} record(s)…` : `${offline.pendingCount} offline record(s) pending sync`}
@@ -494,7 +494,7 @@ export default function EmployeeCheckInPage() {
       </AnimatePresence>
 
       {isReverifyMode && (
-        <div className="flex-none px-4 py-3 bg-rose-500 text-white z-40 shadow-lg mt-14 sm:mt-0 flex flex-col items-center justify-center text-center font-bold text-sm relative">
+        <div className="flex-none px-4 py-3 bg-rose-500 text-slate-900 z-40 shadow-lg mt-14 sm:mt-0 flex flex-col items-center justify-center text-center font-bold text-sm relative">
           <span className="text-lg mb-1">⚠️</span>
           Admin has reset your Face Biometrics. 
           <span className="text-xs font-normal opacity-90 mt-0.5">Please scan your face to re-enroll now!</span>
@@ -504,7 +504,7 @@ export default function EmployeeCheckInPage() {
       {/* ── Minimal Floating Back Button for Mobile View (since top bar is hidden) ── */}
       <button
         onClick={() => router.push('/employee')}
-        className="sm:hidden absolute top-3.5 left-3.5 z-50 p-2.5 rounded-full bg-[#0A1628]/90 hover:bg-[#0A1628] border border-white/20 text-white backdrop-blur-xl shadow-2xl active:scale-95"
+        className="sm:hidden absolute top-3.5 left-3.5 z-50 p-2.5 rounded-full bg-[#0A1628]/90 hover:bg-[#0A1628] border border-slate-300 text-slate-900 backdrop-blur-sm shadow-2xl active:scale-95"
         style={{ top: 'max(0.8rem, env(safe-area-inset-top))' }}
       >
         <ArrowLeft className="w-5 h-5" />
@@ -514,7 +514,7 @@ export default function EmployeeCheckInPage() {
       <div className="flex-none hidden sm:flex items-center justify-between px-4 pt-4 pb-3 bg-gradient-to-b from-[#020810]/95 to-transparent z-40 backdrop-blur-md" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
         <button
           onClick={() => router.push('/employee')}
-          className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 text-white transition-all active:scale-95 shadow-lg"
+          className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 text-slate-900 transition-all active:scale-95 shadow-lg"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -523,13 +523,13 @@ export default function EmployeeCheckInPage() {
           <span className="text-[11px] font-extrabold uppercase tracking-widest text-blue-400 drop-shadow">
             Biometric Attendance
           </span>
-          <span className="text-white font-extrabold text-base tracking-tight">{profile?.branch_name}</span>
+          <span className="text-slate-900 font-extrabold text-base tracking-tight">{profile?.branch_name}</span>
         </div>
 
         {/* Live Clock */}
         <div className="flex items-center space-x-1.5 bg-white/10 border border-white/15 rounded-2xl px-3.5 py-2 shadow-lg">
           <Clock className="w-4 h-4 text-blue-400 animate-pulse shrink-0" />
-          <span className="text-white font-extrabold text-xs tabular-nums">{time}</span>
+          <span className="text-slate-900 font-extrabold text-xs tabular-nums">{time}</span>
         </div>
       </div>
 
@@ -541,29 +541,29 @@ export default function EmployeeCheckInPage() {
           <motion.div
             initial={{ opacity:0, y:-10 }}
             animate={{ opacity:1, y:0 }}
-            className="flex-none mx-4 mb-1 mt-12 sm:mt-0 flex items-center justify-between bg-[#0A1628]/95 backdrop-blur-2xl border border-white/20 rounded-2xl px-4 py-3 z-30 shadow-2xl"
+            className="flex-none mx-4 mb-1 mt-12 sm:mt-0 flex items-center justify-between bg-[#0A1628]/95 backdrop-blur-sm border border-slate-300 rounded-2xl px-4 py-3 z-30 shadow-2xl"
           >
             <div className="flex items-center space-x-2.5">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-[#1dbf73] shrink-0" />
               <div>
                 <p className="text-[10px] sm:text-xs font-extrabold text-blue-300 uppercase tracking-widest">Today&apos;s Record</p>
-                <p className="text-white text-xs sm:text-sm font-extrabold">
-                  In: <span className="text-emerald-300">{todayRecord.check_in_time ? new Date(todayRecord.check_in_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—'}</span>
+                <p className="text-slate-900 text-xs sm:text-sm font-extrabold">
+                  In: <span className="text-[#1dbf73]">{todayRecord.check_in_time ? new Date(todayRecord.check_in_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—'}</span>
                   {todayRecord.check_out_time && <> · Out: <span className="text-slate-300">{new Date(todayRecord.check_out_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></>}
                 </p>
               </div>
             </div>
 
             {/* Check-in / Check-out Toggle */}
-            <div className="flex bg-[#010e05] p-1 rounded-xl border border-white/15 shadow-inner">
+            <div className="flex bg-white p-1 rounded-xl border border-white/15 shadow-inner">
               {(['in','out'] as const).map(t => (
                 <button
                   key={t}
                   onClick={() => setCheckType(t)}
                   className={`px-3.5 py-1.5 rounded-[10px] text-xs font-extrabold transition-all ${
                     checkType === t
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50 scale-[1.02]'
-                      : 'text-slate-300 hover:text-white'
+                      ? 'bg-blue-600 text-slate-900 shadow-lg shadow-blue-900/50 scale-[1.02]'
+                      : 'text-slate-300 hover:text-slate-900'
                   }`}
                 >
                   {t === 'in' ? 'Check In' : 'Check Out'}
@@ -577,15 +577,15 @@ export default function EmployeeCheckInPage() {
       {/* ── Check-in/out toggle when no record exists ── */}
       {!todayRecord && (
         <div className="flex-none flex justify-center px-4 z-30 mb-1 mt-12 sm:mt-0">
-          <div className="flex bg-[#0A1628]/95 backdrop-blur-2xl p-1 rounded-2xl border border-white/20 shadow-2xl">
+          <div className="flex bg-[#0A1628]/95 backdrop-blur-sm p-1 rounded-2xl border border-slate-300 shadow-2xl">
             {(['in','out'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setCheckType(t)}
                 className={`px-7 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${
                   checkType === t
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-900/50 scale-[1.02]'
-                    : 'text-slate-300 hover:text-white'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-slate-900 shadow-lg shadow-blue-900/50 scale-[1.02]'
+                    : 'text-slate-300 hover:text-slate-900'
                 }`}
               >
                 {t === 'in' ? '▶ Check In' : '■ Check Out'}
@@ -618,7 +618,7 @@ export default function EmployeeCheckInPage() {
             initial={{ opacity:0, y:10 }}
             animate={{ opacity:1, y:0 }}
             exit={{ opacity:0 }}
-            className={`flex-none mx-4 mb-4 p-3 rounded-2xl border backdrop-blur-xl text-xs font-semibold text-center z-40 ${
+            className={`flex-none mx-4 mb-4 p-3 rounded-2xl border backdrop-blur-sm text-xs font-semibold text-center z-40 ${
               feedback.type === 'success'
                 ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200'
                 : 'bg-rose-950/90 border-rose-500/30 text-rose-200'

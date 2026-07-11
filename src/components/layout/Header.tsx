@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
@@ -45,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
   };
 
   return (
-    <header className="h-20 bg-white/90 backdrop-blur-2xl border-b border-slate-200 px-4 md:px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+    <header className="h-20 bg-white/90 backdrop-blur-sm border-b border-slate-200 px-4 md:px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm">
       {/* Left side: Mobile menu & Branch badge */}
       <div className="flex items-center space-x-3">
         {user.role === 'admin' && (
@@ -91,7 +91,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
           >
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#1dbf73] text-white font-extrabold text-[10px] rounded-full flex items-center justify-center animate-bounce shadow-md border border-white">
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#1dbf73] text-slate-900 font-extrabold text-[10px] rounded-full flex items-center justify-center animate-bounce shadow-md border border-white">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -99,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
 
           {/* Notifications Dropdown */}
           {showNotifMenu && (
-            <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white backdrop-blur-3xl border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-30 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white backdrop-blur-sm border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-30 animate-in fade-in slide-in-from-top-4 duration-300">
               <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                 <div className="flex items-center space-x-2">
                   <span className="font-bold text-sm text-slate-900 uppercase tracking-wider">Notifications</span>
@@ -174,7 +174,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
             }}
             className="flex items-center space-x-2.5 p-1.5 rounded-xl bg-slate-50 border border-slate-200 shadow-sm hover:border-[#1dbf73]/40 hover:shadow transition-all outline-none"
           >
-            <div className="w-9 h-9 rounded-lg bg-[#1dbf73] flex items-center justify-center text-white font-extrabold text-sm shadow-sm">
+            <div className="w-9 h-9 rounded-lg bg-[#1dbf73] flex items-center justify-center text-slate-900 font-extrabold text-sm shadow-sm">
               {user.photo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={user.photo_url} alt={user.full_name} className="w-full h-full rounded-lg object-cover" />
@@ -190,7 +190,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
 
           {/* User Dropdown */}
           {showUserMenu && (
-            <div className="absolute right-0 mt-3 w-64 bg-white backdrop-blur-3xl border border-slate-200 rounded-2xl shadow-xl py-1 z-30 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="absolute right-0 mt-3 w-64 bg-white backdrop-blur-sm border border-slate-200 rounded-2xl shadow-xl py-1 z-30 animate-in fade-in slide-in-from-top-4 duration-300">
               <div className="px-4 py-4 border-b border-slate-100 bg-slate-50">
                 <p className="text-sm font-bold text-slate-900 tracking-tight">{user.full_name}</p>
                 <p className="text-[10px] text-[#1dbf73] font-bold uppercase tracking-widest mt-1">{user.role.replace('_', ' ')}</p>

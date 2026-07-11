@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -93,13 +93,13 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
   };
 
   return (
-    <Card className="max-w-2xl bg-[#021a0a] border-[#0a3a1e] p-6 shadow-2xl">
+    <Card className="max-w-2xl bg-white border-slate-200 p-6 shadow-2xl">
       <AnimatePresence>
         {feedback && (
           <motion.div
             initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className={`mb-6 p-4 rounded-xl border text-sm font-medium ${
-              feedback.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+              feedback.type === 'success' ? 'bg-[#1dbf73]/10 border-emerald-500/20 text-[#1dbf73]' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
             }`}
           >
             <div className="flex items-center gap-3">
@@ -107,7 +107,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
               <span>{feedback.text}</span>
             </div>
             {feedback.details && (
-              <div className="mt-3 ml-8 p-3 bg-black/40 rounded border border-emerald-500/30 text-emerald-300 font-mono tracking-wider break-all select-all">
+              <div className="mt-3 ml-8 p-3 bg-slate-900/30 rounded border border-emerald-500/30 text-[#1dbf73] font-mono tracking-wider break-all select-all">
                 {feedback.details}
               </div>
             )}
@@ -122,13 +122,13 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
             <div className="relative">
               <User className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
               <input required value={form.full_name} onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
-                placeholder="John Doe" className="w-full pl-10 pr-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all" />
+                placeholder="John Doe" className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all" />
             </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Employee ID</label>
             <input value={form.employee_id} onChange={(e) => setForm((f) => ({ ...f, employee_id: e.target.value }))}
-              placeholder="e.g., EMP-001" className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all" />
+              placeholder="e.g., EMP-001" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all" />
           </div>
         </div>
 
@@ -139,7 +139,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
               <Mail className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
               <input required type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                 disabled={!!initialData} // Email cannot be changed after creation easily via this form
-                placeholder="john@anchorfashion.com" className="w-full pl-10 pr-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all" />
+                placeholder="john@anchorfashion.com" className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all" />
             </div>
           </div>
           <div>
@@ -147,7 +147,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
             <div className="relative">
               <Phone className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
               <input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                placeholder="+880 1xxx-xxxxxx" className="w-full pl-10 pr-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all" />
+                placeholder="+880 1xxx-xxxxxx" className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all" />
             </div>
           </div>
         </div>
@@ -159,14 +159,14 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
           <div className="relative">
             <Lock className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
             <input type="text" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-              placeholder={initialData ? "Type to overwrite password" : "Leave empty to auto-generate"} className="w-full pl-10 pr-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all" />
+              placeholder={initialData ? "Type to overwrite password" : "Leave empty to auto-generate"} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all" />
           </div>
           <p className="text-[10px] text-slate-500 mt-1">
             {initialData ? "Leave blank to keep the current password." : "Staff will use this to login for the first time. If left blank, a secure password will be generated."}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t border-[#0a3a1e]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t border-slate-200">
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center">
               <Shield className="w-3.5 h-3.5 mr-1" /> System Role
@@ -174,7 +174,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
             <select
               value={form.role}
               onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as 'employee' | 'branch_manager' | 'admin' }))}
-              className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white appearance-none focus:outline-none focus:border-[#004417]"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 appearance-none focus:outline-none focus:border-[#1dbf73]"
             >
               <option value="employee">Standard Employee</option>
               <option value="branch_manager">Branch Manager</option>
@@ -188,7 +188,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
             <select
               value={form.branch_id}
               onChange={(e) => setForm((f) => ({ ...f, branch_id: e.target.value }))}
-              className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white appearance-none focus:outline-none focus:border-[#004417]"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 appearance-none focus:outline-none focus:border-[#1dbf73]"
             >
               <option value="">Unassigned (HQ / Float)</option>
               {branches.map(b => (
@@ -199,22 +199,22 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
         </div>
 
         {initialData && (
-          <div className="flex items-center space-x-3 pt-2 bg-[#010e05] p-4 rounded-xl border border-[#0a3a1e]">
+          <div className="flex items-center space-x-3 pt-2 bg-white p-4 rounded-xl border border-slate-200">
             <input
               type="checkbox"
               id="is_active_emp"
               checked={form.is_active}
               onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-              className="w-5 h-5 rounded border-[#0a3a1e] text-[#004417] focus:ring-[#004417]"
+              className="w-5 h-5 rounded border-slate-200 text-[#1dbf73] focus:ring-[#1dbf73]"
             />
-            <label htmlFor="is_active_emp" className="text-sm font-medium text-white flex items-center cursor-pointer">
-              {form.is_active ? <Unlock className="w-4 h-4 mr-2 text-emerald-400" /> : <Lock className="w-4 h-4 mr-2 text-rose-400" />}
+            <label htmlFor="is_active_emp" className="text-sm font-medium text-slate-900 flex items-center cursor-pointer">
+              {form.is_active ? <Unlock className="w-4 h-4 mr-2 text-[#1dbf73]" /> : <Lock className="w-4 h-4 mr-2 text-rose-400" />}
               Account is currently {form.is_active ? 'Active' : 'Suspended'}
             </label>
           </div>
         )}
 
-        <div className="flex justify-end space-x-3 pt-6 border-t border-[#0a3a1e]">
+        <div className="flex justify-end space-x-3 pt-6 border-t border-slate-200">
           <Button type="button" variant="secondary" onClick={() => router.push('/admin/employees')}>
             Cancel
           </Button>

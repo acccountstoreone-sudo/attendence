@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { Card } from '@/components/ui/Card';
@@ -15,7 +15,7 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-lg font-bold text-white">Employees ({employees.length})</h4>
+        <h4 className="text-lg font-bold text-slate-900">Employees ({employees.length})</h4>
       </div>
       
       <Card className="bg-slate-900 border-slate-800 overflow-hidden shadow-xl">
@@ -50,7 +50,7 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
                           )}
                         </div>
                         <div>
-                          <div className="font-bold text-white">{emp.full_name}</div>
+                          <div className="font-bold text-slate-900">{emp.full_name}</div>
                           <div className="text-xs text-slate-500">{emp.email}</div>
                         </div>
                       </div>
@@ -66,14 +66,14 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-1.5">
-                        <Circle className={`w-2.5 h-2.5 fill-current ${emp.is_present_today ? 'text-emerald-500' : 'text-slate-500'}`} />
+                        <Circle className={`w-2.5 h-2.5 fill-current ${emp.is_present_today ? 'text-[#1dbf73]' : 'text-slate-500'}`} />
                         <span className="text-xs font-medium text-slate-300">{emp.is_present_today ? 'Active' : 'Offline'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                         emp.is_present_today 
-                          ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                          ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-emerald-500/20' 
                           : 'bg-red-500/10 text-red-500 border border-red-500/20'
                       }`}>
                         {emp.is_present_today ? 'Present' : 'Absent'}

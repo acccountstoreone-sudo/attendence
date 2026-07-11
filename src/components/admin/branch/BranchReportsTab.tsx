@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { FileText, Download, FileSpreadsheet, FileIcon } from 'lucide-react';
@@ -8,7 +8,7 @@ export const BranchReportsTab: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <h4 className="text-lg font-bold text-white">Branch Reports</h4>
+      <h4 className="text-lg font-bold text-slate-900">Branch Reports</h4>
       
       {reports.length === 0 ? (
         <Card className="bg-slate-900 border-slate-800 p-12 flex flex-col items-center justify-center shadow-xl text-center">
@@ -22,10 +22,10 @@ export const BranchReportsTab: React.FC = () => {
             <Card key={idx} className="bg-slate-900 border-slate-800 p-6 flex flex-col h-full shadow-xl">
               <div className="flex items-start space-x-4 mb-4">
                  <div className="p-3 bg-slate-950 rounded-lg">
-                   <FileText className="w-6 h-6 text-[#004417]" />
+                   <FileText className="w-6 h-6 text-[#1dbf73]" />
                  </div>
                  <div>
-                   <h5 className="text-md font-bold text-white">{report.title}</h5>
+                   <h5 className="text-md font-bold text-slate-900">{report.title}</h5>
                    <p className="text-xs text-slate-400 mt-1">{report.description}</p>
                  </div>
               </div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -153,13 +153,13 @@ export default function AdminDutyHoursPage() {
   return (
     <div className="space-y-8 pb-12 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#021a0a] via-blue-950/20 to-[#021a0a] p-6 rounded-3xl border border-[#0a3a1e] shadow-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-white via-blue-950/20 to-slate-50 p-6 rounded-3xl border border-slate-200 shadow-2xl">
         <div>
           <div className="flex items-center space-x-2 text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">
             <Clock className="w-4 h-4" />
             <span>Duty Hours Management</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
             Branch Duty Hours
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -172,7 +172,7 @@ export default function AdminDutyHoursPage() {
       {loadingBranches ? (
         <div className="flex justify-center py-8"><Spinner size="lg" label="Loading branches..." /></div>
       ) : (
-        <Card className="bg-[#021a0a] border-[#0a3a1e]">
+        <Card className="bg-white border-slate-200">
           <div className="flex items-center gap-2 mb-3">
             <Building2 className="w-4 h-4 text-blue-400" />
             <label className="text-xs font-bold uppercase text-slate-400 tracking-widest">Select Branch</label>
@@ -185,7 +185,7 @@ export default function AdminDutyHoursPage() {
                 className={`px-3 py-2.5 rounded-xl border text-sm font-bold transition-all text-left ${
                   selectedBranchId === b.id
                     ? 'bg-blue-600/20 border-blue-500/50 text-blue-300 shadow-lg shadow-blue-950/50'
-                    : 'bg-[#010e05] border-[#0a3a1e] text-slate-400 hover:border-slate-600 hover:text-slate-200'
+                    : 'bg-white border-slate-200 text-slate-400 hover:border-slate-600 hover:text-slate-200'
                 }`}
               >
                 <span className="block text-[10px] font-extrabold text-blue-400/70 uppercase tracking-wider mb-0.5">{b.code}</span>
@@ -215,7 +215,7 @@ export default function AdminDutyHoursPage() {
                     initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                     className={`flex items-center gap-3 p-4 rounded-xl border text-sm font-medium ${
                       feedback.type === 'success'
-                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                        ? 'bg-[#1dbf73]/10 border-emerald-500/20 text-[#1dbf73]'
                         : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
                     }`}
                   >
@@ -225,10 +225,10 @@ export default function AdminDutyHoursPage() {
                 )}
               </AnimatePresence>
 
-              <Card className="bg-[#021a0a] border-[#0a3a1e]">
-                <div className="flex items-center justify-between mb-6 border-b border-[#0a3a1e] pb-4">
+              <Card className="bg-white border-slate-200">
+                <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-4">
                   <div>
-                    <h2 className="text-lg font-extrabold text-white">{selectedBranch?.name}</h2>
+                    <h2 className="text-lg font-extrabold text-slate-900">{selectedBranch?.name}</h2>
                     <p className="text-xs text-slate-500 mt-0.5">Configure duty hours for this branch</p>
                   </div>
                   <span className="text-xs font-bold text-blue-400 bg-blue-950/60 border border-blue-800/50 px-2.5 py-1 rounded-lg">
@@ -246,7 +246,7 @@ export default function AdminDutyHoursPage() {
                       type="time"
                       value={settings.work_start_time}
                       onChange={e => setSettings(s => ({ ...s, work_start_time: e.target.value }))}
-                      className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-white font-mono text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-mono text-sm focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
 
@@ -259,7 +259,7 @@ export default function AdminDutyHoursPage() {
                       type="time"
                       value={settings.work_end_time}
                       onChange={e => setSettings(s => ({ ...s, work_end_time: e.target.value }))}
-                      className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-white font-mono text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-mono text-sm focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
 
@@ -273,7 +273,7 @@ export default function AdminDutyHoursPage() {
                       min={0} max={120}
                       value={settings.late_grace_minutes}
                       onChange={e => setSettings(s => ({ ...s, late_grace_minutes: Number(e.target.value) }))}
-                      className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                     />
                     <p className="text-xs text-slate-600 mt-1">Check-in within this window is still counted as on-time</p>
                   </div>
@@ -288,7 +288,7 @@ export default function AdminDutyHoursPage() {
                       min={0}
                       value={settings.overtime_after_minutes}
                       onChange={e => setSettings(s => ({ ...s, overtime_after_minutes: Number(e.target.value) }))}
-                      className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                     />
                     <p className="text-xs text-slate-600 mt-1">0 = overtime starts immediately after duty end time</p>
                   </div>
@@ -303,7 +303,7 @@ export default function AdminDutyHoursPage() {
                       min={1} max={8} step={0.5}
                       value={settings.half_day_hours}
                       onChange={e => setSettings(s => ({ ...s, half_day_hours: Number(e.target.value) }))}
-                      className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                     />
                     <p className="text-xs text-slate-600 mt-1">If worked hours are below this, attendance is marked as Half Day</p>
                   </div>
@@ -318,7 +318,7 @@ export default function AdminDutyHoursPage() {
                       placeholder="e.g. Ramadan schedule, summer hours..."
                       value={changeReason}
                       onChange={e => setChangeReason(e.target.value)}
-                      className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-white text-sm placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
                 </div>
@@ -328,10 +328,10 @@ export default function AdminDutyHoursPage() {
                   <div className="flex items-center gap-2 text-blue-300">
                     <Info className="w-3.5 h-3.5 shrink-0" />
                     <span className="font-semibold">Duty Hours:</span>
-                    <span className="font-mono text-white">{settings.work_start_time} – {settings.work_end_time}</span>
+                    <span className="font-mono text-slate-900">{settings.work_start_time} – {settings.work_end_time}</span>
                   </div>
                   <div className="text-slate-400">
-                    Late after: <span className="text-white font-mono">{settings.work_start_time}</span>
+                    Late after: <span className="text-slate-900 font-mono">{settings.work_start_time}</span>
                     {settings.late_grace_minutes > 0 && <span className="text-amber-400"> +{settings.late_grace_minutes}min grace</span>}
                   </div>
                   <div className="text-slate-400">
@@ -346,7 +346,7 @@ export default function AdminDutyHoursPage() {
                     icon={saving ? undefined : <Save className="w-4 h-4 text-slate-900" />}
                     onClick={handleSave}
                     disabled={saving}
-                    className="bg-[#004417] text-[#010e05] hover:bg-[#006622] border-none"
+                    className="bg-[#1dbf73] text-[#010e05] hover:bg-[#16965a] border-none"
                   >
                     {saving ? 'Saving...' : 'Save Duty Hours'}
                   </Button>
@@ -355,14 +355,14 @@ export default function AdminDutyHoursPage() {
 
               {/* Duty Hours History */}
               {history.length > 0 && (
-                <Card className="bg-[#021a0a] border-[#0a3a1e]">
+                <Card className="bg-white border-slate-200">
                   <button
                     onClick={() => setShowHistory(!showHistory)}
                     className="w-full flex items-center justify-between text-left"
                   >
                     <div className="flex items-center gap-2">
-                      <History className="w-4 h-4 text-[#004417]" />
-                      <h3 className="font-bold text-white text-sm">Duty Hours Change History</h3>
+                      <History className="w-4 h-4 text-[#1dbf73]" />
+                      <h3 className="font-bold text-slate-900 text-sm">Duty Hours Change History</h3>
                       <span className="text-xs text-slate-500">({history.length} records)</span>
                     </div>
                     {showHistory ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
@@ -383,7 +383,7 @@ export default function AdminDutyHoursPage() {
                               className={`p-4 rounded-xl border text-xs ${
                                 idx === 0
                                   ? 'bg-blue-950/30 border-blue-800/40'
-                                  : 'bg-[#010e05] border-[#0a3a1e]'
+                                  : 'bg-white border-slate-200'
                               }`}
                             >
                               <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -391,7 +391,7 @@ export default function AdminDutyHoursPage() {
                                   {idx === 0 && (
                                     <span className="px-2 py-0.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-full text-[10px] font-bold uppercase tracking-wider">Current</span>
                                   )}
-                                  <span className="font-mono text-white font-bold text-sm">
+                                  <span className="font-mono text-slate-900 font-bold text-sm">
                                     {timeToInput(entry.work_start_time)} – {timeToInput(entry.work_end_time)}
                                   </span>
                                 </div>

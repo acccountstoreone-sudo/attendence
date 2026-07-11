@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -127,17 +127,17 @@ export default function EmployeeLeavePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
       {/* Top Header */}
-      <div className="flex items-center justify-between bg-[#021a0a] p-6 rounded-3xl border border-[#0a3a1e] shadow-xl">
+      <div className="flex items-center justify-between bg-white p-6 rounded-3xl border border-slate-200 shadow-xl">
         <div className="flex items-center space-x-4">
           <button
             onClick={() => router.push('/employee')}
-            className="p-2.5 rounded-2xl bg-[#010e05]/80 hover:bg-[#0a3a1e] text-slate-300 hover:text-[#004417] transition-colors"
+            className="p-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-300 hover:text-[#1dbf73] transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <span className="text-xs text-[#004417] font-bold uppercase tracking-wider">Annual Leave Management</span>
-            <h1 className="text-2xl font-extrabold text-white mt-1">Leave Application Portal</h1>
+            <span className="text-xs text-[#1dbf73] font-bold uppercase tracking-wider">Annual Leave Management</span>
+            <h1 className="text-2xl font-extrabold text-slate-900 mt-1">Leave Application Portal</h1>
           </div>
         </div>
       </div>
@@ -151,11 +151,11 @@ export default function EmployeeLeavePage() {
             exit={{ opacity: 0, y: -10 }}
             className={`p-4 rounded-2xl border flex items-center space-x-3 shadow-lg ${
               feedback.type === 'success'
-                ? 'bg-emerald-950/80 border-emerald-500/30 text-emerald-300'
+                ? 'bg-emerald-950/80 border-emerald-500/30 text-[#1dbf73]'
                 : 'bg-rose-950/80 border-rose-500/30 text-rose-300'
             }`}
           >
-            {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" /> : <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />}
+            {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-[#1dbf73] shrink-0" /> : <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />}
             <span className="text-sm font-semibold">{feedback.message}</span>
           </motion.div>
         )}
@@ -164,25 +164,25 @@ export default function EmployeeLeavePage() {
       {/* Leave Balance Cards (B8 fix: Dark Theme styled) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {balances.length === 0 ? (
-          <div className="col-span-1 md:col-span-3 text-center py-6 text-slate-500 border border-dashed border-[#0a3a1e] rounded-2xl">
+          <div className="col-span-1 md:col-span-3 text-center py-6 text-slate-500 border border-dashed border-slate-200 rounded-2xl">
             No active leave allocations found for this year.
           </div>
         ) : (
           balances.map((b) => {
             const remaining = Math.max(0, b.allocated - b.used);
             return (
-              <Card key={b.id} className="bg-[#021a0a] border-[#0a3a1e] hover:border-[#004417]/30 transition-all">
+              <Card key={b.id} className="bg-white border-slate-200 hover:border-[#1dbf73]/30 transition-all">
                 <div className="flex items-center justify-between text-slate-400 mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#004417]">{b.name}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#1dbf73]">{b.name}</span>
                   <Calendar className="w-4 h-4 text-slate-500" />
                 </div>
                 <div className="flex items-baseline space-x-2">
-                  <span className="text-3xl font-extrabold text-white">{remaining}</span>
+                  <span className="text-3xl font-extrabold text-slate-900">{remaining}</span>
                   <span className="text-xs text-slate-400">/ {b.allocated} Days Left</span>
                 </div>
-                <div className="w-full bg-[#010e05] h-1.5 rounded-full mt-3 overflow-hidden">
+                <div className="w-full bg-white h-1.5 rounded-full mt-3 overflow-hidden">
                   <div
-                    className="bg-[#004417] h-full rounded-full transition-all"
+                    className="bg-[#1dbf73] h-full rounded-full transition-all"
                     style={{ width: `${b.allocated > 0 ? (remaining / b.allocated) * 100 : 0}%` }}
                   />
                 </div>
@@ -193,11 +193,11 @@ export default function EmployeeLeavePage() {
       </div>
 
       {/* Application Form Card */}
-      <Card className="bg-[#021a0a] border-[#0a3a1e] p-6 sm:p-8 shadow-2xl">
-        <div className="flex items-center space-x-3 border-b border-[#0a3a1e] pb-4 mb-6">
-          <FileText className="w-5 h-5 text-[#004417]" />
+      <Card className="bg-white border-slate-200 p-6 sm:p-8 shadow-2xl">
+        <div className="flex items-center space-x-3 border-b border-slate-200 pb-4 mb-6">
+          <FileText className="w-5 h-5 text-[#1dbf73]" />
           <div>
-            <h3 className="text-lg font-bold text-white">Submit New Request</h3>
+            <h3 className="text-lg font-bold text-slate-900">Submit New Request</h3>
             <p className="text-xs text-slate-400">Fill out the required dates and justification for your supervisor&apos;s review.</p>
           </div>
         </div>
@@ -209,15 +209,15 @@ export default function EmployeeLeavePage() {
               value={leaveType}
               onChange={(e) => setLeaveType(e.target.value)}
               disabled={submitting || balances.length === 0}
-              className="w-full bg-[#010e05] border border-[#0a3a1e] hover:border-slate-700 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-[#004417] transition-all"
+              className="w-full bg-white border border-slate-200 hover:border-slate-700 rounded-xl py-3 px-4 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-all"
             >
               {balances.length === 0 && (
-                <option value="" disabled className="bg-[#010e05] text-slate-500">
+                <option value="" disabled className="bg-white text-slate-500">
                   No leave allocations available
                 </option>
               )}
               {balances.map((b) => (
-                <option key={b.code} value={b.code} className="bg-[#010e05] text-white">
+                <option key={b.code} value={b.code} className="bg-white text-slate-900">
                   {b.name} ({b.code}) — {Math.max(0, b.allocated - b.used)} days available
                 </option>
               ))}
@@ -233,7 +233,7 @@ export default function EmployeeLeavePage() {
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 disabled={submitting}
-                className="w-full bg-[#010e05] border border-[#0a3a1e] hover:border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-[#004417] transition-all"
+                className="w-full bg-white border border-slate-200 hover:border-slate-700 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-all"
               />
             </div>
             <div className="space-y-2">
@@ -244,7 +244,7 @@ export default function EmployeeLeavePage() {
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 disabled={submitting}
-                className="w-full bg-[#010e05] border border-[#0a3a1e] hover:border-slate-700 rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-[#004417] transition-all"
+                className="w-full bg-white border border-slate-200 hover:border-slate-700 rounded-xl py-2.5 px-4 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-all"
               />
             </div>
           </div>
@@ -258,7 +258,7 @@ export default function EmployeeLeavePage() {
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               disabled={submitting}
-              className="w-full bg-[#010e05] border border-[#0a3a1e] hover:border-slate-700 rounded-xl p-4 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-[#004417] transition-all"
+              className="w-full bg-white border border-slate-200 hover:border-slate-700 rounded-xl p-4 text-sm text-slate-900 placeholder-slate-600 focus:outline-none focus:border-[#1dbf73] transition-all"
             />
           </div>
 
@@ -267,7 +267,7 @@ export default function EmployeeLeavePage() {
             disabled={submitting || balances.length === 0 || !leaveType}
             variant="primary"
             size="lg"
-            className="w-full bg-[#004417] text-[#010e05] hover:bg-[#006622] font-extrabold border-none py-4 shadow-lg shadow-[#004417]/20 disabled:opacity-50"
+            className="w-full bg-[#1dbf73] text-[#010e05] hover:bg-[#16965a] font-extrabold border-none py-4 shadow-lg shadow-[#004417]/20 disabled:opacity-50"
           >
             {submitting ? 'Submitting Request...' : 'Submit Leave Application'}
           </Button>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
@@ -265,22 +265,22 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
   };
 
   return (
-    <div className="space-y-4 bg-[#0A1220] border border-[#0a3a1e] rounded-2xl p-5 shadow-2xl">
+    <div className="space-y-4 bg-[#0A1220] border border-slate-200 rounded-2xl p-5 shadow-2xl">
       {/* Fallback stylesheet import for SSR/client rendering safety */}
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
       {/* Header & Instructions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#0a3a1e] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
-          <div className="flex items-center space-x-2 text-[#004417] text-xs font-bold uppercase tracking-widest mb-1">
+          <div className="flex items-center space-x-2 text-[#1dbf73] text-xs font-bold uppercase tracking-widest mb-1">
             <Sparkles className="w-4 h-4" />
             <span>Interactive Geofence Map Picker</span>
           </div>
-          <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+          <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
             Select Store Location directly on Map
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            No need to copy coordinates from Google Maps! Search area, use your GPS, or <span className="text-[#004417] font-semibold">click & drag the pin</span> to set location.
+            No need to copy coordinates from Google Maps! Search area, use your GPS, or <span className="text-[#1dbf73] font-semibold">click & drag the pin</span> to set location.
           </p>
         </div>
 
@@ -288,7 +288,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
           type="button"
           onClick={handleUseCurrentLocation}
           disabled={isLocating}
-          className="bg-[#004417] hover:bg-[#b88b22] text-[#010e05] font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(210,160,42,0.3)] shrink-0 transition-all"
+          className="bg-[#1dbf73] hover:bg-[#b88b22] text-[#010e05] font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(210,160,42,0.3)] shrink-0 transition-all"
         >
           {isLocating ? <Navigation className="w-4 h-4 animate-spin" /> : <Crosshair className="w-4 h-4" />}
           {isLocating ? 'Detecting GPS...' : 'Use My Current Location'}
@@ -310,13 +310,13 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
                 }
               }}
               placeholder="Search store address, area, road, or city (e.g., Mirpur 10, Gulshan 2, Uttara, Chittagong)..."
-              className="w-full pl-10 pr-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#004417] focus:ring-1 focus:ring-[#004417] transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => { setSearchQuery(''); setSearchResults([]); }}
-                className="absolute right-3.5 top-3.5 text-xs text-slate-400 hover:text-white"
+                className="absolute right-3.5 top-3.5 text-xs text-slate-400 hover:text-slate-900"
               >
                 Clear
               </button>
@@ -325,7 +325,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
           <Button
             type="button"
             disabled={isSearching || !searchQuery.trim()}
-            className="bg-[#0a3a1e] hover:bg-[#004417] text-white px-6 font-medium rounded-xl"
+            className="bg-slate-100 hover:bg-[#1dbf73] text-slate-900 px-6 font-medium rounded-xl"
           >
             {isSearching ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Search'}
           </Button>
@@ -333,13 +333,13 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
         {/* Search Results Dropdown */}
         {searchResults.length > 0 && (
-          <div className="absolute left-0 right-0 top-full mt-2 bg-[#021a0a] border border-[#0a3a1e] rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-[#0a3a1e]">
-            <div className="px-3 py-2 bg-[#010e05] text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
+          <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-200">
+            <div className="px-3 py-2 bg-white text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
               <span>Matching Locations ({searchResults.length})</span>
               <button
                 type="button"
                 onClick={() => setSearchResults([])}
-                className="text-slate-400 hover:text-white text-xs"
+                className="text-slate-400 hover:text-slate-900 text-xs"
               >
                 Close
               </button>
@@ -349,11 +349,11 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
                 key={item.place_id}
                 type="button"
                 onClick={() => selectSearchResult(item)}
-                className="w-full px-4 py-3 text-left hover:bg-[#0a3a1e] transition-colors flex items-start gap-3"
+                className="w-full px-4 py-3 text-left hover:bg-slate-100 transition-colors flex items-start gap-3"
               >
-                <MapPin className="w-4 h-4 text-[#004417] shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-[#1dbf73] shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-sm font-semibold text-white line-clamp-1">
+                  <div className="text-sm font-semibold text-slate-900 line-clamp-1">
                     {item.display_name.split(',')[0]}
                   </div>
                   <div className="text-xs text-slate-400 line-clamp-1 mt-0.5">
@@ -367,33 +367,33 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
       </div>
 
       {/* Map Container */}
-      <div className="relative rounded-2xl overflow-hidden border-2 border-[#0a3a1e] shadow-inner group">
+      <div className="relative rounded-2xl overflow-hidden border-2 border-slate-200 shadow-inner group">
         <div
           ref={mapContainerRef}
-          className="w-full h-[380px] sm:h-[430px] bg-[#010e05] z-10 cursor-crosshair"
+          className="w-full h-[380px] sm:h-[430px] bg-white z-10 cursor-crosshair"
         />
 
         {/* Floating instruction overlay on map */}
-        <div className="absolute top-3 right-3 z-20 bg-[#021a0a]/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#0a3a1e] shadow-lg pointer-events-none text-xs text-slate-300 flex items-center gap-1.5">
-          <Globe className="w-3.5 h-3.5 text-[#004417]" />
+        <div className="absolute top-3 right-3 z-20 bg-white backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-200 shadow-lg pointer-events-none text-xs text-slate-300 flex items-center gap-1.5">
+          <Globe className="w-3.5 h-3.5 text-[#1dbf73]" />
           <span>Click anywhere or drag pin to adjust</span>
         </div>
       </div>
 
       {/* Status & Coordinate Summary */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 bg-[#010e05] px-4 py-3 rounded-xl border border-[#0a3a1e]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 bg-white px-4 py-3 rounded-xl border border-slate-200">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-[#004417]/10 rounded-lg text-[#004417]">
+          <div className="p-2 bg-[#1dbf73]/10 rounded-lg text-[#1dbf73]">
             <MapPin className="w-5 h-5" />
           </div>
           <div>
             <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">
               Active Geofence Pin Position
             </div>
-            <div className="text-sm font-extrabold text-white flex items-center gap-3 mt-0.5">
-              <span>Lat: <span className="text-[#004417] font-mono">{latitude !== null && !isNaN(latitude) ? latitude.toFixed(6) : 'Not set'}</span></span>
-              <span>Lng: <span className="text-[#004417] font-mono">{longitude !== null && !isNaN(longitude) ? longitude.toFixed(6) : 'Not set'}</span></span>
-              <span className="text-xs px-2 py-0.5 bg-[#0a3a1e] text-slate-300 rounded-md font-sans">
+            <div className="text-sm font-extrabold text-slate-900 flex items-center gap-3 mt-0.5">
+              <span>Lat: <span className="text-[#1dbf73] font-mono">{latitude !== null && !isNaN(latitude) ? latitude.toFixed(6) : 'Not set'}</span></span>
+              <span>Lng: <span className="text-[#1dbf73] font-mono">{longitude !== null && !isNaN(longitude) ? longitude.toFixed(6) : 'Not set'}</span></span>
+              <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-300 rounded-md font-sans">
                 Radius: {safeRadius}m
               </span>
             </div>
@@ -401,7 +401,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
         </div>
 
         {locationStatus && (
-          <div className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
+          <div className="flex items-center gap-1.5 text-xs text-[#1dbf73] bg-[#1dbf73]/10 px-3 py-1.5 rounded-lg border border-emerald-500/20">
             <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
             <span className="font-medium">{locationStatus}</span>
           </div>

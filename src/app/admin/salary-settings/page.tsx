@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -106,9 +106,9 @@ export default function AdminSalarySettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <DollarSign className="w-7 h-7 text-emerald-400" />
+          <DollarSign className="w-7 h-7 text-[#1dbf73]" />
           <div>
-            <h1 className="text-2xl font-bold text-white">Salary Settings</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Salary Settings</h1>
             <p className="text-sm text-slate-400">Configure base salary and allowances per employee.</p>
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function AdminSalarySettingsPage() {
       <AnimatePresence>
         {feedback && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className={`rounded-lg px-4 py-3 text-sm font-medium flex items-center justify-between ${feedback.type === 'success' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'}`}>
+            className={`rounded-lg px-4 py-3 text-sm font-medium flex items-center justify-between ${feedback.type === 'success' ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'}`}>
             {feedback.text}
             <button onClick={() => setFeedback(null)}><X className="w-4 h-4" /></button>
           </motion.div>
@@ -146,7 +146,7 @@ export default function AdminSalarySettingsPage() {
         {(showAddForm || editingId) && (
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
             <Card className="p-5 border border-emerald-500/30 bg-slate-800/60">
-              <h2 className="text-lg font-semibold text-white mb-4">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">
                 {editingId ? 'Edit Salary' : 'Set Employee Salary'}
               </h2>
               <form onSubmit={handleSave} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -155,7 +155,7 @@ export default function AdminSalarySettingsPage() {
                     <label className="text-xs text-slate-400 mb-1 block">Employee *</label>
                     <select id="salary-employee-select" required value={form.user_id}
                       onChange={(e) => setForm({ ...form, user_id: e.target.value })}
-                      className="w-full bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                      className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
                       <option value="">Select…</option>
                       {employeesWithoutSalary.map((emp) => (
                         <option key={emp.id} value={emp.id}>
@@ -176,12 +176,12 @@ export default function AdminSalarySettingsPage() {
                     <input id={id} type="number" min={0} step={0.01}
                       value={form[key as keyof typeof form]}
                       onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })}
-                      className="w-full bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                      className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 ))}
                 <div className="col-span-2 sm:col-span-3 lg:col-span-6 flex gap-2 justify-end pt-1">
-                  <div className="flex-1 flex items-center text-sm text-emerald-400 font-semibold">
+                  <div className="flex-1 flex items-center text-sm text-[#1dbf73] font-semibold">
                     Total: ৳{(form.base_salary + form.house_rent_allowance + form.medical_allowance + form.transport_allowance).toLocaleString()}
                   </div>
                   <Button id="cancel-salary-btn" type="button" variant="secondary" onClick={() => { setShowAddForm(false); setEditingId(null); }}>Cancel</Button>
@@ -200,7 +200,7 @@ export default function AdminSalarySettingsPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input id="salary-search-input" type="text" placeholder="Search by name, ID, or branch…" value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-slate-800 text-white border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500"
+          className="w-full bg-slate-800 text-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500"
         />
       </div>
 
@@ -230,7 +230,7 @@ export default function AdminSalarySettingsPage() {
                         <input id={id} type="number" min={0} step={0.01}
                           value={form[key as keyof typeof form]}
                           onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })}
-                          className="w-full bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                          className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
                         />
                       </div>
                     ))}
@@ -246,17 +246,17 @@ export default function AdminSalarySettingsPage() {
                 <Card className="p-4 bg-slate-800/60 flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-white font-semibold">{s.profiles?.full_name}</p>
+                      <p className="text-slate-900 font-semibold">{s.profiles?.full_name}</p>
                       {s.profiles?.employee_id && <Badge variant="info">{s.profiles.employee_id}</Badge>}
                     </div>
                     <p className="text-slate-400 text-xs">{(Array.isArray(s.profiles?.branches) ? s.profiles.branches[0]?.name : s.profiles?.branches?.name) ?? 'No branch'}</p>
                     <div className="mt-2 grid grid-cols-2 gap-x-4 text-xs">
-                      <span className="text-slate-400">Base: <span className="text-white">৳{s.base_salary.toLocaleString()}</span></span>
-                      <span className="text-slate-400">HRA: <span className="text-white">৳{s.house_rent_allowance.toLocaleString()}</span></span>
-                      <span className="text-slate-400">Medical: <span className="text-white">৳{s.medical_allowance.toLocaleString()}</span></span>
-                      <span className="text-slate-400">Transport: <span className="text-white">৳{s.transport_allowance.toLocaleString()}</span></span>
+                      <span className="text-slate-400">Base: <span className="text-slate-900">৳{s.base_salary.toLocaleString()}</span></span>
+                      <span className="text-slate-400">HRA: <span className="text-slate-900">৳{s.house_rent_allowance.toLocaleString()}</span></span>
+                      <span className="text-slate-400">Medical: <span className="text-slate-900">৳{s.medical_allowance.toLocaleString()}</span></span>
+                      <span className="text-slate-400">Transport: <span className="text-slate-900">৳{s.transport_allowance.toLocaleString()}</span></span>
                     </div>
-                    <p className="text-emerald-400 text-sm font-bold mt-1">Total: ৳{totalPackage(s).toLocaleString()}/month</p>
+                    <p className="text-[#1dbf73] text-sm font-bold mt-1">Total: ৳{totalPackage(s).toLocaleString()}/month</p>
                   </div>
                   <button id={`edit-salary-${s.user_id}`} onClick={() => startEdit(s)}
                     className="text-slate-400 hover:text-indigo-400 transition-colors p-2 flex-shrink-0">

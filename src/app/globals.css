@@ -66,12 +66,12 @@ body {
 /* ── Universal Theme Overrides for #1dbf73 & White Theme across ALL Pages ── */
 
 /* Background overrides */
-[class*="bg-[#010e05]"], [class*="bg-[#011408]"], [class*="bg-[#011a0a]"] {
+[class*="bg-white"], [class*="bg-white"], [class*="bg-white"] {
   background-color: var(--background) !important;
   color: var(--foreground) !important;
 }
 
-[class*="bg-[#021a0a]"] {
+[class*="bg-white"] {
   background-color: var(--card) !important;
   color: var(--card-foreground) !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
@@ -79,22 +79,22 @@ body {
 }
 
 /* Primary #1dbf73 overrides */
-[class*="bg-[#004417]"], [class*="bg-[#00551e]"], [class*="bg-[#006622]"] {
+[class*="bg-[#1dbf73]"], [class*="bg-[#00551e]"], [class*="bg-[#16965a]"] {
   background-color: #1dbf73 !important;
   color: #ffffff !important;
 }
 
-[class*="from-[#004417]"] {
+[class*="from-[#1dbf73]"] {
   --tw-gradient-from: #1dbf73 !important;
   --tw-gradient-to: #16965a !important;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
 }
 
-[class*="to-[#006622]"], [class*="to-[#004417]"] {
+[class*="to-[#16965a]"], [class*="to-[#16965a]"] {
   --tw-gradient-to: #16965a !important;
 }
 
-[class*="from-[#00cc55]"] {
+[class*="from-[#1dbf73]"] {
   --tw-gradient-from: #1dbf73 !important;
 }
 
@@ -104,31 +104,16 @@ body {
   color: #0f172a !important;
 }
 
-/* Border overrides */
-[class*="border-[#004417]"], [class*="border-[#0a3a1e]"], [class*="border-white/10"], [class*="border-white/[0.05]"], [class*="border-white/[0.03]"], [class*="border-white/5"], [class*="border-[#006622]"] {
+/* Border overrides — only truly dark borders */
+[class*="border-[#0a3a1e]"], [class*="border-white/5"] {
   border-color: #e2e8f0 !important;
 }
 
-/* Text color overrides */
-[class*="text-green-400"], [class*="text-green-300"], [class*="text-emerald-400"], [class*="text-emerald-300"] {
+/* Text color: legacy dark green accent → brand green */
+[class*="text-[#00aa44]"], [class*="text-[#00cc55]"], [class*="text-[#004417]"] {
   color: #1dbf73 !important;
 }
 
-[class*="text-green-200"], [class*="text-green-100"] {
-  color: #475569 !important;
-}
-
-[class*="text-slate-100"], [class*="text-slate-200"], [class*="text-slate-300"], [class*="text-white/80"], [class*="text-white/70"] {
-  color: #334155 !important;
-}
-
-/* Keep text-white white inside #1dbf73 buttons/headers/badges */
-[class*="bg-[#1dbf73]"] [class*="text-"],
-[class*="bg-[#004417]"] [class*="text-"],
-.premium-export-btn,
-[class*="bg-gradient-to-b"] [class*="text-"] {
-  color: #ffffff !important;
-}
 
 /* Glassmorphism Styles */
 .glass-panel {

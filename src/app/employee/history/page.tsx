@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -183,7 +183,7 @@ export default function EmployeeHistoryPage() {
             <History className="w-4 h-4" />
             <span>Personal Attendance Ledger</span>
           </div>
-          <h1 className="text-2xl font-extrabold text-white">My Attendance History</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900">My Attendance History</h1>
           <p className="text-sm text-slate-400 mt-1">Full record of your check-in/out timestamps and daily status.</p>
         </div>
       </div>
@@ -197,7 +197,7 @@ export default function EmployeeHistoryPage() {
               type="date"
               value={searchDate}
               onChange={(e) => handleDateChange(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+              className="pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
           {searchDate && (
@@ -278,7 +278,7 @@ export default function EmployeeHistoryPage() {
                           <div className="flex items-center space-x-2">
                             <Calendar className="w-4 h-4 text-slate-500 shrink-0" />
                             <div>
-                              <p className="font-bold text-white text-sm">
+                              <p className="font-bold text-slate-900 text-sm">
                                 {displayDate}
                               </p>
                             </div>
@@ -293,8 +293,8 @@ export default function EmployeeHistoryPage() {
                         <td className="py-4 px-5">
                           {rec.check_in_time ? (
                             <div className="flex items-center space-x-1.5">
-                              <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                              <span className="font-semibold text-emerald-400">
+                              <Clock className="w-3.5 h-3.5 text-[#1dbf73] shrink-0" />
+                              <span className="font-semibold text-[#1dbf73]">
                                 {new Date(rec.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
@@ -342,7 +342,7 @@ export default function EmployeeHistoryPage() {
 
           {/* Pagination */}
           <div className="p-4 border-t border-slate-800/80 flex items-center justify-between">
-            <span className="text-xs text-slate-400">Showing page <strong className="text-white">{page}</strong> of <strong className="text-white">{totalPages}</strong></span>
+            <span className="text-xs text-slate-400">Showing page <strong className="text-slate-900">{page}</strong> of <strong className="text-slate-900">{totalPages}</strong></span>
             <div className="flex items-center space-x-2">
               <Button
                 size="sm"
@@ -369,16 +369,16 @@ export default function EmployeeHistoryPage() {
 
       {/* Correction Modal */}
       {isCorrectionModalOpen && selectedRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-6 border-b border-slate-800/60 bg-slate-950/50">
               <div>
-                <h3 className="text-lg font-extrabold text-white">Request Correction</h3>
+                <h3 className="text-lg font-extrabold text-slate-900">Request Correction</h3>
                 <p className="text-sm text-slate-400">For {selectedRecord.date || 'this record'}</p>
               </div>
               <button
                 onClick={() => setIsCorrectionModalOpen(false)}
-                className="p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 rounded-full transition-colors"
+                className="p-2 text-slate-400 hover:text-slate-900 bg-slate-800/50 hover:bg-slate-700 rounded-full transition-colors"
                 disabled={isSubmitting}
               >
                 <X className="w-5 h-5" />
@@ -393,7 +393,7 @@ export default function EmployeeHistoryPage() {
                 </div>
               )}
               {correctionSuccess && (
-                <div className="p-3 bg-emerald-950/40 text-emerald-400 text-sm rounded-xl border border-emerald-900/50">
+                <div className="p-3 bg-emerald-950/40 text-[#1dbf73] text-sm rounded-xl border border-emerald-900/50">
                   {correctionSuccess}
                 </div>
               )}
@@ -402,7 +402,7 @@ export default function EmployeeHistoryPage() {
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Correction Type</label>
                   <div className="flex gap-4">
-                    <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                    <label className="flex items-center gap-2 text-sm text-slate-900 cursor-pointer">
                       <input 
                         type="radio" 
                         name="correctionType" 
@@ -414,7 +414,7 @@ export default function EmployeeHistoryPage() {
                       />
                       Check-In Time
                     </label>
-                    <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                    <label className="flex items-center gap-2 text-sm text-slate-900 cursor-pointer">
                       <input 
                         type="radio" 
                         name="correctionType" 
@@ -437,7 +437,7 @@ export default function EmployeeHistoryPage() {
                     onChange={(e) => setRequestedTime(e.target.value)}
                     required
                     disabled={isSubmitting}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                   />
                 </div>
 
@@ -451,7 +451,7 @@ export default function EmployeeHistoryPage() {
                     minLength={5}
                     rows={3}
                     disabled={isSubmitting}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none placeholder:text-slate-600"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none placeholder:text-slate-600"
                   />
                 </div>
               </div>

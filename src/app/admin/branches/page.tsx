@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -121,13 +121,13 @@ export default function AdminBranchesPage() {
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#021a0a] via-blue-950/20 to-[#021a0a] p-6 rounded-3xl border border-[#0a3a1e] shadow-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-white via-blue-950/20 to-slate-50 p-6 rounded-3xl border border-slate-200 shadow-2xl">
         <div>
           <div className="flex items-center space-x-2 text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">
             <Store className="w-4 h-4" />
             <span>Retail Network Management</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
             Anchor Fashion Branch Directory
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -152,7 +152,7 @@ export default function AdminBranchesPage() {
             exit={{ opacity: 0 }}
             className={`flex items-center gap-3 p-4 rounded-xl border text-sm font-medium ${
               feedback.type === 'success'
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                ? 'bg-[#1dbf73]/10 border-emerald-500/20 text-[#1dbf73]'
                 : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
             }`}
           >
@@ -171,7 +171,7 @@ export default function AdminBranchesPage() {
             placeholder="Search branches by name or code..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
       </Card>
@@ -195,7 +195,7 @@ export default function AdminBranchesPage() {
                       </span>
                       <Badge status={branch.is_active ? 'active' : 'inactive'} />
                     </div>
-                    <h3 className="text-lg font-bold text-white">{branch.name}</h3>
+                    <h3 className="text-lg font-bold text-slate-900">{branch.name}</h3>
                   </div>
 
                   <div className="flex items-center space-x-1 shrink-0">
@@ -216,7 +216,7 @@ export default function AdminBranchesPage() {
                     <button
                       onClick={() => toggleActive(branch)}
                       disabled={togglingId === branch.id}
-                      className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${branch.is_active ? 'bg-[#0a3a1e] hover:bg-rose-900/50 hover:text-rose-400 text-slate-400' : 'bg-[#0a3a1e] hover:bg-emerald-900/50 hover:text-emerald-400 text-slate-400'}`}
+                      className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${branch.is_active ? 'bg-slate-100 hover:bg-rose-900/50 hover:text-rose-400 text-slate-400' : 'bg-slate-100 hover:bg-emerald-900/50 hover:text-[#1dbf73] text-slate-400'}`}
                       title={branch.is_active ? 'Deactivate' : 'Activate'}
                     >
                       {togglingId === branch.id
@@ -258,7 +258,7 @@ export default function AdminBranchesPage() {
                   <span><strong className="text-slate-200">{branch._staff_count || 0}</strong> Staff Assigned</span>
                 </div>
                 <div className="flex items-center space-x-1 text-slate-500">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                  <CheckCircle2 className="w-3 h-3 text-[#1dbf73]" />
                   <span>Geofence {branch.latitude ? 'Configured' : 'Not Set'}</span>
                 </div>
               </div>

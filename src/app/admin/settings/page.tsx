@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -102,18 +102,18 @@ export default function AdminSettingsPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#021a0a] p-6 rounded-3xl border border-[#0a3a1e] shadow-2xl relative overflow-hidden"
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-2xl relative overflow-hidden"
       >
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
 
         <div className="relative z-10 pointer-events-none">
           <div className="flex items-center space-x-2">
-            <Settings className="w-5 h-5 text-[#004417]" />
-            <span className="px-3 py-1 rounded-full bg-[#004417]/20 border border-[#004417]/30 text-[#004417] text-xs font-bold uppercase tracking-widest">
+            <Settings className="w-5 h-5 text-[#1dbf73]" />
+            <span className="px-3 py-1 rounded-full bg-[#1dbf73]/10 border border-[#1dbf73]/30 text-[#1dbf73] text-xs font-bold uppercase tracking-widest">
               System Configuration
             </span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white mt-3 tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">
             Platform Settings
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -131,7 +131,7 @@ export default function AdminSettingsPage() {
             exit={{ opacity: 0 }}
             className={`flex items-center gap-3 p-4 rounded-xl border text-sm font-medium ${
               feedback.type === 'success'
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                ? 'bg-[#1dbf73]/10 border-emerald-500/20 text-[#1dbf73]'
                 : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
             }`}
           >
@@ -155,8 +155,8 @@ export default function AdminSettingsPage() {
               onClick={() => setActiveTab(tab.key)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${
                 activeTab === tab.key
-                  ? 'bg-[#004417]/20 text-[#004417] border border-[#004417]/30'
-                  : 'text-slate-400 hover:bg-[#0a3a1e] hover:text-white border border-transparent'
+                  ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/30'
+                  : 'text-slate-400 hover:bg-slate-100 hover:text-slate-900 border border-transparent'
               }`}
             >
               {tab.icon}
@@ -167,13 +167,13 @@ export default function AdminSettingsPage() {
 
         {/* Configuration Forms */}
         <div className="md:col-span-3">
-          <Card className="bg-[#021a0a] border-[#0a3a1e] shadow-2xl">
+          <Card className="bg-white border-slate-200 shadow-2xl">
             <form onSubmit={handleSave} className="space-y-6">
 
               {activeTab === 'general' && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-1">Company Profile</h3>
+                    <h3 className="text-lg font-bold text-slate-900 mb-1">Company Profile</h3>
                     <p className="text-xs text-slate-400">Basic information about the organization.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -184,7 +184,7 @@ export default function AdminSettingsPage() {
                         required
                         value={profile.name}
                         onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
-                        className="w-full bg-[#010e05] border border-[#0a3a1e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#004417] transition-colors"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-colors"
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -193,7 +193,7 @@ export default function AdminSettingsPage() {
                         rows={2}
                         value={profile.hq_address}
                         onChange={(e) => setProfile((p) => ({ ...p, hq_address: e.target.value }))}
-                        className="w-full bg-[#010e05] border border-[#0a3a1e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#004417] resize-none transition-colors"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] resize-none transition-colors"
                       />
                     </div>
                   </div>
@@ -203,7 +203,7 @@ export default function AdminSettingsPage() {
               {activeTab === 'attendance' && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-1">Attendance Parameters</h3>
+                    <h3 className="text-lg font-bold text-slate-900 mb-1">Attendance Parameters</h3>
                     <p className="text-xs text-slate-400">Configure global shift timings and grace periods.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -214,7 +214,7 @@ export default function AdminSettingsPage() {
                         required
                         value={profile.working_hours_start}
                         onChange={(e) => setProfile((p) => ({ ...p, working_hours_start: e.target.value }))}
-                        className="w-full bg-[#010e05] border border-[#0a3a1e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#004417] transition-colors"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-colors"
                       />
                     </div>
                     <div>
@@ -224,7 +224,7 @@ export default function AdminSettingsPage() {
                         required
                         value={profile.working_hours_end}
                         onChange={(e) => setProfile((p) => ({ ...p, working_hours_end: e.target.value }))}
-                        className="w-full bg-[#010e05] border border-[#0a3a1e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#004417] transition-colors"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-colors"
                       />
                     </div>
                     <div>
@@ -236,7 +236,7 @@ export default function AdminSettingsPage() {
                         max={120}
                         value={profile.grace_period_minutes}
                         onChange={(e) => setProfile((p) => ({ ...p, grace_period_minutes: Number(e.target.value) }))}
-                        className="w-full bg-[#010e05] border border-[#0a3a1e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#004417] transition-colors"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-colors"
                       />
                     </div>
                     <div>
@@ -249,7 +249,7 @@ export default function AdminSettingsPage() {
                         step={0.5}
                         value={profile.overtime_multiplier}
                         onChange={(e) => setProfile((p) => ({ ...p, overtime_multiplier: Number(e.target.value) }))}
-                        className="w-full bg-[#010e05] border border-[#0a3a1e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#004417] transition-colors"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-colors"
                       />
                     </div>
                   </div>
@@ -259,7 +259,7 @@ export default function AdminSettingsPage() {
               {activeTab === 'security' && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-1">Security & Access</h3>
+                    <h3 className="text-lg font-bold text-slate-900 mb-1">Security & Access</h3>
                     <p className="text-xs text-slate-400">Biometric and session policies — managed at infrastructure level.</p>
                   </div>
                   <div className="space-y-4">
@@ -275,14 +275,14 @@ export default function AdminSettingsPage() {
                         enabled: true,
                       },
                     ].map((item) => (
-                      <div key={item.title} className="flex items-center justify-between p-4 bg-[#010e05] border border-[#0a3a1e] rounded-xl">
+                      <div key={item.title} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl">
                         <div>
-                          <p className="text-sm font-bold text-white">{item.title}</p>
+                          <p className="text-sm font-bold text-slate-900">{item.title}</p>
                           <p className="text-xs text-slate-400 mt-0.5">{item.desc}</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input type="checkbox" defaultChecked={item.enabled} className="sr-only peer" />
-                          <div className="w-11 h-6 bg-[#0a3a1e] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#004417]"></div>
+                          <div className="w-11 h-6 bg-slate-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1dbf73]"></div>
                         </label>
                       </div>
                     ))}
@@ -294,11 +294,11 @@ export default function AdminSettingsPage() {
                 </motion.div>
               )}
 
-              <div className="pt-6 border-t border-[#0a3a1e] flex justify-end">
+              <div className="pt-6 border-t border-slate-200 flex justify-end">
                 <Button
                   type="submit"
                   variant="primary"
-                  className="bg-[#004417] text-[#010e05] hover:bg-[#006622] font-bold border-none"
+                  className="bg-[#1dbf73] text-[#010e05] hover:bg-[#16965a] font-bold border-none"
                   icon={<Save className="w-4 h-4" />}
                   isLoading={loading}
                 >

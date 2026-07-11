@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -159,7 +159,7 @@ export default function BranchManagerAttendancePage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#021a0a] p-6 rounded-3xl border border-[#0a3a1e] backdrop-blur-xl shadow-2xl relative overflow-hidden"
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 backdrop-blur-sm shadow-2xl relative overflow-hidden"
       >
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
         <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
@@ -168,12 +168,12 @@ export default function BranchManagerAttendancePage() {
 
         <div className="relative z-10 pointer-events-none">
           <div className="flex items-center space-x-2">
-            <span className="px-3 py-1 rounded-full bg-[#004417]/20 border border-[#004417]/30 text-[#004417] text-xs font-bold uppercase tracking-widest">
+            <span className="px-3 py-1 rounded-full bg-[#1dbf73]/10 border border-[#1dbf73]/30 text-[#1dbf73] text-xs font-bold uppercase tracking-widest">
               Store Log
             </span>
             {isToday && (
               <span className="text-xs text-slate-400 flex items-center">
-                <Clock className="w-3 h-3 text-[#004417] mr-1" />
+                <Clock className="w-3 h-3 text-[#1dbf73] mr-1" />
                 Today — Live
               </span>
             )}
@@ -183,7 +183,7 @@ export default function BranchManagerAttendancePage() {
               </span>
             )}
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white mt-2 tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">
             Store Attendance & Approvals
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -195,7 +195,7 @@ export default function BranchManagerAttendancePage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-[#0a3a1e] bg-[#010e05]/50 text-slate-300 hover:bg-[#0a3a1e] hover:text-white"
+            className="border-slate-200 bg-white/50 text-slate-300 hover:bg-slate-100 hover:text-slate-900"
             icon={<RefreshCw className="w-4 h-4" />}
             onClick={fetchAttendance}
           >
@@ -204,7 +204,7 @@ export default function BranchManagerAttendancePage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-[#0a3a1e] bg-[#010e05]/50 text-slate-300 hover:bg-[#0a3a1e] hover:text-white"
+            className="border-slate-200 bg-white/50 text-slate-300 hover:bg-slate-100 hover:text-slate-900"
             icon={<Download className="w-4 h-4" />}
             onClick={handleExport}
             disabled={filteredRecords.length === 0}
@@ -223,7 +223,7 @@ export default function BranchManagerAttendancePage() {
             exit={{ opacity: 0 }}
             className={`flex items-center gap-3 p-4 rounded-xl border text-sm font-medium ${
               feedback.type === 'success'
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                ? 'bg-[#1dbf73]/10 border-emerald-500/20 text-[#1dbf73]'
                 : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
             }`}
           >
@@ -234,10 +234,10 @@ export default function BranchManagerAttendancePage() {
       </AnimatePresence>
 
       {/* Tabs + Table */}
-      <Card className="bg-[#021a0a] border-[#0a3a1e] p-0 overflow-hidden relative z-10 shadow-2xl">
+      <Card className="bg-white border-slate-200 p-0 overflow-hidden relative z-10 shadow-2xl">
 
         {/* Tabs */}
-        <div className="flex border-b border-[#0a3a1e] bg-[#010e05]/80">
+        <div className="flex border-b border-slate-200 bg-white">
           {([
             { key: 'pending', label: 'Pending Approval', icon: <Hourglass className="w-3.5 h-3.5" /> },
             { key: 'approved', label: 'Approved', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
@@ -248,7 +248,7 @@ export default function BranchManagerAttendancePage() {
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-5 py-3.5 text-xs font-extrabold uppercase tracking-widest transition-all border-b-2 ${
                 activeTab === tab.key
-                  ? 'border-[#004417] text-[#004417] bg-[#004417]/5'
+                  ? 'border-[#1dbf73] text-[#1dbf73] bg-[#1dbf73]/5'
                   : 'border-transparent text-slate-500 hover:text-slate-300'
               }`}
             >
@@ -264,7 +264,7 @@ export default function BranchManagerAttendancePage() {
         </div>
 
         {/* Toolbar */}
-        <div className="p-4 border-b border-[#0a3a1e] bg-[#010e05]/60 flex flex-col md:flex-row gap-3 justify-between items-center">
+        <div className="p-4 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row gap-3 justify-between items-center">
           <div className="relative w-full md:w-80">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -272,12 +272,12 @@ export default function BranchManagerAttendancePage() {
               placeholder="Search by employee name..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-[#021a0a] border border-[#0a3a1e] rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#004417] transition-colors"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#1dbf73] transition-colors"
             />
           </div>
 
-          <div className="flex items-center gap-2 bg-[#021a0a] border border-[#0a3a1e] rounded-xl px-3 py-2">
-            <Calendar className="w-4 h-4 text-[#004417] shrink-0" />
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2">
+            <Calendar className="w-4 h-4 text-[#1dbf73] shrink-0" />
             <input
               type="date"
               value={selectedDate}
@@ -297,7 +297,7 @@ export default function BranchManagerAttendancePage() {
           ) : (
             <table className="w-full text-left border-collapse whitespace-nowrap">
               <thead>
-                <tr className="bg-[#010e05] border-b border-[#0a3a1e] text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
                   <th className="py-4 px-6">Employee</th>
                   <th className="py-4 px-6">Location</th>
                   <th className="py-4 px-6">Check-In</th>
@@ -308,14 +308,14 @@ export default function BranchManagerAttendancePage() {
                   {activeTab !== 'pending' && <th className="py-4 px-6 text-right">Approval</th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#0a3a1e]/50 text-sm">
+              <tbody className="divide-y divide-slate-200/50 text-sm">
                 <AnimatePresence>
                   {filteredRecords.length === 0 ? (
                     <tr>
                       <td colSpan={7}>
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-16 text-center text-slate-500 text-sm">
                           {activeTab === 'pending'
-                            ? <><CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-emerald-600/40" /><p className="font-semibold text-emerald-500/60">All caught up! No pending approvals.</p></>
+                            ? <><CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-emerald-600/40" /><p className="font-semibold text-[#1dbf73]/60">All caught up! No pending approvals.</p></>
                             : <><Clock className="w-8 h-8 mx-auto mb-3 text-slate-600 opacity-50" /><p>No attendance records found for {new Date(selectedDate + 'T12:00:00').toLocaleDateString()}.</p></>
                           }
                         </motion.div>
@@ -328,16 +328,16 @@ export default function BranchManagerAttendancePage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
                         key={rec.id}
-                        className="hover:bg-[#0a3a1e]/30 transition-colors group"
+                        className="hover:bg-slate-100/30 transition-colors group"
                       >
                         {/* Employee */}
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-[#010e05] border border-[#0a3a1e] flex items-center justify-center text-[#004417] font-bold text-xs shrink-0">
+                            <div className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center text-[#1dbf73] font-bold text-xs shrink-0">
                               {rec.full_name?.charAt(0) || 'U'}
                             </div>
                             <div>
-                              <p className="font-bold text-white group-hover:text-[#004417] transition-colors">{rec.full_name}</p>
+                              <p className="font-bold text-slate-900 group-hover:text-[#1dbf73] transition-colors">{rec.full_name}</p>
                               <p className="text-xs text-slate-500 font-mono mt-0.5">ID: {rec.employee_id.slice(0, 8)}</p>
                             </div>
                           </div>
@@ -346,7 +346,7 @@ export default function BranchManagerAttendancePage() {
                         {/* Location */}
                         <td className="py-4 px-6">
                           <div className="flex items-center text-slate-300 text-sm">
-                            <MapPin className="w-4 h-4 text-[#004417]/60 mr-2 shrink-0" />
+                            <MapPin className="w-4 h-4 text-[#1dbf73]/60 mr-2 shrink-0" />
                             {rec.branch_name}
                           </div>
                         </td>
@@ -390,7 +390,7 @@ export default function BranchManagerAttendancePage() {
                               <button
                                 onClick={() => handleApproval(rec.id, 'approve')}
                                 disabled={approvingId === rec.id}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 text-xs font-bold transition-all disabled:opacity-50"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1dbf73]/15 hover:bg-[#1dbf73]/25 border border-emerald-500/30 text-[#1dbf73] text-xs font-bold transition-all disabled:opacity-50"
                                 title="Approve check-in"
                               >
                                 {approvingId === rec.id
@@ -415,7 +415,7 @@ export default function BranchManagerAttendancePage() {
                         {activeTab !== 'pending' && (
                           <td className="py-4 px-6 text-right">
                             {rec.approval_status === 'approved' ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1dbf73]/15 border border-emerald-500/30 text-[#1dbf73] text-xs font-bold">
                                 <CheckCircle2 className="w-3 h-3" /> Approved
                               </span>
                             ) : rec.approval_status === 'rejected' ? (
@@ -440,7 +440,7 @@ export default function BranchManagerAttendancePage() {
 
         {/* Summary footer */}
         {!loading && filteredRecords.length > 0 && (
-          <div className="px-6 py-3 border-t border-[#0a3a1e] bg-[#010e05]/60 flex items-center gap-6 text-xs text-slate-500 font-medium">
+          <div className="px-6 py-3 border-t border-slate-200 bg-slate-50 flex items-center gap-6 text-xs text-slate-500 font-medium">
             <span className="flex items-center gap-1.5">
               <Timer className="w-3.5 h-3.5 text-amber-400" />
               Total Overtime: <strong className="text-amber-400 ml-1">

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -232,8 +232,8 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
     switch (status) {
       case 'present':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1dbf73]/10 text-[#1dbf73] border border-emerald-500/20 text-xs font-semibold">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#1dbf73]" />
             Present
             {otMins > 0 && <span className="ml-1 px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[10px]">+{otMins}m OT</span>}
           </span>
@@ -315,7 +315,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               variant="ghost"
               size="sm"
               onClick={() => router.push(backUrl)}
-              className="text-slate-400 hover:text-white mr-1"
+              className="text-slate-400 hover:text-slate-900 mr-1"
             >
               <ArrowLeft className="w-5 h-5 mr-1" /> Back
             </Button>
@@ -325,7 +325,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">
+              <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">
                 {data?.employee?.full_name || 'Loading Employee...'}
               </h1>
               {data?.employee?.employee_id && (
@@ -378,7 +378,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             size="sm"
             onClick={() => setRefreshIndex((prev) => prev + 1)}
             disabled={loading}
-            className="text-slate-400 hover:text-white p-2 border border-[#1E293B] rounded-xl"
+            className="text-slate-400 hover:text-slate-900 p-2 border border-[#1E293B] rounded-xl"
             title="Refresh Data"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -416,7 +416,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             size="sm"
             className="flex-1 md:flex-none border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs gap-1.5"
           >
-            {exporting === 'excel' ? <Spinner size="sm" /> : <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />}
+            {exporting === 'excel' ? <Spinner size="sm" /> : <FileSpreadsheet className="w-3.5 h-3.5 text-[#1dbf73]" />}
             Export Excel
           </Button>
           <Button
@@ -444,7 +444,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               <motion.div
                 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 className={`p-4 rounded-xl border text-sm font-medium ${
-                  feedback.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                  feedback.type === 'success' ? 'bg-[#1dbf73]/10 border-emerald-500/20 text-[#1dbf73]' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -466,7 +466,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-white text-base">Today&apos;s Real-Time Duty Spotlight</h3>
+                      <h3 className="font-bold text-slate-900 text-base">Today&apos;s Real-Time Duty Spotlight</h3>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500 text-slate-950">LIVE</span>
                     </div>
                     <p className="text-xs text-slate-300 mt-0.5">Instant attendance, punctuality, and face/GPS status for today ({new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Dhaka', month: 'short', day: 'numeric', year: 'numeric' })})</p>
@@ -474,7 +474,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                    data.summary.today_status === 'present' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
+                    data.summary.today_status === 'present' ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/40' :
                     data.summary.today_status === 'late' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
                     data.summary.today_status === 'half_day' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' :
                     'bg-slate-800 text-slate-400 border border-slate-700'
@@ -487,12 +487,12 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-center sm:text-left">
                 <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
                   <p className="text-[11px] font-medium text-slate-400">Check-In Time</p>
-                  <p className="text-sm font-bold text-white mt-1">{data.summary.today_check_in_time || '--:--'}</p>
+                  <p className="text-sm font-bold text-slate-900 mt-1">{data.summary.today_check_in_time || '--:--'}</p>
                 </div>
 
                 <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
                   <p className="text-[11px] font-medium text-slate-400">Check-Out Time</p>
-                  <p className="text-sm font-bold text-white mt-1">{data.summary.today_check_out_time || '--:--'}</p>
+                  <p className="text-sm font-bold text-slate-900 mt-1">{data.summary.today_check_out_time || '--:--'}</p>
                 </div>
 
                 <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
@@ -505,7 +505,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                   {data.summary.today_late_minutes && data.summary.today_late_minutes > 0 ? (
                     <p className="text-sm font-bold text-rose-400 mt-1">{data.summary.today_late_minutes}m late ({data.summary.today_late_hours}h)</p>
                   ) : data.summary.today_check_in_time !== '--:--' ? (
-                    <p className="text-sm font-bold text-emerald-400 mt-1">✓ Right Time</p>
+                    <p className="text-sm font-bold text-[#1dbf73] mt-1">✓ Right Time</p>
                   ) : (
                     <p className="text-sm font-bold text-slate-500 mt-1">Not Check In</p>
                   )}
@@ -513,13 +513,13 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
 
                 <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B]">
                   <p className="text-[11px] font-medium text-slate-400">Today Overtime</p>
-                  <p className="text-sm font-bold text-emerald-400 mt-1">{data.summary.today_overtime_minutes || 0}m ({data.summary.today_overtime_hours || 0}h)</p>
+                  <p className="text-sm font-bold text-[#1dbf73] mt-1">{data.summary.today_overtime_minutes || 0}m ({data.summary.today_overtime_hours || 0}h)</p>
                 </div>
 
                 <div className="bg-[#141E33]/60 p-3 rounded-xl border border-[#1E293B] flex flex-col justify-between">
                   <p className="text-[11px] font-medium text-slate-400">Biometric & GPS</p>
                   <div className="flex items-center justify-between gap-1 mt-1">
-                    <span className={`text-xs font-bold ${data.summary.today_face_verified ? 'text-emerald-400' : 'text-slate-400'}`}>
+                    <span className={`text-xs font-bold ${data.summary.today_face_verified ? 'text-[#1dbf73]' : 'text-slate-400'}`}>
                       {data.summary.today_face_verified ? '✓ Face' : '✗ Face'}
                     </span>
                     {data.summary.today_location ? (
@@ -550,7 +550,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               <div className="space-y-3 flex-1">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-cyan-400" />
-                  <h3 className="font-bold text-white text-base">Employee Profile & Biometric Verification Center</h3>
+                  <h3 className="font-bold text-slate-900 text-base">Employee Profile & Biometric Verification Center</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="bg-[#141E33]/80 p-3 rounded-xl border border-[#1E293B]">
@@ -569,7 +569,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                         data.employee.requires_face_reverification
                           ? 'text-rose-400 animate-pulse'
                           : data.employee.face_enrolled
-                          ? 'text-emerald-400'
+                          ? 'text-[#1dbf73]'
                           : 'text-amber-400'
                       }`}>
                         {data.employee.requires_face_reverification
@@ -587,7 +587,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               <div className="space-y-3 flex-1 border-t lg:border-t-0 lg:border-l border-[#1E293B] pt-4 lg:pt-0 lg:pl-6">
                 <div className="flex items-center gap-2">
                   <LocateFixed className="w-5 h-5 text-amber-400" />
-                  <h3 className="font-bold text-white text-base">Live GPS Coordinates & Verification Tracking</h3>
+                  <h3 className="font-bold text-slate-900 text-base">Live GPS Coordinates & Verification Tracking</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="bg-[#141E33]/80 p-3 rounded-xl border border-[#1E293B] relative group">
@@ -677,7 +677,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                 <span className="text-xs font-medium text-slate-400">Total Duty Hours</span>
                 <Clock className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
               </div>
-              <p className="text-2xl font-bold text-white tracking-tight">{data.summary.total_duty_hours} <span className="text-sm font-normal text-slate-400">hrs</span></p>
+              <p className="text-2xl font-bold text-slate-900 tracking-tight">{data.summary.total_duty_hours} <span className="text-sm font-normal text-slate-400">hrs</span></p>
               <p className="text-[11px] text-slate-500 mt-1">Across {data.summary.total_present_days + data.summary.total_late_days} working shifts</p>
             </Card>
 
@@ -685,9 +685,9 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             <Card className="bg-[#0A101C]/90 border-[#1E293B] p-4 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-slate-400">Total Overtime</span>
-                <TrendingUp className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                <TrendingUp className="w-4 h-4 text-[#1dbf73] group-hover:scale-110 transition-transform" />
               </div>
-              <p className="text-2xl font-bold text-emerald-400 tracking-tight">{data.summary.total_overtime_hours} <span className="text-sm font-normal text-slate-400">hrs</span></p>
+              <p className="text-2xl font-bold text-[#1dbf73] tracking-tight">{data.summary.total_overtime_hours} <span className="text-sm font-normal text-slate-400">hrs</span></p>
               <p className="text-[11px] text-slate-500 mt-1">{data.summary.total_overtime_minutes} minutes overtime</p>
             </Card>
 
@@ -717,7 +717,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                 <span className="text-xs font-medium text-slate-400">Present Days</span>
                 <CheckCircle2 className="w-4 h-4 text-sky-400 group-hover:scale-110 transition-transform" />
               </div>
-              <p className="text-2xl font-bold text-white tracking-tight">{data.summary.total_present_days + data.summary.total_late_days} <span className="text-sm font-normal text-slate-400">days</span></p>
+              <p className="text-2xl font-bold text-slate-900 tracking-tight">{data.summary.total_present_days + data.summary.total_late_days} <span className="text-sm font-normal text-slate-400">days</span></p>
               <p className="text-[11px] text-slate-500 mt-1">Out of {data.summary.total_working_days} working days</p>
             </Card>
 
@@ -727,7 +727,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                 <span className="text-xs font-medium text-slate-400">Leave & Off Days</span>
                 <Calendar className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
               </div>
-              <p className="text-2xl font-bold text-white tracking-tight">{data.summary.total_on_leave_days + data.summary.total_off_days + data.summary.total_holiday_days} <span className="text-sm font-normal text-slate-400">days</span></p>
+              <p className="text-2xl font-bold text-slate-900 tracking-tight">{data.summary.total_on_leave_days + data.summary.total_off_days + data.summary.total_holiday_days} <span className="text-sm font-normal text-slate-400">days</span></p>
               <p className="text-[11px] text-slate-500 mt-1">{data.summary.total_on_leave_days} leave, {data.summary.total_off_days + data.summary.total_holiday_days} off/holidays</p>
             </Card>
           </div>
@@ -758,31 +758,31 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                 <div className="flex items-center bg-[#141E33] p-1 rounded-xl border border-[#1E293B] w-full sm:w-auto overflow-x-auto">
                   <button
                     onClick={() => setFilterTab('all')}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'all' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'}`}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'all' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-900'}`}
                   >
                     All ({data.daily_breakdown.length})
                   </button>
                   <button
                     onClick={() => setFilterTab('present')}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'present' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'}`}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'present' ? 'bg-[#1dbf73] text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-900'}`}
                   >
                     Present
                   </button>
                   <button
                     onClick={() => setFilterTab('late')}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'late' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'}`}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'late' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-900'}`}
                   >
                     Late ({data.summary.total_late_days})
                   </button>
                   <button
                     onClick={() => setFilterTab('missed')}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'missed' ? 'bg-rose-500 text-white font-bold' : 'text-slate-400 hover:text-white'}`}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'missed' ? 'bg-rose-500 text-slate-900 font-bold' : 'text-slate-400 hover:text-slate-900'}`}
                   >
                     Missed ({data.summary.total_missed_days})
                   </button>
                   <button
                     onClick={() => setFilterTab('overtime')}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'overtime' ? 'bg-sky-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'}`}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'overtime' ? 'bg-sky-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-900'}`}
                   >
                     Overtime
                   </button>
@@ -830,7 +830,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                         </td>
                         <td className="py-3.5 px-4 text-center font-mono">
                           {log.is_right_time ? (
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/20 text-[11px]">
+                            <span className="px-2 py-0.5 rounded bg-[#1dbf73]/15 text-[#1dbf73] font-bold border border-emerald-500/20 text-[11px]">
                               Right Time
                             </span>
                           ) : log.late_minutes > 0 ? (
@@ -841,7 +841,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                         </td>
                         <td className="py-3.5 px-4 text-center font-mono">
                           {log.overtime_minutes > 0 ? (
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/20 text-[11px]">
+                            <span className="px-2 py-0.5 rounded bg-[#1dbf73]/15 text-[#1dbf73] font-bold border border-emerald-500/20 text-[11px]">
                               +{log.overtime_hours}h ({log.overtime_minutes}m)
                             </span>
                           ) : (
@@ -855,7 +855,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                                 title={log.face_verified ? 'Verified with facial biometrics' : 'Face verification not matched or bypassed'}
                                 className={`px-1.5 py-0.5 rounded font-bold text-[10px] ${
                                   log.face_verified
-                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                    ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30'
                                     : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                                 }`}
                               >
@@ -902,13 +902,13 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                   <MapPin className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-sm">{showMapModal.title}</h3>
+                  <h3 className="font-bold text-slate-900 text-sm">{showMapModal.title}</h3>
                   {showMapModal.subtitle && <p className="text-[11px] text-slate-400">{showMapModal.subtitle}</p>}
                 </div>
               </div>
               <button
                 onClick={() => setShowMapModal(null)}
-                className="w-8 h-8 rounded-lg bg-[#0A101C] border border-[#1E293B] text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-lg bg-[#0A101C] border border-[#1E293B] text-slate-400 hover:text-slate-900 flex items-center justify-center transition-colors"
               >
                 ✕
               </button>

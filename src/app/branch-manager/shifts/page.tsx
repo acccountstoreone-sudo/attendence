@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -159,7 +159,7 @@ export default function BranchManagerShiftsPage() {
         <div className="flex items-center gap-3">
           <Clock className="w-7 h-7 text-indigo-400" />
           <div>
-            <h1 className="text-2xl font-bold text-white">Shift Management</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Shift Management</h1>
             <p className="text-sm text-slate-400">Define shift schedules and assign employees to shifts.</p>
           </div>
         </div>
@@ -182,7 +182,7 @@ export default function BranchManagerShiftsPage() {
           <motion.div
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className={`rounded-lg px-4 py-3 text-sm font-medium flex items-center justify-between ${
-              feedback.type === 'success' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'
+              feedback.type === 'success' ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'
             }`}
           >
             {feedback.text}
@@ -196,34 +196,34 @@ export default function BranchManagerShiftsPage() {
         {showShiftForm && (
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
             <Card className="p-5 border border-indigo-500/30 bg-slate-800/60 backdrop-blur">
-              <h2 className="text-lg font-semibold text-white mb-4">Create New Shift</h2>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Create New Shift</h2>
               <form onSubmit={handleAddShift} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="col-span-2 sm:col-span-1">
                   <label className="text-xs text-slate-400 mb-1 block">Shift Name *</label>
                   <input id="shift-name-input" type="text" required value={shiftForm.name}
                     onChange={(e) => setShiftForm({ ...shiftForm, name: e.target.value })}
-                    placeholder="e.g., Morning" className="w-full bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    placeholder="e.g., Morning" className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
                   <label className="text-xs text-slate-400 mb-1 block">Start Time *</label>
                   <input id="shift-start-input" type="time" required value={shiftForm.start_time}
                     onChange={(e) => setShiftForm({ ...shiftForm, start_time: e.target.value })}
-                    className="w-full bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
                   <label className="text-xs text-slate-400 mb-1 block">End Time *</label>
                   <input id="shift-end-input" type="time" required value={shiftForm.end_time}
                     onChange={(e) => setShiftForm({ ...shiftForm, end_time: e.target.value })}
-                    className="w-full bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
                   <label className="text-xs text-slate-400 mb-1 block">Grace (mins)</label>
                   <input id="shift-grace-input" type="number" min={0} max={120} value={shiftForm.grace_period_minutes}
                     onChange={(e) => setShiftForm({ ...shiftForm, grace_period_minutes: Number(e.target.value) })}
-                    className="w-full bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div className="col-span-2 sm:col-span-4 flex gap-2 justify-end">
@@ -243,13 +243,13 @@ export default function BranchManagerShiftsPage() {
         {showAssignForm && (
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
             <Card className="p-5 border border-emerald-500/30 bg-slate-800/60 backdrop-blur">
-              <h2 className="text-lg font-semibold text-white mb-4">Assign Employee to Shift</h2>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Assign Employee to Shift</h2>
               <form onSubmit={handleAssign} className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
                   <label className="text-xs text-slate-400 mb-1 block">Employee *</label>
                   <select id="assign-employee-select" required value={assignForm.user_id}
                     onChange={(e) => setAssignForm({ ...assignForm, user_id: e.target.value })}
-                    className="w-full bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   >
                     <option value="">Select employee…</option>
                     {employees.map((emp) => (
@@ -261,7 +261,7 @@ export default function BranchManagerShiftsPage() {
                   <label className="text-xs text-slate-400 mb-1 block">Shift *</label>
                   <select id="assign-shift-select" required value={assignForm.shift_id}
                     onChange={(e) => setAssignForm({ ...assignForm, shift_id: e.target.value })}
-                    className="w-full bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   >
                     <option value="">Select shift…</option>
                     {shifts.map((s) => (
@@ -273,7 +273,7 @@ export default function BranchManagerShiftsPage() {
                   <label className="text-xs text-slate-400 mb-1 block">Effective From *</label>
                   <input id="assign-from-input" type="date" required value={assignForm.effective_from}
                     onChange={(e) => setAssignForm({ ...assignForm, effective_from: e.target.value })}
-                    className="w-full bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div className="flex items-end gap-2">
@@ -310,7 +310,7 @@ export default function BranchManagerShiftsPage() {
                         <Clock className="w-5 h-5 text-indigo-400" />
                       </div>
                       <div>
-                        <p className="text-white font-semibold">{s.name}</p>
+                        <p className="text-slate-900 font-semibold">{s.name}</p>
                         <p className="text-slate-400 text-sm">{fmt12(s.start_time)} – {fmt12(s.end_time)}</p>
                         <p className="text-slate-500 text-xs">{s.grace_period_minutes} min grace period</p>
                       </div>
@@ -345,7 +345,7 @@ export default function BranchManagerShiftsPage() {
                 <motion.div key={a.id} layout>
                   <Card className="p-4 flex items-center justify-between gap-3 bg-slate-800/60">
                     <div>
-                      <p className="text-white font-medium">{a.profiles?.full_name}</p>
+                      <p className="text-slate-900 font-medium">{a.profiles?.full_name}</p>
                       <p className="text-indigo-300 text-sm">{a.shifts?.name} · {fmt12(a.shifts?.start_time)} – {fmt12(a.shifts?.end_time)}</p>
                       <p className="text-slate-500 text-xs">Since {new Date(a.effective_from).toLocaleDateString()}</p>
                     </div>

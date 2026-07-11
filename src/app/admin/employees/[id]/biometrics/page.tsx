@@ -29,7 +29,7 @@ export default async function EmployeeBiometricsPage({ params }: { params: Promi
     <div className="space-y-8 pb-12 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <Link href="/admin/employees" className="flex items-center text-slate-400 hover:text-white transition-colors text-sm mb-2 w-fit">
+        <Link href="/admin/employees" className="flex items-center text-slate-400 hover:text-slate-900 transition-colors text-sm mb-2 w-fit">
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back to Employees
         </Link>
@@ -37,7 +37,7 @@ export default async function EmployeeBiometricsPage({ params }: { params: Promi
           <Fingerprint className="w-4 h-4" />
           <span>Manage Biometrics</span>
         </div>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
           {employee.full_name}
         </h1>
         <p className="text-sm text-slate-400">

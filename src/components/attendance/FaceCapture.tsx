@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -325,14 +325,14 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
       {/* Ambient glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-emerald-600/15 rounded-full blur-[90px] pointer-events-none" />
+      <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-[#16965a]/15 rounded-full blur-[90px] pointer-events-none" />
 
       {/* === GPS Status Pill === */}
       <div className="flex-none w-full flex items-center justify-center pt-2 pb-1 z-30 pointer-events-none px-4">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-full text-xs font-extrabold backdrop-blur-2xl border pointer-events-auto shadow-2xl
+          className={`flex items-center space-x-2 px-4 py-2 rounded-full text-xs font-extrabold backdrop-blur-sm border pointer-events-auto shadow-2xl
             ${gpsOk
               ? 'bg-emerald-950/90 border-emerald-400/50 text-emerald-200 shadow-emerald-950/60'
               : gpsStatus === 'locating'
@@ -382,7 +382,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           }}
         >
           {/* Inner bezel */}
-          <div className="relative w-full h-full rounded-[1.8rem] sm:rounded-[2.1rem] overflow-hidden bg-[#010e05] shadow-inner">
+          <div className="relative w-full h-full rounded-[1.8rem] sm:rounded-[2.1rem] overflow-hidden bg-white shadow-inner">
 
             {/* Live camera feed */}
             <video
@@ -434,9 +434,9 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 0.6 }}
                 >
-                  <CheckCircle2 className="w-24 h-24 text-emerald-400 drop-shadow-[0_0_24px_rgba(52,211,153,0.9)]" />
+                  <CheckCircle2 className="w-24 h-24 text-[#1dbf73] drop-shadow-[0_0_24px_rgba(52,211,153,0.9)]" />
                 </motion.div>
-                <p className="text-white font-extrabold text-xl mt-4 tracking-tight drop-shadow">Identity Verified!</p>
+                <p className="text-slate-900 font-extrabold text-xl mt-4 tracking-tight drop-shadow">Identity Verified!</p>
               </motion.div>
             )}
 
@@ -450,7 +450,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
                     className="h-full bg-gradient-to-r from-blue-500 via-emerald-400 to-blue-400 rounded-full"
                   />
                 </div>
-                <p className="text-white text-sm font-extrabold tracking-wide">Loading Biometrics</p>
+                <p className="text-slate-900 text-sm font-extrabold tracking-wide">Loading Biometrics</p>
                 <p className="text-slate-400 text-xs mt-1 font-semibold">{progress}%</p>
               </div>
             )}
@@ -459,7 +459,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
             {phase === 'cam_err' && (
               <div className="absolute inset-0 bg-[#020810]/95 backdrop-blur-md flex flex-col items-center justify-center z-30 p-6 text-center">
                 <AlertCircle className="w-14 h-14 text-rose-500 mb-3 drop-shadow-[0_0_16px_rgba(244,63,94,0.6)]" />
-                <p className="text-white font-extrabold text-base mb-1">Camera Required</p>
+                <p className="text-slate-900 font-extrabold text-base mb-1">Camera Required</p>
                 <p className="text-rose-200/80 text-xs mb-4 leading-relaxed">{camErr}</p>
                 <Button size="sm" variant="outline" onClick={startCam} icon={<RefreshCw className="w-3.5 h-3.5" />}>
                   Retry Access
@@ -480,7 +480,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               transition={{ repeat: Infinity, duration: faceDetected ? 0.8 : 1.5 }}
               className={`w-3 h-3 rounded-full ${faceDetected ? 'bg-emerald-400 shadow-[0_0_10px_#34D399]' : 'bg-blue-400 shadow-[0_0_8px_#60A5FA]'}`}
             />
-            <span className={`text-xs font-bold ${faceDetected ? 'text-emerald-300' : 'text-blue-300'}`}>
+            <span className={`text-xs font-bold ${faceDetected ? 'text-[#1dbf73]' : 'text-blue-300'}`}>
               {faceDetected ? 'Face Detected' : 'Scanning...'}
             </span>
           </div>
@@ -495,7 +495,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-sm mb-2.5 flex items-start space-x-3 bg-rose-950/95 border border-rose-500/50 backdrop-blur-2xl px-4 py-3 rounded-2xl shadow-2xl"
+            className="w-full max-w-sm mb-2.5 flex items-start space-x-3 bg-rose-950/95 border border-rose-500/50 backdrop-blur-sm px-4 py-3 rounded-2xl shadow-2xl"
           >
             <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
             <span className="text-rose-100 text-xs sm:text-sm font-bold leading-snug">
@@ -523,14 +523,14 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-sm flex items-center space-x-3 bg-blue-950/95 backdrop-blur-2xl border border-blue-400/40 rounded-2xl px-5 py-4 mb-2 shadow-2xl"
+            className="w-full max-w-sm flex items-center space-x-3 bg-blue-950/95 backdrop-blur-sm border border-blue-400/40 rounded-2xl px-5 py-4 mb-2 shadow-2xl"
           >
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
               className="w-5 h-5 border-2 border-blue-400/30 border-t-blue-400 rounded-full shrink-0"
             />
-            <p className="text-white font-extrabold text-sm sm:text-base tracking-wide">{msg}</p>
+            <p className="text-slate-900 font-extrabold text-sm sm:text-base tracking-wide">{msg}</p>
           </motion.div>
         )}
 
@@ -545,7 +545,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
                 ${msgType === 'error'   ? 'bg-rose-950/95 border-rose-500/50 text-rose-100 shadow-rose-950/60'
                 : msgType === 'success' ? 'bg-emerald-950/95 border-emerald-500/50 text-emerald-100 shadow-emerald-950/60'
                 : msgType === 'warn'    ? 'bg-amber-950/95 border-amber-500/50 text-amber-100 shadow-amber-950/60'
-                : 'bg-[#0A1628]/95 border-white/20 text-white'}`}
+                : 'bg-[#0A1628]/95 border-slate-300 text-slate-900'}`}
             >
               {msg}
             </motion.p>
@@ -556,7 +556,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         {onUseFingerprint && phase !== 'success' && phase !== 'loading' && (
           <button
             onClick={onUseFingerprint}
-            className="flex items-center gap-2 text-slate-400 hover:text-slate-200 text-xs font-bold transition-colors mt-1 px-4 py-2 rounded-xl hover:bg-white/5"
+            className="flex items-center gap-2 text-slate-400 hover:text-slate-200 text-xs font-bold transition-colors mt-1 px-4 py-2 rounded-xl hover:bg-slate-100"
           >
             <Fingerprint className="w-4 h-4" />
             Use Fingerprint Instead

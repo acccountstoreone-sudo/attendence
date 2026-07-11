@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import Link from 'next/link';
@@ -97,11 +97,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems = role === 'admin' ? adminNav : role === 'branch_manager' ? bmNav : empNav;
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-white/95 backdrop-blur-2xl border-r border-slate-200 text-slate-800 select-none shadow-sm">
+    <div className="flex flex-col h-full bg-white/95 backdrop-blur-sm border-r border-slate-200 text-slate-800 select-none shadow-sm">
       {/* Brand Header */}
       <div className="h-20 flex items-center justify-between px-4 border-b border-slate-200 shrink-0 relative overflow-hidden bg-slate-50/50">
         <div className="flex items-center space-x-3 overflow-hidden relative z-10">
-          <div className="w-10 h-10 rounded-xl bg-[#1dbf73] flex items-center justify-center text-white font-extrabold shadow-sm shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-[#1dbf73] flex items-center justify-center text-slate-900 font-extrabold shadow-sm shrink-0">
             AF
           </div>
           <AnimatePresence>

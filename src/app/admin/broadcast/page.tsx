@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -85,7 +85,7 @@ export default function BroadcastPage() {
     <div className="space-y-8 pb-12 max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <Link href="/admin" className="flex items-center text-slate-400 hover:text-white transition-colors text-sm mb-2 w-fit">
+        <Link href="/admin" className="flex items-center text-slate-400 hover:text-slate-900 transition-colors text-sm mb-2 w-fit">
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back to Dashboard
         </Link>
@@ -93,7 +93,7 @@ export default function BroadcastPage() {
           <Megaphone className="w-4 h-4" />
           <span>System Comms</span>
         </div>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
           Dispatch System Broadcast
         </h1>
         <p className="text-sm text-slate-400">
@@ -110,7 +110,7 @@ export default function BroadcastPage() {
             exit={{ opacity: 0, y: -10 }}
             className={`flex items-start gap-3 p-4 rounded-xl border text-sm font-medium ${
               feedback.type === 'success'
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                ? 'bg-[#1dbf73]/10 border-emerald-500/20 text-[#1dbf73]'
                 : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
             }`}
           >
@@ -124,7 +124,7 @@ export default function BroadcastPage() {
         )}
       </AnimatePresence>
 
-      <Card className="bg-[#021a0a] border-[#0a3a1e] p-6 shadow-2xl">
+      <Card className="bg-white border-slate-200 p-6 shadow-2xl">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <div className="flex justify-between items-center mb-2">
@@ -139,7 +139,7 @@ export default function BroadcastPage() {
               maxLength={TITLE_MAX}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., URGENT: Store Policy Update"
-              className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
             />
           </div>
           <div>
@@ -156,7 +156,7 @@ export default function BroadcastPage() {
               onChange={(e) => setMessage(e.target.value)}
               rows={5}
               placeholder="Details of your broadcast..."
-              className="w-full px-4 py-3 bg-[#010e05] border border-[#0a3a1e] rounded-xl text-sm text-white focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all resize-none"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all resize-none"
             />
           </div>
 
@@ -166,7 +166,7 @@ export default function BroadcastPage() {
             <span>This will send a notification to <strong>all active staff members</strong>. Use with caution.</span>
           </div>
 
-          <div className="pt-4 flex justify-end space-x-3 border-t border-[#0a3a1e]">
+          <div className="pt-4 flex justify-end space-x-3 border-t border-slate-200">
             <Button type="button" variant="secondary" onClick={() => router.push('/admin')}>
               Cancel
             </Button>
@@ -189,7 +189,7 @@ export default function BroadcastPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
             onClick={() => setShowConfirm(false)}
           >
             <motion.div
@@ -197,20 +197,20 @@ export default function BroadcastPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#021a0a] border border-rose-500/30 rounded-2xl shadow-2xl p-6 max-w-md w-full"
+              className="bg-white border border-rose-500/30 rounded-2xl shadow-2xl p-6 max-w-md w-full"
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
                   <Users className="w-6 h-6 text-rose-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Confirm Broadcast</h3>
+                  <h3 className="text-lg font-bold text-slate-900">Confirm Broadcast</h3>
                   <p className="text-xs text-slate-400">This action cannot be undone.</p>
                 </div>
               </div>
-              <div className="bg-[#010e05] rounded-xl p-4 border border-[#0a3a1e] mb-5 space-y-2">
+              <div className="bg-white rounded-xl p-4 border border-slate-200 mb-5 space-y-2">
                 <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">Title</p>
-                <p className="text-white font-semibold text-sm">{title}</p>
+                <p className="text-slate-900 font-semibold text-sm">{title}</p>
                 <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mt-2">Message</p>
                 <p className="text-slate-300 text-sm leading-relaxed">{message}</p>
               </div>

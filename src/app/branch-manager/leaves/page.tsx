@@ -5,7 +5,7 @@ import { LeaveManagementPanel } from '@/components/attendance/LeaveManagementPan
 
 export default function BranchManagerLeavesPage() {
   return (
-    <div className="min-h-screen p-4 md:p-8 text-white space-y-6 max-w-7xl mx-auto">
+    <div className="min-h-screen p-4 md:p-8 text-slate-900 space-y-6 max-w-7xl mx-auto">
       <LeaveManagementPanel role="branch_manager" />
     </div>
   );

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { Card } from '@/components/ui/Card';
@@ -20,8 +20,8 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h4 className="text-lg font-bold text-white flex items-center">
-          <Settings className="w-5 h-5 mr-2 text-[#004417]" /> Branch Configuration
+        <h4 className="text-lg font-bold text-slate-900 flex items-center">
+          <Settings className="w-5 h-5 mr-2 text-[#1dbf73]" /> Branch Configuration
         </h4>
         <Button variant="secondary" onClick={() => router.push(`/admin/branches/${branch.id}/edit`)}>
           Edit Settings
@@ -31,7 +31,7 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Geofence & Location */}
         <Card className="bg-slate-900 border-slate-800 p-6 shadow-xl">
-          <h4 className="text-sm font-semibold text-[#004417] uppercase tracking-wider mb-4 flex items-center">
+          <h4 className="text-sm font-semibold text-[#1dbf73] uppercase tracking-wider mb-4 flex items-center">
             <MapPin className="w-4 h-4 mr-2" /> Geofence Settings & Map
           </h4>
           {branch.latitude && branch.longitude ? (
@@ -44,7 +44,7 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
               />
               <div className="mt-4 p-3 bg-slate-950 rounded-lg text-sm text-slate-300 flex justify-between">
                 <span>Radius:</span>
-                <span className="font-bold text-white">{branch.geofence_radius_meters} meters</span>
+                <span className="font-bold text-slate-900">{branch.geofence_radius_meters} meters</span>
               </div>
             </div>
           ) : (
@@ -58,7 +58,7 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
 
         {/* Office Timings & Rules */}
         <Card className="bg-slate-900 border-slate-800 p-6 shadow-xl">
-           <h4 className="text-sm font-semibold text-[#004417] uppercase tracking-wider mb-4 flex items-center">
+           <h4 className="text-sm font-semibold text-[#1dbf73] uppercase tracking-wider mb-4 flex items-center">
             <Clock className="w-4 h-4 mr-2" /> Office Timings & Rules
           </h4>
           

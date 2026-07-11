@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -90,16 +90,16 @@ export default function AdminHolidaysPage() {
         <div className="flex items-center gap-3">
           <CalendarDays className="w-7 h-7 text-indigo-400" />
           <div>
-            <h1 className="text-2xl font-bold text-white">Public Holidays</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Public Holidays</h1>
             <p className="text-sm text-slate-400">Attendance will not be counted on holidays.</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {/* Year picker */}
           <div className="flex items-center gap-1 bg-slate-800 rounded-lg border border-slate-700 px-3 py-2">
-            <button onClick={() => setYear((y) => y - 1)} className="text-slate-400 hover:text-white px-1">‹</button>
-            <span className="text-white font-semibold w-12 text-center">{year}</span>
-            <button onClick={() => setYear((y) => y + 1)} className="text-slate-400 hover:text-white px-1">›</button>
+            <button onClick={() => setYear((y) => y - 1)} className="text-slate-400 hover:text-slate-900 px-1">‹</button>
+            <span className="text-slate-900 font-semibold w-12 text-center">{year}</span>
+            <button onClick={() => setYear((y) => y + 1)} className="text-slate-400 hover:text-slate-900 px-1">›</button>
           </div>
           <Button id="refresh-holidays-btn" variant="secondary" onClick={loadHolidays} disabled={loading}>
             <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -118,7 +118,7 @@ export default function AdminHolidaysPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             className={`rounded-lg px-4 py-3 text-sm font-medium ${
-              feedback.type === 'success' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'
+              feedback.type === 'success' ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'
             }`}
           >
             {feedback.text}
@@ -132,7 +132,7 @@ export default function AdminHolidaysPage() {
         {showForm && (
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
             <Card className="p-5 border border-indigo-500/30 bg-slate-800/60 backdrop-blur">
-              <h2 className="text-lg font-semibold text-white mb-4">Add New Holiday</h2>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Add New Holiday</h2>
               <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="text-xs text-slate-400 mb-1 block">Holiday Name *</label>
@@ -143,7 +143,7 @@ export default function AdminHolidaysPage() {
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="e.g., Eid-ul-Adha"
-                    className="w-full bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
@@ -154,7 +154,7 @@ export default function AdminHolidaysPage() {
                     required
                     value={form.holiday_date}
                     onChange={(e) => setForm({ ...form, holiday_date: e.target.value })}
-                    className="w-full bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-slate-700 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div className="flex flex-col justify-end">
@@ -211,9 +211,9 @@ export default function AdminHolidaysPage() {
                           {new Date(h.holiday_date).getDate()}
                         </span>
                         <div className="min-w-0">
-                          <p className="text-white text-sm font-medium truncate">{h.name}</p>
+                          <p className="text-slate-900 text-sm font-medium truncate">{h.name}</p>
                           {h.is_recurring && (
-                            <span className="flex items-center gap-1 text-xs text-emerald-400">
+                            <span className="flex items-center gap-1 text-xs text-[#1dbf73]">
                               <Repeat className="w-3 h-3" /> Recurring
                             </span>
                           )}

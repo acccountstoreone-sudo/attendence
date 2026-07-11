@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -160,7 +160,7 @@ export default function AdminReportsPage() {
             <BarChart3 className="w-4 h-4" />
             <span>HR Reporting Suite</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
             Payroll & Attendance Reports
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -183,7 +183,7 @@ export default function AdminReportsPage() {
           <Button
             size="sm"
             variant="outline"
-            icon={<FileSpreadsheet className="w-4 h-4 text-emerald-400" />}
+            icon={<FileSpreadsheet className="w-4 h-4 text-[#1dbf73]" />}
             isLoading={exporting === 'excel'}
             disabled={!hasLoaded || reportData.length === 0}
             onClick={() => handleExport('excel')}
@@ -210,7 +210,7 @@ export default function AdminReportsPage() {
             <UserCheck className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="font-bold text-white text-base">Individual Employee Duty & Overtime Analytics</h3>
+            <h3 className="font-bold text-slate-900 text-base">Individual Employee Duty & Overtime Analytics</h3>
             <p className="text-xs text-slate-400">View & export exact month-wise duty hours, late minutes, overtime, and missed days per staff</p>
           </div>
         </div>
@@ -235,7 +235,7 @@ export default function AdminReportsPage() {
               <select
                 value={filter.month}
                 onChange={(e) => setFilter((f) => ({ ...f, month: Number(e.target.value) }))}
-                className="w-full appearance-none bg-slate-950 border border-slate-800 rounded-xl text-sm text-white px-3 py-2 pr-8 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full appearance-none bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-900 px-3 py-2 pr-8 focus:outline-none focus:border-blue-500 transition-colors"
               >
                 {months.map((m, i) => (
                   <option key={m} value={i + 1}>{m}</option>
@@ -251,7 +251,7 @@ export default function AdminReportsPage() {
               <select
                 value={filter.year}
                 onChange={(e) => setFilter((f) => ({ ...f, year: Number(e.target.value) }))}
-                className="w-full appearance-none bg-slate-950 border border-slate-800 rounded-xl text-sm text-white px-3 py-2 pr-8 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full appearance-none bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-900 px-3 py-2 pr-8 focus:outline-none focus:border-blue-500 transition-colors"
               >
                 {years.map((y) => (
                   <option key={y} value={y}>{y}</option>
@@ -272,7 +272,7 @@ export default function AdminReportsPage() {
                 placeholder="Filter by branch..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
           </div>
@@ -305,16 +305,16 @@ export default function AdminReportsPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
             <p className="text-xs font-bold uppercase text-slate-400">Branches Reported</p>
-            <p className="text-2xl font-extrabold text-white mt-1">{reportData.length}</p>
+            <p className="text-2xl font-extrabold text-slate-900 mt-1">{reportData.length}</p>
           </Card>
           <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
             <p className="text-xs font-bold uppercase text-slate-400">Company Avg Attendance</p>
             <div className="flex items-center space-x-2 mt-1">
-              <p className={`text-2xl font-extrabold ${avgAttendance >= 90 ? 'text-emerald-400' : avgAttendance >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
+              <p className={`text-2xl font-extrabold ${avgAttendance >= 90 ? 'text-[#1dbf73]' : avgAttendance >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
                 {avgAttendance}%
               </p>
               {avgAttendance >= 90 ? (
-                <TrendingUp className="w-5 h-5 text-emerald-400" />
+                <TrendingUp className="w-5 h-5 text-[#1dbf73]" />
               ) : (
                 <TrendingDown className="w-5 h-5 text-rose-400" />
               )}
@@ -322,7 +322,7 @@ export default function AdminReportsPage() {
           </Card>
           <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
             <p className="text-xs font-bold uppercase text-slate-400">Best Performing Store</p>
-            <p className="text-sm font-extrabold text-emerald-400 mt-1 truncate">
+            <p className="text-sm font-extrabold text-[#1dbf73] mt-1 truncate">
               {reportData.reduce((best, r) => r.attendance_rate > best.attendance_rate ? r : best, reportData[0])?.branch_name || '—'}
             </p>
           </Card>
@@ -377,29 +377,29 @@ export default function AdminReportsPage() {
                         <span className="text-xs font-extrabold text-blue-400 bg-blue-950/60 border border-blue-800/60 px-2 py-0.5 rounded-md mr-2">
                           {row.branch_code}
                         </span>
-                        <span className="font-bold text-white">{row.branch_name}</span>
+                        <span className="font-bold text-slate-900">{row.branch_name}</span>
                       </div>
                     </td>
                     <td className="py-4 px-5 text-center text-slate-300 font-semibold">{row.total_days}</td>
-                    <td className="py-4 px-5 text-center font-bold text-emerald-400">{row.present_days}</td>
+                    <td className="py-4 px-5 text-center font-bold text-[#1dbf73]">{row.present_days}</td>
                     <td className="py-4 px-5 text-center font-bold text-amber-400">{row.late_days}</td>
                     <td className="py-4 px-5 text-center font-bold text-rose-400">{row.absent_days}</td>
                     <td className="py-4 px-5 text-center">
                       <div className="flex flex-col items-center">
-                        <span className={`text-lg font-extrabold ${row.attendance_rate >= 90 ? 'text-emerald-400' : row.attendance_rate >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
+                        <span className={`text-lg font-extrabold ${row.attendance_rate >= 90 ? 'text-[#1dbf73]' : row.attendance_rate >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
                           {row.attendance_rate.toFixed(1)}%
                         </span>
                         {/* Mini Progress Bar */}
                         <div className="w-20 h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
                           <div
-                            className={`h-full rounded-full ${row.attendance_rate >= 90 ? 'bg-emerald-500' : row.attendance_rate >= 75 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                            className={`h-full rounded-full ${row.attendance_rate >= 90 ? 'bg-[#1dbf73]' : row.attendance_rate >= 75 ? 'bg-amber-500' : 'bg-rose-500'}`}
                             style={{ width: `${row.attendance_rate}%` }}
                           />
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-5 text-center">
-                      <span className={`font-bold ${row.punctuality_rate >= 85 ? 'text-emerald-400' : row.punctuality_rate >= 70 ? 'text-amber-400' : 'text-rose-400'}`}>
+                      <span className={`font-bold ${row.punctuality_rate >= 85 ? 'text-[#1dbf73]' : row.punctuality_rate >= 70 ? 'text-amber-400' : 'text-rose-400'}`}>
                         {row.punctuality_rate.toFixed(1)}%
                       </span>
                     </td>

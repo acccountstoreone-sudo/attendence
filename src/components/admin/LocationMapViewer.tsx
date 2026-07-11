@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
@@ -94,27 +94,27 @@ export const LocationMapViewer: React.FC<LocationMapViewerProps> = ({
     <div className="space-y-3">
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
       
-      <div className="relative rounded-xl overflow-hidden border border-[#0a3a1e] shadow-inner">
+      <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-inner">
         <div
           ref={mapContainerRef}
-          className="w-full h-52 sm:h-64 bg-[#010e05] z-10"
+          className="w-full h-52 sm:h-64 bg-white z-10"
         />
         <button
           onClick={openInGoogleMaps}
           title="Open in Google Maps"
-          className="absolute top-2.5 right-2.5 z-20 bg-[#021a0a]/90 hover:bg-[#004417] text-slate-300 hover:text-[#010e05] backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#0a3a1e] hover:border-[#004417] shadow-lg text-xs font-bold transition-all flex items-center gap-1.5"
+          className="absolute top-2.5 right-2.5 z-20 bg-white hover:bg-[#1dbf73] text-slate-300 hover:text-[#010e05] backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-200 hover:border-[#1dbf73] shadow-lg text-xs font-bold transition-all flex items-center gap-1.5"
         >
           <span>Open Google Maps</span>
           <ExternalLink className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-slate-400 bg-[#010e05] px-3 py-2 rounded-lg border border-[#0a3a1e]">
+      <div className="flex items-center justify-between text-xs text-slate-400 bg-white px-3 py-2 rounded-lg border border-slate-200">
         <span className="flex items-center gap-1.5 font-mono text-slate-300">
-          <MapPin className="w-3.5 h-3.5 text-[#004417]" />
+          <MapPin className="w-3.5 h-3.5 text-[#1dbf73]" />
           {latitude.toFixed(6)}, {longitude.toFixed(6)}
         </span>
-        <span className="text-[#004417] font-semibold">
+        <span className="text-[#1dbf73] font-semibold">
           Radius: {radiusMeters}m zone
         </span>
       </div>

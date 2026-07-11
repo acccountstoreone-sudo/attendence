@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -142,7 +142,7 @@ export default function BranchManagerReportsPage() {
             <BarChart3 className="w-4 h-4" />
             <span>Store Reporting Suite</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
             Store Attendance Reports
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -165,7 +165,7 @@ export default function BranchManagerReportsPage() {
           <Button
             size="sm"
             variant="outline"
-            icon={<FileSpreadsheet className="w-4 h-4 text-emerald-400" />}
+            icon={<FileSpreadsheet className="w-4 h-4 text-[#1dbf73]" />}
             isLoading={exporting === 'excel'}
             disabled={!hasLoaded || reportData.length === 0}
             onClick={() => handleExport('excel')}
@@ -192,7 +192,7 @@ export default function BranchManagerReportsPage() {
             <UserCheck className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="font-bold text-white text-base">Individual Staff Duty & Overtime Analytics</h3>
+            <h3 className="font-bold text-slate-900 text-base">Individual Staff Duty & Overtime Analytics</h3>
             <p className="text-xs text-slate-400">View & export exact month-wise duty hours, late minutes, overtime, and missed days for your store staff</p>
           </div>
         </div>
@@ -217,7 +217,7 @@ export default function BranchManagerReportsPage() {
               <select
                 value={filter.month}
                 onChange={(e) => setFilter((f) => ({ ...f, month: Number(e.target.value) }))}
-                className="w-full appearance-none bg-slate-950 border border-slate-800 rounded-xl text-sm text-white px-3 py-2 pr-8 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full appearance-none bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-900 px-3 py-2 pr-8 focus:outline-none focus:border-blue-500 transition-colors"
               >
                 {months.map((m, i) => (
                   <option key={m} value={i + 1}>{m}</option>
@@ -233,7 +233,7 @@ export default function BranchManagerReportsPage() {
               <select
                 value={filter.year}
                 onChange={(e) => setFilter((f) => ({ ...f, year: Number(e.target.value) }))}
-                className="w-full appearance-none bg-slate-950 border border-slate-800 rounded-xl text-sm text-white px-3 py-2 pr-8 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full appearance-none bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-900 px-3 py-2 pr-8 focus:outline-none focus:border-blue-500 transition-colors"
               >
                 {years.map((y) => (
                   <option key={y} value={y}>{y}</option>
@@ -272,11 +272,11 @@ export default function BranchManagerReportsPage() {
           <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
             <p className="text-xs font-bold uppercase text-slate-400">Attendance Rate</p>
             <div className="flex items-center space-x-2 mt-1">
-              <p className={`text-2xl font-extrabold ${storeData.attendance_rate >= 90 ? 'text-emerald-400' : storeData.attendance_rate >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
+              <p className={`text-2xl font-extrabold ${storeData.attendance_rate >= 90 ? 'text-[#1dbf73]' : storeData.attendance_rate >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
                 {storeData.attendance_rate.toFixed(1)}%
               </p>
               {storeData.attendance_rate >= 90 ? (
-                <TrendingUp className="w-5 h-5 text-emerald-400" />
+                <TrendingUp className="w-5 h-5 text-[#1dbf73]" />
               ) : (
                 <TrendingDown className="w-5 h-5 text-rose-400" />
               )}
@@ -285,11 +285,11 @@ export default function BranchManagerReportsPage() {
           <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800">
             <p className="text-xs font-bold uppercase text-slate-400">Punctuality Rate</p>
             <div className="flex items-center space-x-2 mt-1">
-              <p className={`text-2xl font-extrabold ${storeData.punctuality_rate >= 85 ? 'text-emerald-400' : storeData.punctuality_rate >= 70 ? 'text-amber-400' : 'text-rose-400'}`}>
+              <p className={`text-2xl font-extrabold ${storeData.punctuality_rate >= 85 ? 'text-[#1dbf73]' : storeData.punctuality_rate >= 70 ? 'text-amber-400' : 'text-rose-400'}`}>
                 {storeData.punctuality_rate.toFixed(1)}%
               </p>
               {storeData.punctuality_rate >= 85 ? (
-                <TrendingUp className="w-5 h-5 text-emerald-400" />
+                <TrendingUp className="w-5 h-5 text-[#1dbf73]" />
               ) : (
                 <TrendingDown className="w-5 h-5 text-rose-400" />
               )}
@@ -347,29 +347,29 @@ export default function BranchManagerReportsPage() {
                         <span className="text-xs font-extrabold text-blue-400 bg-blue-950/60 border border-blue-800/60 px-2 py-0.5 rounded-md mr-2">
                           {storeData.branch_code}
                         </span>
-                        <span className="font-bold text-white">{storeData.branch_name}</span>
+                        <span className="font-bold text-slate-900">{storeData.branch_name}</span>
                       </div>
                     </td>
                     <td className="py-4 px-5 text-center text-slate-300 font-semibold">{storeData.total_days}</td>
-                    <td className="py-4 px-5 text-center font-bold text-emerald-400">{storeData.present_days}</td>
+                    <td className="py-4 px-5 text-center font-bold text-[#1dbf73]">{storeData.present_days}</td>
                     <td className="py-4 px-5 text-center font-bold text-amber-400">{storeData.late_days}</td>
                     <td className="py-4 px-5 text-center font-bold text-rose-400">{storeData.absent_days}</td>
                     <td className="py-4 px-5 text-center">
                       <div className="flex flex-col items-center">
-                        <span className={`text-lg font-extrabold ${storeData.attendance_rate >= 90 ? 'text-emerald-400' : storeData.attendance_rate >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
+                        <span className={`text-lg font-extrabold ${storeData.attendance_rate >= 90 ? 'text-[#1dbf73]' : storeData.attendance_rate >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
                           {storeData.attendance_rate.toFixed(1)}%
                         </span>
                         {/* Mini Progress Bar */}
                         <div className="w-20 h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
                           <div
-                            className={`h-full rounded-full ${storeData.attendance_rate >= 90 ? 'bg-emerald-500' : storeData.attendance_rate >= 75 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                            className={`h-full rounded-full ${storeData.attendance_rate >= 90 ? 'bg-[#1dbf73]' : storeData.attendance_rate >= 75 ? 'bg-amber-500' : 'bg-rose-500'}`}
                             style={{ width: `${storeData.attendance_rate}%` }}
                           />
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-5 text-center">
-                      <span className={`font-bold ${storeData.punctuality_rate >= 85 ? 'text-emerald-400' : storeData.punctuality_rate >= 70 ? 'text-amber-400' : 'text-rose-400'}`}>
+                      <span className={`font-bold ${storeData.punctuality_rate >= 85 ? 'text-[#1dbf73]' : storeData.punctuality_rate >= 70 ? 'text-amber-400' : 'text-rose-400'}`}>
                         {storeData.punctuality_rate.toFixed(1)}%
                       </span>
                     </td>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -28,8 +28,8 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex flex-col gap-2">
-        <h4 className="text-lg font-bold text-white flex items-center">
-          <Bell className="w-5 h-5 mr-2 text-[#004417]" /> Branch Announcements
+        <h4 className="text-lg font-bold text-slate-900 flex items-center">
+          <Bell className="w-5 h-5 mr-2 text-[#1dbf73]" /> Branch Announcements
         </h4>
         <p className="text-sm text-slate-400">Send notifications to all employees assigned to {branch.name}.</p>
       </div>
@@ -40,8 +40,8 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
             onClick={() => setAnnouncementType('text')}
             className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               announcementType === 'text' 
-                ? 'bg-[#004417]/10 text-[#004417] border border-[#004417]/20' 
-                : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-white'
+                ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/20' 
+                : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-900'
             }`}
           >
             <MessageSquare className="w-4 h-4 mr-2" /> Text Announcement
@@ -50,8 +50,8 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
             onClick={() => setAnnouncementType('sound')}
             className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               announcementType === 'sound' 
-                ? 'bg-[#004417]/10 text-[#004417] border border-[#004417]/20' 
-                : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-white'
+                ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/20' 
+                : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-900'
             }`}
           >
             <Volume2 className="w-4 h-4 mr-2" /> Sound Notification
@@ -77,7 +77,7 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
           </div>
           
           <div className="pt-4 flex justify-end">
-            <Button onClick={handleSend} disabled={!message.trim()} className="bg-[#004417] hover:bg-[#003311]">
+            <Button onClick={handleSend} disabled={!message.trim()} className="bg-[#1dbf73] hover:bg-[#003311]">
               <Send className="w-4 h-4 mr-2" /> Send Announcement
             </Button>
           </div>
@@ -87,7 +87,7 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
           {feedback && (
             <motion.div
               initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="mt-6 p-4 rounded-xl border bg-emerald-500/10 border-emerald-500/20 text-emerald-400 text-sm font-medium"
+              className="mt-6 p-4 rounded-xl border bg-[#1dbf73]/10 border-emerald-500/20 text-[#1dbf73] text-sm font-medium"
             >
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 shrink-0" />

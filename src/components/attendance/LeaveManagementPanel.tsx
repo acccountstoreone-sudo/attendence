@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -112,10 +112,10 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
   return (
     <div className="space-y-6">
       {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#0A1628]/80 border border-[#0a3a1e] p-6 rounded-2xl backdrop-blur-xl shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#0A1628]/80 border border-slate-200 p-6 rounded-2xl backdrop-blur-sm shadow-xl">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <CalendarDays className="w-7 h-7 text-[#004417]" />
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <CalendarDays className="w-7 h-7 text-[#1dbf73]" />
             {role === 'admin' ? 'HQ Leave Applications Management' : 'Store Leave Applications Management'}
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -130,15 +130,15 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
 
       {/* Tabs & Search */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex bg-[#0A1628]/90 border border-[#0a3a1e] p-1 rounded-xl shadow-inner overflow-x-auto">
+        <div className="flex bg-[#0A1628]/90 border border-slate-200 p-1 rounded-xl shadow-inner overflow-x-auto">
           {(['pending', 'approved', 'rejected', 'all'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setStatusTab(tab)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold capitalize transition-all whitespace-nowrap flex items-center gap-2 ${
                 statusTab === tab
-                  ? 'bg-[#004417] text-[#010e05] shadow-md'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#1dbf73] text-[#010e05] shadow-md'
+                  : 'text-slate-400 hover:text-slate-900'
               }`}
             >
               {tab === 'pending' && <Clock className="w-4 h-4" />}
@@ -157,7 +157,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
             placeholder="Search employee, ID, branch, reason..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#0A1628]/90 border border-[#0a3a1e] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#004417] transition-colors"
+            className="w-full bg-[#0A1628]/90 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#1dbf73] transition-colors"
           />
         </div>
       </div>
@@ -175,7 +175,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
           <motion.div
             initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className={`p-4 rounded-xl border text-sm font-medium ${
-              feedback.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+              feedback.type === 'success' ? 'bg-[#1dbf73]/10 border-emerald-500/20 text-[#1dbf73]' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
             }`}
           >
             <div className="flex items-center gap-3">
@@ -192,9 +192,9 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
           <p className="mt-3 text-sm text-slate-400">Loading leave requests...</p>
         </div>
       ) : filteredLeaves.length === 0 ? (
-        <Card className="p-12 text-center border-dashed border-[#0a3a1e] bg-[#0A1628]/50">
+        <Card className="p-12 text-center border-dashed border-slate-200 bg-[#0A1628]/50">
           <CalendarDays className="w-12 h-12 text-slate-500 mx-auto mb-3 opacity-60" />
-          <h3 className="text-lg font-semibold text-white">No Leave Requests Found</h3>
+          <h3 className="text-lg font-semibold text-slate-900">No Leave Requests Found</h3>
           <p className="text-sm text-slate-400 mt-1 max-w-md mx-auto">
             {statusTab === 'pending' 
               ? 'There are currently no pending leave applications awaiting verification.' 
@@ -215,7 +215,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                   exit={{ opacity: 0, scale: 0.95 }}
                 >
                   <Card className={`p-6 border transition-all ${
-                    isPending ? 'border-[#004417]/40 bg-gradient-to-r from-[#0A1628] to-[#0D1E38]' :
+                    isPending ? 'border-[#1dbf73]/40 bg-gradient-to-r from-[#0A1628] to-[#0D1E38]' :
                     isApproved ? 'border-emerald-500/30 bg-[#0A1628]/70' :
                     'border-red-500/30 bg-[#0A1628]/50'
                   }`}>
@@ -223,15 +223,15 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                       {/* Left side: Employee & Branch info */}
                       <div className="flex items-start gap-4">
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 ${
-                          isPending ? 'bg-[#004417]/20 text-[#004417] border border-[#004417]/30' :
-                          isApproved ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                          isPending ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/30' :
+                          isApproved ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' :
                           'bg-red-500/20 text-red-400 border border-red-500/30'
                         }`}>
                           {(l.employee_name || 'E').charAt(0).toUpperCase()}
                         </div>
                         <div className="space-y-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-base font-bold text-white tracking-wide truncate">
+                            <h3 className="text-base font-bold text-slate-900 tracking-wide truncate">
                               {l.employee_name}
                             </h3>
                             {l.employee_code && (
@@ -241,7 +241,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                             )}
                             <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider ${
                               isPending ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
-                              isApproved ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                              isApproved ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' :
                               'bg-red-500/20 text-red-300 border border-red-500/30'
                             }`}>
                               {l.status}
@@ -276,10 +276,10 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                       {/* Middle: Duration Dates */}
                       <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 text-center shrink-0 min-w-[180px]">
                         <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Leave Duration</p>
-                        <p className="text-lg font-bold text-white mt-1">
+                        <p className="text-lg font-bold text-slate-900 mt-1">
                           {l.total_days || 1} {Number(l.total_days) === 1 ? 'Day' : 'Days'}
                         </p>
-                        <p className="text-xs text-[#004417] font-mono mt-0.5">
+                        <p className="text-xs text-[#1dbf73] font-mono mt-0.5">
                           {l.start_date} &rarr; {l.end_date}
                         </p>
                       </div>
@@ -292,7 +292,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                             size="sm"
                             onClick={() => handleQuickAction(l.id, 'approve')}
                             disabled={actingId === l.id}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950/40"
+                            className="bg-[#16965a] hover:bg-[#1dbf73] text-slate-900 shadow-lg shadow-emerald-950/40"
                           >
                             <CheckCircle2 className="w-4 h-4 mr-1.5" />
                             {actingId === l.id ? 'Approving...' : 'Approve'}
@@ -339,17 +339,17 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
       {/* Review Note Modal */}
       {noteModalLeave && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <Card className="w-full max-w-md p-6 bg-[#0A1628] border border-[#0a3a1e] shadow-2xl space-y-4">
+          <Card className="w-full max-w-md p-6 bg-[#0A1628] border border-slate-200 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 {modalAction === 'approve' ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  <CheckCircle2 className="w-5 h-5 text-[#1dbf73]" />
                 ) : (
                   <XCircle className="w-5 h-5 text-red-400" />
                 )}
                 {modalAction === 'approve' ? 'Approve with Note' : 'Reject Leave Request'}
               </h3>
-              <button onClick={() => setNoteModalLeave(null)} className="text-slate-400 hover:text-white text-sm">✕</button>
+              <button onClick={() => setNoteModalLeave(null)} className="text-slate-400 hover:text-slate-900 text-sm">✕</button>
             </div>
             <p className="text-sm text-slate-300">
               {modalAction === 'approve' 
@@ -363,7 +363,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                 placeholder={modalAction === 'approve' ? 'e.g., Approved. Hand over pending work to Team Lead.' : 'e.g., Critical shift shortage during project delivery week.'}
                 value={reviewerNote}
                 onChange={(e) => setReviewerNote(e.target.value)}
-                className="w-full bg-[#021a0a] border border-[#0a3a1e] rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#004417]"
+                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#1dbf73]"
               />
             </div>
             <div className="flex justify-end gap-3 pt-2">
@@ -372,7 +372,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                 variant="primary"
                 onClick={() => handleQuickAction(noteModalLeave.id, modalAction, reviewerNote)}
                 disabled={actingId === noteModalLeave.id}
-                className={modalAction === 'approve' ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500'}
+                className={modalAction === 'approve' ? 'bg-[#16965a] hover:bg-[#1dbf73]' : 'bg-red-600 hover:bg-red-500'}
               >
                 {actingId === noteModalLeave.id ? 'Processing...' : `Confirm ${modalAction === 'approve' ? 'Approval' : 'Rejection'}`}
               </Button>

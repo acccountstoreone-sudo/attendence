@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -47,7 +47,7 @@ export const SelectTrigger = React.forwardRef<HTMLButtonElement, React.ButtonHTM
         type="button"
         onClick={() => ctx.setOpen(!ctx.open)}
         className={cn(
-          'flex h-10 w-full items-center justify-between rounded-xl border border-white/10 bg-[#010e05]/60 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#004417] disabled:cursor-not-allowed disabled:opacity-50 transition-all',
+          'flex h-10 w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#1dbf73] disabled:cursor-not-allowed disabled:opacity-50 transition-all',
           className
         )}
         {...props}
@@ -92,7 +92,7 @@ export const SelectContent = React.forwardRef<HTMLDivElement, React.HTMLAttribut
       <div
         ref={contentRef}
         className={cn(
-          'absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-white/10 bg-[#021a0a] p-1 text-white shadow-2xl backdrop-blur-3xl focus:outline-none animate-in fade-in-80',
+          'absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 text-slate-900 shadow-2xl backdrop-blur-sm focus:outline-none animate-in fade-in-80',
           className
         )}
         {...props}
@@ -127,8 +127,8 @@ export const SelectItem = React.forwardRef<HTMLDivElement, { value: string; chil
           ctx.setOpen(false);
         }}
         className={cn(
-          'relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-8 pr-2 text-sm outline-none hover:bg-white/10 focus:bg-white/10 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors',
-          isSelected && 'bg-white/10 text-[#004417] font-medium',
+          'relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-8 pr-2 text-sm outline-none hover:bg-slate-100 focus:bg-white/10 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors',
+          isSelected && 'bg-white/10 text-[#1dbf73] font-medium',
           className
         )}
         {...props}

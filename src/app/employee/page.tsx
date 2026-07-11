@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -81,14 +81,14 @@ export default function EmployeeDashboardPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
       {/* Welcome Banner */}
-      <div className="bg-[#021a0a] p-8 rounded-3xl border border-[#004417]/20 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+      <div className="bg-white p-8 rounded-3xl border border-[#1dbf73]/20 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
         <div className="relative z-10">
-          <div className="flex items-center space-x-2 text-[#004417] text-xs font-bold uppercase tracking-wider">
+          <div className="flex items-center space-x-2 text-[#1dbf73] text-xs font-bold uppercase tracking-wider">
             <MapPin className="w-4 h-4" />
             <span>{profile?.branch_name}</span>
           </div>
-          <h1 className="text-2xl md:text-4xl font-extrabold text-white mt-2 tracking-tight">
+          <h1 className="text-2xl md:text-4xl font-extrabold text-slate-900 mt-2 tracking-tight">
             Welcome, {profile?.full_name || 'Staff Member'}!
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -100,7 +100,7 @@ export default function EmployeeDashboardPage() {
           size="lg"
           variant="primary"
           icon={<Clock className="w-5 h-5 text-[#010e05]" />}
-          className="relative z-10 shadow-xl shadow-[#004417]/20 bg-[#004417] text-[#010e05] hover:bg-[#006622] font-bold border-none disabled:opacity-60 disabled:cursor-not-allowed"
+          className="relative z-10 shadow-xl shadow-[#004417]/20 bg-[#1dbf73] text-[#010e05] hover:bg-[#16965a] font-bold border-none disabled:opacity-60 disabled:cursor-not-allowed"
           onClick={() => router.push('/employee/check-in')}
           disabled={!!(todayRecord?.check_in_time && todayRecord.check_out_time)}
         >
@@ -114,11 +114,11 @@ export default function EmployeeDashboardPage() {
 
       {/* Today's Shift Status Card */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-[#021a0a] border-[#0a3a1e] col-span-2">
-            <div className="flex items-center justify-between border-b border-[#0a3a1e] pb-4 mb-6">
+        <Card className="bg-white border-slate-200 col-span-2">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
               <div className="flex items-center space-x-2">
-                <ShieldCheck className="w-5 h-5 text-[#004417]" />
-                <h3 className="text-lg font-bold text-white">Today&apos;s Attendance Status</h3>
+                <ShieldCheck className="w-5 h-5 text-[#1dbf73]" />
+                <h3 className="text-lg font-bold text-slate-900">Today&apos;s Attendance Status</h3>
               </div>
               <div className="flex items-center gap-2">
                 <Badge
@@ -130,7 +130,7 @@ export default function EmployeeDashboardPage() {
                   </span>
                 )}
                 {todayRecord?.approval_status === 'approved' && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1dbf73]/15 border border-emerald-500/30 text-[#1dbf73] text-xs font-bold">
                     ✅ Approved
                   </span>
                 )}
@@ -143,18 +143,18 @@ export default function EmployeeDashboardPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-6 text-center">
-              <div className="bg-[#010e05]/60 p-4 rounded-2xl border border-[#0a3a1e]">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
                 <p className="text-xs font-bold uppercase text-slate-400 mb-1">Check-In Timestamp</p>
-                <p className="text-xl font-extrabold text-[#004417]">
+                <p className="text-xl font-extrabold text-[#1dbf73]">
                   {todayRecord?.check_in_time
                     ? new Date(todayRecord.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     : '--:--'}
                 </p>
               </div>
 
-              <div className="bg-[#010e05]/60 p-4 rounded-2xl border border-[#0a3a1e]">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
                 <p className="text-xs font-bold uppercase text-slate-400 mb-1">Check-Out Timestamp</p>
-                <p className="text-xl font-extrabold text-[#004417]/70">
+                <p className="text-xl font-extrabold text-[#1dbf73]/70">
                   {todayRecord?.check_out_time
                     ? new Date(todayRecord.check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     : '--:--'}
@@ -175,20 +175,20 @@ export default function EmployeeDashboardPage() {
         </Card>
 
         {/* Leave Balance & Quick Action */}
-        <Card className="bg-[#021a0a] border-[#0a3a1e] flex flex-col justify-between">
+        <Card className="bg-white border-slate-200 flex flex-col justify-between">
           <div>
-            <div className="flex items-center space-x-2 text-[#004417] mb-2">
+            <div className="flex items-center space-x-2 text-[#1dbf73] mb-2">
               <Calendar className="w-5 h-5" />
-              <h3 className="text-lg font-bold text-white">Leave Balance</h3>
+              <h3 className="text-lg font-bold text-slate-900">Leave Balance</h3>
             </div>
             <p className="text-xs text-slate-400">Annual Paid Leave Allocation</p>
             {leaveBalance?.total === 0 ? (
-              <div className="mt-4 p-3 border border-dashed border-[#0a3a1e] rounded-xl text-xs text-slate-500 text-center">
+              <div className="mt-4 p-3 border border-dashed border-slate-200 rounded-xl text-xs text-slate-500 text-center">
                 No leave allocations active.
               </div>
             ) : (
               <div className="mt-4 flex items-baseline space-x-2">
-                <span className="text-4xl font-extrabold text-[#004417]">{leaveBalance?.available || 0}</span>
+                <span className="text-4xl font-extrabold text-[#1dbf73]">{leaveBalance?.available || 0}</span>
                 <span className="text-sm font-bold text-slate-500">/ {leaveBalance?.total || 0} Days Available</span>
               </div>
             )}
@@ -198,7 +198,7 @@ export default function EmployeeDashboardPage() {
           <Button
             size="sm"
             variant="outline"
-            className="w-full mt-6 border-[#004417]/30 text-[#004417] hover:bg-[#004417]/10"
+            className="w-full mt-6 border-[#1dbf73]/30 text-[#1dbf73] hover:bg-[#1dbf73]/10"
             onClick={() => router.push('/employee/leaves')}
           >
             Request Leave

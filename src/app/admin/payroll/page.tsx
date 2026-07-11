@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -104,26 +104,26 @@ export default function AdminPayrollDashboard() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#021a0a] p-6 rounded-3xl border border-[#0a3a1e] shadow-2xl relative overflow-hidden"
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-2xl relative overflow-hidden"
       >
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
         <div className="relative z-10 pointer-events-none">
           <div className="flex items-center space-x-2 mb-1">
-            <DollarSign className="w-5 h-5 text-[#004417]" />
-            <span className="px-3 py-1 rounded-full bg-[#004417]/20 border border-[#004417]/30 text-[#004417] text-xs font-bold uppercase tracking-widest">
+            <DollarSign className="w-5 h-5 text-[#1dbf73]" />
+            <span className="px-3 py-1 rounded-full bg-[#1dbf73]/10 border border-[#1dbf73]/30 text-[#1dbf73] text-xs font-bold uppercase tracking-widest">
               Finance
             </span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Payroll Generation</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Payroll Generation</h1>
           <p className="text-sm text-slate-400 mt-1">Compute monthly salary sheets based on attendance records.</p>
         </div>
       </motion.div>
 
       {/* Generator Card */}
-      <Card className="bg-[#021a0a] border-[#0a3a1e] shadow-2xl">
-        <div className="border-b border-[#0a3a1e] pb-4 mb-6">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-[#004417]" />
+      <Card className="bg-white border-slate-200 shadow-2xl">
+        <div className="border-b border-slate-200 pb-4 mb-6">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-[#1dbf73]" />
             Run Payroll Calculation
           </h2>
           <p className="text-sm text-slate-400 mt-1">Select the target month. This will process all employees in your scope.</p>
@@ -138,7 +138,7 @@ export default function AdminPayrollDashboard() {
               type="month"
               value={monthYear}
               onChange={(e) => setMonthYear(e.target.value)}
-              className="w-full bg-[#010e05] border border-[#0a3a1e] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#004417] transition-colors"
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-colors"
             />
           </div>
           <Button
@@ -178,10 +178,10 @@ export default function AdminPayrollDashboard() {
             {/* Summary Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Total Processed', value: results.length, icon: <Users className="w-5 h-5 text-blue-400" />, color: 'text-white' },
-                { label: 'Successful', value: successCount, icon: <CheckCircle2 className="w-5 h-5 text-emerald-400" />, color: 'text-emerald-400' },
+                { label: 'Total Processed', value: results.length, icon: <Users className="w-5 h-5 text-blue-400" />, color: 'text-slate-900' },
+                { label: 'Successful', value: successCount, icon: <CheckCircle2 className="w-5 h-5 text-[#1dbf73]" />, color: 'text-[#1dbf73]' },
                 { label: 'Errors', value: errorCount, icon: <XCircle className="w-5 h-5 text-rose-400" />, color: 'text-rose-400' },
-                { label: 'Total Net Payable', value: `৳${totalNet.toLocaleString()}`, icon: <TrendingUp className="w-5 h-5 text-[#004417]" />, color: 'text-[#004417]' },
+                { label: 'Total Net Payable', value: `৳${totalNet.toLocaleString()}`, icon: <TrendingUp className="w-5 h-5 text-[#1dbf73]" />, color: 'text-[#1dbf73]' },
               ].map((s) => (
                 <Card key={s.label} variant="glass" className="hover:-translate-y-0.5 transition-transform">
                   <div className="flex items-center justify-between mb-2 text-slate-500">
@@ -194,10 +194,10 @@ export default function AdminPayrollDashboard() {
             </div>
 
             {/* Table Card */}
-            <Card className="bg-[#021a0a] border-[#0a3a1e] p-0 overflow-hidden shadow-2xl">
-              <div className="flex items-center justify-between p-4 border-b border-[#0a3a1e]">
+            <Card className="bg-white border-slate-200 p-0 overflow-hidden shadow-2xl">
+              <div className="flex items-center justify-between p-4 border-b border-slate-200">
                 <div>
-                  <h2 className="font-bold text-white">Generation Results</h2>
+                  <h2 className="font-bold text-slate-900">Generation Results</h2>
                   <p className="text-xs text-slate-400">{results.length} records for {monthYear}</p>
                 </div>
                 <Button
@@ -205,7 +205,7 @@ export default function AdminPayrollDashboard() {
                   variant="outline"
                   icon={<Download className="w-4 h-4" />}
                   onClick={handleExport}
-                  className="border-[#0a3a1e] text-slate-300 hover:bg-[#0a3a1e] hover:text-white"
+                  className="border-slate-200 text-slate-300 hover:bg-slate-100 hover:text-slate-900"
                 >
                   Export CSV
                 </Button>
@@ -213,7 +213,7 @@ export default function AdminPayrollDashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-[#010e05] border-b border-[#0a3a1e] text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                    <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
                       <th className="py-3 px-5">Employee ID</th>
                       <th className="py-3 px-5">Status</th>
                       <th className="py-3 px-5 text-right">Payable Days</th>
@@ -222,15 +222,15 @@ export default function AdminPayrollDashboard() {
                       <th className="py-3 px-5 text-right">Net Payable</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#0a3a1e]/50 text-sm">
+                  <tbody className="divide-y divide-slate-200/50 text-sm">
                     {results.map((res, idx) => (
-                      <tr key={idx} className="hover:bg-[#0a3a1e]/30 transition-colors">
+                      <tr key={idx} className="hover:bg-slate-100/30 transition-colors">
                         <td className="py-3 px-5 font-mono text-xs text-slate-400">
                           {res.user_id.split('-')[0]}...
                         </td>
                         <td className="py-3 px-5">
                           {res.status === 'success' ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-[#1dbf73]/10 border border-emerald-500/20 text-[#1dbf73]">
                               <CheckCircle2 className="w-3 h-3" /> Success
                             </span>
                           ) : (
@@ -244,7 +244,7 @@ export default function AdminPayrollDashboard() {
                             <td className="py-3 px-5 text-right text-slate-300">{res.data.total_payable_days}</td>
                             <td className="py-3 px-5 text-right text-slate-300">৳{res.data.gross_salary.toLocaleString()}</td>
                             <td className="py-3 px-5 text-right text-rose-400">-৳{res.data.deductions.toLocaleString()}</td>
-                            <td className="py-3 px-5 text-right font-bold text-emerald-400">৳{res.data.net_payable.toLocaleString()}</td>
+                            <td className="py-3 px-5 text-right font-bold text-[#1dbf73]">৳{res.data.net_payable.toLocaleString()}</td>
                           </>
                         ) : (
                           <td colSpan={4} className="py-3 px-5 text-slate-500 text-xs italic">{res.reason}</td>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -98,15 +98,15 @@ export default function StoreEmployeesPage() {
   return (
     <div className="space-y-6 pb-12">
       {/* Sleek Minimal Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#0a3a1e] pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <h1 className="text-2xl font-semibold text-slate-100 tracking-tight">Store Employees</h1>
           <p className="text-sm text-slate-400 mt-1">Manage staff accounts and operational access for this branch.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-4 text-sm text-slate-400 bg-[#0A101C] border border-[#0a3a1e] px-4 py-2 rounded-xl">
-            <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>{activeCount} Active</span>
-            <div className="w-px h-4 bg-[#0a3a1e]"></div>
+          <div className="flex items-center gap-4 text-sm text-slate-400 bg-[#0A101C] border border-slate-200 px-4 py-2 rounded-xl">
+            <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-[#1dbf73]"></div>{activeCount} Active</span>
+            <div className="w-px h-4 bg-slate-100"></div>
             <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-rose-500"></div>{inactiveCount} Suspended</span>
           </div>
         </div>
@@ -121,7 +121,7 @@ export default function StoreEmployeesPage() {
             exit={{ opacity: 0 }}
             className={`flex items-center gap-3 p-4 rounded-xl border text-sm font-medium ${
               feedback.type === 'success'
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                ? 'bg-[#1dbf73]/10 border-emerald-500/20 text-[#1dbf73]'
                 : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
             }`}
           >
@@ -132,7 +132,7 @@ export default function StoreEmployeesPage() {
       </AnimatePresence>
 
       {/* Action Bar */}
-      <div className="flex flex-wrap gap-3 items-center justify-between bg-[#0A101C] p-3 rounded-xl border border-[#0a3a1e]">
+      <div className="flex flex-wrap gap-3 items-center justify-between bg-[#0A101C] p-3 rounded-xl border border-slate-200">
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
           <input
@@ -140,7 +140,7 @@ export default function StoreEmployeesPage() {
             placeholder="Search staff by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-transparent border border-[#0a3a1e] rounded-lg text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition-colors"
+            className="w-full pl-9 pr-4 py-2 bg-transparent border border-slate-200 rounded-lg text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition-colors"
           />
         </div>
 
@@ -149,7 +149,7 @@ export default function StoreEmployeesPage() {
           className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
             showInactive
               ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-              : 'text-slate-400 hover:text-slate-200 border border-transparent hover:bg-[#0a3a1e]/50'
+              : 'text-slate-400 hover:text-slate-200 border border-transparent hover:bg-slate-100/50'
           }`}
         >
           {showInactive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -158,7 +158,7 @@ export default function StoreEmployeesPage() {
       </div>
 
       {/* Roster Table */}
-      <div className="bg-[#0A101C] border border-[#0a3a1e] rounded-xl overflow-hidden shadow-lg">
+      <div className="bg-[#0A101C] border border-slate-200 rounded-xl overflow-hidden shadow-lg">
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <Spinner size="lg" />
@@ -167,14 +167,14 @@ export default function StoreEmployeesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-transparent text-slate-500 text-xs font-semibold uppercase border-b border-[#0a3a1e]">
+                <tr className="bg-transparent text-slate-500 text-xs font-semibold uppercase border-b border-slate-200">
                   <th className="py-4 px-6">Staff Member</th>
                   <th className="py-4 px-6">ID / Contact</th>
                   <th className="py-4 px-6 text-center">Status</th>
                   <th className="py-4 px-6 text-right">Access Control</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#0a3a1e]">
+              <tbody className="divide-y divide-slate-200">
                 {filteredEmployees.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-16 text-center text-slate-500 text-sm">
@@ -184,7 +184,7 @@ export default function StoreEmployeesPage() {
                   </tr>
                 ) : (
                   filteredEmployees.map((emp) => (
-                    <tr key={emp.id} className="hover:bg-[#0a3a1e]/20 transition-colors">
+                    <tr key={emp.id} className="hover:bg-slate-100/20 transition-colors">
                       <td className="py-4 px-6">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-medium text-sm shrink-0 border border-slate-700">
@@ -229,7 +229,7 @@ export default function StoreEmployeesPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg ${emp.is_active ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-500/10' : 'text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10'}`}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg ${emp.is_active ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-500/10' : 'text-slate-400 hover:text-[#1dbf73] hover:bg-[#1dbf73]/10'}`}
                             onClick={() => toggleActive(emp)}
                             disabled={togglingId === emp.id || emp.registration_step === 'pending_approval'}
                             isLoading={togglingId === emp.id}

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
@@ -50,16 +50,16 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
       hideHeader
       noPadding
     >
-      <div className="flex flex-col md:flex-row min-h-[650px] bg-[#021a0a] rounded-2xl overflow-hidden">
+      <div className="flex flex-col md:flex-row min-h-[650px] bg-white rounded-2xl overflow-hidden">
         
         {/* Left Pane: User Details & Verification Status */}
-        <div className="w-full md:w-[350px] lg:w-[400px] border-r border-[#0a3a1e] bg-[#010e05]/50 p-8 flex flex-col">
+        <div className="w-full md:w-[350px] lg:w-[400px] border-r border-slate-200 bg-white/50 p-8 flex flex-col">
           <div className="flex items-center gap-3 mb-8">
             <div className="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white tracking-tight">Identity Review</h2>
+              <h2 className="text-xl font-bold text-slate-900 tracking-tight">Identity Review</h2>
               <p className="text-xs text-slate-400 mt-1">Global Security & Compliance</p>
             </div>
           </div>
@@ -106,7 +106,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
             <div>
               <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3">Automated Checks</p>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#1dbf73]/5 border border-emerald-500/10">
                   <span className="text-xs text-slate-300 font-medium">Liveness Check</span>
                   <Badge status="present" variant="solid" className="text-[10px]">Passed</Badge>
                 </div>
@@ -114,7 +114,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                   <span className="text-xs text-slate-300 font-medium">Face Enrollment</span>
                   <Badge status="present" variant="solid" className="text-[10px]">Captured</Badge>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-[#0a3a1e]/30 border border-[#0a3a1e]">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-100/30 border border-slate-200">
                   <span className="text-xs text-slate-300 font-medium">Document Scan</span>
                   {isMissingBoth ? (
                     <Badge status="absent" variant="solid" className="text-[10px]">Missing</Badge>
@@ -128,21 +128,21 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
         </div>
 
         {/* Right Pane: Document Viewer */}
-        <div className="flex-1 flex flex-col bg-[#021a0a] relative">
+        <div className="flex-1 flex flex-col bg-white relative">
           {/* Top Bar */}
-          <div className="h-16 border-b border-[#0a3a1e] flex items-center justify-between px-6 bg-[#021a0a]/80 backdrop-blur-sm z-10">
+          <div className="h-16 border-b border-slate-200 flex items-center justify-between px-6 bg-white backdrop-blur-sm z-10">
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-slate-400" />
               <span className="text-sm font-semibold text-slate-200">Document Inspector</span>
             </div>
             
             {/* Tab Switcher */}
-            <div className="flex p-1 bg-[#010e05] border border-[#0a3a1e] rounded-lg">
+            <div className="flex p-1 bg-white border border-slate-200 rounded-lg">
               <button 
                 onClick={() => setActiveTab('front')}
                 className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
                   activeTab === 'front' 
-                    ? 'bg-[#0a3a1e] text-white shadow-sm' 
+                    ? 'bg-slate-100 text-slate-900 shadow-sm' 
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -152,7 +152,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                 onClick={() => setActiveTab('back')}
                 className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
                   activeTab === 'back' 
-                    ? 'bg-[#0a3a1e] text-white shadow-sm' 
+                    ? 'bg-slate-100 text-slate-900 shadow-sm' 
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -181,13 +181,13 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                       className={`max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-transform duration-300 ${isZoomed ? 'scale-150 cursor-zoom-out' : 'cursor-zoom-in hover:scale-105'}`}
                       onClick={() => setIsZoomed(!isZoomed)}
                     />
-                    <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md border border-white/10 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center gap-2">
+                    <div className="absolute bottom-4 right-4 bg-slate-900/40 backdrop-blur-md border border-slate-200 text-slate-900 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center gap-2">
                       <Expand className="w-4 h-4" />
                       <span className="text-xs font-medium">Click to {isZoomed ? 'zoom out' : 'zoom in'}</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-[#0a3a1e] rounded-2xl max-w-sm mx-auto">
+                  <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-slate-200 rounded-2xl max-w-sm mx-auto">
                     <AlertTriangle className="w-12 h-12 text-slate-500 mb-4" />
                     <p className="text-slate-300 font-bold mb-2">Document Missing</p>
                     <p className="text-xs text-slate-500">The employee did not upload the {activeTab} side of their National ID.</p>
@@ -198,10 +198,10 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
           </div>
 
           {/* Action Footer */}
-          <div className="p-6 border-t border-[#0a3a1e] bg-[#021a0a] flex items-center justify-between">
+          <div className="p-6 border-t border-slate-200 bg-white flex items-center justify-between">
             <Button 
               variant="ghost" 
-              className="text-slate-400 hover:text-white"
+              className="text-slate-400 hover:text-slate-900"
               onClick={onClose}
               disabled={loading}
             >
@@ -222,7 +222,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
               </Button>
               <Button 
                 variant="primary" 
-                className="bg-gradient-to-r from-[#004417] to-[#B08015] hover:from-[#006622] hover:to-[#9F700B] text-black font-extrabold border-none shadow-[0_0_15px_rgba(210,160,42,0.3)] hover:shadow-[0_0_25px_rgba(210,160,42,0.5)] transition-all px-6"
+                className="bg-gradient-to-r from-[#1dbf73] to-[#B08015] hover:from-[#16965a] hover:to-[#9F700B] text-black font-extrabold border-none shadow-[0_0_15px_rgba(210,160,42,0.3)] hover:shadow-[0_0_25px_rgba(210,160,42,0.5)] transition-all px-6"
                 onClick={async () => {
                   await onApprove(employee.id, 'approve');
                   onClose();

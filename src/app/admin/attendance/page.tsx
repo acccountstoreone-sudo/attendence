@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -111,7 +111,7 @@ export default function AdminAttendancePage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#021a0a] p-6 rounded-3xl border border-[#0a3a1e] backdrop-blur-xl shadow-2xl relative overflow-hidden"
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 backdrop-blur-sm shadow-2xl relative overflow-hidden"
       >
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#004417_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
         <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
@@ -120,17 +120,17 @@ export default function AdminAttendancePage() {
 
         <div className="relative z-10 pointer-events-none">
           <div className="flex items-center space-x-2">
-            <span className="px-3 py-1 rounded-full bg-[#004417]/20 border border-[#004417]/30 text-[#004417] text-xs font-bold uppercase tracking-widest">
+            <span className="px-3 py-1 rounded-full bg-[#1dbf73]/10 border border-[#1dbf73]/30 text-[#1dbf73] text-xs font-bold uppercase tracking-widest">
               Master Log
             </span>
             {isToday && (
               <span className="text-xs text-slate-400 flex items-center">
-                <Clock className="w-3 h-3 text-[#004417] mr-1" />
+                <Clock className="w-3 h-3 text-[#1dbf73] mr-1" />
                 Today — Live
               </span>
             )}
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white mt-2 tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">
             Enterprise Attendance Grid
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -142,7 +142,7 @@ export default function AdminAttendancePage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-[#0a3a1e] bg-[#010e05]/50 text-slate-300 hover:bg-[#0a3a1e] hover:text-white"
+            className="border-slate-200 bg-white/50 text-slate-300 hover:bg-slate-100 hover:text-slate-900"
             icon={<RefreshCw className="w-4 h-4" />}
             onClick={fetchAttendance}
           >
@@ -151,7 +151,7 @@ export default function AdminAttendancePage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-[#0a3a1e] bg-[#010e05]/50 text-slate-300 hover:bg-[#0a3a1e] hover:text-white"
+            className="border-slate-200 bg-white/50 text-slate-300 hover:bg-slate-100 hover:text-slate-900"
             icon={<Download className="w-4 h-4" />}
             onClick={handleExport}
             disabled={filteredRecords.length === 0}
@@ -162,10 +162,10 @@ export default function AdminAttendancePage() {
       </motion.div>
 
       {/* Filters and Table Area */}
-      <Card className="bg-[#021a0a] border-[#0a3a1e] p-0 overflow-hidden relative z-10 shadow-2xl">
+      <Card className="bg-white border-slate-200 p-0 overflow-hidden relative z-10 shadow-2xl">
 
         {/* Toolbar */}
-        <div className="p-4 border-b border-[#0a3a1e] bg-[#010e05]/80 flex flex-col md:flex-row gap-3 justify-between items-center">
+        <div className="p-4 border-b border-slate-200 bg-white flex flex-col md:flex-row gap-3 justify-between items-center">
           <div className="relative w-full md:w-80">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -173,14 +173,14 @@ export default function AdminAttendancePage() {
               placeholder="Search by employee name or branch..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-[#021a0a] border border-[#0a3a1e] rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#004417] transition-colors"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#1dbf73] transition-colors"
             />
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
             {/* Bug 7 fix: Date picker */}
-            <div className="flex items-center gap-2 bg-[#021a0a] border border-[#0a3a1e] rounded-xl px-3 py-2">
-              <Calendar className="w-4 h-4 text-[#004417] shrink-0" />
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2">
+              <Calendar className="w-4 h-4 text-[#1dbf73] shrink-0" />
               <input
                 type="date"
                 value={selectedDate}
@@ -195,7 +195,7 @@ export default function AdminAttendancePage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-[#021a0a] border border-[#0a3a1e] text-slate-300 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-[#004417]"
+                className="bg-white border border-slate-200 text-slate-300 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-[#1dbf73]"
               >
                 <option value="all">All Statuses</option>
                 <option value="present">Present (On-Time)</option>
@@ -216,7 +216,7 @@ export default function AdminAttendancePage() {
           ) : (
             <table className="w-full text-left border-collapse whitespace-nowrap">
               <thead>
-                <tr className="bg-[#010e05] border-b border-[#0a3a1e] text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
                   <th className="py-4 px-6">Identity</th>
                   <th className="py-4 px-6">Location</th>
                   <th className="py-4 px-6">Check-In</th>
@@ -224,7 +224,7 @@ export default function AdminAttendancePage() {
                   <th className="py-4 px-6 text-right">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#0a3a1e]/50 text-sm">
+              <tbody className="divide-y divide-slate-200/50 text-sm">
                 <AnimatePresence>
                   {filteredRecords.length === 0 ? (
                     <tr>
@@ -242,22 +242,22 @@ export default function AdminAttendancePage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
                         key={rec.id}
-                        className="hover:bg-[#0a3a1e]/30 transition-colors group"
+                        className="hover:bg-slate-100/30 transition-colors group"
                       >
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-[#010e05] border border-[#0a3a1e] flex items-center justify-center text-[#004417] font-bold text-xs shrink-0">
+                            <div className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center text-[#1dbf73] font-bold text-xs shrink-0">
                               {rec.full_name?.charAt(0) || 'U'}
                             </div>
                             <div>
-                              <p className="font-bold text-white group-hover:text-[#004417] transition-colors">{rec.full_name}</p>
+                              <p className="font-bold text-slate-900 group-hover:text-[#1dbf73] transition-colors">{rec.full_name}</p>
                               <p className="text-xs text-slate-500 font-mono mt-0.5">ID: {rec.user_id.slice(0, 8)}</p>
                             </div>
                           </div>
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex items-center text-slate-300 text-sm">
-                            <MapPin className="w-4 h-4 text-[#004417]/60 mr-2 shrink-0" />
+                            <MapPin className="w-4 h-4 text-[#1dbf73]/60 mr-2 shrink-0" />
                             {rec.branch_name}
                           </div>
                         </td>

@@ -73,7 +73,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#004417]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1dbf73]"></div>
       </div>
     );
   }
@@ -82,8 +82,8 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
     return (
       <div className="text-center py-12">
         <Store className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-white mb-2">Branch Not Found</h2>
-        <button onClick={() => router.push('/admin/branches')} className="text-[#004417] hover:underline">Go Back</button>
+        <h2 className="text-xl font-bold text-slate-900 mb-2">Branch Not Found</h2>
+        <button onClick={() => router.push('/admin/branches')} className="text-[#1dbf73] hover:underline">Go Back</button>
       </div>
     );
   }
@@ -102,14 +102,14 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <Link href="/admin/branches" className="flex items-center text-slate-400 hover:text-white transition-colors text-sm mb-2 w-fit">
+          <Link href="/admin/branches" className="flex items-center text-slate-400 hover:text-slate-900 transition-colors text-sm mb-2 w-fit">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back to All Branches
           </Link>
-          <div className="flex items-center space-x-2 text-[#004417] text-xs font-bold uppercase tracking-widest mb-1">
+          <div className="flex items-center space-x-2 text-[#1dbf73] text-xs font-bold uppercase tracking-widest mb-1">
             <Store className="w-4 h-4" />
             <span>Workspace</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
             {branch.name} <span className="text-xl text-slate-500 font-normal">({branch.code})</span>
           </h1>
         </div>
@@ -119,11 +119,11 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
          <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-400">Total Staff</span>
-            <span className="text-lg font-bold text-white">{employees.length}</span>
+            <span className="text-lg font-bold text-slate-900">{employees.length}</span>
          </div>
          <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-400">Present</span>
-            <span className="text-lg font-bold text-emerald-500">{employees.filter(e => e.is_present_today).length}</span>
+            <span className="text-lg font-bold text-[#1dbf73]">{employees.filter(e => e.is_present_today).length}</span>
          </div>
          <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-400">Absent</span>
@@ -139,7 +139,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
          </div>
          <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-400">Attendance %</span>
-            <span className="text-lg font-bold text-[#004417]">
+            <span className="text-lg font-bold text-[#1dbf73]">
               {employees.length > 0 ? Math.round((employees.filter(e => e.is_present_today).length / employees.length) * 100) : 0}%
             </span>
          </div>
@@ -154,8 +154,8 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
               onClick={() => setActiveTab(tab.id as TabType)}
               className={`flex items-center px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
                 activeTab === tab.id || (tab.id === 'employees' && activeTab === 'profile')
-                  ? 'bg-[#004417]/10 text-[#004417] shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                  ? 'bg-[#1dbf73]/10 text-[#1dbf73] shadow-sm'
+                  : 'text-slate-400 hover:text-slate-900 hover:bg-slate-800/50'
               }`}
             >
               {tab.icon}

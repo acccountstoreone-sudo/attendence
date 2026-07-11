@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -87,7 +87,7 @@ export function WebAuthnRegister() {
       )}
 
       {success ? (
-        <div className="flex items-center space-x-2 p-3 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
+        <div className="flex items-center space-x-2 p-3 rounded bg-[#1dbf73]/10 border border-emerald-500/20 text-[#1dbf73] text-sm">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span>Fingerprint successfully registered for this device!</span>
         </div>

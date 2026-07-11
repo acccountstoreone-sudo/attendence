@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -32,7 +32,7 @@ export const Toast: React.FC<ToastProps> = ({
   }, [duration, onDismiss]);
 
   const icons = {
-    success: <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />,
+    success: <CheckCircle2 className="w-5 h-5 text-[#1dbf73] shrink-0" />,
     warning: <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />,
     error: <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />,
     info: <Info className="w-5 h-5 text-blue-400 shrink-0" />,
@@ -50,7 +50,7 @@ export const Toast: React.FC<ToastProps> = ({
   return (
     <div
       className={cn(
-        'flex items-start space-x-3 p-4 rounded-xl border shadow-2xl backdrop-blur-xl animate-in slide-in-from-bottom-5 fade-in duration-300 max-w-sm w-full',
+        'flex items-start space-x-3 p-4 rounded-xl border shadow-2xl backdrop-blur-sm animate-in slide-in-from-bottom-5 fade-in duration-300 max-w-sm w-full',
         borders[type]
       )}
     >
@@ -62,7 +62,7 @@ export const Toast: React.FC<ToastProps> = ({
       {onDismiss && (
         <button
           onClick={onDismiss}
-          className="p-1 rounded-lg opacity-70 hover:opacity-100 hover:bg-white/10 transition-all shrink-0"
+          className="p-1 rounded-lg opacity-70 hover:opacity-100 hover:bg-slate-100 transition-all shrink-0"
         >
           <X className="w-4 h-4" />
         </button>

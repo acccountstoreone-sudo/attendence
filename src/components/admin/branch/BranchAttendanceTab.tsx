@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -11,17 +11,17 @@ export const BranchAttendanceTab: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h4 className="text-lg font-bold text-white">Attendance Records</h4>
+        <h4 className="text-lg font-bold text-slate-900">Attendance Records</h4>
         <div className="flex items-center space-x-2">
           <div className="bg-slate-900 rounded-lg p-1 border border-slate-800 flex">
             <button 
-              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${view === 'daily' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}
+              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${view === 'daily' ? 'bg-slate-800 text-slate-900' : 'text-slate-400 hover:text-slate-900'}`}
               onClick={() => setView('daily')}
             >
               Daily
             </button>
             <button 
-              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${view === 'monthly' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}
+              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${view === 'monthly' ? 'bg-slate-800 text-slate-900' : 'text-slate-400 hover:text-slate-900'}`}
               onClick={() => setView('monthly')}
             >
               Monthly

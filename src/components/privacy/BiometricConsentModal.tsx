@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
@@ -31,7 +31,7 @@ export const BiometricConsentModal: React.FC<BiometricConsentModalProps> = ({
       bn: 'উপস্থিতি যাচাইয়ের জন্য শুধুমাত্র মুখমণ্ডলের বায়োমেট্রিক তথ্য সংগ্রহ করা হবে।',
     },
     {
-      icon: <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />,
+      icon: <MapPin className="w-4 h-4 text-[#1dbf73] shrink-0" />,
       en: 'GPS location is verified to confirm physical store presence during check-in.',
       bn: 'চেক-ইনের সময় দোকানের ভেতরে থাকার নিশ্চয়তার জন্য জিপিএস অবস্থান যাচাই করা হবে।',
     },
@@ -65,7 +65,7 @@ export const BiometricConsentModal: React.FC<BiometricConsentModalProps> = ({
         <div className="flex items-center space-x-3 bg-gradient-to-r from-blue-950/80 to-indigo-950/60 p-4 rounded-2xl border border-blue-500/30">
           <ShieldCheck className="w-8 h-8 text-blue-400 shrink-0" />
           <div>
-            <p className="text-sm font-bold text-white">Anchor Fashion ERP — Privacy Notice</p>
+            <p className="text-sm font-bold text-slate-900">Anchor Fashion ERP — Privacy Notice</p>
             <p className="text-xs text-blue-300">অ্যাঙ্কর ফ্যাশন ERP — গোপনীয়তা বিজ্ঞপ্তি</p>
             <p className="text-xs text-slate-400 mt-0.5">For: <strong className="text-slate-200">{employeeName}</strong></p>
           </div>
@@ -100,7 +100,7 @@ export const BiometricConsentModal: React.FC<BiometricConsentModalProps> = ({
           onClick={() => setIsChecked(!isChecked)}
         >
           <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors ${isChecked ? 'bg-blue-600 border-blue-600' : 'border-slate-600 bg-slate-950'}`}>
-            {isChecked && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+            {isChecked && <CheckCircle2 className="w-3.5 h-3.5 text-slate-900" />}
           </div>
           <div>
             <p className="text-xs font-bold text-slate-200">
