@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import Link from 'next/link';
@@ -101,7 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Brand Header */}
       <div className="h-20 flex items-center justify-between px-4 border-b border-slate-200 shrink-0 relative overflow-hidden bg-slate-50/50">
         <div className="flex items-center space-x-3 overflow-hidden relative z-10">
-          <div className="w-10 h-10 rounded-xl bg-[#1dbf73] flex items-center justify-center text-slate-900 font-extrabold shadow-sm shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-[#1dbf73] flex items-center justify-center text-white font-extrabold shadow-sm shrink-0">
             AF
           </div>
           <AnimatePresence>
@@ -124,7 +124,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Collapse button for Desktop */}
         <button
           onClick={onToggleCollapse}
-          className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+          className="hidden md:flex p-1.5 rounded-lg text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors"
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
@@ -217,8 +217,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile Drawer */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex animate-in fade-in duration-200">
-          <div className="fixed inset-0 bg-white/80 backdrop-blur-sm" onClick={onCloseMobile} />
-          <div className="relative w-72 h-full z-10 animate-in slide-in-from-left duration-300">
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onCloseMobile} />
+          <div className="relative w-72 h-full z-10 animate-in slide-in-from-left duration-300 shadow-2xl">
             {sidebarContent}
           </div>
         </div>

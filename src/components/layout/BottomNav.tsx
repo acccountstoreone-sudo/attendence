@@ -54,7 +54,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ role }) => {
             >
               <div className={cn(
                 "relative z-10 p-1 transition-transform duration-200 active:scale-90",
-                isActive ? "text-[#1dbf73]" : "text-slate-400 group-hover:text-slate-700"
+                isActive ? "text-[#1dbf73]" : "text-slate-600 group-hover:text-slate-700"
               )}>
                 {item.icon}
                 {isActive && (

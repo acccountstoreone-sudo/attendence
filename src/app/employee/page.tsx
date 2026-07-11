@@ -91,7 +91,7 @@ export default function EmployeeDashboardPage() {
           <h1 className="text-2xl md:text-4xl font-extrabold text-slate-900 mt-2 tracking-tight">
             Welcome, {profile?.full_name || 'Staff Member'}!
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 mt-1">
             Biometric facial verification and GPS geofenced attendance tracking portal.
           </p>
         </div>
@@ -144,7 +144,7 @@ export default function EmployeeDashboardPage() {
 
             <div className="grid grid-cols-2 gap-6 text-center">
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <p className="text-xs font-bold uppercase text-slate-400 mb-1">Check-In Timestamp</p>
+                <p className="text-xs font-bold uppercase text-slate-600 mb-1">Check-In Timestamp</p>
                 <p className="text-xl font-extrabold text-[#1dbf73]">
                   {todayRecord?.check_in_time
                     ? new Date(todayRecord.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -153,7 +153,7 @@ export default function EmployeeDashboardPage() {
               </div>
 
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <p className="text-xs font-bold uppercase text-slate-400 mb-1">Check-Out Timestamp</p>
+                <p className="text-xs font-bold uppercase text-slate-600 mb-1">Check-Out Timestamp</p>
                 <p className="text-xl font-extrabold text-[#1dbf73]/70">
                   {todayRecord?.check_out_time
                     ? new Date(todayRecord.check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -181,7 +181,7 @@ export default function EmployeeDashboardPage() {
               <Calendar className="w-5 h-5" />
               <h3 className="text-lg font-bold text-slate-900">Leave Balance</h3>
             </div>
-            <p className="text-xs text-slate-400">Annual Paid Leave Allocation</p>
+            <p className="text-xs text-slate-600">Annual Paid Leave Allocation</p>
             {leaveBalance?.total === 0 ? (
               <div className="mt-4 p-3 border border-dashed border-slate-200 rounded-xl text-xs text-slate-500 text-center">
                 No leave allocations active.

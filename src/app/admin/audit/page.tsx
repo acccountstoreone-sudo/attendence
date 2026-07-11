@@ -163,7 +163,7 @@ export default function AdminAuditPage() {
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">
             System Audit & Security Logs
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 mt-1">
             Live ledger of all administrative actions, system overrides, and security events.
           </p>
         </div>
@@ -202,7 +202,7 @@ export default function AdminAuditPage() {
               placeholder="Search actions, users, tables..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#1dbf73] transition-colors"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73] transition-colors"
             />
           </div>
 
@@ -230,7 +230,7 @@ export default function AdminAuditPage() {
           ) : (
             <table className="w-full text-left border-collapse whitespace-nowrap">
               <thead>
-                <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-600 font-bold">
                   <th className="py-4 px-6 w-12">Event</th>
                   <th className="py-4 px-6">Timestamp & IP</th>
                   <th className="py-4 px-6">Actor</th>
@@ -278,7 +278,7 @@ export default function AdminAuditPage() {
                           <td className="py-4 px-6 whitespace-normal min-w-[300px]">
                             <p className="font-bold text-[#1dbf73] text-xs uppercase tracking-wider mb-0.5">{log.action}</p>
                             {log.table_name && (
-                              <p className="text-slate-400 text-sm leading-snug">
+                              <p className="text-slate-600 text-sm leading-snug">
                                 Table: <span className="font-mono text-slate-600">{log.table_name}</span>
                                 {log.record_id && <span className="text-slate-500"> · ID: {log.record_id.slice(0, 8)}...</span>}
                               </p>

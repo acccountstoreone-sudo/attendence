@@ -109,7 +109,7 @@ export const LocationMapViewer: React.FC<LocationMapViewerProps> = ({
         </button>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-slate-400 bg-white px-3 py-2 rounded-lg border border-slate-200">
+      <div className="flex items-center justify-between text-xs text-slate-600 bg-white px-3 py-2 rounded-lg border border-slate-200">
         <span className="flex items-center gap-1.5 font-mono text-slate-600">
           <MapPin className="w-3.5 h-3.5 text-[#1dbf73]" />
           {latitude.toFixed(6)}, {longitude.toFixed(6)}

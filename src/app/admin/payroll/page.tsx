@@ -115,7 +115,7 @@ export default function AdminPayrollDashboard() {
             </span>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Payroll Generation</h1>
-          <p className="text-sm text-slate-400 mt-1">Compute monthly salary sheets based on attendance records.</p>
+          <p className="text-sm text-slate-600 mt-1">Compute monthly salary sheets based on attendance records.</p>
         </div>
       </motion.div>
 
@@ -126,11 +126,11 @@ export default function AdminPayrollDashboard() {
             <Calendar className="w-5 h-5 text-[#1dbf73]" />
             Run Payroll Calculation
           </h2>
-          <p className="text-sm text-slate-400 mt-1">Select the target month. This will process all employees in your scope.</p>
+          <p className="text-sm text-slate-600 mt-1">Select the target month. This will process all employees in your scope.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 items-end">
           <div className="flex-1 max-w-sm space-y-2">
-            <label htmlFor="month" className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <label htmlFor="month" className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
               Month & Year
             </label>
             <input
@@ -198,7 +198,7 @@ export default function AdminPayrollDashboard() {
               <div className="flex items-center justify-between p-4 border-b border-slate-200">
                 <div>
                   <h2 className="font-bold text-slate-900">Generation Results</h2>
-                  <p className="text-xs text-slate-400">{results.length} records for {monthYear}</p>
+                  <p className="text-xs text-slate-600">{results.length} records for {monthYear}</p>
                 </div>
                 <Button
                   size="sm"
@@ -213,7 +213,7 @@ export default function AdminPayrollDashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                    <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-600 font-bold">
                       <th className="py-3 px-5">Employee ID</th>
                       <th className="py-3 px-5">Status</th>
                       <th className="py-3 px-5 text-right">Payable Days</th>
@@ -225,7 +225,7 @@ export default function AdminPayrollDashboard() {
                   <tbody className="divide-y divide-slate-200/50 text-sm">
                     {results.map((res, idx) => (
                       <tr key={idx} className="hover:bg-slate-100/30 transition-colors">
-                        <td className="py-3 px-5 font-mono text-xs text-slate-400">
+                        <td className="py-3 px-5 font-mono text-xs text-slate-600">
                           {res.user_id.split('-')[0]}...
                         </td>
                         <td className="py-3 px-5">

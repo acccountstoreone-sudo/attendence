@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 
 export const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
@@ -12,28 +12,28 @@ Table.displayName = 'Table';
 
 export const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
   ({ className, ...props }, ref) => (
-    <thead ref={ref} className={cn('bg-white/5 text-slate-700 border-b border-slate-200 uppercase text-xs tracking-wider', className)} {...props} />
+    <thead ref={ref} className={cn('bg-slate-50 text-slate-700 border-b border-slate-200 uppercase text-xs tracking-wider font-bold', className)} {...props} />
   )
 );
 TableHeader.displayName = 'TableHeader';
 
 export const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
   ({ className, ...props }, ref) => (
-    <tbody ref={ref} className={cn('[&_tr:last-child]:border-0 divide-y divide-white/5', className)} {...props} />
+    <tbody ref={ref} className={cn('[&_tr:last-child]:border-0 divide-y divide-slate-100', className)} {...props} />
   )
 );
 TableBody.displayName = 'TableBody';
 
 export const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTMLTableRowElement>>(
   ({ className, ...props }, ref) => (
-    <tr ref={ref} className={cn('border-b border-slate-200 transition-colors hover:bg-slate-50 data-[state=selected]:bg-white/5', className)} {...props} />
+    <tr ref={ref} className={cn('border-b border-slate-200 transition-colors hover:bg-slate-50/80 data-[state=selected]:bg-emerald-50/60', className)} {...props} />
   )
 );
 TableRow.displayName = 'TableRow';
 
 export const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<HTMLTableCellElement>>(
   ({ className, ...props }, ref) => (
-    <th ref={ref} className={cn('h-12 px-4 text-left align-middle font-semibold text-slate-600 [&:has([role=checkbox])]:pr-0', className)} {...props} />
+    <th ref={ref} className={cn('h-12 px-4 text-left align-middle font-bold text-slate-700 [&:has([role=checkbox])]:pr-0', className)} {...props} />
   )
 );
 TableHead.displayName = 'TableHead';

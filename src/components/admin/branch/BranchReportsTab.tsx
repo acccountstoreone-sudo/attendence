@@ -26,7 +26,7 @@ export const BranchReportsTab: React.FC = () => {
                  </div>
                  <div>
                    <h5 className="text-md font-bold text-slate-900">{report.title}</h5>
-                   <p className="text-xs text-slate-400 mt-1">{report.description}</p>
+                   <p className="text-xs text-slate-600 mt-1">{report.description}</p>
                  </div>
               </div>
               

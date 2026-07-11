@@ -101,10 +101,10 @@ export default function StoreEmployeesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Store Employees</h1>
-          <p className="text-sm text-slate-400 mt-1">Manage staff accounts and operational access for this branch.</p>
+          <p className="text-sm text-slate-600 mt-1">Manage staff accounts and operational access for this branch.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-4 text-sm text-slate-400 bg-[#ffffff] border border-slate-200 px-4 py-2 rounded-xl">
+          <div className="flex items-center gap-4 text-sm text-slate-600 bg-[#ffffff] border border-slate-200 px-4 py-2 rounded-xl">
             <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-[#1dbf73]"></div>{activeCount} Active</span>
             <div className="w-px h-4 bg-slate-100"></div>
             <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-rose-500"></div>{inactiveCount} Suspended</span>
@@ -140,7 +140,7 @@ export default function StoreEmployeesPage() {
             placeholder="Search staff by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-transparent border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition-colors"
+            className="w-full pl-9 pr-4 py-2 bg-transparent border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-slate-500 transition-colors"
           />
         </div>
 
@@ -149,7 +149,7 @@ export default function StoreEmployeesPage() {
           className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
             showInactive
               ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-              : 'text-slate-400 hover:text-slate-700 border border-transparent hover:bg-slate-100/50'
+              : 'text-slate-600 hover:text-slate-700 border border-transparent hover:bg-slate-100/50'
           }`}
         >
           {showInactive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -197,7 +197,7 @@ export default function StoreEmployeesPage() {
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <p className="text-xs font-mono text-slate-400 mb-0.5">
+                        <p className="text-xs font-mono text-slate-600 mb-0.5">
                           {emp.employee_id || 'PENDING-ID'}
                         </p>
                         <p className="text-xs text-slate-500">
@@ -229,7 +229,7 @@ export default function StoreEmployeesPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg ${emp.is_active ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-500/10' : 'text-slate-400 hover:text-[#1dbf73] hover:bg-[#1dbf73]/10'}`}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg ${emp.is_active ? 'text-slate-600 hover:text-rose-400 hover:bg-rose-500/10' : 'text-slate-600 hover:text-[#1dbf73] hover:bg-[#1dbf73]/10'}`}
                             onClick={() => toggleActive(emp)}
                             disabled={togglingId === emp.id || emp.registration_step === 'pending_approval'}
                             isLoading={togglingId === emp.id}

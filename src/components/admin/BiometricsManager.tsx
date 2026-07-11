@@ -65,7 +65,7 @@ export function BiometricsManager({ employee, webauthnCredentials }: { employee:
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Face Verification</h3>
-                <p className="text-sm text-slate-400">Primary biometric check-in</p>
+                <p className="text-sm text-slate-600">Primary biometric check-in</p>
               </div>
             </div>
             {employee.face_enrolled ? (
@@ -108,10 +108,10 @@ export function BiometricsManager({ employee, webauthnCredentials }: { employee:
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Registered Devices</h3>
-                <p className="text-sm text-slate-400">Passkeys & Fingerprints</p>
+                <p className="text-sm text-slate-600">Passkeys & Fingerprints</p>
               </div>
             </div>
-            <span className="text-slate-400 text-sm font-medium">{webauthnCredentials.length} Saved</span>
+            <span className="text-slate-600 text-sm font-medium">{webauthnCredentials.length} Saved</span>
           </div>
 
           <div className="space-y-3">

@@ -60,7 +60,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900 tracking-tight">Identity Review</h2>
-              <p className="text-xs text-slate-400 mt-1">Global Security & Compliance</p>
+              <p className="text-xs text-slate-600 mt-1">Global Security & Compliance</p>
             </div>
           </div>
 
@@ -70,28 +70,28 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
               <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3">Applicant Profile</p>
               <div className="space-y-4">
                 <div className="flex gap-4 items-start">
-                  <User className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+                  <User className="w-5 h-5 text-slate-600 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs text-slate-500 font-medium">Full Legal Name</p>
                     <p className="text-sm font-bold text-slate-900">{employee.full_name}</p>
                   </div>
                 </div>
                 <div className="flex gap-4 items-start">
-                  <Mail className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+                  <Mail className="w-5 h-5 text-slate-600 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs text-slate-500 font-medium">Email Address</p>
                     <p className="text-sm font-bold text-slate-900 truncate max-w-[200px]" title={employee.email}>{employee.email}</p>
                   </div>
                 </div>
                 <div className="flex gap-4 items-start">
-                  <Building2 className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+                  <Building2 className="w-5 h-5 text-slate-600 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs text-slate-500 font-medium">Assigned Branch</p>
                     <p className="text-sm font-bold text-slate-900">{employee.branch_name || 'Global / Unassigned'}</p>
                   </div>
                 </div>
                 <div className="flex gap-4 items-start">
-                  <CreditCard className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+                  <CreditCard className="w-5 h-5 text-slate-600 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs text-slate-500 font-medium">National ID Number</p>
                     <p className="text-sm font-bold text-slate-900">{employee.nid || 'Not Provided'}</p>
@@ -132,7 +132,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
           {/* Top Bar */}
           <div className="h-16 border-b border-slate-200 flex items-center justify-between px-6 bg-white backdrop-blur-sm z-10">
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-slate-400" />
+              <FileText className="w-4 h-4 text-slate-600" />
               <span className="text-sm font-semibold text-slate-700">Document Inspector</span>
             </div>
             
@@ -143,7 +143,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                 className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
                   activeTab === 'front' 
                     ? 'bg-slate-100 text-slate-900 shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-700'
+                    : 'text-slate-600 hover:text-slate-700'
                 }`}
               >
                 Front Side
@@ -153,7 +153,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
                 className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
                   activeTab === 'back' 
                     ? 'bg-slate-100 text-slate-900 shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-700'
+                    : 'text-slate-600 hover:text-slate-700'
                 }`}
               >
                 Back Side
@@ -201,7 +201,7 @@ export const KYCReviewModal: React.FC<KYCReviewModalProps> = ({
           <div className="p-6 border-t border-slate-200 bg-white flex items-center justify-between">
             <Button 
               variant="ghost" 
-              className="text-slate-400 hover:text-slate-900"
+              className="text-slate-600 hover:text-slate-900"
               onClick={onClose}
               disabled={loading}
             >

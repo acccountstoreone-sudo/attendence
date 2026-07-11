@@ -47,7 +47,7 @@ export default function UnauthorizedPage() {
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
             Access <span className="text-[#1dbf73]">Restricted</span>
           </h1>
-          <p className="text-slate-400 text-sm">
+          <p className="text-slate-600 text-sm">
             403 - You don&apos;t have permission to view this resource.
           </p>
         </div>

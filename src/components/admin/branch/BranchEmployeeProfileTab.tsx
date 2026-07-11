@@ -16,7 +16,7 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
 
   if (!employee) {
     return (
-      <div className="text-center py-12 text-slate-400">
+      <div className="text-center py-12 text-slate-600">
         <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
         <p>Employee not found.</p>
         <Button variant="secondary" onClick={onBack} className="mt-4">Back to Employees</Button>
@@ -27,7 +27,7 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-4 mb-2">
-        <Button variant="ghost" size="sm" onClick={onBack} className="text-slate-400 hover:text-slate-900 p-0 h-auto">
+        <Button variant="ghost" size="sm" onClick={onBack} className="text-slate-600 hover:text-slate-900 p-0 h-auto">
           <ChevronLeft className="w-5 h-5 mr-1" /> Back
         </Button>
         <h3 className="text-xl font-bold text-slate-900">Employee Profile</h3>
@@ -57,7 +57,7 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
           </div>
           
           <div className="pt-6 space-y-4">
-            <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Contact Info</h4>
+            <h4 className="text-sm font-semibold text-slate-600 uppercase tracking-wider">Contact Info</h4>
             <div className="flex items-center space-x-3 text-sm text-slate-600">
               <Phone className="w-4 h-4 text-slate-500" />
               <span>{employee.phone || 'N/A'}</span>
@@ -79,19 +79,19 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
              <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center"><Calendar className="w-5 h-5 mr-2 text-[#1dbf73]" /> Attendance Summary</h4>
              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                <div className="bg-white p-4 rounded-lg text-center">
-                 <p className="text-xs text-slate-400">Total Present</p>
+                 <p className="text-xs text-slate-600">Total Present</p>
                  <p className="text-xl font-bold text-[#1dbf73] mt-1">24 days</p>
                </div>
                <div className="bg-white p-4 rounded-lg text-center">
-                 <p className="text-xs text-slate-400">Total Absent</p>
+                 <p className="text-xs text-slate-600">Total Absent</p>
                  <p className="text-xl font-bold text-red-500 mt-1">2 days</p>
                </div>
                <div className="bg-white p-4 rounded-lg text-center">
-                 <p className="text-xs text-slate-400">Working Hours</p>
+                 <p className="text-xs text-slate-600">Working Hours</p>
                  <p className="text-xl font-bold text-blue-500 mt-1">192 hrs</p>
                </div>
                <div className="bg-white p-4 rounded-lg text-center">
-                 <p className="text-xs text-slate-400">Overtime</p>
+                 <p className="text-xs text-slate-600">Overtime</p>
                  <p className="text-xl font-bold text-purple-500 mt-1">15 hrs</p>
                </div>
              </div>

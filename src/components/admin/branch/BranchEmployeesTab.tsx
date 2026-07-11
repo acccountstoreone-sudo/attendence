@@ -27,7 +27,7 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-white text-slate-400 border-b border-slate-200">
+              <thead className="bg-white text-slate-600 border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Employee</th>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">ID & Phone</th>

@@ -82,7 +82,7 @@ export default function AdminAnalyticsPage() {
           <TrendingUp className="w-7 h-7 text-indigo-400" />
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Attendance Analytics</h1>
-            <p className="text-sm text-slate-400">{data?.month_label ?? 'Loading…'} — Powered by database analytics, no AI cost.</p>
+            <p className="text-sm text-slate-600">{data?.month_label ?? 'Loading…'} — Powered by database analytics, no AI cost.</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -95,7 +95,7 @@ export default function AdminAnalyticsPage() {
       {loading ? (
         <div className="flex justify-center py-20"><Spinner className="w-8 h-8" /></div>
       ) : !data ? (
-        <Card className="p-12 text-center"><p className="text-slate-400">Failed to load analytics.</p></Card>
+        <Card className="p-12 text-center"><p className="text-slate-600">Failed to load analytics.</p></Card>
       ) : (
         <>
           {/* KPI Row */}
@@ -109,7 +109,7 @@ export default function AdminAnalyticsPage() {
               <motion.div key={kpi.label} custom={i} variants={cardVariant} initial="hidden" animate="visible">
                 <Card className={`p-4 border ${kpi.color}`}>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-slate-400">{kpi.label}</p>
+                    <p className="text-xs text-slate-600">{kpi.label}</p>
                     {kpi.icon}
                   </div>
                   <p className="text-3xl font-bold text-slate-900">{kpi.value}</p>
@@ -147,7 +147,7 @@ export default function AdminAnalyticsPage() {
                   <Trophy className="w-4 h-4 text-[#1dbf73]" /> Branch Leaderboard — {data.month_label}
                 </h2>
                 {data.branch_leaderboard.length === 0 ? (
-                  <p className="text-slate-400 text-sm text-center py-6">No branch data for this period.</p>
+                  <p className="text-slate-600 text-sm text-center py-6">No branch data for this period.</p>
                 ) : (
                   <div className="space-y-2">
                     {data.branch_leaderboard.map((b, idx) => (
@@ -184,7 +184,7 @@ export default function AdminAnalyticsPage() {
                       <div key={emp.employee_id} className="flex items-center justify-between p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
                         <div>
                           <p className="text-slate-900 text-sm font-medium">{emp.name}</p>
-                          <p className="text-slate-400 text-xs">{emp.branch}</p>
+                          <p className="text-slate-600 text-xs">{emp.branch}</p>
                         </div>
                         <Badge variant="warning">{emp.count}× late</Badge>
                       </div>
@@ -210,7 +210,7 @@ export default function AdminAnalyticsPage() {
                       <UserX className="w-4 h-4 text-red-400 flex-shrink-0" />
                       <div className="min-w-0">
                         <p className="text-slate-900 text-sm font-medium truncate">{e.full_name}</p>
-                        <p className="text-slate-400 text-xs">{e.branch}{e.employee_id ? ` · ${e.employee_id}` : ''}</p>
+                        <p className="text-slate-600 text-xs">{e.branch}{e.employee_id ? ` · ${e.employee_id}` : ''}</p>
                       </div>
                     </div>
                   ))}

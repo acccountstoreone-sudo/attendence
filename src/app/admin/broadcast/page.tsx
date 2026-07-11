@@ -85,7 +85,7 @@ export default function BroadcastPage() {
     <div className="space-y-8 pb-12 max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <Link href="/admin" className="flex items-center text-slate-400 hover:text-slate-900 transition-colors text-sm mb-2 w-fit">
+        <Link href="/admin" className="flex items-center text-slate-600 hover:text-slate-900 transition-colors text-sm mb-2 w-fit">
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back to Dashboard
         </Link>
@@ -96,7 +96,7 @@ export default function BroadcastPage() {
         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
           Dispatch System Broadcast
         </h1>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-600">
           Send an urgent alert to all active staff devices across the Anchor Fashion network.
         </p>
       </div>
@@ -128,7 +128,7 @@ export default function BroadcastPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Message Title</label>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">Message Title</label>
               <span className={`text-[10px] font-mono ${title.length > TITLE_MAX * 0.9 ? 'text-amber-400' : 'text-slate-500'}`}>
                 {title.length}/{TITLE_MAX}
               </span>
@@ -144,7 +144,7 @@ export default function BroadcastPage() {
           </div>
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Message Body</label>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">Message Body</label>
               <span className={`text-[10px] font-mono ${message.length > MESSAGE_MAX * 0.9 ? 'text-amber-400' : 'text-slate-500'}`}>
                 {message.length}/{MESSAGE_MAX}
               </span>
@@ -205,13 +205,13 @@ export default function BroadcastPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Confirm Broadcast</h3>
-                  <p className="text-xs text-slate-400">This action cannot be undone.</p>
+                  <p className="text-xs text-slate-600">This action cannot be undone.</p>
                 </div>
               </div>
               <div className="bg-white rounded-xl p-4 border border-slate-200 mb-5 space-y-2">
-                <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">Title</p>
+                <p className="text-xs text-slate-600 uppercase tracking-wider font-bold">Title</p>
                 <p className="text-slate-900 font-semibold text-sm">{title}</p>
-                <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mt-2">Message</p>
+                <p className="text-xs text-slate-600 uppercase tracking-wider font-bold mt-2">Message</p>
                 <p className="text-slate-600 text-sm leading-relaxed">{message}</p>
               </div>
               <p className="text-xs text-amber-400 text-center mb-5">

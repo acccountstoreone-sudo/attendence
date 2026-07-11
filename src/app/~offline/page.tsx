@@ -16,7 +16,7 @@ export default function OfflineFallbackPage() {
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-2">
           You Are Currently Offline
         </h1>
-        <p className="text-sm text-slate-400 mb-8 leading-relaxed">
+        <p className="text-sm text-slate-600 mb-8 leading-relaxed">
           It looks like your internet connection was interrupted or this page is not available in offline mode. Please check your network and try again.
         </p>
 

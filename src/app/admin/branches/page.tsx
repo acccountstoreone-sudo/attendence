@@ -130,7 +130,7 @@ export default function AdminBranchesPage() {
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
             Anchor Fashion Branch Directory
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 mt-1">
             Manage store branches, GPS geofence settings, and staff allocations.
           </p>
         </div>
@@ -165,13 +165,13 @@ export default function AdminBranchesPage() {
       {/* Search */}
       <Card className="bg-white border-slate-200 p-4">
         <div className="relative max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-slate-600 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Search branches by name or code..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
           />
         </div>
       </Card>
@@ -201,14 +201,14 @@ export default function AdminBranchesPage() {
                   <div className="flex items-center space-x-1 shrink-0">
                     <button
                       onClick={() => openDetailsModal(branch)}
-                      className="p-2 rounded-lg bg-slate-50 hover:bg-indigo-900/50 hover:text-indigo-400 text-slate-400 transition-colors"
+                      className="p-2 rounded-lg bg-slate-50 hover:bg-indigo-900/50 hover:text-indigo-400 text-slate-600 transition-colors"
                       title="View Details"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => openEditModal(branch)}
-                      className="p-2 rounded-lg bg-slate-50 hover:bg-blue-900/50 hover:text-blue-400 text-slate-400 transition-colors"
+                      className="p-2 rounded-lg bg-slate-50 hover:bg-blue-900/50 hover:text-blue-400 text-slate-600 transition-colors"
                       title="Edit Branch"
                     >
                       <Pencil className="w-4 h-4" />
@@ -216,7 +216,7 @@ export default function AdminBranchesPage() {
                     <button
                       onClick={() => toggleActive(branch)}
                       disabled={togglingId === branch.id}
-                      className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${branch.is_active ? 'bg-slate-100 hover:bg-rose-900/50 hover:text-rose-400 text-slate-400' : 'bg-slate-100 hover:bg-emerald-900/50 hover:text-[#1dbf73] text-slate-400'}`}
+                      className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${branch.is_active ? 'bg-slate-100 hover:bg-rose-900/50 hover:text-rose-400 text-slate-600' : 'bg-slate-100 hover:bg-emerald-900/50 hover:text-[#1dbf73] text-slate-600'}`}
                       title={branch.is_active ? 'Deactivate' : 'Activate'}
                     >
                       {togglingId === branch.id
@@ -226,7 +226,7 @@ export default function AdminBranchesPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2 text-xs text-slate-400">
+                <div className="space-y-2 text-xs text-slate-600">
                   {branch.address && (
                     <div className="flex items-start space-x-2">
                       <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
@@ -253,7 +253,7 @@ export default function AdminBranchesPage() {
 
               {/* Footer Stats */}
               <div className="mt-4 pt-4 border-t border-slate-200/80 flex items-center justify-between text-xs">
-                <div className="flex items-center space-x-1.5 text-slate-400">
+                <div className="flex items-center space-x-1.5 text-slate-600">
                   <Users className="w-3.5 h-3.5 text-blue-400" />
                   <span><strong className="text-slate-700">{branch._staff_count || 0}</strong> Staff Assigned</span>
                 </div>

@@ -15,13 +15,13 @@ export const BranchAttendanceTab: React.FC = () => {
         <div className="flex items-center space-x-2">
           <div className="bg-white rounded-lg p-1 border border-slate-200 flex">
             <button 
-              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${view === 'daily' ? 'bg-slate-50 text-slate-900' : 'text-slate-400 hover:text-slate-900'}`}
+              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${view === 'daily' ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}
               onClick={() => setView('daily')}
             >
               Daily
             </button>
             <button 
-              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${view === 'monthly' ? 'bg-slate-50 text-slate-900' : 'text-slate-400 hover:text-slate-900'}`}
+              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${view === 'monthly' ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}
               onClick={() => setView('monthly')}
             >
               Monthly

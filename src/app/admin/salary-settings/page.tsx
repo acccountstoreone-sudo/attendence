@@ -109,7 +109,7 @@ export default function AdminSalarySettingsPage() {
           <DollarSign className="w-7 h-7 text-[#1dbf73]" />
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Salary Settings</h1>
-            <p className="text-sm text-slate-400">Configure base salary and allowances per employee.</p>
+            <p className="text-sm text-slate-600">Configure base salary and allowances per employee.</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -152,7 +152,7 @@ export default function AdminSalarySettingsPage() {
               <form onSubmit={handleSave} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 {!editingId && (
                   <div className="col-span-2 sm:col-span-3 lg:col-span-2">
-                    <label className="text-xs text-slate-400 mb-1 block">Employee *</label>
+                    <label className="text-xs text-slate-600 mb-1 block">Employee *</label>
                     <select id="salary-employee-select" required value={form.user_id}
                       onChange={(e) => setForm({ ...form, user_id: e.target.value })}
                       className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
@@ -172,7 +172,7 @@ export default function AdminSalarySettingsPage() {
                   { key: 'transport_allowance', label: 'Transport ৳', id: 'salary-transport-input' },
                 ].map(({ key, label, id }) => (
                   <div key={key}>
-                    <label className="text-xs text-slate-400 mb-1 block">{label}</label>
+                    <label className="text-xs text-slate-600 mb-1 block">{label}</label>
                     <input id={id} type="number" min={0} step={0.01}
                       value={form[key as keyof typeof form]}
                       onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })}
@@ -197,7 +197,7 @@ export default function AdminSalarySettingsPage() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
         <input id="salary-search-input" type="text" placeholder="Search by name, ID, or branch…" value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full bg-slate-50 text-slate-900 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500"
@@ -210,7 +210,7 @@ export default function AdminSalarySettingsPage() {
       ) : filtered.length === 0 ? (
         <Card className="p-12 text-center">
           <DollarSign className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <p className="text-slate-400">No salary settings found. Add one using the button above.</p>
+          <p className="text-slate-600">No salary settings found. Add one using the button above.</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -226,7 +226,7 @@ export default function AdminSalarySettingsPage() {
                       { key: 'transport_allowance', label: 'Transport ৳', id: `edit-trans-${s.user_id}` },
                     ].map(({ key, label, id }) => (
                       <div key={key}>
-                        <label className="text-xs text-slate-400 mb-1 block">{label}</label>
+                        <label className="text-xs text-slate-600 mb-1 block">{label}</label>
                         <input id={id} type="number" min={0} step={0.01}
                           value={form[key as keyof typeof form]}
                           onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })}
@@ -249,17 +249,17 @@ export default function AdminSalarySettingsPage() {
                       <p className="text-slate-900 font-semibold">{s.profiles?.full_name}</p>
                       {s.profiles?.employee_id && <Badge variant="info">{s.profiles.employee_id}</Badge>}
                     </div>
-                    <p className="text-slate-400 text-xs">{(Array.isArray(s.profiles?.branches) ? s.profiles.branches[0]?.name : s.profiles?.branches?.name) ?? 'No branch'}</p>
+                    <p className="text-slate-600 text-xs">{(Array.isArray(s.profiles?.branches) ? s.profiles.branches[0]?.name : s.profiles?.branches?.name) ?? 'No branch'}</p>
                     <div className="mt-2 grid grid-cols-2 gap-x-4 text-xs">
-                      <span className="text-slate-400">Base: <span className="text-slate-900">৳{s.base_salary.toLocaleString()}</span></span>
-                      <span className="text-slate-400">HRA: <span className="text-slate-900">৳{s.house_rent_allowance.toLocaleString()}</span></span>
-                      <span className="text-slate-400">Medical: <span className="text-slate-900">৳{s.medical_allowance.toLocaleString()}</span></span>
-                      <span className="text-slate-400">Transport: <span className="text-slate-900">৳{s.transport_allowance.toLocaleString()}</span></span>
+                      <span className="text-slate-600">Base: <span className="text-slate-900">৳{s.base_salary.toLocaleString()}</span></span>
+                      <span className="text-slate-600">HRA: <span className="text-slate-900">৳{s.house_rent_allowance.toLocaleString()}</span></span>
+                      <span className="text-slate-600">Medical: <span className="text-slate-900">৳{s.medical_allowance.toLocaleString()}</span></span>
+                      <span className="text-slate-600">Transport: <span className="text-slate-900">৳{s.transport_allowance.toLocaleString()}</span></span>
                     </div>
                     <p className="text-[#1dbf73] text-sm font-bold mt-1">Total: ৳{totalPackage(s).toLocaleString()}/month</p>
                   </div>
                   <button id={`edit-salary-${s.user_id}`} onClick={() => startEdit(s)}
-                    className="text-slate-400 hover:text-indigo-400 transition-colors p-2 flex-shrink-0">
+                    className="text-slate-600 hover:text-indigo-400 transition-colors p-2 flex-shrink-0">
                     <Pencil className="w-4 h-4" />
                   </button>
                 </Card>

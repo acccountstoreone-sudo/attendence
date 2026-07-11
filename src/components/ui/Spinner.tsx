@@ -42,7 +42,7 @@ export const Spinner: React.FC<SpinnerProps> = ({
           <Shield className={cn(iconSizes[size], 'animate-pulse')} />
         </div>
       </div>
-      {label && <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase animate-pulse">{label}</p>}
+      {label && <p className="text-xs font-semibold text-slate-600 tracking-wider uppercase animate-pulse">{label}</p>}
     </div>
   );
 };

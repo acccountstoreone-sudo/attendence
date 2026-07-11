@@ -198,7 +198,7 @@ export default function AdminDashboardPage() {
             <input
               type="text"
               placeholder="Type to search..."
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#1dbf73] transition-colors shadow-inner"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-slate-700 placeholder:text-slate-600 focus:outline-none focus:border-[#1dbf73] transition-colors shadow-inner"
             />
           </div>
           <Button
@@ -228,7 +228,7 @@ export default function AdminDashboardPage() {
           <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-600" /></div>
           <div className="flex items-center gap-3 mb-6 relative z-10">
             <div className="p-2 bg-[#1dbf73]/10 rounded-xl ring-1 ring-[#1dbf73]/20 shadow-[0_0_15px_rgba(0,170,68,0.2)]"><Users className="w-4 h-4 text-[#1dbf73]" /></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Staff</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Total Staff</span>
           </div>
           <div className="flex items-end justify-between relative z-10">
             <div>
@@ -245,7 +245,7 @@ export default function AdminDashboardPage() {
           <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-600" /></div>
           <div className="flex items-center gap-3 mb-6 relative z-10">
             <div className="p-2 bg-amber-500/10 rounded-xl ring-1 ring-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.2)]"><AlertTriangle className="w-4 h-4 text-amber-500" /></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Late Arrivals</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Late Arrivals</span>
           </div>
           <div className="flex items-end justify-between relative z-10">
             <div>
@@ -262,7 +262,7 @@ export default function AdminDashboardPage() {
           <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-600" /></div>
           <div className="flex items-center gap-3 mb-6 relative z-10">
             <div className="p-2 bg-blue-500/10 rounded-xl ring-1 ring-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]"><Users className="w-4 h-4 text-blue-400" /></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">On Leave</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">On Leave</span>
           </div>
           <div className="flex items-end justify-between relative z-10">
             <div>
@@ -279,7 +279,7 @@ export default function AdminDashboardPage() {
           <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-600" /></div>
           <div className="flex items-center gap-3 mb-6 relative z-10">
             <div className="p-2 bg-rose-500/10 rounded-xl ring-1 ring-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]"><Activity className="w-4 h-4 text-rose-500" /></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Branch Alerts</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Branch Alerts</span>
           </div>
           <div className="flex items-end justify-between relative z-10">
             <div>
@@ -298,7 +298,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center justify-between mb-8 relative z-10">
           <div>
             <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Attendance in time</h2>
-            <p className="text-[11px] font-medium text-slate-400 mt-0.5">Historical trend across all branches</p>
+            <p className="text-[11px] font-medium text-slate-600 mt-0.5">Historical trend across all branches</p>
           </div>
           <div className="px-4 py-1.5 bg-white backdrop-blur-md border border-[#1dbf73]/20 rounded-full text-[10px] font-bold text-[#1dbf73] shadow-[0_0_15px_rgba(0,170,68,0.15)] uppercase tracking-wider">
             Current Year
@@ -353,7 +353,7 @@ export default function AdminDashboardPage() {
           </div>
           <button 
             onClick={() => router.push('/admin/branches')}
-            className="w-full py-3.5 mt-4 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 transition-all border border-slate-200 rounded-2xl hover:bg-slate-100 hover:border-slate-300 relative z-10"
+            className="w-full py-3.5 mt-4 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 transition-all border border-slate-200 rounded-2xl hover:bg-slate-100 hover:border-slate-200 relative z-10"
           >
             View All Branches
           </button>
@@ -387,7 +387,7 @@ export default function AdminDashboardPage() {
           </div>
           
           <div className="flex items-center justify-between mt-4 relative z-10">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Check-ins</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Total Check-ins</div>
             <div className="text-2xl font-extrabold text-slate-900 tracking-tight">{totalCheckins > 0 ? totalCheckins.toLocaleString() : '00'}</div>
           </div>
         </div>
@@ -404,10 +404,10 @@ export default function AdminDashboardPage() {
           <div className="flex-1 overflow-y-auto space-y-3 max-h-[300px] relative z-10 scrollbar-thin scrollbar-thumb-slate-300 pr-2">
             {liveFeed.slice(0,4).map((feed) => (
               <div key={feed.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 hover:border-slate-200 hover:bg-slate-50 transition-all duration-300 flex items-start gap-3 group/item">
-                <div className="mt-0.5 p-1.5 bg-slate-100 rounded-lg group-hover/item:bg-slate-200 transition-colors"><Bell className="w-3.5 h-3.5 text-slate-400" /></div>
+                <div className="mt-0.5 p-1.5 bg-slate-100 rounded-lg group-hover/item:bg-slate-200 transition-colors"><Bell className="w-3.5 h-3.5 text-slate-600" /></div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 tracking-tight">{feed.full_name}</h3>
-                  <p className="text-[10px] text-slate-400 mt-1 font-medium leading-relaxed">
+                  <p className="text-[10px] text-slate-600 mt-1 font-medium leading-relaxed">
                     {feed.type} recorded at {feed.branch_name}. Status: <span className={feed.status === 'late' ? 'text-amber-400' : feed.status === 'absent' ? 'text-rose-400' : 'text-[#1dbf73]'}>{feed.status}</span>.
                   </p>
                   <button className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-3 hover:text-slate-900 flex items-center gap-1 transition-colors">
@@ -440,10 +440,10 @@ export default function AdminDashboardPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Online Now</h3>
-                  <p className="text-xs text-slate-400">{onlineUsers.length} users active</p>
+                  <p className="text-xs text-slate-600">{onlineUsers.length} users active</p>
                 </div>
               </div>
-              <button onClick={() => setShowActiveUsersModal(false)} className="p-2 text-slate-400 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors">
+              <button onClick={() => setShowActiveUsersModal(false)} className="p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>

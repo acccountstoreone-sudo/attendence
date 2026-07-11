@@ -102,7 +102,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <Link href="/admin/branches" className="flex items-center text-slate-400 hover:text-slate-900 transition-colors text-sm mb-2 w-fit">
+          <Link href="/admin/branches" className="flex items-center text-slate-600 hover:text-slate-900 transition-colors text-sm mb-2 w-fit">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back to All Branches
           </Link>
           <div className="flex items-center space-x-2 text-[#1dbf73] text-xs font-bold uppercase tracking-widest mb-1">
@@ -118,27 +118,27 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
       {/* Quick Statistics Top Bar */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
          <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
-            <span className="text-xs text-slate-400">Total Staff</span>
+            <span className="text-xs text-slate-600">Total Staff</span>
             <span className="text-lg font-bold text-slate-900">{employees.length}</span>
          </div>
          <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
-            <span className="text-xs text-slate-400">Present</span>
+            <span className="text-xs text-slate-600">Present</span>
             <span className="text-lg font-bold text-[#1dbf73]">{employees.filter(e => e.is_present_today).length}</span>
          </div>
          <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
-            <span className="text-xs text-slate-400">Absent</span>
+            <span className="text-xs text-slate-600">Absent</span>
             <span className="text-lg font-bold text-red-500">{employees.filter(e => !e.is_present_today).length}</span>
          </div>
          <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
-            <span className="text-xs text-slate-400">Active Now</span>
+            <span className="text-xs text-slate-600">Active Now</span>
             <span className="text-lg font-bold text-blue-500">{employees.filter(e => e.is_active).length}</span>
          </div>
          <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
-            <span className="text-xs text-slate-400">Late</span>
+            <span className="text-xs text-slate-600">Late</span>
             <span className="text-lg font-bold text-orange-500">2</span>
          </div>
          <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
-            <span className="text-xs text-slate-400">Attendance %</span>
+            <span className="text-xs text-slate-600">Attendance %</span>
             <span className="text-lg font-bold text-[#1dbf73]">
               {employees.length > 0 ? Math.round((employees.filter(e => e.is_present_today).length / employees.length) * 100) : 0}%
             </span>
@@ -155,7 +155,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
               className={`flex items-center px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
                 activeTab === tab.id || (tab.id === 'employees' && activeTab === 'profile')
                   ? 'bg-[#1dbf73]/10 text-[#1dbf73] shadow-sm'
-                  : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50/50'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50/50'
               }`}
             >
               {tab.icon}

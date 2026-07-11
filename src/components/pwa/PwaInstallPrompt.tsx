@@ -109,7 +109,7 @@ export function PwaInstallPrompt() {
 
           <div className="flex items-start space-x-4">
             {/* App Icon Box */}
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shrink-0 shadow-lg shadow-blue-900/50 border border-slate-300">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shrink-0 shadow-lg shadow-blue-900/50 border border-slate-200">
               <ShieldCheck className="w-8 h-8 text-slate-900" />
             </div>
 
@@ -145,7 +145,7 @@ export function PwaInstallPrompt() {
               <>
                 <button
                   onClick={handleDismiss}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors"
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors"
                 >
                   Not Now
                 </button>

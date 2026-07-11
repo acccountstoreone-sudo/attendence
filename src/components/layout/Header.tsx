@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
@@ -142,7 +142,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <p className="text-xs font-bold text-slate-900 truncate">{n.title}</p>
-                          <span className="text-[10px] text-slate-400 shrink-0">
+                          <span className="text-[10px] text-slate-600 shrink-0">
                             {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
@@ -174,7 +174,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
             }}
             className="flex items-center space-x-2.5 p-1.5 rounded-xl bg-slate-50 border border-slate-200 shadow-sm hover:border-[#1dbf73]/40 hover:shadow transition-all outline-none"
           >
-            <div className="w-9 h-9 rounded-lg bg-[#1dbf73] flex items-center justify-center text-slate-900 font-extrabold text-sm shadow-sm">
+            <div className="w-9 h-9 rounded-lg bg-[#1dbf73] flex items-center justify-center text-white font-extrabold text-sm shadow-sm">
               {user.photo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={user.photo_url} alt={user.full_name} className="w-full h-full rounded-lg object-cover" />

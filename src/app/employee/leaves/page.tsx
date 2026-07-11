@@ -172,13 +172,13 @@ export default function EmployeeLeavePage() {
             const remaining = Math.max(0, b.allocated - b.used);
             return (
               <Card key={b.id} className="bg-white border-slate-200 hover:border-[#1dbf73]/30 transition-all">
-                <div className="flex items-center justify-between text-slate-400 mb-3">
+                <div className="flex items-center justify-between text-slate-600 mb-3">
                   <span className="text-xs font-bold uppercase tracking-wider text-[#1dbf73]">{b.name}</span>
                   <Calendar className="w-4 h-4 text-slate-500" />
                 </div>
                 <div className="flex items-baseline space-x-2">
                   <span className="text-3xl font-extrabold text-slate-900">{remaining}</span>
-                  <span className="text-xs text-slate-400">/ {b.allocated} Days Left</span>
+                  <span className="text-xs text-slate-600">/ {b.allocated} Days Left</span>
                 </div>
                 <div className="w-full bg-white h-1.5 rounded-full mt-3 overflow-hidden">
                   <div
@@ -198,7 +198,7 @@ export default function EmployeeLeavePage() {
           <FileText className="w-5 h-5 text-[#1dbf73]" />
           <div>
             <h3 className="text-lg font-bold text-slate-900">Submit New Request</h3>
-            <p className="text-xs text-slate-400">Fill out the required dates and justification for your supervisor&apos;s review.</p>
+            <p className="text-xs text-slate-600">Fill out the required dates and justification for your supervisor&apos;s review.</p>
           </div>
         </div>
 
@@ -258,7 +258,7 @@ export default function EmployeeLeavePage() {
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               disabled={submitting}
-              className="w-full bg-white border border-slate-200 hover:border-slate-200 rounded-xl p-4 text-sm text-slate-900 placeholder-slate-600 focus:outline-none focus:border-[#1dbf73] transition-all"
+              className="w-full bg-white border border-slate-200 hover:border-slate-200 rounded-xl p-4 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73] transition-all"
             />
           </div>
 

@@ -31,7 +31,7 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
         <h4 className="text-lg font-bold text-slate-900 flex items-center">
           <Bell className="w-5 h-5 mr-2 text-[#1dbf73]" /> Branch Announcements
         </h4>
-        <p className="text-sm text-slate-400">Send notifications to all employees assigned to {branch.name}.</p>
+        <p className="text-sm text-slate-600">Send notifications to all employees assigned to {branch.name}.</p>
       </div>
 
       <Card className="bg-white border-slate-200 p-6 shadow-xl">
@@ -41,7 +41,7 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
             className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               announcementType === 'text' 
                 ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/20' 
-                : 'bg-white text-slate-400 border border-slate-200 hover:text-slate-900'
+                : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
             }`}
           >
             <MessageSquare className="w-4 h-4 mr-2" /> Text Announcement
@@ -51,7 +51,7 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
             className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               announcementType === 'sound' 
                 ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/20' 
-                : 'bg-white text-slate-400 border border-slate-200 hover:text-slate-900'
+                : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
             }`}
           >
             <Volume2 className="w-4 h-4 mr-2" /> Sound Notification

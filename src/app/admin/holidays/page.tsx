@@ -91,15 +91,15 @@ export default function AdminHolidaysPage() {
           <CalendarDays className="w-7 h-7 text-indigo-400" />
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Public Holidays</h1>
-            <p className="text-sm text-slate-400">Attendance will not be counted on holidays.</p>
+            <p className="text-sm text-slate-600">Attendance will not be counted on holidays.</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {/* Year picker */}
           <div className="flex items-center gap-1 bg-slate-50 rounded-lg border border-slate-200 px-3 py-2">
-            <button onClick={() => setYear((y) => y - 1)} className="text-slate-400 hover:text-slate-900 px-1">‹</button>
+            <button onClick={() => setYear((y) => y - 1)} className="text-slate-600 hover:text-slate-900 px-1">‹</button>
             <span className="text-slate-900 font-semibold w-12 text-center">{year}</span>
-            <button onClick={() => setYear((y) => y + 1)} className="text-slate-400 hover:text-slate-900 px-1">›</button>
+            <button onClick={() => setYear((y) => y + 1)} className="text-slate-600 hover:text-slate-900 px-1">›</button>
           </div>
           <Button id="refresh-holidays-btn" variant="secondary" onClick={loadHolidays} disabled={loading}>
             <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -135,7 +135,7 @@ export default function AdminHolidaysPage() {
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Add New Holiday</h2>
               <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-xs text-slate-400 mb-1 block">Holiday Name *</label>
+                  <label className="text-xs text-slate-600 mb-1 block">Holiday Name *</label>
                   <input
                     id="holiday-name-input"
                     type="text"
@@ -147,7 +147,7 @@ export default function AdminHolidaysPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400 mb-1 block">Date *</label>
+                  <label className="text-xs text-slate-600 mb-1 block">Date *</label>
                   <input
                     id="holiday-date-input"
                     type="date"
@@ -189,7 +189,7 @@ export default function AdminHolidaysPage() {
       ) : holidays.length === 0 ? (
         <Card className="p-12 text-center">
           <CalendarDays className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <p className="text-slate-400">No holidays defined for {year}. Click &quot;Add Holiday&quot; to get started.</p>
+          <p className="text-slate-600">No holidays defined for {year}. Click &quot;Add Holiday&quot; to get started.</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -198,7 +198,7 @@ export default function AdminHolidaysPage() {
             if (!monthHolidays?.length) return null;
             return (
               <Card key={idx} className="p-4 bg-slate-50/60">
-                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">{monthName} {year}</h3>
+                <h3 className="text-sm font-semibold text-slate-600 uppercase tracking-wider mb-3">{monthName} {year}</h3>
                 <div className="space-y-2">
                   {monthHolidays.map((h) => (
                     <motion.div

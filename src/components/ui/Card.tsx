@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -10,10 +10,10 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     const baseStyles = 'rounded-2xl p-6 transition-all duration-200';
     
     const variants = {
-      elevated: 'bg-slate-50 backdrop-blur-sm border border-slate-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.4)] text-slate-900',
-      bordered: 'bg-transparent border border-slate-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] text-slate-900',
-      interactive: 'bg-slate-50 backdrop-blur-sm border border-slate-200 hover:border-slate-300 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_12px_40px_rgba(0,0,0,0.6)] cursor-pointer text-slate-900 transform hover:-translate-y-1 transition-all duration-300',
-      glass: 'bg-slate-50 backdrop-blur-sm border border-slate-200 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_20px_40px_rgba(0,0,0,0.5)] text-slate-900',
+      elevated: 'bg-white border border-slate-200/80 shadow-sm hover:shadow-md text-slate-900 transition-all duration-200',
+      bordered: 'bg-white/80 border border-slate-200 shadow-xs text-slate-900',
+      interactive: 'bg-white border border-slate-200/80 hover:border-[#1dbf73]/50 hover:shadow-md cursor-pointer text-slate-900 transform hover:-translate-y-0.5 transition-all duration-200',
+      glass: 'bg-white/90 backdrop-blur-md border border-slate-200/80 shadow-sm text-slate-900',
     };
 
     return (
@@ -45,7 +45,7 @@ CardTitle.displayName = 'CardTitle';
 
 export const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
   ({ className, ...props }, ref) => (
-    <p ref={ref} className={cn('text-sm text-slate-400 mt-1', className)} {...props} />
+    <p ref={ref} className={cn('text-sm text-slate-600 mt-1', className)} {...props} />
   )
 );
 CardDescription.displayName = 'CardDescription';

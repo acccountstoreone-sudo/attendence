@@ -127,7 +127,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
             <UserCheck className="w-7 h-7 text-[#1dbf73]" />
             {role === 'admin' ? 'HQ Manual Corrections & Overrides' : 'Store Manual Corrections & Overrides'}
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 mt-1">
             Review and approve employee check-in / check-out time adjustment requests.
           </p>
         </div>
@@ -147,7 +147,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
               className={`px-4 py-2 rounded-lg text-sm font-semibold capitalize transition-all whitespace-nowrap flex items-center gap-2 ${
                 statusTab === tab
                   ? 'bg-[#1dbf73] text-[#ffffff] shadow-md'
-                  : 'text-slate-400 hover:text-slate-900'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               {tab === 'pending' && <Clock className="w-4 h-4" />}
@@ -160,13 +160,13 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
         </div>
 
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-600" />
           <input
             type="text"
             placeholder="Search employee, ID, branch, reason..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#ffffff]/90 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#1dbf73] transition-colors"
+            className="w-full bg-[#ffffff]/90 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73] transition-colors"
           />
         </div>
       </div>
@@ -198,13 +198,13 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Spinner size="lg" />
-          <p className="mt-3 text-sm text-slate-400">Loading correction requests...</p>
+          <p className="mt-3 text-sm text-slate-600">Loading correction requests...</p>
         </div>
       ) : filteredCorrections.length === 0 ? (
         <Card className="p-12 text-center border-dashed border-slate-200 bg-[#ffffff]/50">
           <UserCheck className="w-12 h-12 text-slate-500 mx-auto mb-3 opacity-60" />
           <h3 className="text-lg font-semibold text-slate-900">No Correction Requests Found</h3>
-          <p className="text-sm text-slate-400 mt-1 max-w-md mx-auto">
+          <p className="text-sm text-slate-600 mt-1 max-w-md mx-auto">
             {statusTab === 'pending' 
               ? 'There are currently no pending attendance time corrections awaiting review.' 
               : `No ${statusTab} correction requests match your filter criteria.`}
@@ -256,7 +256,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                               {c.status}
                             </span>
                           </div>
-                          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
+                          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
                             <span className="flex items-center gap-1.5">
                               <Building2 className="w-3.5 h-3.5 text-slate-500" />
                               {c.branch_name}
@@ -273,7 +273,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                             </p>
                           </div>
                           {c.reviewer_note && (
-                            <div className="pt-1 flex items-center gap-1.5 text-xs text-slate-400">
+                            <div className="pt-1 flex items-center gap-1.5 text-xs text-slate-600">
                               <MessageSquare className="w-3.5 h-3.5 text-slate-500" />
                               <span className="font-semibold text-slate-600">Reviewer Note:</span> {c.reviewer_note}
                             </div>
@@ -284,7 +284,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                       {/* Middle: Time change diff */}
                       <div className="bg-white/70 border border-slate-200/80 rounded-xl p-4 flex items-center justify-between gap-4 shrink-0 min-w-[240px]">
                         <div className="text-center">
-                          <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Original Time</p>
+                          <p className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold">Original Time</p>
                           <p className="text-sm font-medium text-slate-600 mt-1 font-mono">
                             {formatTimeStr(c.original_time)}
                           </p>
@@ -337,7 +337,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                             title="Add Reviewer Note before approving"
                             className="px-2"
                           >
-                            <MessageSquare className="w-4 h-4 text-slate-400" />
+                            <MessageSquare className="w-4 h-4 text-slate-600" />
                           </Button>
                         </div>
                       )}
@@ -363,7 +363,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                 )}
                 {modalAction === 'approve' ? 'Approve with Note' : 'Reject Correction Request'}
               </h3>
-              <button onClick={() => setNoteModalReq(null)} className="text-slate-400 hover:text-slate-900 text-sm">✕</button>
+              <button onClick={() => setNoteModalReq(null)} className="text-slate-600 hover:text-slate-900 text-sm">✕</button>
             </div>
             <p className="text-sm text-slate-600">
               {modalAction === 'approve' 
@@ -371,13 +371,13 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                 : `Please provide a reason for rejecting ${noteModalReq.employee_name}'s correction request.`}
             </p>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Reviewer Note / Reason</label>
+              <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Reviewer Note / Reason</label>
               <textarea
                 rows={3}
                 placeholder={modalAction === 'approve' ? 'e.g., Verified via store CCTV log.' : 'e.g., Time mismatch with store entrance log.'}
                 value={reviewerNote}
                 onChange={(e) => setReviewerNote(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#1dbf73]"
+                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73]"
               />
             </div>
             <div className="flex justify-end gap-3 pt-2">

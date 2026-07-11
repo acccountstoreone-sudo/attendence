@@ -89,7 +89,7 @@ export default function AdminSettingsPage() {
 
   if (fetching) {
     return (
-      <div className="min-h-[400px] flex items-center justify-center text-slate-400 text-sm">
+      <div className="min-h-[400px] flex items-center justify-center text-slate-600 text-sm">
         Loading configuration...
       </div>
     );
@@ -116,7 +116,7 @@ export default function AdminSettingsPage() {
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">
             Platform Settings
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 mt-1">
             Manage global operational parameters, security thresholds, and company preferences.
           </p>
         </div>
@@ -156,7 +156,7 @@ export default function AdminSettingsPage() {
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${
                 activeTab === tab.key
                   ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/30'
-                  : 'text-slate-400 hover:bg-slate-100 hover:text-slate-900 border border-transparent'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent'
               }`}
             >
               {tab.icon}
@@ -174,7 +174,7 @@ export default function AdminSettingsPage() {
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 mb-1">Company Profile</h3>
-                    <p className="text-xs text-slate-400">Basic information about the organization.</p>
+                    <p className="text-xs text-slate-600">Basic information about the organization.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -204,7 +204,7 @@ export default function AdminSettingsPage() {
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 mb-1">Attendance Parameters</h3>
-                    <p className="text-xs text-slate-400">Configure global shift timings and grace periods.</p>
+                    <p className="text-xs text-slate-600">Configure global shift timings and grace periods.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -260,7 +260,7 @@ export default function AdminSettingsPage() {
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 mb-1">Security & Access</h3>
-                    <p className="text-xs text-slate-400">Biometric and session policies — managed at infrastructure level.</p>
+                    <p className="text-xs text-slate-600">Biometric and session policies — managed at infrastructure level.</p>
                   </div>
                   <div className="space-y-4">
                     {[
@@ -278,11 +278,11 @@ export default function AdminSettingsPage() {
                       <div key={item.title} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl">
                         <div>
                           <p className="text-sm font-bold text-slate-900">{item.title}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">{item.desc}</p>
+                          <p className="text-xs text-slate-600 mt-0.5">{item.desc}</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input type="checkbox" defaultChecked={item.enabled} className="sr-only peer" />
-                          <div className="w-11 h-6 bg-slate-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1dbf73]"></div>
+                          <div className="w-11 h-6 bg-slate-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-200 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1dbf73]"></div>
                         </label>
                       </div>
                     ))}

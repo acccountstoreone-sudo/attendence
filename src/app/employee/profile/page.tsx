@@ -107,7 +107,7 @@ export default function EmployeeProfilePage() {
     return (
       <div className="min-h-[600px] flex flex-col items-center justify-center text-center space-y-4">
         <div className="text-rose-500 font-semibold text-lg">Failed to load profile</div>
-        <p className="text-slate-400 text-sm max-w-md">{error || 'Could not retrieve employee profile records.'}</p>
+        <p className="text-slate-600 text-sm max-w-md">{error || 'Could not retrieve employee profile records.'}</p>
         <Button onClick={() => window.location.reload()} variant="outline">
           Retry
         </Button>
@@ -121,7 +121,7 @@ export default function EmployeeProfilePage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">My Profile</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 mt-1">
             View your personal information and account settings.
           </p>
         </div>
@@ -159,7 +159,7 @@ export default function EmployeeProfilePage() {
         <div className="col-span-1 md:col-span-2 space-y-6">
           <Card className="bg-[#ffffff] border-slate-200 p-6 shadow-lg">
             <div className="flex items-center space-x-2 text-slate-900 mb-6 pb-4 border-b border-slate-200">
-              <User className="w-5 h-5 text-slate-400" />
+              <User className="w-5 h-5 text-slate-600" />
               <h3 className="font-semibold text-base">Personal Information</h3>
             </div>
             <div className="space-y-5">
@@ -174,14 +174,14 @@ export default function EmployeeProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
                 <span className="text-sm font-medium text-slate-500">Email Address</span>
                 <div className="sm:col-span-2 flex items-center space-x-2">
-                  <Mail className="w-4 h-4 text-slate-400" />
+                  <Mail className="w-4 h-4 text-slate-600" />
                   <span className="text-sm text-slate-700">{profile.email || 'Not available'}</span>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
                 <span className="text-sm font-medium text-slate-500">Phone Number</span>
                 <div className="sm:col-span-2 flex items-center space-x-2">
-                  <Phone className="w-4 h-4 text-slate-400" />
+                  <Phone className="w-4 h-4 text-slate-600" />
                   <span className="text-sm text-slate-700">{profile.phone || 'Not provided'}</span>
                 </div>
               </div>
@@ -190,11 +190,11 @@ export default function EmployeeProfilePage() {
 
           <Card className="bg-[#ffffff] border-slate-200 p-6 shadow-lg">
             <div className="flex items-center space-x-2 text-slate-900 mb-6 pb-4 border-b border-slate-200">
-              <ShieldCheck className="w-5 h-5 text-slate-400" />
+              <ShieldCheck className="w-5 h-5 text-slate-600" />
               <h3 className="font-semibold text-base">Account Security</h3>
             </div>
             <div className="space-y-4">
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-slate-600">
                 To update your password or edit your personal details, please contact your Branch Manager or HQ Administrator. This ensures all employee records remain verified and secure.
               </p>
               <div className="pt-2">

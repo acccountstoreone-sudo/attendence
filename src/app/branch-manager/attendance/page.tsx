@@ -172,7 +172,7 @@ export default function BranchManagerAttendancePage() {
               Store Log
             </span>
             {isToday && (
-              <span className="text-xs text-slate-400 flex items-center">
+              <span className="text-xs text-slate-600 flex items-center">
                 <Clock className="w-3 h-3 text-[#1dbf73] mr-1" />
                 Today — Live
               </span>
@@ -186,7 +186,7 @@ export default function BranchManagerAttendancePage() {
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">
             Store Attendance & Approvals
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 mt-1">
             {filteredRecords.length} record{filteredRecords.length !== 1 ? 's' : ''} for {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
           </p>
         </div>
@@ -272,7 +272,7 @@ export default function BranchManagerAttendancePage() {
               placeholder="Search by employee name..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#1dbf73] transition-colors"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73] transition-colors"
             />
           </div>
 
@@ -297,7 +297,7 @@ export default function BranchManagerAttendancePage() {
           ) : (
             <table className="w-full text-left border-collapse whitespace-nowrap">
               <thead>
-                <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-600 font-bold">
                   <th className="py-4 px-6">Employee</th>
                   <th className="py-4 px-6">Location</th>
                   <th className="py-4 px-6">Check-In</th>

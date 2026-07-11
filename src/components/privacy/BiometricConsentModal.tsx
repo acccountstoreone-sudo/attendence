@@ -67,7 +67,7 @@ export const BiometricConsentModal: React.FC<BiometricConsentModalProps> = ({
           <div>
             <p className="text-sm font-bold text-slate-900">Anchor Fashion ERP — Privacy Notice</p>
             <p className="text-xs text-blue-300">অ্যাঙ্কর ফ্যাশন ERP — গোপনীয়তা বিজ্ঞপ্তি</p>
-            <p className="text-xs text-slate-400 mt-0.5">For: <strong className="text-slate-700">{employeeName}</strong></p>
+            <p className="text-xs text-slate-600 mt-0.5">For: <strong className="text-slate-700">{employeeName}</strong></p>
           </div>
         </div>
 
@@ -78,14 +78,14 @@ export const BiometricConsentModal: React.FC<BiometricConsentModalProps> = ({
               <div className="mt-0.5">{point.icon}</div>
               <div>
                 <p className="text-xs font-semibold text-slate-700">{point.en}</p>
-                <p className="text-xs text-slate-400 mt-0.5 font-normal">{point.bn}</p>
+                <p className="text-xs text-slate-600 mt-0.5 font-normal">{point.bn}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Legal Notice */}
-        <div className="bg-white/80 p-4 rounded-xl border border-slate-200 text-[11px] text-slate-400 leading-relaxed">
+        <div className="bg-white/80 p-4 rounded-xl border border-slate-200 text-[11px] text-slate-600 leading-relaxed">
           <p>
             <strong className="text-slate-700">Legal Basis / আইনী ভিত্তি:</strong> This collection is authorized under the Bangladesh Labour Act 2006 (Section 15), the Digital Security Act, and internal Anchor Fashion HR Policy v2.0.
           </p>
@@ -106,7 +106,7 @@ export const BiometricConsentModal: React.FC<BiometricConsentModalProps> = ({
             <p className="text-xs font-bold text-slate-700">
               I have read, understood, and voluntarily consent to biometric data processing for attendance purposes.
             </p>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-600 mt-0.5">
               আমি পড়েছি, বুঝেছি এবং উপস্থিতির উদ্দেশ্যে বায়োমেট্রিক তথ্য প্রক্রিয়াকরণে স্বেচ্ছায় সম্মত।
             </p>
           </div>

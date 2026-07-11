@@ -159,10 +159,10 @@ export default function AdminEmployeesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Staff Registry</h1>
-          <p className="text-sm text-slate-400 mt-1">Manage employee accounts, roles, and branch assignments.</p>
+          <p className="text-sm text-slate-600 mt-1">Manage employee accounts, roles, and branch assignments.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3 text-sm text-slate-400 mr-2">
+          <div className="flex items-center gap-3 text-sm text-slate-600 mr-2">
             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#1dbf73]"></div>{activeCount} Active</span>
             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-500"></div>{inactiveCount} Suspended</span>
           </div>
@@ -263,7 +263,7 @@ export default function AdminEmployeesPage() {
               placeholder="Search staff..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-transparent border-none text-sm text-slate-700 placeholder-slate-600 focus:outline-none focus:ring-0"
+              className="w-full pl-9 pr-4 py-2 bg-transparent border-none text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-0"
             />
           </div>
 
@@ -336,12 +336,12 @@ export default function AdminEmployeesPage() {
                         </div>
                       </td>
                       <td className="py-3 px-5">
-                        <span className="text-xs text-slate-400 capitalize">
+                        <span className="text-xs text-slate-600 capitalize">
                           {emp.role.replace('_', ' ')}
                         </span>
                       </td>
                       <td className="py-3 px-5">
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-slate-600">
                           {emp.branch_name || 'Global'}
                         </span>
                       </td>
@@ -382,7 +382,7 @@ export default function AdminEmployeesPage() {
                             <Fingerprint className="w-3.5 h-3.5" />
                             Biometrics
                           </Button>
-                          <Button size="sm" variant="ghost" className="text-slate-400 hover:text-slate-700 px-2" onClick={() => openEditModal(emp)}>
+                          <Button size="sm" variant="ghost" className="text-slate-600 hover:text-slate-700 px-2" onClick={() => openEditModal(emp)}>
                             Edit
                           </Button>
                           <Button

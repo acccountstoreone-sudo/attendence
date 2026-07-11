@@ -637,12 +637,12 @@ export default function RegisterPage() {
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       />
                       <div className="flex items-center space-x-3">
-                        <div className={`p-2.5 rounded-lg ${nidFront ? 'bg-[#1dbf73]/20 text-[#1dbf73]' : 'bg-slate-100 text-slate-400'}`}>
+                        <div className={`p-2.5 rounded-lg ${nidFront ? 'bg-[#1dbf73]/20 text-[#1dbf73]' : 'bg-slate-100 text-slate-600'}`}>
                           {nidFront ? <Check className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-slate-900 truncate">{nidFront ? nidFrontName : 'Click or drag to upload NID Front'}</p>
-                          <p className="text-[11px] text-slate-400">{nidFront ? 'File uploaded and ready' : 'Image or PDF (Max 5MB)'}</p>
+                          <p className="text-[11px] text-slate-600">{nidFront ? 'File uploaded and ready' : 'Image or PDF (Max 5MB)'}</p>
                         </div>
                         {nidFront && (
                           <button type="button" onClick={(e) => { e.stopPropagation(); setNidFront(null); setNidFrontName(''); }} className="p-1.5 hover:bg-rose-950/40 text-rose-400 rounded-lg relative z-20">
@@ -665,12 +665,12 @@ export default function RegisterPage() {
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       />
                       <div className="flex items-center space-x-3">
-                        <div className={`p-2.5 rounded-lg ${nidBack ? 'bg-[#1dbf73]/20 text-[#1dbf73]' : 'bg-slate-100 text-slate-400'}`}>
+                        <div className={`p-2.5 rounded-lg ${nidBack ? 'bg-[#1dbf73]/20 text-[#1dbf73]' : 'bg-slate-100 text-slate-600'}`}>
                           {nidBack ? <Check className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-slate-900 truncate">{nidBack ? nidBackName : 'Click or drag to upload NID Back'}</p>
-                          <p className="text-[11px] text-slate-400">{nidBack ? 'File uploaded and ready' : 'Image or PDF (Max 5MB)'}</p>
+                          <p className="text-[11px] text-slate-600">{nidBack ? 'File uploaded and ready' : 'Image or PDF (Max 5MB)'}</p>
                         </div>
                         {nidBack && (
                           <button type="button" onClick={(e) => { e.stopPropagation(); setNidBack(null); setNidBackName(''); }} className="p-1.5 hover:bg-rose-950/40 text-rose-400 rounded-lg relative z-20">
@@ -716,7 +716,7 @@ export default function RegisterPage() {
                 </div>
 
                 {!faceImage ? (
-                  <button onClick={captureFace} disabled={scanning || !faceDetected} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${(!faceDetected || scanning) ? 'bg-slate-100 text-gray-400 cursor-not-allowed' : 'bg-[#1dbf73] hover:bg-[#16965a] text-slate-900 shadow-[0_0_20px_rgba(34,197,94,0.4)]'}`}>
+                  <button onClick={captureFace} disabled={scanning || !faceDetected} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${(!faceDetected || scanning) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-[#1dbf73] hover:bg-[#16965a] text-slate-900 shadow-[0_0_20px_rgba(34,197,94,0.4)]'}`}>
                     {scanning ? <><RefreshCw className="w-4 h-4 animate-spin"/> Processing...</> : <><Camera className="w-4 h-4"/> {faceDetected ? 'Capture Face ID' : 'Searching for Face...'}</>}
                   </button>
                 ) : (
@@ -744,7 +744,7 @@ export default function RegisterPage() {
                 <button onClick={handleFingerprintSetup} disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-slate-900 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 mb-4">
                   {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/> : <><Fingerprint className="w-4 h-4" /> Set Up Device Biometrics</>}
                 </button>
-                <button onClick={skipFingerprint} disabled={loading} className="w-full bg-transparent text-slate-400 hover:text-slate-900 font-bold py-3 rounded-xl transition-all text-sm">
+                <button onClick={skipFingerprint} disabled={loading} className="w-full bg-transparent text-slate-600 hover:text-slate-900 font-bold py-3 rounded-xl transition-all text-sm">
                   Skip for now
                 </button>
               </div>

@@ -50,7 +50,7 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
           ) : (
             <div className="h-[300px] flex flex-col justify-center items-center text-center bg-white rounded-lg border border-dashed border-slate-200">
               <Globe className="w-10 h-10 text-slate-700 mb-2" />
-              <p className="text-sm font-medium text-slate-400">GPS Coordinates Not Set</p>
+              <p className="text-sm font-medium text-slate-600">GPS Coordinates Not Set</p>
               <p className="text-xs text-slate-500 mt-1">Biometric check-in requires a geofence.</p>
             </div>
           )}
@@ -65,27 +65,27 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
           <div className="space-y-4 pointer-events-none opacity-80">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-slate-400">Office Start Time</Label>
+                <Label className="text-slate-600">Office Start Time</Label>
                 <Input type="time" defaultValue={branch.office_start_time || "09:00"} className="bg-white border-slate-200" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-400">Office End Time</Label>
+                <Label className="text-slate-600">Office End Time</Label>
                 <Input type="time" defaultValue={branch.office_end_time || "18:00"} className="bg-white border-slate-200" />
               </div>
             </div>
             
             <div className="space-y-1.5">
-              <Label className="text-slate-400">Grace Time (Minutes)</Label>
+              <Label className="text-slate-600">Grace Time (Minutes)</Label>
               <Input type="number" defaultValue={branch.grace_time_minutes?.toString() || "15"} className="bg-white border-slate-200" />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-slate-400">Late Rules</Label>
+              <Label className="text-slate-600">Late Rules</Label>
               <Input defaultValue={branch.late_rules || "Deduct half day after 3 late days"} className="bg-white border-slate-200" />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-slate-400">Overtime Rules</Label>
+              <Label className="text-slate-600">Overtime Rules</Label>
               <Input defaultValue={branch.overtime_rules || "Calculated after 18:30"} className="bg-white border-slate-200" />
             </div>
             

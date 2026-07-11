@@ -191,11 +191,11 @@ export default function BranchManagerDashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <Store className="w-4 h-4 text-slate-400" />
+            <Store className="w-4 h-4 text-slate-600" />
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{storeName}</span>
           </div>
           <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Store Console</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 mt-1">
             Supervise staff attendance, punctuality, and manual override requests.
           </p>
         </div>
@@ -204,7 +204,7 @@ export default function BranchManagerDashboardPage() {
           <Button
             size="sm"
             variant="outline"
-            className="text-slate-400 hover:text-slate-900 border-slate-200"
+            className="text-slate-600 hover:text-slate-900 border-slate-200"
             icon={<RefreshCw className="w-4 h-4" />}
             onClick={() => fetchStoreDashboard()}
           >
@@ -266,7 +266,7 @@ export default function BranchManagerDashboardPage() {
                 </div>
               ))}
               {pendingApprovals.length > 3 && (
-                <div className="w-8 h-8 rounded-full bg-slate-50 border-2 border-[#ffffff] flex items-center justify-center text-xs font-medium text-slate-400">
+                <div className="w-8 h-8 rounded-full bg-slate-50 border-2 border-[#ffffff] flex items-center justify-center text-xs font-medium text-slate-600">
                   +{pendingApprovals.length - 3}
                 </div>
               )}
@@ -318,7 +318,7 @@ export default function BranchManagerDashboardPage() {
       {/* Clean Metric Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-[#ffffff] border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
-          <p className="text-xs font-medium text-slate-400">Total Staff</p>
+          <p className="text-xs font-medium text-slate-600">Total Staff</p>
           <div className="mt-2 text-2xl font-bold text-slate-900">
             {employees.length}
           </div>
@@ -365,7 +365,7 @@ export default function BranchManagerDashboardPage() {
               placeholder="Search staff..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-transparent border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-600 focus:outline-none focus:border-slate-500 transition-colors"
+              className="w-full pl-9 pr-4 py-2 bg-transparent border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-slate-500 transition-colors"
             />
           </div>
         </div>
@@ -408,7 +408,7 @@ export default function BranchManagerDashboardPage() {
                         variant="subtle"
                       />
                     </td>
-                    <td className="py-3 px-5 font-mono text-xs text-slate-400">
+                    <td className="py-3 px-5 font-mono text-xs text-slate-600">
                       {emp.check_in_time ? (
                         <span className="text-[#1dbf73]/90">
                           {new Date(emp.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -417,7 +417,7 @@ export default function BranchManagerDashboardPage() {
                         <span className="text-slate-600 italic">Not Checked In</span>
                       )}
                     </td>
-                    <td className="py-3 px-5 font-mono text-xs text-slate-400">
+                    <td className="py-3 px-5 font-mono text-xs text-slate-600">
                       {emp.check_out_time ? (
                         <span className="text-blue-400/90">
                           {new Date(emp.check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -430,7 +430,7 @@ export default function BranchManagerDashboardPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-slate-400 hover:text-slate-700"
+                        className="text-slate-600 hover:text-slate-700"
                         onClick={() => router.push(`/branch-manager/corrections?user_id=${emp.id}`)}
                       >
                         Correction

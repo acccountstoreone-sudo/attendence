@@ -184,7 +184,7 @@ export default function EmployeeHistoryPage() {
             <span>Personal Attendance Ledger</span>
           </div>
           <h1 className="text-2xl font-extrabold text-slate-900">My Attendance History</h1>
-          <p className="text-sm text-slate-400 mt-1">Full record of your check-in/out timestamps and daily status.</p>
+          <p className="text-sm text-slate-600 mt-1">Full record of your check-in/out timestamps and daily status.</p>
         </div>
       </div>
 
@@ -192,7 +192,7 @@ export default function EmployeeHistoryPage() {
       <Card className="bg-white border-slate-200 p-4">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <Calendar className="w-4 h-4 text-slate-600 absolute left-3 top-2.5" />
             <input
               type="date"
               value={searchDate}
@@ -226,7 +226,7 @@ export default function EmployeeHistoryPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-white/80 text-slate-400 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200">
+                <tr className="bg-white/80 text-slate-600 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200">
                   <th className="py-4 px-5">Date</th>
                   <th className="py-4 px-5 text-center">Status</th>
                   <th className="py-4 px-5">Check-In</th>
@@ -312,7 +312,7 @@ export default function EmployeeHistoryPage() {
                         </td>
                         <td className="py-4 px-5 text-slate-600 font-semibold text-sm">{hoursWorked}</td>
                         <td className="py-4 px-5">
-                          <div className="flex items-center space-x-1.5 text-xs text-slate-400">
+                          <div className="flex items-center space-x-1.5 text-xs text-slate-600">
                             {rec.check_in_method === 'biometric' ? (
                               <Camera className="w-3.5 h-3.5 text-purple-400" />
                             ) : (
@@ -327,7 +327,7 @@ export default function EmployeeHistoryPage() {
                             variant="ghost"
                             onClick={() => openCorrectionModal(rec)}
                             title="Request Correction"
-                            className="text-slate-400 hover:text-blue-400"
+                            className="text-slate-600 hover:text-blue-400"
                           >
                             <Edit3 className="w-4 h-4" />
                           </Button>
@@ -342,7 +342,7 @@ export default function EmployeeHistoryPage() {
 
           {/* Pagination */}
           <div className="p-4 border-t border-slate-200/80 flex items-center justify-between">
-            <span className="text-xs text-slate-400">Showing page <strong className="text-slate-900">{page}</strong> of <strong className="text-slate-900">{totalPages}</strong></span>
+            <span className="text-xs text-slate-600">Showing page <strong className="text-slate-900">{page}</strong> of <strong className="text-slate-900">{totalPages}</strong></span>
             <div className="flex items-center space-x-2">
               <Button
                 size="sm"
@@ -374,11 +374,11 @@ export default function EmployeeHistoryPage() {
             <div className="flex items-center justify-between p-6 border-b border-slate-200/60 bg-white/50">
               <div>
                 <h3 className="text-lg font-extrabold text-slate-900">Request Correction</h3>
-                <p className="text-sm text-slate-400">For {selectedRecord.date || 'this record'}</p>
+                <p className="text-sm text-slate-600">For {selectedRecord.date || 'this record'}</p>
               </div>
               <button
                 onClick={() => setIsCorrectionModalOpen(false)}
-                className="p-2 text-slate-400 hover:text-slate-900 bg-slate-50/50 hover:bg-slate-100 rounded-full transition-colors"
+                className="p-2 text-slate-600 hover:text-slate-900 bg-slate-50/50 hover:bg-slate-100 rounded-full transition-colors"
                 disabled={isSubmitting}
               >
                 <X className="w-5 h-5" />
@@ -400,7 +400,7 @@ export default function EmployeeHistoryPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Correction Type</label>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Correction Type</label>
                   <div className="flex gap-4">
                     <label className="flex items-center gap-2 text-sm text-slate-900 cursor-pointer">
                       <input 
@@ -430,7 +430,7 @@ export default function EmployeeHistoryPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Requested Time</label>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Requested Time</label>
                   <input
                     type="time"
                     value={requestedTime}
@@ -442,7 +442,7 @@ export default function EmployeeHistoryPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Reason</label>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Reason</label>
                   <textarea
                     value={correctionReason}
                     onChange={(e) => setCorrectionReason(e.target.value)}
