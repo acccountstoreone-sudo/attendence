@@ -49,9 +49,18 @@ export function useRealtimeNotifications(userId: string | undefined) {
   useEffect(() => {
     if (!userId) return;
 
+    // Remove any stale channel with the same topic before initializing
+    const topic = `user-notifications-${userId}`;
+    const existingChannels = supabase.getChannels();
+    existingChannels.forEach((c) => {
+      if (c.topic === `realtime:${topic}`) {
+        supabase.removeChannel(c);
+      }
+    });
+
     // Create a user-scoped broadcast channel listening to INSERT events on public.notifications
     const channel = supabase
-      .channel(`user-notifications-${userId}`)
+      .channel(topic)
       .on(
         'postgres_changes',
         {

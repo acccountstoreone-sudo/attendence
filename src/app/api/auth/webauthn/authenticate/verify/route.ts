@@ -80,6 +80,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ verified: true });
     }
 
+    // Clear the challenge even on failure to prevent stale challenges
+    await supabase.from('profiles').update({ webauthn_challenge: null }).eq('id', user.id);
+
     return NextResponse.json({ verified: false }, { status: 400 });
   } catch (err: unknown) {
     console.error('Authentication verification error:', err);

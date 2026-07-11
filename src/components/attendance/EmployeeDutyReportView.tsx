@@ -165,7 +165,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
     let mounted = true;
     const fetchDutyData = async () => {
       setLoading(true);
-      setError(null);
+      setFeedback(null);
       try {
         const res = await fetch(`/api/reports/employee/${employeeId}/duty-summary?month=${month}&year=${year}`);
         const json = await res.json();

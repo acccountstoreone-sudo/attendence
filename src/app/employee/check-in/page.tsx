@@ -125,7 +125,7 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
     coords,
     errorMsg,
     refresh: check,
-    verified: status === 'inside' || isAdminOrManager || Boolean(coords),
+    verified: status === 'inside' || isAdminOrManager,
   };
 }
 
@@ -163,7 +163,7 @@ export default function EmployeeCheckInPage() {
     check_out_time?: string;
     status?: string;
   } | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isReverifyMode, setIsReverifyMode] = useState(false);
 
   const gps = useGPS(profile, loading);
@@ -261,7 +261,7 @@ export default function EmployeeCheckInPage() {
 
         setProfile(p);
       } else {
-        setSubmitError(`Failed to load your profile. ${profErr ? profErr.message : 'No profile found in database.'}`);
+        setFeedback({ type: 'error', text: `Failed to load your profile. ${profErr ? profErr.message : 'No profile found in database.'}` });
       }
 
       try {
@@ -289,28 +289,40 @@ export default function EmployeeCheckInPage() {
       throw new Error(`Check-in denied: You are ${gps.distance ?? 'too far'}m away from ${profile?.branch_name ?? 'the store'} geofence.`);
     }
     setSubmitting(true);
-    setSubmitError(null);
+    setFeedback(null);
 
     // ── Re-Verification Mode ────────────────────────────────
     if (isReverifyMode) {
-      const res = await fetch('/api/employees/enroll-face', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          faceDescriptor,
-          selfieUrl: base64Image,
-          latitude: gps.coords?.lat ?? 0,
-          longitude: gps.coords?.lng ?? 0,
-        })
-      });
-      const result = await res.json();
-      setSubmitting(false);
-      if (!result.success) throw new Error(result.error?.message ?? 'Face re-enrollment failed');
-      
-      alert('Face Reverification Successful! You can now check in normally.');
-      setIsReverifyMode(false);
-      if (typeof window !== 'undefined') window.history.replaceState({}, '', '/employee/check-in');
-      return;
+      try {
+        const res = await fetch('/api/employees/enroll-face', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            faceDescriptor,
+            selfieUrl: base64Image,
+            latitude: gps.coords?.lat ?? 0,
+            longitude: gps.coords?.lng ?? 0,
+          })
+        });
+        const result = await res.json();
+        setSubmitting(false);
+        if (!result.success) {
+          setIsReverifyMode(false);
+          setFeedback({ type: 'error', text: result.error?.message ?? 'Face re-enrollment failed' });
+          throw new Error(result.error?.message ?? 'Face re-enrollment failed');
+        }
+        
+        setFeedback({ type: 'success', text: 'Face Reverification Successful! You can now check in normally.' });
+        setIsReverifyMode(false);
+        if (typeof window !== 'undefined') window.history.replaceState({}, '', '/employee/check-in');
+        return;
+      } catch (err: unknown) {
+        setSubmitting(false);
+        setIsReverifyMode(false);
+        const errMsg = err instanceof Error ? err.message : 'Face re-enrollment failed';
+        setFeedback({ type: 'error', text: errMsg });
+        throw err;
+      }
     }
 
     // ── Offline Mode: queue record locally ─────────────────
@@ -371,13 +383,14 @@ export default function EmployeeCheckInPage() {
   const handleFingerprintSubmit = useCallback(async () => {
     try {
       const isAdminOrManager = profile?.role === 'admin' || profile?.role === 'branch_manager';
+      
+      setSubmitting(true);
+      setFeedback(null);
+      
       if (!gps.coords && !isAdminOrManager) throw new Error('GPS coordinates unavailable. Please retry.');
       if (!gps.verified && !isAdminOrManager) {
         throw new Error(`Check-in denied: You are ${gps.distance ?? 'too far'}m away from ${profile?.branch_name ?? 'the store'} geofence.`);
       }
-
-      setSubmitting(true);
-      setSubmitError(null);
 
       // 1. Get Authentication Options
       const resp = await fetch('/api/auth/webauthn/authenticate/generate', { method: 'POST' });
@@ -435,9 +448,9 @@ export default function EmployeeCheckInPage() {
     } catch (err: unknown) {
       setSubmitting(false);
       if (err instanceof Error) {
-        setSubmitError(err.message || 'Fingerprint check-in failed');
+        setFeedback({ type: 'error', text: err.message || 'Fingerprint check-in failed' });
       } else {
-        setSubmitError('Fingerprint check-in failed');
+        setFeedback({ type: 'error', text: 'Fingerprint check-in failed' });
       }
     }
   }, [gps.coords, gps.verified, gps.distance, profile, checkType, router]);
@@ -598,16 +611,20 @@ export default function EmployeeCheckInPage() {
         />
       </div>
 
-      {/* ── Error Banner (for API errors) ── */}
+      {/* ── Feedback Banner ── */}
       <AnimatePresence>
-        {submitError && (
+        {feedback && (
           <motion.div
             initial={{ opacity:0, y:10 }}
             animate={{ opacity:1, y:0 }}
             exit={{ opacity:0 }}
-            className="flex-none mx-4 mb-4 p-3 rounded-2xl bg-rose-950/90 border border-rose-500/30 backdrop-blur-xl text-rose-200 text-xs font-semibold text-center z-40"
+            className={`flex-none mx-4 mb-4 p-3 rounded-2xl border backdrop-blur-xl text-xs font-semibold text-center z-40 ${
+              feedback.type === 'success'
+                ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200'
+                : 'bg-rose-950/90 border-rose-500/30 text-rose-200'
+            }`}
           >
-            {submitError}
+            {feedback.text}
           </motion.div>
         )}
       </AnimatePresence>

@@ -6,7 +6,6 @@ import {
   CheckCircle2, AlertCircle, MapPin, RefreshCw, Fingerprint
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Spinner } from '@/components/ui/Spinner';
 
 // ─────────────────────────────────────────────────────────
 // Types
@@ -68,6 +67,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const mountedRef     = useRef(true);
   const isCapturingRef = useRef(false);
   const phRef          = useRef<Phase>('init');
+  const runCaptureRef  = useRef<(() => Promise<void>) | undefined>(undefined);
 
   // ── State ─────────────────────────────────────────────
   const [phase, _setPhase]  = useState<Phase>('init');
@@ -176,8 +176,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         setFaceDetected(true);
         isCapturingRef.current = true;
         stopScan();
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        await runCapture();
+        if (runCaptureRef.current) await runCaptureRef.current();
       } catch { /* silently continue */ }
     }, 180); // scan every 180ms for fast 2-5s total detection
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -240,6 +239,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       setTimeout(() => { if (mountedRef.current) startScan(); }, 3000);
     }
   }, [announce, setPhase, onCapture, checkType, startScan]);
+
+  useEffect(() => {
+    runCaptureRef.current = runCapture;
+  }, [runCapture]);
 
   // ── GPS change: start scan when verified ─────────────
   useEffect(() => {

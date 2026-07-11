@@ -97,14 +97,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems = role === 'admin' ? adminNav : role === 'branch_manager' ? bmNav : empNav;
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-[#010e05]/95 backdrop-blur-2xl border-r border-[#0a3a1e] text-green-100 select-none shadow-[4px_0_24px_rgba(0,10,4,0.6)]">
+    <div className="flex flex-col h-full bg-white/95 backdrop-blur-2xl border-r border-slate-200 text-slate-800 select-none shadow-sm">
       {/* Brand Header */}
-      <div className="h-20 flex items-center justify-between px-4 border-b border-[#0a3a1e] shrink-0 relative overflow-hidden">
-        {/* Subtle background glow for header */}
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,rgba(0,68,23,0.25),transparent_70%)] pointer-events-none" />
-        
+      <div className="h-20 flex items-center justify-between px-4 border-b border-slate-200 shrink-0 relative overflow-hidden bg-slate-50/50">
         <div className="flex items-center space-x-3 overflow-hidden relative z-10">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#004417] to-[#006622] flex items-center justify-center text-white font-extrabold shadow-[0_0_15px_rgba(0,68,23,0.5)] shrink-0 border border-[#00aa44]/30">
+          <div className="w-10 h-10 rounded-xl bg-[#1dbf73] flex items-center justify-center text-white font-extrabold shadow-sm shrink-0">
             AF
           </div>
           <AnimatePresence>
@@ -115,8 +112,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 exit={{ opacity: 0, width: 0 }}
                 className="flex flex-col min-w-0"
               >
-                <span className="font-bold text-white tracking-tight truncate whitespace-nowrap">Anchor Fashion</span>
-                <span className="text-[10px] text-green-400 font-semibold uppercase tracking-wider truncate">
+                <span className="font-bold text-slate-900 tracking-tight truncate whitespace-nowrap">Anchor Fashion</span>
+                <span className="text-[10px] text-[#1dbf73] font-bold uppercase tracking-wider truncate">
                   {role.replace('_', ' ')} Portal
                 </span>
               </motion.div>
@@ -127,17 +124,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Collapse button for Desktop */}
         <button
           onClick={onToggleCollapse}
-          className="hidden md:flex p-1.5 rounded-lg text-green-300 hover:text-white hover:bg-[#0a3a1e] transition-colors"
+          className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
       </div>
 
       {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin scrollbar-thumb-[#0a3a1e] scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
         {navItems.map((item) => {
-          // If the link is a root dashboard (/admin, /branch-manager, /employee), it must match exactly.
-          // Otherwise, it can match exactly or as a sub-path.
           const isRoot = item.href === '/admin' || item.href === '/branch-manager' || item.href === '/employee';
           const isActive = isRoot 
             ? pathname === item.href 
@@ -151,27 +146,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className={cn(
                 'relative flex items-center space-x-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-300 group outline-none',
                 isActive
-                  ? 'text-white font-bold'
-                  : 'text-green-200/60 hover:text-green-100'
+                  ? 'text-[#1dbf73] font-bold bg-[#1dbf73]/10'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               )}
             >
               {isActive && (
                 <motion.div
                   layoutId="activeNavBackground"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-gradient-to-b from-[#00cc55] to-[#004417] rounded-r-full shadow-[0_0_12px_rgba(0,204,85,0.5)] z-0"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-7 bg-[#1dbf73] rounded-r-full shadow-sm z-0"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
-              
-              {!isActive && (
-                 <div className="absolute inset-0 bg-white/0 group-hover:bg-white/[0.03] rounded-xl transition-colors duration-300 z-0" />
-              )}
-              
-              {isActive && (
-                 <div className="absolute inset-0 bg-gradient-to-r from-white/[0.05] to-transparent rounded-xl z-0" />
-              )}
 
-              <div className={cn('relative z-10 shrink-0 transition-all duration-300 group-hover:scale-110', isActive ? 'text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'group-hover:text-white')}>
+              <div className={cn('relative z-10 shrink-0 transition-all duration-300 group-hover:scale-110', isActive ? 'text-[#1dbf73]' : 'text-slate-500 group-hover:text-slate-900')}>
                 {item.icon}
               </div>
               <AnimatePresence>
@@ -192,10 +179,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Footer / Logout */}
-      <div className="p-4 border-t border-[#0a3a1e] shrink-0 bg-[#010e05]/40">
+      <div className="p-4 border-t border-slate-200 shrink-0 bg-slate-50/50">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center space-x-3 px-3 py-3 rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors group"
+          className="w-full flex items-center space-x-3 px-3 py-3 rounded-xl text-sm font-bold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors group"
         >
           <LogOut className="w-5 h-5 shrink-0 group-hover:-translate-x-1 transition-transform" />
           <AnimatePresence>

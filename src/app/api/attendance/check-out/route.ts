@@ -11,6 +11,7 @@ const checkOutSchema = z.object({
   face_verified: z.boolean(),
   faceDescriptor: z.array(z.number()).optional(),
   facial_id: z.string().optional(),
+  branch_id: z.string().uuid().optional(),
   is_offline_sync: z.boolean().optional().default(false),
   timestamp: z.string().datetime().optional(),
   liveness_passed: z.boolean().optional(),
@@ -20,7 +21,7 @@ const checkOutSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireRole(['employee', 'branch_manager']);
+    const user = await requireRole(['admin', 'employee', 'branch_manager']);
     const body = await request.json();
     const payload = checkOutSchema.parse(body);
 
@@ -170,11 +171,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify Geofence if branch is assigned
-    if (user.branch_id) {
+    const targetBranchId = payload.branch_id || user.branch_id;
+    if (targetBranchId) {
       const { data: branch } = await supabase
         .from('branches')
         .select('latitude, longitude, geofence_radius_meters')
-        .eq('id', user.branch_id)
+        .eq('id', targetBranchId)
         .single();
 
       if (branch && branch.latitude && branch.longitude) {

@@ -16,7 +16,7 @@ import type { Metadata } from "next";
 import { PwaInstallPrompt } from "@/components/pwa/PwaInstallPrompt";
 
 export const viewport: Viewport = {
-  themeColor: "#004417",
+  themeColor: "#1dbf73",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
