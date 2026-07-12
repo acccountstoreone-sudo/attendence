@@ -193,13 +193,15 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       setPhase('extract');
       announce('Analyzing biometric signature...', 'info');
 
-      // Capture frame
-      c.width  = v.videoWidth  || 640;
-      c.height = v.videoHeight || 640;
+      // Capture frame downscaled for fast transmission & safe payload size
+      const targetW = Math.min(v.videoWidth  || 640, 640);
+      const targetH = Math.min(v.videoHeight || 480, 480);
+      c.width  = targetW;
+      c.height = targetH;
       const ctx = c.getContext('2d');
       if (!ctx) { isCapturingRef.current = false; return; }
-      ctx.drawImage(v, 0, 0);
-      const dataUrl = c.toDataURL('image/jpeg', 0.92);
+      ctx.drawImage(v, 0, 0, targetW, targetH);
+      const dataUrl = c.toDataURL('image/jpeg', 0.82);
 
       // Extract descriptor from captured frame
       const img = new Image(); img.src = dataUrl;

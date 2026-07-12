@@ -20,6 +20,9 @@ const checkInSchema = z.object({
   webauthn_verified: z.boolean().optional(),
 });
 
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // 1. Enforce Role: Employees, Branch Managers, & Admins can check in

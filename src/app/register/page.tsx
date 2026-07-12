@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -263,6 +263,55 @@ export default function RegisterPage() {
     }
   };
 
+// Helper to compress image down to max dimensions and JPEG quality
+const compressDataUrl = async (dataUrl: string, maxDim = 1200, quality = 0.8): Promise<string> => {
+  return new Promise((resolve) => {
+    if (!dataUrl.startsWith('data:image/')) {
+      resolve(dataUrl); // e.g., PDF document
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(dataUrl);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+};
+
+// Helper to safely parse API responses without throwing 'Unexpected token R... is not valid JSON'
+async function parseJsonResponse(res: Response) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    if (res.status === 413 || text.includes('Request Entity Too Large') || text.startsWith('R')) {
+      throw new Error('Uploaded images or face scan are too large. Please upload smaller files or retake your photo.');
+    }
+    throw new Error(`Server returned non-JSON response (${res.status}): ${text.slice(0, 100)}`);
+  }
+}
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
     setFeedback(null);
     const file = e.target.files?.[0];
@@ -283,13 +332,17 @@ export default function RegisterPage() {
     }
 
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       if (typeof reader.result === 'string') {
+        let compressed = reader.result;
+        if (file.type.startsWith('image/')) {
+          compressed = await compressDataUrl(reader.result, 1200, 0.8);
+        }
         if (side === 'front') {
-          setNidFront(reader.result);
+          setNidFront(compressed);
           setNidFrontName(file.name);
         } else {
-          setNidBack(reader.result);
+          setNidBack(compressed);
           setNidBackName(file.name);
         }
       }
@@ -324,8 +377,11 @@ export default function RegisterPage() {
           .withFaceDescriptor();
 
         if (detection) {
-          const imageSrc = webcamRef.current.getScreenshot();
-          if (imageSrc) setFaceImage(imageSrc);
+          const imageSrc = webcamRef.current.getScreenshot({ width: 640, height: 480 });
+          if (imageSrc) {
+            const compressedFace = await compressDataUrl(imageSrc, 640, 0.82);
+            setFaceImage(compressedFace);
+          }
           setFaceDescriptor(Array.from(detection.descriptor));
           setFaceMessage('Biometric enrollment successful!');
         } else {
@@ -369,8 +425,8 @@ export default function RegisterPage() {
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw data.error || data;
+      const data = await parseJsonResponse(res);
+      if (!res.ok) throw data.error || data.message || data;
 
       setStep('fingerprint_scan');
 
@@ -389,11 +445,10 @@ export default function RegisterPage() {
     try {
       // 1. Get options from server
       const resp = await fetch('/api/auth/webauthn/register/generate', { method: 'POST' });
+      const options = await parseJsonResponse(resp);
       if (!resp.ok) {
-        const d = await resp.json();
-        throw new Error(d.error || 'Failed to generate fingerprint options.');
+        throw new Error(options.error || 'Failed to generate fingerprint options.');
       }
-      const options = await resp.json();
 
       // 2. Pass options to browser authenticator
       let asseResp;
@@ -413,12 +468,10 @@ export default function RegisterPage() {
         body: JSON.stringify(asseResp),
       });
 
+      const verifyData = await parseJsonResponse(verifyResp);
       if (!verifyResp.ok) {
-         const d = await verifyResp.json();
-         throw new Error(d.error || 'Fingerprint verification failed.');
+         throw new Error(verifyData.error || 'Fingerprint verification failed.');
       }
-
-      const verifyData = await verifyResp.json();
       if (!verifyData.verified) throw new Error('Invalid fingerprint registration.');
 
       // Clear local storage so next user starts fresh
@@ -694,7 +747,7 @@ export default function RegisterPage() {
                 <div className="relative w-full aspect-square rounded-2xl overflow-hidden border-2 border-slate-200 bg-black">
                   {!faceImage ? (
                      <>
-                        <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" className="w-full h-full object-cover" mirrored />
+                        <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" screenshotQuality={0.82} videoConstraints={{ width: 640, height: 480, facingMode: 'user' }} className="w-full h-full object-cover" mirrored />
                         {/* Overlay Scanning HUD */}
                         <div className={`absolute inset-0 border-4 rounded-2xl transition-colors duration-300 ${faceDetected ? 'border-green-500' : 'border-[#1dbf73]'}`} />
                         

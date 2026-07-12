@@ -1,9 +1,18 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Fingerprint, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { startRegistration } from '@simplewebauthn/browser';
+
+async function parseJsonResponse(res: Response) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Server returned error (${res.status}): ${text.slice(0, 100)}`);
+  }
+}
 
 export function WebAuthnRegister() {
   const [loading, setLoading] = useState(false);
@@ -18,11 +27,10 @@ export function WebAuthnRegister() {
     try {
       // 1. Get registration options from server
       const resp = await fetch('/api/auth/webauthn/register/generate', { method: 'POST' });
+      const options = await parseJsonResponse(resp);
       if (!resp.ok) {
-        const errData = await resp.json();
-        throw new Error(errData.error || 'Failed to get registration options');
+        throw new Error(options.error || 'Failed to get registration options');
       }
-      const options = await resp.json();
 
       // 2. Pass options to browser authenticator (Fingerprint/FaceID)
       let attResp;
@@ -46,12 +54,10 @@ export function WebAuthnRegister() {
         body: JSON.stringify(attResp),
       });
 
+      const verifyData = await parseJsonResponse(verifyResp);
       if (!verifyResp.ok) {
-        const errData = await verifyResp.json();
-        throw new Error(errData.error || 'Failed to verify registration');
+        throw new Error(verifyData.error || 'Failed to verify registration');
       }
-
-      const verifyData = await verifyResp.json();
       if (verifyData.verified) {
         setSuccess(true);
       } else {

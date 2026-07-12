@@ -304,12 +304,15 @@ export default function EmployeeCheckInPage() {
             longitude: gps.coords?.lng ?? 0,
           })
         });
-        const result = await res.json();
+        const text = await res.text();
+        let result: Record<string, unknown>;
+        try { result = JSON.parse(text); }
+        catch { throw new Error(res.status === 413 || text.startsWith('R') ? 'Captured image too large. Please retry.' : `Server error (${res.status}): ${text.slice(0, 100)}`); }
         setSubmitting(false);
         if (!result.success) {
           setIsReverifyMode(false);
-          setFeedback({ type: 'error', text: result.error?.message ?? 'Face re-enrollment failed' });
-          throw new Error(result.error?.message ?? 'Face re-enrollment failed');
+          setFeedback({ type: 'error', text: (result.error as { message?: string })?.message ?? 'Face re-enrollment failed' });
+          throw new Error((result.error as { message?: string })?.message ?? 'Face re-enrollment failed');
         }
         
         setFeedback({ type: 'success', text: 'Face Reverification Successful! You can now check in normally.' });
@@ -365,16 +368,19 @@ export default function EmployeeCheckInPage() {
         };
 
     const res    = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    const result = await res.json();
+    const text   = await res.text();
+    let result: Record<string, unknown>;
+    try { result = JSON.parse(text); }
+    catch { throw new Error(res.status === 413 || text.startsWith('R') ? 'Check-in payload too large. Please try again.' : `Server error (${res.status}): ${text.slice(0, 100)}`); }
 
     setSubmitting(false);
 
     if (!result.success) {
-      if (result.error?.code === 'BIOMETRIC_REVERIFICATION_REQUIRED') {
+      if ((result.error as { code?: string })?.code === 'BIOMETRIC_REVERIFICATION_REQUIRED') {
         setIsReverifyMode(true);
         throw new Error('Admin requested reverification. The system is now in Re-Enrollment mode. Please scan your face again to save your new reference biometrics.');
       }
-      throw new Error(result.error?.message ?? `Check-${checkType === 'in' ? 'In' : 'Out'} failed`);
+      throw new Error((result.error as { message?: string })?.message ?? `Check-${checkType === 'in' ? 'In' : 'Out'} failed`);
     }
 
     setTimeout(() => router.push('/employee'), 2200);

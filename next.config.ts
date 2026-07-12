@@ -25,6 +25,11 @@ const withPWA = (withPWAInit as unknown as (opts: Record<string, unknown>) => (c
 
 const nextConfig: NextConfig = {
   /* config options here */
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '25mb',
+    },
+  },
   turbopack: {},
 };
 

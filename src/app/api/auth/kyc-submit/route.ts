@@ -34,6 +34,9 @@ async function uploadDataUrl(supabase: import('@supabase/supabase-js').SupabaseC
   return publicUrlData.publicUrl;
 }
 
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const { nid, nidFrontDataUrl, nidBackDataUrl, facePhotoDataUrl, faceDescriptor } = await request.json();
