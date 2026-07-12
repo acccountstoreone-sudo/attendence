@@ -60,8 +60,8 @@ export async function POST(req: NextRequest) {
         credential_id: credentialID,
         public_key: publicKeyHex,
         counter,
-        device_type: credentialDeviceType,
-        transports: body.response.transports || [],
+        // Omitting device_type and transports to prevent Supabase schema cache errors
+        // if these columns are out-of-sync. They have default values in the DB.
       });
 
       if (error) {

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     // Get the user's registered passkey/fingerprint credentials
     const { data: credentials } = await adminClient
       .from('webauthn_credentials')
-      .select('credential_id, transports')
+      .select('*')
       .eq('user_id', user.id);
 
     if (!credentials || credentials.length === 0) {
