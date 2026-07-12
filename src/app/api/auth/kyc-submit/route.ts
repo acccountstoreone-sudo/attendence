@@ -58,10 +58,15 @@ export async function POST(request: Request) {
     const photoUrl = await uploadDataUrl(supabase, facePhotoDataUrl, 'kyc_face', user.id);
 
     // Update the profile status with document URLs and face photo
-    const { error: profileError } = await supabase
+    const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+    const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY
+      ? createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
+      : supabase;
+
+    const { error: profileError } = await adminClient
       .from('profiles')
       .update({ 
-        nid: nid, // Now properly received from the frontend instead of generating a dummy doc_ ID
+        nid: nid || null, // Now properly received from the frontend instead of generating a dummy doc_ ID
         nid_front_url: frontUrl,
         nid_back_url: backUrl,
         kyc_status: 'pending',
@@ -73,15 +78,21 @@ export async function POST(request: Request) {
       .eq('id', user.id);
 
     if (profileError) {
-       console.error('KYC Update Error:', profileError);
-       return NextResponse.json({ error: 'Failed to save KYC documents. Please try again.' }, { status: 400 });
+       console.error('KYC Update Error Detailed:', profileError);
+       const errMsg = profileError.message || profileError.details || profileError.hint || JSON.stringify(profileError);
+       if (errMsg.includes('profiles_nid_key') || errMsg.includes('duplicate key') || errMsg.includes('unique constraint')) {
+          return NextResponse.json({ error: 'This NID number is already registered to another account. Please verify your NID or use a unique NID.' }, { status: 400 });
+       }
+       return NextResponse.json({ error: `Database error during profile update: ${errMsg}` }, { status: 400 });
     }
 
     return NextResponse.json({ success: true, message: 'KYC Documents & Biometric Face Verification Submitted. Waiting for approval.' });
 
   } catch (error: unknown) {
     console.error('KYC Submit Error:', error);
-    const msg = error instanceof Error ? error.message : String(error);
+    const msg = error instanceof Error 
+      ? error.message 
+      : (typeof error === 'object' && error !== null && 'message' in error ? String((error as { message: unknown }).message) : JSON.stringify(error));
     return NextResponse.json({ error: msg || 'Internal server error during document upload.' }, { status: 500 });
   }
 }

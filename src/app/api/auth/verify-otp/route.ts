@@ -48,7 +48,12 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user) {
-       await supabase
+       const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+       const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY
+         ? createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
+         : supabase;
+
+       await adminClient
         .from('profiles')
         .update({ registration_step: 'kyc' })
         .eq('id', user.id);
