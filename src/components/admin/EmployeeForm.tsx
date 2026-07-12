@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { User, Mail, Phone, Building2, Shield, Lock, Unlock, CheckCircle2, XCircle } from 'lucide-react';
+import { User, Mail, Phone, Building2, Shield, Lock, Unlock, CheckCircle2, XCircle, MapPin, MessageSquare, Image as ImageIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -25,6 +25,9 @@ interface EmployeeFormProps {
     branch_id?: string | null;
     employee_id?: string | null;
     is_active: boolean;
+    photo_url?: string | null;
+    whatsapp_number?: string | null;
+    address?: string | null;
   };
 }
 
@@ -114,6 +117,31 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {initialData && (
+        <div className="mb-8 flex items-start gap-5 p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+          <div className="relative w-20 h-20 rounded-full bg-white flex items-center justify-center text-slate-400 border-4 border-white shadow-sm overflow-hidden shrink-0">
+            {initialData.photo_url ? (
+              <img src={initialData.photo_url} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <ImageIcon className="w-8 h-8 opacity-50" />
+            )}
+          </div>
+          <div className="flex-1 space-y-2">
+            <h3 className="text-lg font-bold text-slate-800">{initialData.full_name || 'Unnamed Employee'}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-600">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-slate-400" />
+                <span>{initialData.whatsapp_number ? `WA: ${initialData.whatsapp_number}` : 'No WhatsApp'}</span>
+              </div>
+              <div className="flex items-start gap-2 sm:col-span-2 mt-1">
+                <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                <span className="leading-tight">{initialData.address || 'No address provided'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSave} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -30,6 +30,8 @@ interface Employee {
   created_at: string;
   registration_step?: string;
   kyc_status?: string;
+  photo_url?: string;
+  whatsapp_number?: string;
 }
 
 export default function StoreEmployeesPage() {
@@ -187,8 +189,12 @@ export default function StoreEmployeesPage() {
                     <tr key={emp.id} className="hover:bg-slate-100/20 transition-colors">
                       <td className="py-4 px-6">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 font-medium text-sm shrink-0 border border-slate-200">
-                            {emp.full_name.charAt(0)}
+                          <div className="relative w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 font-medium text-sm shrink-0 border border-slate-200 overflow-hidden">
+                            {emp.photo_url ? (
+                              <img src={emp.photo_url} alt={emp.full_name} className="w-full h-full object-cover" />
+                            ) : (
+                              emp.full_name.charAt(0).toUpperCase()
+                            )}
                           </div>
                           <div>
                             <p className="font-semibold text-slate-700 text-sm">{emp.full_name}</p>
@@ -201,7 +207,7 @@ export default function StoreEmployeesPage() {
                           {emp.employee_id || 'PENDING-ID'}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {emp.phone || 'No phone'}
+                          {emp.whatsapp_number ? `WA: ${emp.whatsapp_number}` : (emp.phone || 'No phone')}
                         </p>
                       </td>
                       <td className="py-4 px-6 text-center">

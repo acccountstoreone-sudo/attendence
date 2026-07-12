@@ -13,10 +13,14 @@ import {
   ShieldCheck,
   Calendar,
   Key,
+  Pencil,
+  MapPin,
+  MessageSquare
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { WebAuthnRegister } from '@/components/auth/WebAuthnRegister';
+import { EditProfileModal } from '@/components/employee/EditProfileModal';
 
 interface ProfileData {
   id: string;
@@ -28,6 +32,9 @@ interface ProfileData {
   is_active: boolean;
   branch_name: string;
   created_at: string;
+  address: string | null;
+  whatsapp_number: string | null;
+  photo_url: string | null;
 }
 
 export default function EmployeeProfilePage() {
@@ -39,6 +46,8 @@ export default function EmployeeProfilePage() {
   // BUG-NEW-07 fix: password reset state
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMsg, setResetMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const handlePasswordReset = async () => {
     if (!profile?.email) return;
@@ -56,7 +65,10 @@ export default function EmployeeProfilePage() {
   };
 
   useEffect(() => {
-    async function loadProfile() {
+    loadProfile();
+  }, [supabase, router]);
+
+  const loadProfile = async () => {
       try {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
@@ -98,6 +110,9 @@ export default function EmployeeProfilePage() {
           is_active: prof?.is_active ?? true,
           created_at: prof?.created_at ?? user.created_at ?? new Date().toISOString(),
           branch_name: branchName,
+          address: prof?.address ?? null,
+          whatsapp_number: prof?.whatsapp_number ?? null,
+          photo_url: prof?.photo_url ?? null,
         });
       } catch (err: unknown) {
         console.error('Error loading profile:', err);
@@ -109,9 +124,7 @@ export default function EmployeeProfilePage() {
       } finally {
         setLoading(false);
       }
-    }
-    loadProfile();
-  }, [supabase, router]);
+    };
 
   if (loading) {
     return (
@@ -143,18 +156,32 @@ export default function EmployeeProfilePage() {
             View your personal information and account settings.
           </p>
         </div>
-        <Badge status={profile.is_active ? 'active' : 'inactive'}>
-          {profile.is_active ? 'Account Active' : 'Account Suspended'}
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            icon={<Pencil className="w-4 h-4" />}
+            onClick={() => setEditModalOpen(true)}
+          >
+            Edit Profile
+          </Button>
+          <Badge status={profile.is_active ? 'active' : 'inactive'}>
+            {profile.is_active ? 'Account Active' : 'Account Suspended'}
+          </Badge>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column: Avatar & Summary */}
         <Card className="bg-[#ffffff] border-slate-200 p-6 col-span-1 flex flex-col items-center text-center shadow-lg">
-          <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center border-4 border-[#ffffff] shadow-xl mb-4">
-            <span className="text-3xl font-bold text-slate-600">
-              {(profile.full_name || '?').charAt(0).toUpperCase()}
-            </span>
+          <div className="relative w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center border-4 border-[#ffffff] shadow-xl mb-4 overflow-hidden">
+            {profile.photo_url ? (
+              <img src={profile.photo_url} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-3xl font-bold text-slate-600">
+                {(profile.full_name || '?').charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
           <h2 className="text-xl font-bold text-slate-900">{profile.full_name}</h2>
           <p className="text-sm text-amber-500 font-medium capitalize mt-1">
@@ -203,6 +230,20 @@ export default function EmployeeProfilePage() {
                   <span className="text-sm text-slate-700">{profile.phone || 'Not provided'}</span>
                 </div>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+                <span className="text-sm font-medium text-slate-500">WhatsApp Number</span>
+                <div className="sm:col-span-2 flex items-center space-x-2">
+                  <MessageSquare className="w-4 h-4 text-slate-600" />
+                  <span className="text-sm text-slate-700">{profile.whatsapp_number || 'Not provided'}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+                <span className="text-sm font-medium text-slate-500">Address</span>
+                <div className="sm:col-span-2 flex items-start space-x-2">
+                  <MapPin className="w-4 h-4 text-slate-600 shrink-0 mt-0.5" />
+                  <span className="text-sm text-slate-700">{profile.address || 'Not provided'}</span>
+                </div>
+              </div>
             </div>
           </Card>
 
@@ -240,6 +281,19 @@ export default function EmployeeProfilePage() {
           </Card>
         </div>
       </div>
+      
+      <EditProfileModal 
+        isOpen={editModalOpen} 
+        onClose={() => setEditModalOpen(false)}
+        currentAddress={profile.address}
+        currentWhatsapp={profile.whatsapp_number}
+        currentPhotoUrl={profile.photo_url}
+        onSuccess={() => {
+          // Re-load profile to reflect new updates immediately
+          setLoading(true);
+          loadProfile();
+        }}
+      />
     </div>
   );
 }

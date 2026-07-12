@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -44,9 +44,10 @@ interface Employee {
   created_at: string;
   registration_step?: string;
   kyc_status?: string;
-  nid_front_url?: string;
   nid_back_url?: string;
   nid?: string;
+  photo_url?: string;
+  whatsapp_number?: string;
 }
 
 interface Branch {
@@ -198,9 +199,13 @@ export default function AdminEmployeesPage() {
              {pendingApprovals.map(emp => (
                <div key={emp.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 gap-4 hover:bg-slate-100/30 transition-colors">
                  <div className="flex gap-4 items-center">
-                   <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 font-medium text-sm shrink-0">
-                     {emp.full_name.charAt(0)}
-                   </div>
+                    <div className="relative w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 font-medium text-sm shrink-0 overflow-hidden border border-slate-200">
+                      {emp.photo_url ? (
+                        <img src={emp.photo_url} alt={emp.full_name} className="w-full h-full object-cover" />
+                      ) : (
+                        emp.full_name.charAt(0)
+                      )}
+                    </div>
                    <div>
                      <p className="text-slate-700 font-medium text-sm">{emp.full_name}</p>
                      <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
@@ -324,26 +329,42 @@ export default function AdminEmployeesPage() {
                 ) : (
                   filteredEmployees.map((emp) => (
                     <tr key={emp.id} className="hover:bg-slate-100/20 transition-colors">
-                      <td className="py-3 px-5">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 text-xs shrink-0">
-                            {emp.full_name.charAt(0)}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-9 h-9 rounded-full bg-[#1dbf73]/10 flex items-center justify-center text-[#1dbf73] font-medium text-sm shrink-0 overflow-hidden border border-[#1dbf73]/20">
+                            {emp.photo_url ? (
+                              <img src={emp.photo_url} alt={emp.full_name} className="w-full h-full object-cover" />
+                            ) : (
+                              emp.full_name.charAt(0).toUpperCase()
+                            )}
                           </div>
                           <div>
-                            <p className="font-medium text-slate-700 text-sm">{emp.full_name}</p>
-                            <p className="text-xs text-slate-500">{emp.email}</p>
+                            <div className="font-medium text-slate-900 text-sm">{emp.full_name}</div>
+                            <div className="text-xs text-slate-500">{emp.email}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-5">
-                        <span className="text-xs text-slate-600 capitalize">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-slate-700 capitalize flex items-center gap-2">
                           {emp.role.replace('_', ' ')}
-                        </span>
+                        </div>
                       </td>
-                      <td className="py-3 px-5">
-                        <span className="text-xs text-slate-600">
-                          {emp.branch_name || 'Global'}
-                        </span>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5 text-sm text-slate-600">
+                            <Building2 className="w-4 h-4 text-slate-400" />
+                            {emp.branch_name || 'Global'}
+                          </div>
+                          {(emp.phone || emp.whatsapp_number) && (
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
+                              {emp.whatsapp_number ? (
+                                <span className="flex items-center gap-1"><span className="text-[#1dbf73] font-medium text-[10px] bg-[#1dbf73]/10 px-1 rounded">WA</span> {emp.whatsapp_number}</span>
+                              ) : (
+                                <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-slate-400" /> {emp.phone}</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 px-5">
                         <span className="text-xs font-mono text-slate-500">

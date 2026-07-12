@@ -1,6 +1,8 @@
+import type { NextRequest } from 'next/server';
+
 export const getRPName = () => 'Anchor Fashion';
 
-export const getRPID = (req?: Request) => {
+export const getRPID = (req?: Request | NextRequest | any) => {
   if (req) {
     const host = req.headers.get('host');
     if (host) {
@@ -14,7 +16,7 @@ export const getRPID = (req?: Request) => {
   return process.env.NEXT_PUBLIC_APP_URL?.replace(/^https?:\/\//, '').split(':')[0] || 'attendence.vercel.app';
 };
 
-export const getExpectedOrigin = (req?: Request) => {
+export const getExpectedOrigin = (req?: Request | NextRequest | any) => {
   if (req) {
     const origin = req.headers.get('origin');
     if (origin) return origin;
