@@ -14,11 +14,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase.from('profiles').select('webauthn_challenge').eq('id', user.id).single();
-    const expectedChallenge = profile?.webauthn_challenge;
+    const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+    const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY
+      ? createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
+      : supabase;
+
+    const { data: profile } = await adminClient.from('profiles').select('webauthn_current_challenge').eq('id', user.id).single();
+    const expectedChallenge = profile?.webauthn_current_challenge;
 
     if (!expectedChallenge) {
-       return NextResponse.json({ error: 'No challenge found' }, { status: 400 });
+       return NextResponse.json({ error: 'No verification challenge found or session expired.' }, { status: 400 });
     }
 
     let verification;
@@ -34,7 +39,7 @@ export async function POST(req: NextRequest) {
       if (error instanceof Error) {
         return NextResponse.json({ error: error.message }, { status: 400 });
       }
-      return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 400 });
+      return NextResponse.json({ error: 'An unexpected error occurred during fingerprint verification' }, { status: 400 });
     }
 
     const { verified, registrationInfo } = verification;
@@ -46,7 +51,7 @@ export async function POST(req: NextRequest) {
       // Save to database. credentialPublicKey is Uint8Array, we need to convert to Buffer for bytea postgres column
       const publicKeyBuffer = Buffer.from(credentialPublicKey);
       
-      const { error } = await supabase.from('webauthn_credentials').insert({
+      const { error } = await adminClient.from('webauthn_credentials').insert({
         user_id: user.id,
         credential_id: credentialID,
         public_key: publicKeyBuffer,
@@ -57,8 +62,10 @@ export async function POST(req: NextRequest) {
 
       if (error) throw error;
 
-      // Clear the challenge
-      await supabase.from('profiles').update({ webauthn_challenge: null }).eq('id', user.id);
+      // Clear the challenge and set fingerprint_enrolled status
+      await adminClient.from('profiles').update({ 
+        webauthn_current_challenge: null,
+      }).eq('id', user.id);
 
       return NextResponse.json({ verified: true });
     }

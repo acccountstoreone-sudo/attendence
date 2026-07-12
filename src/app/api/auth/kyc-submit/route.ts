@@ -39,10 +39,14 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const { nid, nidFrontDataUrl, nidBackDataUrl, facePhotoDataUrl, faceDescriptor } = await request.json();
+    const { nid, nidFrontDataUrl, nidBackDataUrl, facePhotoDataUrl, faceDescriptor, fingerprintEnrolled } = await request.json();
 
-    if (!nidFrontDataUrl || !nidBackDataUrl || !facePhotoDataUrl || !faceDescriptor) {
-      return NextResponse.json({ error: 'NID Front copy, NID Back copy, Face Photo, and Biometric Data are required.' }, { status: 400 });
+    if (!nidFrontDataUrl || !nidBackDataUrl) {
+      return NextResponse.json({ error: 'NID Front Side and NID Back Side copies are required.' }, { status: 400 });
+    }
+
+    if (!faceDescriptor && !fingerprintEnrolled) {
+      return NextResponse.json({ error: 'At least one biometric verification method (Face Scan OR Fingerprint) is required.' }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -52,30 +56,44 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized. Please login again.' }, { status: 401 });
     }
 
-    // Upload NID Front, NID Back, and Face Photo to Supabase Storage
-    const frontUrl = await uploadDataUrl(supabase, nidFrontDataUrl, 'nid_front', user.id);
-    const backUrl = await uploadDataUrl(supabase, nidBackDataUrl, 'nid_back', user.id);
-    const photoUrl = await uploadDataUrl(supabase, facePhotoDataUrl, 'kyc_face', user.id);
-
-    // Update the profile status with document URLs and face photo
     const { createClient: createAdminClient } = await import('@supabase/supabase-js');
     const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY
       ? createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
       : supabase;
 
-    const { error: profileError } = await adminClient
+    // Upload NID Front, NID Back, and Face Photo (if provided) to Supabase Storage using adminClient
+    const frontUrl = await uploadDataUrl(adminClient, nidFrontDataUrl, 'nid_front', user.id);
+    const backUrl = await uploadDataUrl(adminClient, nidBackDataUrl, 'nid_back', user.id);
+    const photoUrl = facePhotoDataUrl ? await uploadDataUrl(adminClient, facePhotoDataUrl, 'kyc_face', user.id) : null;
+
+    const updatePayload: Record<string, unknown> = {
+      nid_front_url: frontUrl,
+      nid_back_url: backUrl,
+      kyc_status: 'pending',
+      registration_step: 'pending_approval',
+      face_enrolled: Boolean(faceDescriptor && Array.isArray(faceDescriptor) && faceDescriptor.length > 0),
+      face_descriptor: faceDescriptor || null,
+      fingerprint_enrolled: Boolean(fingerprintEnrolled),
+    };
+
+    if (photoUrl) {
+      updatePayload.photo_url = photoUrl;
+    }
+    if (nid !== undefined && nid !== null && nid !== '') {
+      updatePayload.nid = nid;
+    }
+
+    let { error: profileError } = await adminClient
       .from('profiles')
-      .update({ 
-        nid: nid || null, // Now properly received from the frontend instead of generating a dummy doc_ ID
-        nid_front_url: frontUrl,
-        nid_back_url: backUrl,
-        kyc_status: 'pending',
-        registration_step: 'pending_approval',
-        face_enrolled: true,
-        face_descriptor: faceDescriptor,
-        photo_url: photoUrl
-      })
+      .update(updatePayload)
       .eq('id', user.id);
+
+    // If column fingerprint_enrolled is missing in schema cache before migration, retry without it
+    if (profileError && (profileError.code === '42703' || profileError.message?.includes('fingerprint_enrolled') || profileError.message?.includes('schema cache'))) {
+      delete updatePayload.fingerprint_enrolled;
+      const fallbackRes = await adminClient.from('profiles').update(updatePayload).eq('id', user.id);
+      profileError = fallbackRes.error;
+    }
 
     if (profileError) {
        console.error('KYC Update Error Detailed:', profileError);
@@ -86,7 +104,7 @@ export async function POST(request: Request) {
        return NextResponse.json({ error: `Database error during profile update: ${errMsg}` }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, message: 'KYC Documents & Biometric Face Verification Submitted. Waiting for approval.' });
+    return NextResponse.json({ success: true, message: 'KYC Documents & Biometric Verification Submitted. Waiting for approval.' });
 
   } catch (error: unknown) {
     console.error('KYC Submit Error:', error);

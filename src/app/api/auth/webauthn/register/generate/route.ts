@@ -12,13 +12,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase.from('profiles').select('employee_id, full_name').eq('id', user.id).single();
+    const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+    const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY
+      ? createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
+      : supabase;
+
+    const { data: profile } = await adminClient.from('profiles').select('employee_id, full_name').eq('id', user.id).single();
     if (!profile) {
        return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     // Get any existing credentials so we can exclude them
-    const { data: existingCredentials } = await supabase
+    const { data: existingCredentials } = await adminClient
         .from('webauthn_credentials')
         .select('credential_id')
         .eq('user_id', user.id);
@@ -32,19 +37,20 @@ export async function POST(req: NextRequest) {
       excludeCredentials: existingCredentials?.map(cred => ({
         id: cred.credential_id,
         type: 'public-key',
-        // Optional
         transports: ['internal'],
       })),
       authenticatorSelection: {
-        // "platform" means device-bound (fingerprint/FaceID). Not a roaming key like Yubikey.
         authenticatorAttachment: 'platform',
         userVerification: 'required',
         residentKey: 'required'
       }
     });
 
-    // Save the challenge in the user's profile
-    await supabase.from('profiles').update({ webauthn_challenge: options.challenge }).eq('id', user.id);
+    // Save the challenge in the user's profile using admin client to bypass RLS restrictions during onboarding
+    await adminClient
+      .from('profiles')
+      .update({ webauthn_current_challenge: options.challenge })
+      .eq('id', user.id);
 
     return NextResponse.json(options);
   } catch (err: unknown) {
