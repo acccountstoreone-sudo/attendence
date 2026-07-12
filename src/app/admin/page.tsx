@@ -317,26 +317,35 @@ export default function AdminDashboardPage() {
         </div>
         
         <div className="h-[250px] w-full relative z-10">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.8} vertical={false} />
-              <XAxis dataKey="name" stroke="#475569" fontSize={11} tickLine={false} axisLine={false} />
-              <YAxis 
-                stroke="#475569" 
-                fontSize={11} 
-                tickLine={false} 
-                axisLine={false} 
-                domain={[0, (dataMax: number) => Math.max(dataMax, 10)]}
-                tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} 
-              />
-              <Tooltip 
-                contentStyle={{ backgroundColor: '#ffffff', backdropFilter: 'blur(16px)', borderColor: '#e2e8f0', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
-                itemStyle={{ color: '#0f172a' }}
-              />
-              <Line type="monotone" dataKey="expected" stroke="#1dbf73" strokeWidth={3} dot={false} strokeOpacity={0.4} connectNulls />
-              <Line type="monotone" dataKey="attendance" stroke="#1dbf73" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#ffffff' }} activeDot={{ r: 6, strokeWidth: 0, fill: '#1dbf73' }} connectNulls />
-            </LineChart>
-          </ResponsiveContainer>
+          {monthlyData.every(m => !m.attendance || m.attendance === 0) ? (
+            <div className="h-full w-full flex flex-col items-center justify-center bg-slate-50/50 rounded-2xl border border-slate-200 border-dashed p-6 text-center">
+              <p className="text-xs font-bold text-slate-700 uppercase tracking-widest">No Attendance Plotted For {new Date().getFullYear()}</p>
+              <p className="text-[11px] text-slate-500 font-medium mt-1.5 max-w-md">
+                Historical attendance curves will dynamically render here as daily check-ins accumulate or when demo trends are seeded.
+              </p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.8} vertical={false} />
+                <XAxis dataKey="name" stroke="#475569" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis 
+                  stroke="#475569" 
+                  fontSize={11} 
+                  tickLine={false} 
+                  axisLine={false} 
+                  domain={[0, (dataMax: number) => Math.max(dataMax, 10)]}
+                  tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} 
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#ffffff', backdropFilter: 'blur(16px)', borderColor: '#e2e8f0', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
+                  itemStyle={{ color: '#0f172a' }}
+                />
+                <Line type="monotone" dataKey="expected" stroke="#1dbf73" strokeWidth={3} dot={false} strokeOpacity={0.4} connectNulls />
+                <Line type="monotone" dataKey="attendance" stroke="#1dbf73" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#ffffff' }} activeDot={{ r: 6, strokeWidth: 0, fill: '#1dbf73' }} connectNulls />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
@@ -384,22 +393,31 @@ export default function AdminDashboardPage() {
           </div>
           
           <div className="h-[200px] w-full mt-4 relative z-10">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={weeklyTrendData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#1dbf73" stopOpacity={0.25}/>
-                    <stop offset="95%" stopColor="#1dbf73" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#ffffff', backdropFilter: 'blur(16px)', borderColor: '#e2e8f0', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
-                />
-                <XAxis dataKey="day" hide />
-                <YAxis hide domain={[0, (dataMax: number) => Math.max(dataMax, 5)]} />
-                <Area type="monotone" dataKey="val" stroke="#1dbf73" strokeWidth={3} fillOpacity={1} fill="url(#colorVal)" activeDot={{ r: 6, strokeWidth: 0, fill: '#1dbf73' }} connectNulls />
-              </AreaChart>
-            </ResponsiveContainer>
+            {totalCheckins === 0 ? (
+              <div className="h-full w-full flex flex-col items-center justify-center bg-slate-50/50 rounded-2xl border border-slate-200 border-dashed p-4 text-center">
+                <p className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">No Check-ins (Last 10 Days)</p>
+                <p className="text-[10px] text-slate-500 font-medium mt-1">
+                  Run the SQL demo seed or record check-ins to view dynamic trend area.
+                </p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={weeklyTrendData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#1dbf73" stopOpacity={0.25}/>
+                      <stop offset="95%" stopColor="#1dbf73" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#ffffff', backdropFilter: 'blur(16px)', borderColor: '#e2e8f0', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
+                  />
+                  <XAxis dataKey="day" hide />
+                  <YAxis hide domain={[0, (dataMax: number) => Math.max(dataMax, 5)]} />
+                  <Area type="monotone" dataKey="val" stroke="#1dbf73" strokeWidth={3} fillOpacity={1} fill="url(#colorVal)" activeDot={{ r: 6, strokeWidth: 0, fill: '#1dbf73' }} connectNulls />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
           
           <div className="flex items-center justify-between mt-4 relative z-10">

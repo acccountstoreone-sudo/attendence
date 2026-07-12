@@ -37,19 +37,25 @@ export async function GET(request: NextRequest) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthlyCounts = new Array(12).fill(0);
 
-    // Process Weekly Data (last 10 days)
+    // Process Weekly Data (last 10 days in Asia/Dhaka timezone)
+    const dhakaFmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Dhaka',
+      day: '2-digit',
+      month: 'short'
+    });
+
     const weeklyTrendData: { day: string; val: number }[] = [];
     for (let i = 9; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
-      const dayStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      const dayStr = dhakaFmt.format(d);
       weeklyTrendData.push({ day: dayStr, val: 0 });
     }
 
     const { count: totalEmployees } = await supabase
       .from('profiles')
       .select('id', { count: 'exact', head: true })
-      .in('role', ['employee', 'branch_manager']); // APP-04 fix: include branch_managers
+      .in('role', ['employee', 'branch_manager']);
 
     const expectedPerMonth = (totalEmployees || 0) * 22;
 
@@ -61,7 +67,7 @@ export async function GET(request: NextRequest) {
       monthlyCounts[monthIndex]++;
 
       if (logDate >= tenDaysAgo) {
-        const dayStr = logDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+        const dayStr = dhakaFmt.format(logDate);
         const existing = weeklyTrendData.find(w => w.day === dayStr);
         if (existing) existing.val++;
       }
