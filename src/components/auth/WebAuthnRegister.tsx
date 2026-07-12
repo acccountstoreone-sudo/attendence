@@ -10,6 +10,9 @@ async function parseJsonResponse(res: Response) {
   try {
     return JSON.parse(text);
   } catch {
+    if (res.status === 413 || text.includes('Request Entity Too Large') || text.startsWith('R')) {
+      throw new Error('Payload size too large. Please retry with smaller biometric data.');
+    }
     throw new Error(`Server returned error (${res.status}): ${text.slice(0, 100)}`);
   }
 }

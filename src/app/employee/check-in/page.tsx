@@ -11,6 +11,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { startAuthentication } from '@simplewebauthn/browser';
 
+async function parseJsonResponse(res: Response) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    if (res.status === 413 || text.includes('Request Entity Too Large') || text.startsWith('R')) {
+      throw new Error('Payload size too large. Please retry with smaller biometric data.');
+    }
+    throw new Error(`Server returned error (${res.status}): ${text.slice(0, 100)}`);
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────
@@ -400,11 +412,10 @@ export default function EmployeeCheckInPage() {
 
       // 1. Get Authentication Options
       const resp = await fetch('/api/auth/webauthn/authenticate/generate', { method: 'POST' });
+      const options = await parseJsonResponse(resp);
       if (!resp.ok) {
-         const d = await resp.json();
-         throw new Error(d.error || 'Fingerprint authentication is not set up. Please go to your profile to register.');
+         throw new Error(options.error || 'Fingerprint authentication is not set up. Please go to your profile to register.');
       }
-      const options = await resp.json();
 
       // 2. Start browser authentication
       let asseResp;
@@ -422,12 +433,10 @@ export default function EmployeeCheckInPage() {
         body: JSON.stringify(asseResp),
       });
 
+      const verifyData = await parseJsonResponse(verifyResp);
       if (!verifyResp.ok) {
-         const d = await verifyResp.json();
-         throw new Error(d.error || 'Fingerprint verification failed.');
+         throw new Error(verifyData.error || 'Fingerprint verification failed.');
       }
-
-      const verifyData = await verifyResp.json();
       if (!verifyData.verified) throw new Error('Invalid fingerprint.');
 
       // 4. Record Check-in (Offline queueing is not fully supported for fingerprint since it requires server for challenge. We just bypass face matching.)
@@ -442,7 +451,7 @@ export default function EmployeeCheckInPage() {
       };
 
       const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const result = await res.json();
+      const result = await parseJsonResponse(res);
 
       setSubmitting(false);
 

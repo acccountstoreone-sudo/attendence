@@ -251,8 +251,8 @@ export default function RegisterPage() {
     }
   };
 
-  // Helper to compress image down to max dimensions and JPEG quality
-  const compressDataUrl = async (dataUrl: string, maxDim = 1200, quality = 0.8): Promise<string> => {
+  // Helper to compress image down to max dimensions and JPEG quality (ensures payload is well below Vercel/Next.js 4MB body size limit)
+  const compressDataUrl = async (dataUrl: string, maxDim = 800, quality = 0.65): Promise<string> => {
     return new Promise((resolve) => {
       if (!dataUrl.startsWith('data:image/')) {
         resolve(dataUrl);
@@ -322,7 +322,7 @@ export default function RegisterPage() {
       if (typeof reader.result === 'string') {
         let compressed = reader.result;
         if (file.type.startsWith('image/')) {
-          compressed = await compressDataUrl(reader.result, 1200, 0.8);
+          compressed = await compressDataUrl(reader.result, 800, 0.65);
         }
         if (side === 'front') {
           setNidFront(compressed);
@@ -361,7 +361,7 @@ export default function RegisterPage() {
         if (detection) {
           const imageSrc = webcamRef.current.getScreenshot({ width: 640, height: 480 });
           if (imageSrc) {
-            const compressedFace = await compressDataUrl(imageSrc, 640, 0.82);
+            const compressedFace = await compressDataUrl(imageSrc, 500, 0.65);
             setFaceImage(compressedFace);
           }
           setFaceDescriptor(Array.from(detection.descriptor));
