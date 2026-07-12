@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Buffer } from 'buffer';
 import { verifyRegistrationResponse } from '@simplewebauthn/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
@@ -49,19 +50,24 @@ export async function POST(req: NextRequest) {
       const { credential, credentialDeviceType } = registrationInfo;
       const { id: credentialID, publicKey: credentialPublicKey, counter } = credential;
 
-      // Save to database. credentialPublicKey is Uint8Array, we need to convert to Buffer for bytea postgres column
+      // Save to database. credentialPublicKey is Uint8Array
+      // We must convert it to a hex string for PostgREST bytea column
       const publicKeyBuffer = Buffer.from(credentialPublicKey);
+      const publicKeyHex = '\\x' + publicKeyBuffer.toString('hex');
       
       const { error } = await adminClient.from('webauthn_credentials').insert({
         user_id: user.id,
         credential_id: credentialID,
-        public_key: publicKeyBuffer,
+        public_key: publicKeyHex,
         counter,
         device_type: credentialDeviceType,
         transports: body.response.transports || [],
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('DB Insert Error:', error);
+        throw new Error(error.message || 'Failed to insert webauthn credential into database');
+      }
 
       // Clear the challenge and set fingerprint_enrolled status
       await adminClient.from('profiles').update({ 
@@ -77,6 +83,9 @@ export async function POST(req: NextRequest) {
     console.error('Registration verification error:', err);
     if (err instanceof Error) {
       return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    if (typeof err === 'object' && err !== null && 'message' in err) {
+      return NextResponse.json({ error: String((err as any).message) }, { status: 500 });
     }
     return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }

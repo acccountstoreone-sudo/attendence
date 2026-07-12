@@ -32,32 +32,39 @@ export async function POST(req: NextRequest) {
     const options = await generateRegistrationOptions({
       rpName: getRPName(),
       rpID: getRPID(req),
-      userID: new Uint8Array(Buffer.from(user.id)),
+      userID: new TextEncoder().encode(user.id),
       userName: profile.employee_id || user.email || 'employee',
       // Don't prompt users for their authenticator if they've already registered it
       excludeCredentials: existingCredentials?.map((cred: { credential_id: string }) => ({
-        id: cred.credential_id,
-        type: 'public-key',
-        transports: ['internal'],
+        id: cred.credential_id as any,
+        type: 'public-key' as const,
+        transports: ['internal'] as any,
       })),
       authenticatorSelection: {
-        authenticatorAttachment: 'platform',
-        userVerification: 'required',
-        residentKey: 'required'
+        authenticatorAttachment: 'platform' as const,
+        userVerification: 'required' as const,
+        residentKey: 'required' as const
       }
     });
 
     // Save the challenge in the user's profile using admin client to bypass RLS restrictions during onboarding
-    await adminClient
+    const { error: dbError } = await adminClient
       .from('profiles')
       .update({ webauthn_current_challenge: options.challenge })
       .eq('id', user.id);
+      
+    if (dbError) {
+      throw new Error(dbError.message || 'Failed to update challenge in database');
+    }
 
     return NextResponse.json(options);
   } catch (err: unknown) {
     console.error('Registration generation error:', err);
     if (err instanceof Error) {
       return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    if (typeof err === 'object' && err !== null && 'message' in err) {
+      return NextResponse.json({ error: String((err as any).message) }, { status: 500 });
     }
     return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }

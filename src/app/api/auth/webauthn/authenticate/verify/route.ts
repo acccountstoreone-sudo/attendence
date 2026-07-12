@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Buffer } from 'buffer';
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
@@ -94,6 +95,9 @@ export async function POST(req: NextRequest) {
     console.error('Authentication Verification Route Error:', err);
     if (err instanceof Error) {
       return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    if (typeof err === 'object' && err !== null && 'message' in err) {
+      return NextResponse.json({ error: String((err as any).message) }, { status: 500 });
     }
     return NextResponse.json({ error: 'An unexpected error occurred during verification.' }, { status: 500 });
   }
