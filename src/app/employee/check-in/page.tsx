@@ -507,14 +507,18 @@ export default function EmployeeCheckInPage() {
   // Render: Full-screen check-in
   // ─────────────────────────────────────────────────────────
   return (
-    <div className="min-h-[100dvh] flex flex-col overflow-x-hidden bg-[#020810] relative" style={{ fontFamily: 'Inter, sans-serif' }}>
-
+    <div className="min-h-[100dvh] flex flex-col overflow-x-hidden bg-[#050505] relative text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
+      
+      {/* Ambient Background Glows */}
+      <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />
+      <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[150px] pointer-events-none translate-x-1/3 translate-y-1/3" />
+      
       {/* ── Offline Banner ── */}
       <AnimatePresence>
         {!offline.isOnline && (
           <motion.div
             initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -40, opacity: 0 }}
-            className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-amber-500/95 text-amber-950 font-semibold text-xs rounded-full px-4 py-2 shadow-xl"
+            className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-amber-500/10 border border-amber-500/30 text-amber-400 font-semibold text-xs rounded-2xl px-5 py-3 shadow-[0_0_30px_rgba(245,158,11,0.15)] backdrop-blur-xl"
           >
             <WifiOff className="w-4 h-4" /> Offline Mode — Check-in saved locally
           </motion.div>
@@ -522,7 +526,7 @@ export default function EmployeeCheckInPage() {
         {offline.isOnline && offline.pendingCount > 0 && (
           <motion.div
             initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -40, opacity: 0 }}
-            className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-blue-500/90 text-slate-900 text-xs rounded-full px-4 py-2 shadow-xl"
+            className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold rounded-2xl px-5 py-3 shadow-[0_0_30px_rgba(59,130,246,0.15)] backdrop-blur-xl"
           >
             {offline.syncing ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
             {offline.syncing ? `Syncing ${offline.pendingCount} record(s)…` : `${offline.pendingCount} offline record(s) pending sync`}
@@ -548,29 +552,27 @@ export default function EmployeeCheckInPage() {
       </button>
 
       {/* ── Top Navigation Bar (Hidden on Mobile as requested) ── */}
-      <div className="flex-none hidden sm:flex items-center justify-between px-4 pt-4 pb-3 bg-gradient-to-b from-[#020810]/95 to-transparent z-40 backdrop-blur-md" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+      <div className="flex-none hidden sm:flex items-center justify-between px-6 pt-6 pb-4 z-40" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}>
         <button
           onClick={() => router.push('/employee')}
-          className="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-all active:scale-95 shadow-sm"
+          className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-all active:scale-95 shadow-lg backdrop-blur-md"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
 
         <div className="flex flex-col items-center">
-          <span className="text-[11px] font-extrabold uppercase tracking-widest text-blue-400 drop-shadow">
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-400/80 mb-0.5">
             Biometric Attendance
           </span>
-          <span className="text-slate-900 font-extrabold text-base tracking-tight">{profile?.branch_name}</span>
+          <span className="text-white font-medium text-lg tracking-tight">{profile?.branch_name || 'Loading...'}</span>
         </div>
 
         {/* Live Clock */}
-        <div className="flex items-center space-x-1.5 bg-slate-100 border border-slate-200 rounded-2xl px-3.5 py-2 shadow-sm">
-          <Clock className="w-4 h-4 text-blue-400 animate-pulse shrink-0" />
-          <span className="text-slate-900 font-extrabold text-xs tabular-nums">{time}</span>
+        <div className="flex items-center space-x-2 bg-white/5 border border-white/10 rounded-2xl px-4 py-2.5 shadow-lg backdrop-blur-md">
+          <Clock className="w-4 h-4 text-blue-400" />
+          <span className="text-white font-medium text-sm tabular-nums tracking-wide">{time}</span>
         </div>
       </div>
-
-      {/* ── Admin / Manager Branch Switcher removed as per user request ── */}
 
       {/* ── Today's Status Banner (if already checked in) ── */}
       <AnimatePresence>
@@ -578,29 +580,31 @@ export default function EmployeeCheckInPage() {
           <motion.div
             initial={{ opacity:0, y:-10 }}
             animate={{ opacity:1, y:0 }}
-            className="flex-none mx-4 mb-1 mt-12 sm:mt-0 flex items-center justify-between bg-[#0A1628]/95 backdrop-blur-sm border border-slate-300 rounded-2xl px-4 py-3 z-30 shadow-2xl"
+            className="flex-none mx-4 mb-2 mt-16 sm:mt-2 flex items-center justify-between bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl px-5 py-4 z-30 shadow-2xl"
           >
-            <div className="flex items-center space-x-2.5">
-              <CheckCircle2 className="w-5 h-5 text-[#1dbf73] shrink-0" />
+            <div className="flex items-center space-x-4">
+              <div className="p-2.5 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              </div>
               <div>
-                <p className="text-[10px] sm:text-xs font-extrabold text-blue-300 uppercase tracking-widest">Today&apos;s Record</p>
-                <p className="text-slate-900 text-xs sm:text-sm font-extrabold">
-                  In: <span className="text-[#1dbf73]">{todayRecord.check_in_time ? new Date(todayRecord.check_in_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—'}</span>
-                  {todayRecord.check_out_time && <> · Out: <span className="text-slate-300">{new Date(todayRecord.check_out_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></>}
+                <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-0.5">Today&apos;s Record</p>
+                <p className="text-white text-sm sm:text-base font-medium">
+                  In: <span className="text-emerald-400">{todayRecord.check_in_time ? new Date(todayRecord.check_in_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—'}</span>
+                  {todayRecord.check_out_time && <> <span className="text-slate-600 mx-1">·</span> Out: <span className="text-slate-300">{new Date(todayRecord.check_out_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></>}
                 </p>
               </div>
             </div>
 
             {/* Check-in / Check-out Toggle */}
-            <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200 shadow-inner">
+            <div className="flex bg-black/40 p-1 rounded-2xl border border-white/5 shadow-inner">
               {(['in','out'] as const).map(t => (
                 <button
                   key={t}
                   onClick={() => setCheckType(t)}
-                  className={`px-3.5 py-1.5 rounded-[10px] text-xs font-extrabold transition-all ${
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
                     checkType === t
-                      ? 'bg-blue-600 text-slate-900 shadow-lg shadow-blue-900/50 scale-[1.02]'
-                      : 'text-slate-300 hover:text-slate-900'
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] scale-[1.02]'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   {t === 'in' ? 'Check In' : 'Check Out'}
@@ -613,19 +617,19 @@ export default function EmployeeCheckInPage() {
 
       {/* ── Check-in/out toggle when no record exists ── */}
       {!todayRecord && (
-        <div className="flex-none flex justify-center px-4 z-30 mb-1 mt-12 sm:mt-0">
-          <div className="flex bg-[#0A1628]/95 backdrop-blur-sm p-1 rounded-2xl border border-slate-300 shadow-2xl">
+        <div className="flex-none flex justify-center px-4 z-30 mb-2 mt-16 sm:mt-2">
+          <div className="flex bg-white/5 backdrop-blur-xl p-1.5 rounded-3xl border border-white/10 shadow-2xl">
             {(['in','out'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setCheckType(t)}
-                className={`px-7 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${
+                className={`px-8 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
                   checkType === t
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-slate-900 shadow-lg shadow-blue-900/50 scale-[1.02]'
-                    : 'text-slate-300 hover:text-slate-900'
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-[0_0_30px_rgba(59,130,246,0.4)] scale-[1.02]'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                {t === 'in' ? '▶ Check In' : '■ Check Out'}
+                {t === 'in' ? 'Check In' : 'Check Out'}
               </button>
             ))}
           </div>
@@ -633,37 +637,45 @@ export default function EmployeeCheckInPage() {
       )}
 
       {/* ── Dynamic Biometric Verification Area ── */}
-      <div className="flex-1 relative min-h-0 mt-2 flex flex-col justify-center items-center">
+      <div className="flex-1 relative min-h-0 mt-4 flex flex-col justify-center items-center">
         {selectedMethod === 'selector' && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-sm bg-[#0A1628]/95 backdrop-blur-sm border border-slate-300 rounded-2xl p-6 shadow-2xl flex flex-col items-center space-y-4"
+            className="w-full max-w-sm bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 shadow-2xl flex flex-col items-center space-y-6"
           >
-            <h2 className="text-white text-lg font-bold mb-2">How would you like to verify?</h2>
-            <Button
-              onClick={() => setSelectedMethod('face')}
-              className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg flex items-center justify-center space-x-2"
-            >
-              <span className="text-lg">📷</span>
-              <span className="font-bold text-base">Face Match</span>
-            </Button>
-            <Button
-              onClick={() => setSelectedMethod('fingerprint')}
-              className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg flex items-center justify-center space-x-2"
-            >
-              <span className="text-lg">👆</span>
-              <span className="font-bold text-base">Fingerprint Scan</span>
-            </Button>
+            <div className="text-center">
+              <h2 className="text-white text-xl font-bold tracking-tight mb-1">Select Verification</h2>
+              <p className="text-slate-400 text-sm">Choose how you want to verify your identity today.</p>
+            </div>
+            <div className="w-full space-y-4">
+              <Button
+                onClick={() => setSelectedMethod('face')}
+                className="w-full h-16 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 hover:from-blue-500 hover:to-indigo-500 text-white border border-blue-500/30 hover:border-transparent rounded-2xl shadow-lg hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] flex items-center justify-center space-x-3 transition-all duration-300 group"
+              >
+                <span className="text-2xl group-hover:scale-110 transition-transform duration-300">📷</span>
+                <span className="font-bold text-lg tracking-wide">Face Match</span>
+              </Button>
+              <Button
+                onClick={() => setSelectedMethod('fingerprint')}
+                className="w-full h-16 bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500 hover:to-pink-500 text-white border border-purple-500/30 hover:border-transparent rounded-2xl shadow-lg hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] flex items-center justify-center space-x-3 transition-all duration-300 group"
+              >
+                <span className="text-2xl group-hover:scale-110 transition-transform duration-300">👆</span>
+                <span className="font-bold text-lg tracking-wide">Fingerprint</span>
+              </Button>
+            </div>
           </motion.div>
         )}
 
         {selectedMethod === 'none' && (
-          <div className="w-full max-w-sm p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-center shadow-lg">
-            <h3 className="text-amber-500 font-bold mb-2">No Biometrics Set Up</h3>
-            <p className="text-slate-300 text-sm mb-4">You have not enrolled any biometric verification methods (Face or Fingerprint).</p>
-            <Button onClick={() => router.push('/employee/profile')} className="w-full">
-              Go to Profile to Set Up
+          <div className="w-full max-w-sm p-6 bg-amber-500/10 border border-amber-500/20 backdrop-blur-xl rounded-[2rem] text-center shadow-2xl">
+            <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-amber-400" />
+            </div>
+            <h3 className="text-amber-400 text-lg font-bold mb-2 tracking-tight">No Biometrics Set Up</h3>
+            <p className="text-amber-200/70 text-sm mb-6 leading-relaxed">You have not enrolled any biometric verification methods (Face or Fingerprint). Please configure this in your profile to check in.</p>
+            <Button onClick={() => router.push('/employee/profile')} className="w-full h-14 bg-amber-500 hover:bg-amber-600 text-amber-950 font-bold rounded-xl">
+              Go to Profile Setup
             </Button>
           </div>
         )}
@@ -672,7 +684,7 @@ export default function EmployeeCheckInPage() {
           <FaceCapture
             checkType={checkType}
             onCapture={handleBiometricSubmit}
-            onUseFingerprint={undefined} // Hide fingerprint fallback if they explicitly chose face or only have face
+            onUseFingerprint={undefined}
             gpsVerified={gps.verified}
             gpsStatus={gps.status}
             gpsDistance={gps.distance}
@@ -687,33 +699,36 @@ export default function EmployeeCheckInPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-sm bg-[#0A1628]/95 backdrop-blur-sm border border-slate-300 rounded-2xl p-6 shadow-2xl flex flex-col items-center justify-center text-center space-y-6"
+            className="w-full max-w-sm bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 shadow-2xl flex flex-col items-center justify-center text-center space-y-6 relative overflow-hidden"
           >
-            <div className="p-4 bg-indigo-500/10 rounded-full">
-              <span className="text-5xl">👆</span>
+            {/* Ambient Background Glow for Fingerprint */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-purple-500/20 rounded-full blur-[60px] pointer-events-none" />
+            
+            <div className="p-5 bg-purple-500/10 border border-purple-500/20 rounded-3xl relative z-10 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+              <span className="text-5xl drop-shadow-lg">👆</span>
             </div>
-            <div>
-              <h2 className="text-white text-lg font-bold mb-1">Fingerprint Verification</h2>
-              <p className="text-slate-400 text-sm">Please verify your identity using your device's fingerprint scanner or passkey.</p>
+            <div className="relative z-10">
+              <h2 className="text-white text-xl font-bold tracking-tight mb-2">Fingerprint Verification</h2>
+              <p className="text-slate-400 text-sm leading-relaxed px-4">Please verify your identity using your device's fingerprint scanner or passkey.</p>
             </div>
             <Button
               onClick={handleFingerprintSubmit}
               disabled={submitting || (gps.status !== 'inside' && profile?.role !== 'admin' && profile?.role !== 'branch_manager')}
               isLoading={submitting}
-              className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg rounded-xl shadow-lg"
+              className="w-full h-14 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-bold text-lg rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all duration-300 relative z-10"
             >
               Scan Fingerprint
             </Button>
             
             {(gps.status !== 'inside' && profile?.role !== 'admin' && profile?.role !== 'branch_manager') && (
-               <p className="text-rose-400 text-xs font-semibold mt-2 bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">
+               <p className="text-rose-300 text-xs font-medium mt-4 bg-rose-500/10 px-4 py-2.5 rounded-xl border border-rose-500/20 relative z-10 shadow-inner">
                   {gps.status === 'locating' ? 'Locating...' : 'You must be inside the store to check in.'}
                </p>
             )}
 
             <button 
                onClick={gps.refresh}
-               className="text-slate-400 hover:text-white text-xs underline mt-2"
+               className="text-slate-500 hover:text-white text-xs font-semibold uppercase tracking-wider mt-2 transition-colors relative z-10"
             >
                Refresh Location
             </button>

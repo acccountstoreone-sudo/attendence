@@ -337,20 +337,20 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-[#16965a]/15 rounded-full blur-[90px] pointer-events-none" />
 
       {/* === GPS Status Pill === */}
-      <div className="flex-none w-full flex items-center justify-center pt-2 pb-1 z-30 pointer-events-none px-4">
+      <div className="flex-none w-full flex items-center justify-center pt-4 pb-2 z-30 pointer-events-none px-4">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-full text-xs font-extrabold backdrop-blur-sm border pointer-events-auto shadow-2xl
+          className={`flex items-center space-x-2 px-5 py-2.5 rounded-full text-xs font-bold backdrop-blur-xl border pointer-events-auto shadow-2xl transition-colors duration-300
             ${gpsOk
-              ? 'bg-emerald-950/90 border-emerald-400/50 text-emerald-200 shadow-emerald-950/60'
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
               : gpsStatus === 'locating'
-                ? 'bg-[#0B1729]/95 border-blue-400/50 text-blue-200 animate-pulse'
-                : 'bg-rose-950/90 border-rose-400/50 text-rose-200 shadow-rose-950/60'
+                ? 'bg-blue-500/10 border-blue-500/20 text-blue-300 animate-pulse shadow-[0_0_20px_rgba(59,130,246,0.15)]'
+                : 'bg-rose-500/10 border-rose-500/20 text-rose-300 shadow-[0_0_20px_rgba(244,63,94,0.15)]'
             }`}
         >
           <MapPin className="w-4 h-4 shrink-0" />
-          <span className="tracking-tight">
+          <span className="tracking-wide">
             {gpsOk ? `✓ Inside Zone (${branchName ?? 'Store'})`
               : gpsStatus === 'locating'           ? 'Locating Store GPS...'
               : gpsStatus === 'not_configured'     ? 'Store GPS not configured — Ask Admin'
@@ -362,7 +362,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               : `${gpsDistance ?? '—'}m away from ${branchName ?? 'store'}`}
           </span>
           {(!gpsOk && gpsStatus !== 'locating') && (
-            <button onClick={gpsRefresh} className="ml-1 p-1 hover:bg-white/15 rounded-full transition-colors">
+            <button onClick={gpsRefresh} className="ml-2 p-1.5 hover:bg-white/10 rounded-full transition-colors focus:outline-none">
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
           )}
@@ -443,34 +443,34 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 0.6 }}
                 >
-                  <CheckCircle2 className="w-24 h-24 text-[#1dbf73] drop-shadow-[0_0_24px_rgba(52,211,153,0.9)]" />
+                  <CheckCircle2 className="w-24 h-24 text-emerald-400 drop-shadow-[0_0_24px_rgba(52,211,153,0.9)]" />
                 </motion.div>
-                <p className="text-slate-900 font-extrabold text-xl mt-4 tracking-tight drop-shadow">Identity Verified!</p>
+                <p className="text-white font-extrabold text-xl mt-4 tracking-tight drop-shadow">Identity Verified!</p>
               </motion.div>
             )}
 
             {/* Model loading overlay */}
             {phase === 'loading' && (
-              <div className="absolute inset-0 bg-[#020810]/95 backdrop-blur-md flex flex-col items-center justify-center z-30 p-6 text-center">
-                <div className="w-40 h-2 bg-slate-800 rounded-full overflow-hidden shadow-inner mb-4">
+              <div className="absolute inset-0 bg-[#020810]/95 backdrop-blur-xl flex flex-col items-center justify-center z-30 p-6 text-center">
+                <div className="w-40 h-2 bg-white/10 rounded-full overflow-hidden shadow-inner mb-4">
                   <motion.div
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.35 }}
-                    className="h-full bg-gradient-to-r from-blue-500 via-emerald-400 to-blue-400 rounded-full"
+                    className="h-full bg-gradient-to-r from-blue-500 via-indigo-400 to-blue-400 rounded-full shadow-[0_0_10px_rgba(96,165,250,0.5)]"
                   />
                 </div>
-                <p className="text-slate-900 text-sm font-extrabold tracking-wide">Loading Biometrics</p>
-                <p className="text-slate-400 text-xs mt-1 font-semibold">{progress}%</p>
+                <p className="text-white text-sm font-bold tracking-wide">Loading Biometrics</p>
+                <p className="text-slate-400 text-xs mt-1 font-medium">{progress}%</p>
               </div>
             )}
 
             {/* Camera error overlay */}
             {phase === 'cam_err' && (
-              <div className="absolute inset-0 bg-[#020810]/95 backdrop-blur-md flex flex-col items-center justify-center z-30 p-6 text-center">
+              <div className="absolute inset-0 bg-[#020810]/95 backdrop-blur-xl flex flex-col items-center justify-center z-30 p-6 text-center">
                 <AlertCircle className="w-14 h-14 text-rose-500 mb-3 drop-shadow-[0_0_16px_rgba(244,63,94,0.6)]" />
-                <p className="text-slate-900 font-extrabold text-base mb-1">Camera Required</p>
-                <p className="text-rose-200/80 text-xs mb-4 leading-relaxed">{camErr}</p>
-                <Button size="sm" variant="outline" onClick={startCam} icon={<RefreshCw className="w-3.5 h-3.5" />}>
+                <p className="text-white font-bold text-base mb-1">Camera Required</p>
+                <p className="text-rose-200/80 text-xs mb-4 leading-relaxed px-4">{camErr}</p>
+                <Button size="sm" onClick={startCam} className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl shadow-[0_0_15px_rgba(244,63,94,0.4)]" icon={<RefreshCw className="w-3.5 h-3.5" />}>
                   Retry Access
                 </Button>
               </div>
@@ -480,16 +480,16 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
         {/* Face detection indicator dot */}
         {phase === 'scanning' && (
-          <div className="flex items-center space-x-2 mt-3">
+          <div className="flex items-center space-x-2 mt-4 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
             <motion.div
               animate={faceDetected
                 ? { scale: [1, 1.4, 1], backgroundColor: ['#34D399', '#10B981', '#34D399'] }
                 : { scale: [1, 1.2, 1] }
               }
               transition={{ repeat: Infinity, duration: faceDetected ? 0.8 : 1.5 }}
-              className={`w-3 h-3 rounded-full ${faceDetected ? 'bg-[#1dbf73] shadow-[0_0_10px_#34D399]' : 'bg-blue-400 shadow-[0_0_8px_#60A5FA]'}`}
+              className={`w-2.5 h-2.5 rounded-full ${faceDetected ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]' : 'bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.8)]'}`}
             />
-            <span className={`text-xs font-bold ${faceDetected ? 'text-[#1dbf73]' : 'text-blue-300'}`}>
+            <span className={`text-xs font-bold tracking-wide uppercase ${faceDetected ? 'text-emerald-400' : 'text-blue-300'}`}>
               {faceDetected ? 'Face Detected' : 'Scanning...'}
             </span>
           </div>
@@ -497,17 +497,19 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       </div>
 
       {/* === Bottom Status UI === */}
-      <div className="flex-none w-full flex flex-col items-center z-30 pb-3 px-4 shrink-0" style={{ paddingBottom: 'max(0.8rem, env(safe-area-inset-bottom))' }}>
+      <div className="flex-none w-full flex flex-col items-center z-30 pb-4 px-6 shrink-0" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
 
         {/* GPS out-of-zone warning */}
         {!gpsOk && phase !== 'loading' && phase !== 'cam_err' && phase !== 'success' && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-sm mb-2.5 flex items-start space-x-3 bg-rose-950/95 border border-rose-500/50 backdrop-blur-sm px-4 py-3 rounded-2xl shadow-2xl"
+            className="w-full max-w-sm mb-3 flex items-start space-x-3 bg-rose-500/10 border border-rose-500/20 backdrop-blur-xl px-5 py-4 rounded-[1.5rem] shadow-[0_0_30px_rgba(244,63,94,0.1)]"
           >
-            <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-            <span className="text-rose-100 text-xs sm:text-sm font-bold leading-snug">
+            <div className="p-2 bg-rose-500/20 rounded-full shrink-0">
+              <AlertCircle className="w-5 h-5 text-rose-400" />
+            </div>
+            <span className="text-rose-200 text-sm font-medium leading-relaxed mt-1">
               {gpsStatus === 'not_configured'
                 ? 'Store GPS location not configured. Ask Admin to set it.'
                 : gpsStatus === 'permission_denied'
@@ -532,14 +534,15 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-sm flex items-center space-x-3 bg-blue-950/95 backdrop-blur-sm border border-blue-400/40 rounded-2xl px-5 py-4 mb-2 shadow-2xl"
+            className="w-full max-w-sm flex items-center space-x-4 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[1.5rem] px-6 py-5 mb-3 shadow-[0_0_40px_rgba(59,130,246,0.15)] relative overflow-hidden"
           >
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10" />
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-              className="w-5 h-5 border-2 border-blue-400/30 border-t-blue-400 rounded-full shrink-0"
+              className="w-6 h-6 border-2 border-white/20 border-t-blue-400 rounded-full shrink-0 relative z-10"
             />
-            <p className="text-slate-900 font-extrabold text-sm sm:text-base tracking-wide">{msg}</p>
+            <p className="text-white font-bold text-base tracking-wide relative z-10">{msg}</p>
           </motion.div>
         )}
 
@@ -550,11 +553,11 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               key={msg}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`w-full max-w-sm text-center text-xs sm:text-sm font-extrabold px-5 py-3.5 rounded-2xl mb-2 border shadow-2xl tracking-wide
-                ${msgType === 'error'   ? 'bg-rose-950/95 border-rose-500/50 text-rose-100 shadow-rose-950/60'
-                : msgType === 'success' ? 'bg-emerald-950/95 border-emerald-500/50 text-emerald-100 shadow-emerald-950/60'
-                : msgType === 'warn'    ? 'bg-amber-950/95 border-amber-500/50 text-amber-100 shadow-amber-950/60'
-                : 'bg-[#0A1628]/95 border-slate-300 text-slate-900'}`}
+              className={`w-full max-w-sm text-center text-sm font-bold px-6 py-4 rounded-[1.5rem] mb-3 border backdrop-blur-xl shadow-2xl tracking-wide transition-colors duration-300
+                ${msgType === 'error'   ? 'bg-rose-500/10 border-rose-500/20 text-rose-200 shadow-[0_0_30px_rgba(244,63,94,0.15)]'
+                : msgType === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-200 shadow-[0_0_30px_rgba(16,185,129,0.15)]'
+                : msgType === 'warn'    ? 'bg-amber-500/10 border-amber-500/20 text-amber-200 shadow-[0_0_30px_rgba(245,158,11,0.15)]'
+                : 'bg-white/5 border-white/10 text-white'}`}
             >
               {msg}
             </motion.p>
@@ -565,7 +568,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         {onUseFingerprint && phase !== 'success' && phase !== 'loading' && (
           <button
             onClick={onUseFingerprint}
-            className="flex items-center gap-2 text-slate-400 hover:text-slate-200 text-xs font-bold transition-colors mt-1 px-4 py-2 rounded-xl hover:bg-slate-100"
+            className="flex items-center gap-2 text-slate-400 hover:text-white text-xs font-bold transition-all duration-300 mt-1 px-5 py-3 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10"
           >
             <Fingerprint className="w-4 h-4" />
             Use Fingerprint Instead
@@ -574,10 +577,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
         {/* Security badge */}
         {!['cam_err', 'loading', 'success'].includes(phase) && (
-          <p className="text-slate-500 text-xs text-center mt-1 font-bold flex items-center justify-center space-x-2 tracking-wide">
-            <span>🔒 Biometric Face Match</span>
-            <span>•</span>
-            <span>On-device Processing</span>
+          <p className="text-slate-500 text-[10px] uppercase tracking-[0.15em] text-center mt-3 font-bold flex items-center justify-center space-x-2">
+            <span>🔒 Biometric Match</span>
+            <span className="opacity-50">•</span>
+            <span>Local AI</span>
           </p>
         )}
       </div>
