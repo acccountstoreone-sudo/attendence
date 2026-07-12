@@ -28,8 +28,21 @@ export function WebAuthnRegister() {
     setSuccess(false);
 
     try {
+      // Get current session token for authorization header
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       // 1. Get registration options from server
-      const resp = await fetch('/api/auth/webauthn/register/generate', { method: 'POST' });
+      const resp = await fetch('/api/auth/webauthn/register/generate', { 
+        method: 'POST',
+        headers
+      });
       const options = await parseJsonResponse(resp);
       if (!resp.ok) {
         throw new Error(options.error || 'Failed to get registration options');
@@ -53,7 +66,7 @@ export function WebAuthnRegister() {
       // 3. Send response back to server for verification
       const verifyResp = await fetch('/api/auth/webauthn/register/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(attResp),
       });
 
