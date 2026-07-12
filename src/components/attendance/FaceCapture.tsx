@@ -89,7 +89,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   }, []);
 
   const stopScan = useCallback(() => {
-    if (scanTimerRef.current) { clearInterval(scanTimerRef.current); scanTimerRef.current = null; }
+    if (scanTimerRef.current) { clearTimeout(scanTimerRef.current); scanTimerRef.current = null; }
   }, []);
 
   // ── Camera ────────────────────────────────────────────
@@ -138,14 +138,17 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     setFaceDetected(false);
     announce('Look straight at the camera...', 'info');
 
-    scanTimerRef.current = setInterval(async () => {
+    const loop = async () => {
       const fa = faRef.current;
       const v  = videoRef.current;
       const ph = phRef.current;
 
       if (ph === 'cam_err' || !mountedRef.current) { stopScan(); return; }
       if (ph !== 'scanning') return;
-      if (!fa || !v || v.readyState < 3) return;
+      if (!fa || !v || v.readyState < 3) {
+        scanTimerRef.current = setTimeout(loop, 150) as any;
+        return;
+      }
       if (isCapturingRef.current) return;
 
       try {
@@ -158,27 +161,31 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
             setFaceDetected(false);
             setMsg('No face detected. Look directly at the camera.');
           }
-          return;
-        }
-
-        // Face must be large enough (at least 8% of frame) to ensure it's not too far
-        const { width: fw, height: fh } = det.detection.box;
-        const frameArea = (v.videoWidth || 640) * (v.videoHeight || 640);
-        if ((fw * fh) / frameArea < 0.08) {
-          if (mountedRef.current) {
-            setFaceDetected(false);
-            setMsg('Move closer to the camera.');
+        } else {
+          // Face must be large enough (at least 8% of frame) to ensure it's not too far
+          const { width: fw, height: fh } = det.detection.box;
+          const frameArea = (v.videoWidth || 640) * (v.videoHeight || 640);
+          if ((fw * fh) / frameArea < 0.08) {
+            if (mountedRef.current) {
+              setFaceDetected(false);
+              setMsg('Move closer to the camera.');
+            }
+          } else {
+            // Face detected — auto-capture immediately
+            setFaceDetected(true);
+            isCapturingRef.current = true;
+            stopScan();
+            if (runCaptureRef.current) await runCaptureRef.current();
+            return; // stop loop since we captured
           }
-          return;
         }
-
-        // Face detected — auto-capture immediately
-        setFaceDetected(true);
-        isCapturingRef.current = true;
-        stopScan();
-        if (runCaptureRef.current) await runCaptureRef.current();
       } catch { /* silently continue */ }
-    }, 180); // scan every 180ms for fast 2-5s total detection
+
+      // Schedule next frame only after current processing finishes
+      scanTimerRef.current = setTimeout(loop, 150) as any;
+    };
+
+    loop();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stopScan, setPhase, announce]);
 
