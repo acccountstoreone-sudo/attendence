@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getAdminClient } from '@/lib/supabase/admin';
 
-async function uploadDataUrl(supabase: import('@supabase/supabase-js').SupabaseClient, dataUrl: string, pathPrefix: string, userId: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function uploadDataUrl(supabase: any, dataUrl: string, pathPrefix: string, userId: string) {
   const matches = dataUrl.match(/^data:(.+);base64,(.+)$/);
   if (!matches) {
     // Fallback if regex doesn't match standard data url prefix
@@ -56,10 +58,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized. Please login again.' }, { status: 401 });
     }
 
-    const { createClient: createAdminClient } = await import('@supabase/supabase-js');
-    const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY
-      ? createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
-      : supabase;
+    const adminClient = getAdminClient(supabase);
 
     // Upload NID Front, NID Back, and Face Photo (if provided) to Supabase Storage using adminClient
     const frontUrl = await uploadDataUrl(adminClient, nidFrontDataUrl, 'nid_front', user.id);

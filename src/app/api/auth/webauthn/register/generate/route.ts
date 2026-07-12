@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateRegistrationOptions } from '@simplewebauthn/server';
 import { createClient } from '@/lib/supabase/server';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { getRPID, getRPName } from '@/lib/webauthn';
 
-export async function POST(req: NextRequest) {
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
+export async function POST(_req: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -12,10 +16,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { createClient: createAdminClient } = await import('@supabase/supabase-js');
-    const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY
-      ? createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
-      : supabase;
+    const adminClient = getAdminClient(supabase);
 
     const { data: profile } = await adminClient.from('profiles').select('employee_id, full_name').eq('id', user.id).single();
     if (!profile) {
@@ -61,4 +62,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
-
