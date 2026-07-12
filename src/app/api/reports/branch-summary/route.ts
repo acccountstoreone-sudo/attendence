@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
          present = attData.filter(a => a.status === 'present').length;
          late = attData.filter(a => a.status === 'late').length;
          absent = attData.filter(a => a.status === 'absent').length;
-         halfDay = attData.filter(a => a.status === 'half_day').length;
+         halfDay = attData.filter(a => a.status === 'half-day' || a.status === 'half_day').length;
        }
 
        const totalStaff = staffCount || 0;
@@ -87,18 +87,32 @@ export async function GET(request: NextRequest) {
        const todayStartDhaka = new Date(`${yr2}-${mo2}-${da2}T00:00:00+06:00`);
        const todayEndDhaka = new Date(`${yr2}-${mo2}-${da2}T23:59:59+06:00`);
 
-       const { count: presentTodayCount } = await supabase
+       const { data: todayRecords } = await supabase
          .from('attendance_records')
-         .select('*', { count: 'exact', head: true })
+         .select('status')
          .eq('branch_id', branch.id)
-         .eq('status', 'present')
          .gte('check_in_time', todayStartDhaka.toISOString())
          .lte('check_in_time', todayEndDhaka.toISOString());
 
+       let presentTodayCount = 0;
+       let lateTodayCount = 0;
+       let halfDayTodayCount = 0;
+       if (todayRecords) {
+         presentTodayCount = todayRecords.filter(r => r.status === 'present').length;
+         lateTodayCount = todayRecords.filter(r => r.status === 'late').length;
+         halfDayTodayCount = todayRecords.filter(r => r.status === 'half-day' || r.status === 'half_day').length;
+       }
+       const totalPresentToday = presentTodayCount + lateTodayCount + halfDayTodayCount;
+       const absentTodayCount = Math.max(0, totalStaff - totalPresentToday);
+       const alertCount = lateTodayCount + (attendanceRate < 75 && totalStaff > 0 ? 1 : 0);
+
        return {
          branch_id: branch.id,
+         name: branch.name,
          branch_name: branch.name,
-         branch_code: branch.code || branch.id.split('-')[0].toUpperCase(), // NEW-10 fix: use branch.code
+         code: branch.code || branch.id.split('-')[0].toUpperCase(),
+         branch_code: branch.code || branch.id.split('-')[0].toUpperCase(),
+         address: branch.address || 'Headquarters / Main Store',
          total_days: totalWorkingDays,
          present_days: present,
          late_days: late,
@@ -106,7 +120,10 @@ export async function GET(request: NextRequest) {
          attendance_rate: attendanceRate,
          punctuality_rate: punctualityRate,
          total_staff: totalStaff,
-         present_today: presentTodayCount || 0
+         present_today: totalPresentToday,
+         late_today: lateTodayCount,
+         absent_today: absentTodayCount,
+         alert_count: alertCount
        };
     }));
 

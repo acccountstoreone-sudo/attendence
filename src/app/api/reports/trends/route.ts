@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     // For weekly trend (last 10 days)
     const tenDaysAgo = new Date(today);
     tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+    tenDaysAgo.setHours(0, 0, 0, 0);
 
     // For monthly trend (current year)
     const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
       .from('attendance_records')
       .select('check_in_time, status')
       .gte('check_in_time', firstDayOfYear.toISOString())
-      .in('status', ['present', 'late']);
+      .in('status', ['present', 'late', 'half-day', 'half_day']);
 
     if (error) {
       console.error('Error fetching trends:', error);

@@ -30,6 +30,9 @@ export async function GET(request: NextRequest) {
         status,
         check_in_time,
         check_out_time,
+        branches (
+           name
+        ),
         profiles (
            full_name,
            branches!profiles_branch_id_fkey (

@@ -34,14 +34,16 @@ interface CompanySummary {
 
 interface BranchItem {
   branch_id: string;
-  name: string;
-  code: string;
-  address: string;
-  total_staff: number;
-  present_today: number;
-  late_today: number;
-  absent_today: number;
-  alert_count: number;
+  name?: string;
+  branch_name?: string;
+  code?: string;
+  branch_code?: string;
+  address?: string;
+  total_staff?: number;
+  present_today?: number;
+  late_today?: number;
+  absent_today?: number;
+  alert_count?: number;
 }
 
 interface AttendanceRecord {
@@ -149,7 +151,7 @@ export default function AdminDashboardPage() {
                 id: rec.id,
                 user_id: rec.user_id,
                 full_name: rec.profiles?.full_name || 'Unknown',
-                branch_name: rec.profiles?.branches?.name || 'HQ',
+                branch_name: rec.branches?.name || rec.profiles?.branches?.name || 'HQ',
                 type: rec.check_out_time ? 'Check-Out' : 'Check-In',
                 status: rec.status || 'present',
                 timestamp: rec.check_out_time || rec.check_in_time || new Date().toISOString(),
@@ -346,19 +348,24 @@ export default function AdminDashboardPage() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#1dbf73]/5 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
           <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 relative z-10">Branch Status</h2>
           <div className="space-y-3 flex-1 overflow-y-auto max-h-[320px] scrollbar-thin scrollbar-thumb-slate-300 relative z-10 pr-2">
-            {branches.map(b => (
+            {branches.map(b => {
+              const branchName = b.name || b.branch_name || 'Unnamed Branch';
+              const presentCount = b.present_today || 0;
+              const staffCount = b.total_staff || 0;
+              return (
               <div 
                 key={b.branch_id} 
                 onClick={() => router.push(`/admin/branches/${b.branch_id}`)}
                 className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between cursor-pointer hover:border-[#1dbf73]/40 hover:bg-[#1dbf73]/5 hover:shadow-sm transition-all duration-300 group/item"
               >
                 <div>
-                  <p className="text-sm font-bold text-slate-900 tracking-tight group-hover/item:text-[#1dbf73] transition-colors">{b.name}</p>
-                  <p className="text-[10px] text-slate-500 font-medium mt-1">{b.present_today} Present / {b.total_staff} Staff</p>
+                  <p className="text-sm font-bold text-slate-900 tracking-tight group-hover/item:text-[#1dbf73] transition-colors">{branchName}</p>
+                  <p className="text-[10px] text-slate-500 font-medium mt-1">{presentCount} Present / {staffCount} Staff</p>
                 </div>
                 <ChevronDown className="w-4 h-4 text-slate-500 -rotate-90 group-hover/item:translate-x-1 transition-transform" />
               </div>
-            ))}
+              );
+            })}
           </div>
           <button 
             onClick={() => router.push('/admin/branches')}

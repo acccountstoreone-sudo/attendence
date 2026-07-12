@@ -54,11 +54,13 @@ export async function GET(request: NextRequest) {
 
     let present = 0;
     let late = 0;
+    let halfDay = 0;
     let explicitAbsent = 0;
 
     if (attData) {
       present = attData.filter(a => a.status === 'present').length;
       late = attData.filter(a => a.status === 'late').length;
+      halfDay = attData.filter(a => a.status === 'half-day' || a.status === 'half_day').length;
       explicitAbsent = attData.filter(a => a.status === 'absent').length;
     }
 
@@ -73,9 +75,10 @@ export async function GET(request: NextRequest) {
     const { count: leaveCount } = await leaveQuery;
     const leaves = leaveCount || 0;
 
-    // Calculate actual absent count (total staff minus present, late, and on leave)
+    // Calculate actual absent count (total staff minus checked in staff and on leave)
     const totalStaff = employeeCount || 0;
-    const absent = Math.max(0, totalStaff - present - late - leaves);
+    const totalCheckedIn = present + late + halfDay;
+    const absent = Math.max(0, totalStaff - totalCheckedIn - leaves);
 
     // Bug 21 fix: Compute system_health dynamically based on attendance data
     const absenceRate = totalStaff > 0 ? absent / totalStaff : 0;
@@ -88,7 +91,7 @@ export async function GET(request: NextRequest) {
       data: {
         total_branches: branchCount || 0,
         total_employees: totalStaff,
-        present_today: present,
+        present_today: totalCheckedIn,
         late_today: late,
         absent_today: absent,
         on_leave_today: leaves,
