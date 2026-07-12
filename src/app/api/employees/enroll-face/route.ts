@@ -7,8 +7,23 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    let user;
+    let userId;
+    const authHeader = request.headers.get('Authorization');
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      const supabase = await createClient();
+      const { data } = await supabase.auth.getUser(token);
+      user = data.user;
+      userId = user?.id;
+    } else {
+      const currentUser = await getCurrentUser();
+      user = currentUser;
+      userId = currentUser?.id;
+    }
+
+    if (!user || !userId) {
       return NextResponse.json({ success: false, error: { message: 'UNAUTHENTICATED' } }, { status: 401 });
     }
 
@@ -39,7 +54,7 @@ export async function POST(request: NextRequest) {
     let { error } = await supabase
       .from('profiles')
       .update(updatePayloadWithCol)
-      .eq('id', user.id);
+      .eq('id', userId);
 
     if (error && (error.message?.includes('requires_face_reverification') || error.message?.includes('first_verified_latitude') || error.code === '42703')) {
       const fallbackPayload: Record<string, unknown> = {
@@ -50,7 +65,7 @@ export async function POST(request: NextRequest) {
       const fallbackRes = await supabase
         .from('profiles')
         .update(fallbackPayload)
-        .eq('id', user.id);
+        .eq('id', userId);
       error = fallbackRes.error;
     }
 

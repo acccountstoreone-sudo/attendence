@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { ScanFace, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import { FaceCapture } from '@/components/attendance/FaceCapture';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createClient } from '@/lib/supabase/client';
 
 export function FaceRegister() {
   const [loading, setLoading] = useState(false);
@@ -16,9 +17,20 @@ export function FaceRegister() {
     setLoading(true);
     setError(null);
     try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch('/api/employees/enroll-face', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ faceDescriptor: descriptor, selfieUrl: image }),
       });
       const data = await res.json();
