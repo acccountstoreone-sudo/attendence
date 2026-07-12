@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { calculateDistance } from '@/lib/geo';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
-import { ArrowLeft, Clock, CheckCircle2, WifiOff, RefreshCcw } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, CheckCircle2, WifiOff, RefreshCcw, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { startAuthentication } from '@simplewebauthn/browser';
