@@ -1,18 +1,25 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getAdminClient } from '@/lib/supabase/admin';
 
-export async function POST(request: Request) {
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
+export async function POST(request: NextRequest) {
   try {
-    const { email, code } = await request.json();
+    const body = await request.json();
+    const email = body.email ? body.email.trim().toLowerCase() : '';
+    const code = body.code || body.otp;
 
     if (!email || !code) {
-      return NextResponse.json({ error: 'Email and OTP code are required' }, { status: 400 });
+      return NextResponse.json({ error: 'Email and verification code are required.' }, { status: 400 });
     }
 
     const supabase = await createClient();
+    const adminClient = getAdminClient(supabase);
 
-    // Find the latest valid OTP for this email
-    const { data, error } = await supabase
+    // 1. Find the latest valid OTP for this email
+    const { data: otpRow, error: otpError } = await adminClient
       .from('otp_codes')
       .select('*')
       .eq('email', email)
@@ -22,49 +29,45 @@ export async function POST(request: Request) {
       .limit(1)
       .single();
 
-    if (error || !data) {
-      return NextResponse.json({ error: 'Invalid or expired OTP code' }, { status: 400 });
+    if (otpError || !otpRow) {
+      return NextResponse.json({ error: 'Verification code is invalid or has expired.' }, { status: 400 });
     }
 
-    if (data.code !== code) {
-      return NextResponse.json({ error: 'Incorrect OTP code' }, { status: 400 });
+    if (otpRow.code !== code) {
+      return NextResponse.json({ error: 'Incorrect verification code.' }, { status: 400 });
     }
 
-    // Mark as used
-    await supabase
+    // 2. Mark OTP as used
+    await adminClient
       .from('otp_codes')
       .update({ is_used: true })
-      .eq('id', data.id);
+      .eq('id', otpRow.id);
 
-    // Update the profile registration_step to 'kyc'
-    // First, find the user by email (we assume the user was created in auth.users)
-    const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
-    // (Note: Supabase requires service role key to search users by email easily,
-    // or we can just update the profile by email if we stored email in profiles. 
-    // Since 'email' is not in 'profiles' by default, the frontend should ideally pass the user ID. 
-    // Wait, the user is already signed in via Supabase Auth when they registered.
-    // So we can just get their session.)
-
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (user) {
-       const { createClient: createAdminClient } = await import('@supabase/supabase-js');
-       const adminClient = process.env.SUPABASE_SERVICE_ROLE_KEY
-         ? createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
-         : supabase;
-
-       await adminClient
-        .from('profiles')
-        .update({ registration_step: 'kyc' })
-        .eq('id', user.id);
+    // 3. Find user account by email or current session
+    let userId: string | null = null;
+    const { data: sessionData } = await supabase.auth.getUser();
+    if (sessionData?.user) {
+      userId = sessionData.user.id;
+    } else {
+      const { data: usersList } = await adminClient.auth.admin.listUsers();
+      const existingUser = usersList?.users?.find((u: { email?: string }) => u.email?.toLowerCase() === email);
+      if (existingUser) {
+        userId = existingUser.id;
+      }
     }
 
-    return NextResponse.json({ success: true, message: 'OTP verified successfully' });
+    // 4. Update registration step on profile to 'kyc'
+    if (userId) {
+      await adminClient
+        .from('profiles')
+        .update({ registration_step: 'kyc' })
+        .eq('id', userId);
+    }
 
-  } catch (error: unknown) {
-    console.error('Verify OTP Error:', error);
-    const msg = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: msg || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ success: true, message: 'Email verified successfully.', userId });
+  } catch (err: unknown) {
+    console.error('Verify OTP Error:', err);
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: msg || 'Internal server error during OTP verification.' }, { status: 500 });
   }
 }
-

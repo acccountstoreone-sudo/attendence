@@ -1,29 +1,35 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy');
 
-export async function POST(request: Request) {
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
+export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json();
 
     if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+      return NextResponse.json({ error: 'Email address is required.' }, { status: 400 });
     }
 
+    const cleanEmail = email.trim().toLowerCase();
     const supabase = await createClient();
+    const adminClient = getAdminClient(supabase);
 
     // Generate 6-digit OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Save to DB
-    const { error: dbError } = await supabase
+    // Save to DB using admin client to guarantee bypass of RLS on otp_codes
+    const { error: dbError } = await adminClient
       .from('otp_codes')
       .insert([
         {
-          email,
+          email: cleanEmail,
           code: otpCode,
           expires_at: expiresAt.toISOString(),
         }
@@ -31,48 +37,39 @@ export async function POST(request: Request) {
 
     if (dbError) {
       console.error('OTP DB Error:', dbError);
-      return NextResponse.json({ error: 'Failed to generate OTP' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to generate verification code.' }, { status: 500 });
     }
 
-    // Always log the OTP to the server console for easy testing during development
     console.log(`\n========================================`);
-    console.log(`🔑 OTP CODE FOR ${email}: ${otpCode}`);
+    console.log(`🔑 SEND-OTP FOR ${cleanEmail}: ${otpCode}`);
     console.log(`========================================\n`);
 
     try {
       if (process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.includes('dummy')) {
-        const { data, error } = await resend.emails.send({
+        await resend.emails.send({
           from: 'Anchor Fashion <noreply@accountstoreone.com>',
-          to: email,
-          subject: 'Your Registration Verification Code',
+          to: cleanEmail,
+          subject: 'Anchor Fashion — Verification Code',
           html: `
-            <div style="font-family: sans-serif; max-w-md; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-              <h2 style="color: #0C2B6A;">Verify Your Identity</h2>
-              <p>Hello,</p>
-              <p>Please use the following 6-digit code to complete your Anchor Fashion registration:</p>
-              <h1 style="color: #1dbf73; letter-spacing: 5px;">${otpCode}</h1>
-              <p>This code will expire in 10 minutes.</p>
-              <br/>
-              <p style="font-size: 12px; color: #666;">If you didn't request this, please ignore this email.</p>
+            <div style="font-family: sans-serif; max-width: 500px; margin: auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+              <h2 style="color: #0C2B6A; margin-top: 0;">Verify Your Identity</h2>
+              <p style="color: #475569; font-size: 15px;">Please use the 6-digit verification code below to continue:</p>
+              <div style="text-align: center; margin: 25px 0;">
+                <h1 style="color: #1dbf73; font-size: 36px; letter-spacing: 6px; margin: 0; padding: 15px; background: #f0fdf4; border-radius: 8px; display: inline-block;">${otpCode}</h1>
+              </div>
+              <p style="color: #64748b; font-size: 13px;">This code will expire in 10 minutes.</p>
             </div>
           `,
         });
-
-        if (error) {
-          console.error('❌ Resend API Error:', error);
-        } else {
-          console.log('✅ Email sent via Resend:', data);
-        }
       }
     } catch (emailError) {
-      console.error('❌ Unexpected Resend Error:', emailError);
+      console.error('Resend Email Error:', emailError);
     }
 
-    return NextResponse.json({ success: true, message: 'OTP sent successfully' });
-
+    return NextResponse.json({ success: true, message: 'Verification code sent successfully.' });
   } catch (error: unknown) {
+    console.error('Send OTP Endpoint Error:', error);
     const msg = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: msg || 'Internal server error' }, { status: 500 });
   }
 }
-
