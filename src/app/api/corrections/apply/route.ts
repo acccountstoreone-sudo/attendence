@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { dispatchToAdmins, dispatchToBranchManagers } from '@/lib/notification-service';
 import { z } from 'zod';
 
 const applyCorrectionSchema = z.object({
@@ -65,6 +66,30 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (reqErr) throw new Error(reqErr.message);
+
+    // Notify Admins & Branch Managers about the correction request
+    try {
+      const msg = `${user.full_name || 'An employee'} submitted a ${input.type.replace('_', ' ')} correction request for ${input.date}. Reason: ${input.reason}`;
+      if (branchId) {
+        await dispatchToBranchManagers({
+          branchId: branchId,
+          title: 'New Attendance Correction Request ⏱️',
+          message: msg,
+          type: 'correction',
+          actionUrl: '/branch-manager/corrections',
+          sendEmail: true,
+        });
+      }
+      await dispatchToAdmins({
+        title: 'New Attendance Correction Request ⏱️',
+        message: msg,
+        type: 'correction',
+        actionUrl: '/admin/corrections',
+        sendEmail: true,
+      });
+    } catch {
+      // Non-fatal
+    }
 
     return NextResponse.json({
       success: true,

@@ -74,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
             <Toast
               title={latestToast.title}
               message={latestToast.message}
-              type={latestToast.type}
+              type={latestToast.type as any}
               onDismiss={clearToast}
             />
           </div>
@@ -126,39 +126,47 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
                     No notifications to display.
                   </div>
                 ) : (
-                  notifications.slice(0, 10).map((n) => (
-                    <div
-                      key={n.id}
-                      onClick={() => !n.is_read && markAsRead(n.id)}
-                      className={`p-3.5 transition-colors cursor-pointer flex items-start space-x-3 border-b border-slate-100 last:border-0 ${
-                        n.is_read ? 'bg-transparent opacity-70' : 'bg-slate-50/80 hover:bg-slate-100'
-                      }`}
-                    >
+                  notifications.slice(0, 10).map((n) => {
+                    const targetUrl = n.action_url || n.link_url;
+                    return (
                       <div
-                        className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                          n.type === 'alert' ? 'bg-rose-500' : n.type === 'warning' ? 'bg-amber-500' : n.type === 'success' ? 'bg-[#1dbf73]' : 'bg-[#1dbf73]'
+                        key={n.id}
+                        onClick={() => {
+                          if (!n.is_read) markAsRead(n.id);
+                          if (targetUrl) {
+                            setShowNotifMenu(false);
+                            router.push(targetUrl);
+                          }
+                        }}
+                        className={`p-3.5 transition-colors cursor-pointer flex items-start space-x-3 border-b border-slate-100 last:border-0 ${
+                          n.is_read ? 'bg-transparent opacity-70' : 'bg-slate-50/80 hover:bg-slate-100'
                         }`}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold text-slate-900 truncate">{n.title}</p>
-                          <span className="text-[10px] text-slate-600 shrink-0">
-                            {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
+                      >
+                        <div
+                          className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                            n.type === 'alert' ? 'bg-rose-500' : n.type === 'warning' ? 'bg-amber-500' : n.type === 'success' ? 'bg-[#1dbf73]' : 'bg-[#1dbf73]'
+                          }`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-bold text-slate-900 truncate">{n.title}</p>
+                            <span className="text-[10px] text-slate-600 shrink-0">
+                              {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">{n.message}</p>
+                          {targetUrl && (
+                            <span
+                              className="inline-flex items-center space-x-1 text-[10px] text-[#1dbf73] hover:underline mt-1 font-semibold"
+                            >
+                              <span>View details &rarr;</span>
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </span>
+                          )}
                         </div>
-                        <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">{n.message}</p>
-                        {n.link_url && (
-                          <a
-                            href={n.link_url}
-                            className="inline-flex items-center space-x-1 text-[10px] text-[#1dbf73] hover:underline mt-1 font-semibold"
-                          >
-                            <span>View details</span>
-                            <ExternalLink className="w-2.5 h-2.5" />
-                          </a>
-                        )}
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>

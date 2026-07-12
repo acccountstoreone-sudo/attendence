@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { Card } from '@/components/ui/Card';
@@ -93,8 +93,11 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
               <span className="text-xs text-slate-500">Settings apply only to {branch.name}</span>
             </div>
           </div>
-          <div className="mt-4 flex justify-end">
-            <Button variant="secondary" onClick={() => router.push(`/admin/branches/${branch.id}/edit`)}>Edit Rules</Button>
+          <div className="mt-4 flex flex-wrap justify-end gap-2">
+            <Button variant="secondary" onClick={() => router.push(`/admin/branches/${branch.id}/edit`)}>Edit Static Metadata</Button>
+            <Button variant="primary" onClick={() => router.push(`/admin/duty-hours`)} className="bg-[#1dbf73] text-white hover:bg-[#16965a] border-none font-bold">
+              Manage Live Duty Hours & Grace
+            </Button>
           </div>
         </Card>
       </div>

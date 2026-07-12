@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError, getCurrentUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { dispatchToAdmins, dispatchToBranchManagers } from '@/lib/notification-service';
 import { z } from 'zod';
 
 const applyLeaveSchema = z.object({
@@ -132,26 +133,28 @@ export async function POST(request: NextRequest) {
 
     if (reqErr || !requestRecord) throw new Error(reqErr?.message || 'Failed to submit leave request.');
 
-    // APP-07 fix: Notify the Branch Manager about this new leave application
-    if (user.branch_id) {
-      const { data: bm } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('branch_id', user.branch_id)
-        .eq('role', 'branch_manager')
-        .eq('is_active', true)
-        .limit(1)
-        .single();
-
-      if (bm?.id) {
-        await supabase.from('notifications').insert({
-          user_id: bm.id,
-          title: 'New Leave Application',
-          message: `${user.full_name || 'An employee'} has applied for ${requestedDays} day(s) of ${input.leave_type_code} leave starting ${input.start_date}.`,
+    // Notify Admins & Branch Managers about this new leave application
+    try {
+      const msg = `${user.full_name || 'An employee'} has applied for ${requestedDays} day(s) of ${input.leave_type_code} leave starting ${input.start_date}.`;
+      if (user.branch_id) {
+        await dispatchToBranchManagers({
+          branchId: user.branch_id,
+          title: 'New Leave Application 🏖️',
+          message: msg,
           type: 'leave',
-          is_read: false,
-        }); // Non-fatal
+          actionUrl: '/branch-manager/leaves',
+          sendEmail: true,
+        });
       }
+      await dispatchToAdmins({
+        title: 'New Leave Application 🏖️',
+        message: msg,
+        type: 'leave',
+        actionUrl: '/admin/leaves',
+        sendEmail: true,
+      });
+    } catch {
+      // Non-fatal
     }
 
     return NextResponse.json({

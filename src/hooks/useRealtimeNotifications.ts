@@ -8,11 +8,47 @@ export interface NotificationItem {
   user_id: string;
   title: string;
   message: string;
-  type: 'info' | 'warning' | 'alert' | 'success';
+  type: 'info' | 'warning' | 'alert' | 'success' | 'attendance_approval' | 'attendance_decision' | 'welcome' | 'system' | 'leave' | 'attendance' | 'correction' | 'payroll';
+  action_url?: string | null;
   link_url?: string | null;
   is_read: boolean;
   created_at: string;
 }
+
+// Helper to play a clean, crisp double-pip notification sound via Web Audio API
+const playPipSound = () => {
+  try {
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+
+    // First pip note (A5 - 880 Hz)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(880, ctx.currentTime);
+    gain1.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 0.12);
+
+    // Second pip note (D6 - 1174.66 Hz) played right after 140ms
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(1174.66, ctx.currentTime + 0.14);
+    gain2.gain.setValueAtTime(0.2, ctx.currentTime + 0.14);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(ctx.currentTime + 0.14);
+    osc2.stop(ctx.currentTime + 0.28);
+  } catch (err) {
+    console.warn('Could not play pip sound:', err);
+  }
+};
 
 export function useRealtimeNotifications(userId: string | undefined) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -71,6 +107,8 @@ export function useRealtimeNotifications(userId: string | undefined) {
         },
         (payload) => {
           const newNotif = payload.new as NotificationItem;
+          // Play the double-pip sound immediately
+          playPipSound();
           // Update state immediately
           setNotifications((prev) => [newNotif, ...prev]);
           setUnreadCount((prev) => prev + 1);

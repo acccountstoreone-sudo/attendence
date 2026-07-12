@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -7,7 +7,8 @@ import { Spinner } from '@/components/ui/Spinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   UserCheck, CheckCircle2, XCircle, Clock, AlertTriangle, 
-  Search, Filter, MessageSquare, RefreshCw, Building2, Calendar, ArrowRight
+  Search, Filter, MessageSquare, RefreshCw, Building2, Calendar, ArrowRight,
+  ShieldCheck, AlertCircle, TrendingUp, MapPin
 } from 'lucide-react';
 
 export interface CorrectionRequestRecord {
@@ -30,34 +31,73 @@ export interface CorrectionRequestRecord {
   branch_name?: string;
 }
 
+export interface AttendanceApprovalRecord {
+  id: string;
+  employee_id: string;
+  branch_id?: string;
+  check_in_time: string | null;
+  check_out_time: string | null;
+  status: string;
+  approval_status: 'pending' | 'approved' | 'rejected';
+  is_manual_override?: boolean;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  approval_note?: string | null;
+  overtime_minutes?: number;
+  face_verified?: boolean;
+  profiles?: { full_name?: string; photo_url?: string; employee_id?: string };
+  branches?: { name?: string };
+}
+
 interface CorrectionsManagementPanelProps {
   role: 'admin' | 'branch_manager';
 }
 
 export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProps> = ({ role }) => {
+  const [categoryTab, setCategoryTab] = useState<'checkins' | 'corrections'>('checkins');
+  const [statusTab, setStatusTab] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Data states
   const [corrections, setCorrections] = useState<CorrectionRequestRecord[]>([]);
+  const [checkins, setCheckins] = useState<AttendanceApprovalRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [statusTab, setStatusTab] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
-  const [searchQuery, setSearchQuery] = useState('');
   const [actingId, setActingId] = useState<string | null>(null);
+
+  // Note modals
   const [noteModalReq, setNoteModalReq] = useState<CorrectionRequestRecord | null>(null);
+  const [checkinModalReq, setCheckinModalReq] = useState<AttendanceApprovalRecord | null>(null);
   const [modalAction, setModalAction] = useState<'approve' | 'reject'>('approve');
   const [reviewerNote, setReviewerNote] = useState('');
 
-  const fetchCorrections = useCallback(async () => {
+  const fetchAllData = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/corrections/list?status=${statusTab === 'all' ? '' : statusTab}`);
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error?.message || data.error || 'Failed to fetch correction requests');
+      const statusParam = statusTab === 'all' ? 'all' : statusTab;
+      
+      // Fetch both check-in approvals and correction requests simultaneously
+      const [corrRes, checkinRes] = await Promise.all([
+        fetch(`/api/corrections/list?status=${statusParam}`),
+        fetch(`/api/attendance/approve?status=${statusParam}&date=all`)
+      ]);
+
+      const corrData = await corrRes.json();
+      const checkinData = await checkinRes.json();
+
+      if (!corrRes.ok || !corrData.success) {
+        throw new Error(corrData.error?.message || corrData.error || 'Failed to fetch correction requests');
       }
-      setCorrections(data.data || []);
+      if (!checkinRes.ok || !checkinData.success) {
+        throw new Error(checkinData.error?.message || checkinData.error || 'Failed to fetch attendance approvals');
+      }
+
+      setCorrections(corrData.data || []);
+      setCheckins(checkinData.data || []);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An error occurred fetching correction requests.');
+      setError(err instanceof Error ? err.message : 'An error occurred fetching records.');
     } finally {
       setLoading(false);
     }
@@ -65,11 +105,12 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
 
   useEffect(() => {
     queueMicrotask(() => {
-      fetchCorrections();
+      fetchAllData();
     });
-  }, [fetchCorrections]);
+  }, [fetchAllData]);
 
-  const handleQuickAction = async (id: string, action: 'approve' | 'reject', note?: string) => {
+  // Action for time correction request
+  const handleCorrectionAction = async (id: string, action: 'approve' | 'reject', note?: string) => {
     setActingId(id);
     try {
       const res = await fetch(`/api/corrections/${id}/action`, {
@@ -82,7 +123,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
         throw new Error(result.error?.message || result.error || `Failed to ${action} correction request`);
       }
       setFeedback({ type: 'success', text: `Correction request ${action}d successfully.` });
-      await fetchCorrections();
+      await fetchAllData();
       setNoteModalReq(null);
       setReviewerNote('');
     } catch (err: unknown) {
@@ -92,7 +133,31 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
     }
   };
 
-  const formatTimeStr = (isoString?: string) => {
+  // Action for live attendance check-in approval
+  const handleCheckinAction = async (id: string, action: 'approve' | 'reject', note?: string) => {
+    setActingId(id);
+    try {
+      const res = await fetch('/api/attendance/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ attendance_id: id, action, note }),
+      });
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        throw new Error(result.error?.message || result.error || `Failed to ${action} check-in`);
+      }
+      setFeedback({ type: 'success', text: `Attendance check-in ${action}d successfully.` });
+      await fetchAllData();
+      setCheckinModalReq(null);
+      setReviewerNote('');
+    } catch (err: unknown) {
+      setFeedback({ type: 'error', text: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const formatTimeStr = (isoString?: string | null) => {
     if (!isoString) return 'Missing / Not Recorded';
     try {
       return new Intl.DateTimeFormat('en-US', {
@@ -118,26 +183,97 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
     );
   });
 
+  const filteredCheckins = checkins.filter((c) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    const name = c.profiles?.full_name || '';
+    const code = c.profiles?.employee_id || '';
+    const branch = c.branches?.name || '';
+    return name.toLowerCase().includes(q) || code.toLowerCase().includes(q) || branch.toLowerCase().includes(q);
+  });
+
+  const checkinsPendingCount = checkins.filter(c => c.approval_status === 'pending').length;
+  const correctionsPendingCount = corrections.filter(c => c.status === 'pending').length;
+
   return (
     <div className="space-y-6">
       {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#ffffff]/80 border border-slate-200 p-6 rounded-2xl backdrop-blur-sm shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#ffffff]/90 border border-slate-200 p-6 rounded-2xl backdrop-blur-sm shadow-xl">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2.5">
             <UserCheck className="w-7 h-7 text-[#1dbf73]" />
             {role === 'admin' ? 'HQ Manual Corrections & Overrides' : 'Store Manual Corrections & Overrides'}
           </h1>
           <p className="text-sm text-slate-600 mt-1">
-            Review and approve employee check-in / check-out time adjustment requests.
+            Review live check-in approvals, manual override entries, and employee time adjustment requests.
           </p>
         </div>
-        <Button onClick={fetchCorrections} variant="secondary" className="flex items-center gap-2">
+        <Button onClick={fetchAllData} variant="secondary" className="flex items-center gap-2 shrink-0">
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
 
-      {/* Tabs & Search */}
+      {/* Category Tabs (Check-ins vs Corrections) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <button
+          onClick={() => setCategoryTab('checkins')}
+          className={`p-5 rounded-2xl border transition-all text-left flex items-center justify-between ${
+            categoryTab === 'checkins'
+              ? 'bg-[#1dbf73]/10 border-[#1dbf73] shadow-lg shadow-emerald-500/10 ring-2 ring-[#1dbf73]/20'
+              : 'bg-white border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <div className="flex items-center gap-3.5">
+            <div className={`p-3 rounded-xl ${categoryTab === 'checkins' ? 'bg-[#1dbf73] text-white' : 'bg-slate-100 text-slate-600'}`}>
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                Live Check-In & Check-Out Approvals
+              </h3>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Everyday attendance timestamps & geofence overrides
+              </p>
+            </div>
+          </div>
+          {checkinsPendingCount > 0 && (
+            <span className="px-3 py-1 bg-amber-500 text-amber-950 text-xs font-extrabold rounded-full shrink-0 animate-pulse">
+              {checkinsPendingCount} Pending
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setCategoryTab('corrections')}
+          className={`p-5 rounded-2xl border transition-all text-left flex items-center justify-between ${
+            categoryTab === 'corrections'
+              ? 'bg-[#1dbf73]/10 border-[#1dbf73] shadow-lg shadow-emerald-500/10 ring-2 ring-[#1dbf73]/20'
+              : 'bg-white border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <div className="flex items-center gap-3.5">
+            <div className={`p-3 rounded-xl ${categoryTab === 'corrections' ? 'bg-[#1dbf73] text-white' : 'bg-slate-100 text-slate-600'}`}>
+              <Clock className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                Time Correction & Missing Day Requests
+              </h3>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Employee submitted requests to modify past records
+              </p>
+            </div>
+          </div>
+          {correctionsPendingCount > 0 && (
+            <span className="px-3 py-1 bg-amber-500 text-amber-950 text-xs font-extrabold rounded-full shrink-0 animate-pulse">
+              {correctionsPendingCount} Pending
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Tabs & Search Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex bg-[#ffffff]/90 border border-slate-200 p-1 rounded-xl shadow-inner overflow-x-auto">
           {(['pending', 'approved', 'rejected', 'all'] as const).map((tab) => (
@@ -171,7 +307,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
         </div>
       </div>
 
-      {/* Content Area */}
+      {/* Error / Feedback Banners */}
       {error && (
         <div className="p-4 bg-red-950/40 border border-red-500/30 rounded-xl text-red-300 flex items-center gap-3">
           <AlertTriangle className="w-5 h-5 shrink-0 text-red-400" />
@@ -195,162 +331,329 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
         )}
       </AnimatePresence>
 
+      {/* Content Area */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Spinner size="lg" />
-          <p className="mt-3 text-sm text-slate-600">Loading correction requests...</p>
+          <p className="mt-3 text-sm text-slate-600">Loading attendance & correction records...</p>
         </div>
-      ) : filteredCorrections.length === 0 ? (
-        <Card className="p-12 text-center border-dashed border-slate-200 bg-[#ffffff]/50">
-          <UserCheck className="w-12 h-12 text-slate-500 mx-auto mb-3 opacity-60" />
-          <h3 className="text-lg font-semibold text-slate-900">No Correction Requests Found</h3>
-          <p className="text-sm text-slate-600 mt-1 max-w-md mx-auto">
-            {statusTab === 'pending' 
-              ? 'There are currently no pending attendance time corrections awaiting review.' 
-              : `No ${statusTab} correction requests match your filter criteria.`}
-          </p>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 gap-4">
-          <AnimatePresence>
-            {filteredCorrections.map((c) => {
-              const isPending = c.status === 'pending';
-              const isApproved = c.status === 'approved';
-              return (
-                <motion.div
-                  key={c.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                >
-                  <Card className={`p-6 border transition-all ${
-                    isPending ? 'border-[#1dbf73]/40 bg-gradient-to-r from-[#ffffff] to-[#f1f5f9]' :
-                    isApproved ? 'border-emerald-500/30 bg-[#ffffff]/70' :
-                    'border-red-500/30 bg-[#ffffff]/50'
-                  }`}>
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                      {/* Left: Employee details */}
-                      <div className="flex items-start gap-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 ${
-                          isPending ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/30' :
-                          isApproved ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' :
-                          'bg-red-500/20 text-red-400 border border-red-500/30'
-                        }`}>
-                          {(c.employee_name || 'E').charAt(0).toUpperCase()}
-                        </div>
-                        <div className="space-y-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-base font-bold text-slate-900 tracking-wide truncate">
-                              {c.employee_name}
-                            </h3>
-                            {c.employee_code && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 font-mono">
-                                #{c.employee_code}
+      ) : categoryTab === 'checkins' ? (
+        /* ── Live Check-In / Check-Out Approvals List ── */
+        filteredCheckins.length === 0 ? (
+          <Card className="p-12 text-center border-dashed border-slate-200 bg-[#ffffff]/50">
+            <ShieldCheck className="w-12 h-12 text-slate-500 mx-auto mb-3 opacity-60" />
+            <h3 className="text-lg font-semibold text-slate-900">No Live Check-In Approvals Found</h3>
+            <p className="text-sm text-slate-600 mt-1 max-w-md mx-auto">
+              {statusTab === 'pending'
+                ? 'All check-ins and manual overrides have been reviewed.'
+                : `No ${statusTab} attendance check-ins match your filter criteria.`}
+            </p>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            <AnimatePresence>
+              {filteredCheckins.map((c) => {
+                const isPending = c.approval_status === 'pending';
+                const isApproved = c.approval_status === 'approved';
+                const fullName = c.profiles?.full_name || 'Unknown Employee';
+                const empCode = c.profiles?.employee_id || c.employee_id.slice(0, 8);
+                const branchName = c.branches?.name || 'Headquarters / Main Branch';
+                const checkInDateStr = c.check_in_time ? new Date(c.check_in_time).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown Date';
+
+                return (
+                  <motion.div
+                    key={c.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                  >
+                    <Card className={`p-6 border transition-all ${
+                      isPending ? 'border-[#1dbf73]/40 bg-gradient-to-r from-[#ffffff] to-[#f1f5f9]' :
+                      isApproved ? 'border-emerald-500/30 bg-[#ffffff]/70' :
+                      'border-red-500/30 bg-[#ffffff]/50'
+                    }`}>
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        {/* Left: Employee details */}
+                        <div className="flex items-start gap-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 ${
+                            isPending ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/30' :
+                            isApproved ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' :
+                            'bg-red-500/20 text-red-400 border border-red-500/30'
+                          }`}>
+                            {fullName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-base font-bold text-slate-900 tracking-wide truncate">
+                                {fullName}
+                              </h3>
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono">
+                                #{empCode}
                               </span>
+                              <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider ${
+                                isPending ? 'bg-amber-500/20 text-amber-700 border border-amber-500/30' :
+                                isApproved ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' :
+                                'bg-red-500/20 text-red-600 border border-red-500/30'
+                              }`}>
+                                {c.approval_status}
+                              </span>
+                              {c.is_manual_override && (
+                                <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-700 border border-purple-500/30 font-extrabold uppercase">
+                                  Manual / Out of Geofence Override
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600 pt-1">
+                              <span className="flex items-center gap-1.5">
+                                <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                                {branchName}
+                              </span>
+                              <span className="text-slate-500">•</span>
+                              <span className="flex items-center gap-1 text-blue-600 font-medium">
+                                <Calendar className="w-3.5 h-3.5" />
+                                {checkInDateStr}
+                              </span>
+                              {c.overtime_minutes && c.overtime_minutes > 0 ? (
+                                <>
+                                  <span className="text-slate-500">•</span>
+                                  <span className="flex items-center gap-1 text-amber-600 font-bold">
+                                    <TrendingUp className="w-3.5 h-3.5" />
+                                    +{c.overtime_minutes} min Overtime
+                                  </span>
+                                </>
+                              ) : null}
+                            </div>
+                            {c.approval_note && (
+                              <div className="pt-2 flex items-center gap-1.5 text-xs text-slate-700">
+                                <MessageSquare className="w-3.5 h-3.5 text-slate-500" />
+                                <span className="font-semibold">Reviewer Note:</span> {c.approval_note}
+                              </div>
                             )}
-                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider ${
-                              isPending ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
-                              isApproved ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' :
-                              'bg-red-500/20 text-red-300 border border-red-500/30'
-                            }`}>
-                              {c.status}
-                            </span>
                           </div>
-                          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
-                            <span className="flex items-center gap-1.5">
-                              <Building2 className="w-3.5 h-3.5 text-slate-500" />
-                              {c.branch_name}
-                            </span>
-                            <span className="text-slate-500">•</span>
-                            <span className="flex items-center gap-1 text-blue-400 font-medium uppercase">
-                              <Calendar className="w-3.5 h-3.5" />
-                              {c.date} ({c.type.replace('_', ' ')})
-                            </span>
-                          </div>
-                          <div className="pt-2">
-                            <p className="text-sm text-slate-700 bg-white/80 border border-slate-200 p-3 rounded-xl italic">
-                              &quot;{c.reason}&quot;
+                        </div>
+
+                        {/* Middle: Timestamps diff */}
+                        <div className="bg-white/90 border border-slate-200/80 rounded-xl p-4 flex items-center justify-between gap-6 shrink-0 min-w-[280px]">
+                          <div className="text-center">
+                            <p className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold">Check-In Time</p>
+                            <p className="text-sm font-bold text-slate-900 mt-1 font-mono">
+                              {formatTimeStr(c.check_in_time)}
                             </p>
                           </div>
-                          {c.reviewer_note && (
-                            <div className="pt-1 flex items-center gap-1.5 text-xs text-slate-600">
-                              <MessageSquare className="w-3.5 h-3.5 text-slate-500" />
-                              <span className="font-semibold text-slate-600">Reviewer Note:</span> {c.reviewer_note}
+                          <ArrowRight className="w-5 h-5 text-slate-400 shrink-0" />
+                          <div className="text-center">
+                            <p className="text-[10px] text-blue-600 uppercase tracking-wider font-semibold">Check-Out Time</p>
+                            <p className="text-sm font-bold text-slate-900 mt-1 font-mono">
+                              {c.check_out_time ? formatTimeStr(c.check_out_time) : <span className="text-slate-400 italic">On Duty</span>}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Right: Actions */}
+                        {isPending && (
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleCheckinAction(c.id, 'approve')}
+                              disabled={actingId === c.id}
+                              className="bg-[#16965a] hover:bg-[#1dbf73] text-white shadow-lg shadow-emerald-950/20 font-bold px-4 py-2.5"
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                              {actingId === c.id ? 'Approving...' : 'Approve'}
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                setCheckinModalReq(c);
+                                setModalAction('reject');
+                                setReviewerNote('');
+                              }}
+                              disabled={actingId === c.id}
+                              className="border-red-500/40 text-red-600 hover:bg-red-500/10 font-bold px-3 py-2.5"
+                            >
+                              <XCircle className="w-4 h-4 mr-1.5" />
+                              Reject
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                setCheckinModalReq(c);
+                                setModalAction('approve');
+                                setReviewerNote('');
+                              }}
+                              disabled={actingId === c.id}
+                              title="Add Note before approving"
+                              className="px-2.5 py-2.5"
+                            >
+                              <MessageSquare className="w-4 h-4 text-slate-600" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        )
+      ) : (
+        /* ── Time Correction & Missing Day Requests List ── */
+        filteredCorrections.length === 0 ? (
+          <Card className="p-12 text-center border-dashed border-slate-200 bg-[#ffffff]/50">
+            <UserCheck className="w-12 h-12 text-slate-500 mx-auto mb-3 opacity-60" />
+            <h3 className="text-lg font-semibold text-slate-900">No Time Correction Requests Found</h3>
+            <p className="text-sm text-slate-600 mt-1 max-w-md mx-auto">
+              {statusTab === 'pending'
+                ? 'There are currently no pending attendance time corrections awaiting review.'
+                : `No ${statusTab} correction requests match your filter criteria.`}
+            </p>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            <AnimatePresence>
+              {filteredCorrections.map((c) => {
+                const isPending = c.status === 'pending';
+                const isApproved = c.status === 'approved';
+                return (
+                  <motion.div
+                    key={c.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                  >
+                    <Card className={`p-6 border transition-all ${
+                      isPending ? 'border-[#1dbf73]/40 bg-gradient-to-r from-[#ffffff] to-[#f1f5f9]' :
+                      isApproved ? 'border-emerald-500/30 bg-[#ffffff]/70' :
+                      'border-red-500/30 bg-[#ffffff]/50'
+                    }`}>
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        {/* Left: Employee details */}
+                        <div className="flex items-start gap-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 ${
+                            isPending ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/30' :
+                            isApproved ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' :
+                            'bg-red-500/20 text-red-400 border border-red-500/30'
+                          }`}>
+                            {(c.employee_name || 'E').charAt(0).toUpperCase()}
+                          </div>
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-base font-bold text-slate-900 tracking-wide truncate">
+                                {c.employee_name}
+                              </h3>
+                              {c.employee_code && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono">
+                                  #{c.employee_code}
+                                </span>
+                              )}
+                              <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider ${
+                                isPending ? 'bg-amber-500/20 text-amber-700 border border-amber-500/30' :
+                                isApproved ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' :
+                                'bg-red-500/20 text-red-600 border border-red-500/30'
+                              }`}>
+                                {c.status}
+                              </span>
                             </div>
-                          )}
+                            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
+                              <span className="flex items-center gap-1.5">
+                                <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                                {c.branch_name}
+                              </span>
+                              <span className="text-slate-500">•</span>
+                              <span className="flex items-center gap-1 text-blue-600 font-medium uppercase">
+                                <Calendar className="w-3.5 h-3.5" />
+                                {c.date} ({c.type.replace('_', ' ')})
+                              </span>
+                            </div>
+                            <div className="pt-2">
+                              <p className="text-sm text-slate-800 bg-white/90 border border-slate-200 p-3 rounded-xl italic">
+                                &quot;{c.reason}&quot;
+                              </p>
+                            </div>
+                            {c.reviewer_note && (
+                              <div className="pt-1 flex items-center gap-1.5 text-xs text-slate-700">
+                                <MessageSquare className="w-3.5 h-3.5 text-slate-500" />
+                                <span className="font-semibold">Reviewer Note:</span> {c.reviewer_note}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Middle: Time change diff */}
-                      <div className="bg-white/70 border border-slate-200/80 rounded-xl p-4 flex items-center justify-between gap-4 shrink-0 min-w-[240px]">
-                        <div className="text-center">
-                          <p className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold">Original Time</p>
-                          <p className="text-sm font-medium text-slate-600 mt-1 font-mono">
-                            {formatTimeStr(c.original_time)}
-                          </p>
+                        {/* Middle: Time change diff */}
+                        <div className="bg-white/90 border border-slate-200/80 rounded-xl p-4 flex items-center justify-between gap-4 shrink-0 min-w-[240px]">
+                          <div className="text-center">
+                            <p className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold">Original Time</p>
+                            <p className="text-sm font-medium text-slate-600 mt-1 font-mono">
+                              {formatTimeStr(c.original_time)}
+                            </p>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-[#1dbf73] shrink-0" />
+                          <div className="text-center">
+                            <p className="text-[10px] text-[#1dbf73] uppercase tracking-wider font-bold">Requested Time</p>
+                            <p className="text-sm font-bold text-slate-900 mt-1 font-mono bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-500/30">
+                              {formatTimeStr(c.requested_time)}
+                            </p>
+                          </div>
                         </div>
-                        <ArrowRight className="w-5 h-5 text-[#1dbf73] shrink-0" />
-                        <div className="text-center">
-                          <p className="text-[10px] text-[#1dbf73] uppercase tracking-wider font-bold">Requested Time</p>
-                          <p className="text-sm font-bold text-slate-900 mt-1 font-mono bg-amber-950/40 px-2.5 py-1 rounded-lg border border-amber-500/30">
-                            {formatTimeStr(c.requested_time)}
-                          </p>
-                        </div>
-                      </div>
 
-                      {/* Right: Actions */}
-                      {isPending && (
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => handleQuickAction(c.id, 'approve')}
-                            disabled={actingId === c.id}
-                            className="bg-[#16965a] hover:bg-[#1dbf73] text-slate-900 shadow-lg shadow-emerald-950/40"
-                          >
-                            <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                            {actingId === c.id ? 'Approving...' : 'Approve'}
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                              setNoteModalReq(c);
-                              setModalAction('reject');
-                              setReviewerNote('');
-                            }}
-                            disabled={actingId === c.id}
-                            className="border-red-500/40 text-red-400 hover:bg-red-500/10"
-                          >
-                            <XCircle className="w-4 h-4 mr-1.5" />
-                            Reject
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                              setNoteModalReq(c);
-                              setModalAction('approve');
-                              setReviewerNote('');
-                            }}
-                            disabled={actingId === c.id}
-                            title="Add Reviewer Note before approving"
-                            className="px-2"
-                          >
-                            <MessageSquare className="w-4 h-4 text-slate-600" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
+                        {/* Right: Actions */}
+                        {isPending && (
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleCorrectionAction(c.id, 'approve')}
+                              disabled={actingId === c.id}
+                              className="bg-[#16965a] hover:bg-[#1dbf73] text-white shadow-lg shadow-emerald-950/20 font-bold px-4 py-2.5"
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                              {actingId === c.id ? 'Approving...' : 'Approve'}
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                setNoteModalReq(c);
+                                setModalAction('reject');
+                                setReviewerNote('');
+                              }}
+                              disabled={actingId === c.id}
+                              className="border-red-500/40 text-red-600 hover:bg-red-500/10 font-bold px-3 py-2.5"
+                            >
+                              <XCircle className="w-4 h-4 mr-1.5" />
+                              Reject
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                setNoteModalReq(c);
+                                setModalAction('approve');
+                                setReviewerNote('');
+                              }}
+                              disabled={actingId === c.id}
+                              title="Add Reviewer Note before approving"
+                              className="px-2.5 py-2.5"
+                            >
+                              <MessageSquare className="w-4 h-4 text-slate-600" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        )
       )}
 
-      {/* Review Note Modal */}
+      {/* Review Note Modal for Time Correction */}
       {noteModalReq && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
           <Card className="w-full max-w-md p-6 bg-[#ffffff] border border-slate-200 shadow-2xl space-y-4">
@@ -359,7 +662,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                 {modalAction === 'approve' ? (
                   <CheckCircle2 className="w-5 h-5 text-[#1dbf73]" />
                 ) : (
-                  <XCircle className="w-5 h-5 text-red-400" />
+                  <XCircle className="w-5 h-5 text-red-600" />
                 )}
                 {modalAction === 'approve' ? 'Approve with Note' : 'Reject Correction Request'}
               </h3>
@@ -384,11 +687,56 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
               <Button variant="secondary" onClick={() => setNoteModalReq(null)}>Cancel</Button>
               <Button
                 variant="primary"
-                onClick={() => handleQuickAction(noteModalReq.id, modalAction, reviewerNote)}
+                onClick={() => handleCorrectionAction(noteModalReq.id, modalAction, reviewerNote)}
                 disabled={actingId === noteModalReq.id}
-                className={modalAction === 'approve' ? 'bg-[#16965a] hover:bg-[#1dbf73]' : 'bg-red-600 hover:bg-red-500'}
+                className={modalAction === 'approve' ? 'bg-[#16965a] hover:bg-[#1dbf73] text-white' : 'bg-red-600 hover:bg-red-500 text-white'}
               >
                 {actingId === noteModalReq.id ? 'Processing...' : `Confirm ${modalAction === 'approve' ? 'Approval' : 'Rejection'}`}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Review Note Modal for Check-In Approval */}
+      {checkinModalReq && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <Card className="w-full max-w-md p-6 bg-[#ffffff] border border-slate-200 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                {modalAction === 'approve' ? (
+                  <CheckCircle2 className="w-5 h-5 text-[#1dbf73]" />
+                ) : (
+                  <XCircle className="w-5 h-5 text-red-600" />
+                )}
+                {modalAction === 'approve' ? 'Approve Check-In with Note' : 'Reject Check-In Request'}
+              </h3>
+              <button onClick={() => setCheckinModalReq(null)} className="text-slate-600 hover:text-slate-900 text-sm">✕</button>
+            </div>
+            <p className="text-sm text-slate-600">
+              {modalAction === 'approve' 
+                ? `You are about to approve ${checkinModalReq.profiles?.full_name || 'this employee'}'s check-in.`
+                : `Please provide a reason for rejecting ${checkinModalReq.profiles?.full_name || 'this employee'}'s check-in.`}
+            </p>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Reviewer Note / Reason</label>
+              <textarea
+                rows={3}
+                placeholder={modalAction === 'approve' ? 'e.g., Verified manager override.' : 'e.g., Checked in outside store without prior permission.'}
+                value={reviewerNote}
+                onChange={(e) => setReviewerNote(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73]"
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="secondary" onClick={() => setCheckinModalReq(null)}>Cancel</Button>
+              <Button
+                variant="primary"
+                onClick={() => handleCheckinAction(checkinModalReq.id, modalAction, reviewerNote)}
+                disabled={actingId === checkinModalReq.id}
+                className={modalAction === 'approve' ? 'bg-[#16965a] hover:bg-[#1dbf73] text-white' : 'bg-red-600 hover:bg-red-500 text-white'}
+              >
+                {actingId === checkinModalReq.id ? 'Processing...' : `Confirm ${modalAction === 'approve' ? 'Approval' : 'Rejection'}`}
               </Button>
             </div>
           </Card>

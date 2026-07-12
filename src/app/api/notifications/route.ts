@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { dispatchNotification } from '@/lib/notification-service';
 import { z } from 'zod';
 
 const createNotificationSchema = z.object({
@@ -78,24 +79,30 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const payload = createNotificationSchema.parse(body);
 
-    const supabase = await createClient();
-    const { data: newNotif, error } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: payload.user_id,
-        title: payload.title,
-        message: payload.message,
-        type: payload.type,
-        action_url: payload.action_url || null, // SQL-05 fix: was link_url
-        is_read: false,
-      })
-      .select()
-      .single();
+    const success = await dispatchNotification({
+      userId: payload.user_id,
+      title: payload.title,
+      message: payload.message,
+      type: payload.type,
+      actionUrl: payload.action_url || null,
+      sendEmail: true,
+    });
 
-    if (error || !newNotif) throw new Error(`Failed to create notification: ${error?.message}`);
+    if (!success) throw new Error(`Failed to dispatch notification to user ${payload.user_id}`);
 
     return NextResponse.json(
-      { success: true, data: newNotif, message: 'Notification dispatched.', timestamp: new Date().toISOString() },
+      {
+        success: true,
+        data: {
+          user_id: payload.user_id,
+          title: payload.title,
+          message: payload.message,
+          type: payload.type,
+          action_url: payload.action_url || null,
+        },
+        message: 'Notification and email dispatched.',
+        timestamp: new Date().toISOString(),
+      },
       { status: 201 }
     );
   } catch (error) {

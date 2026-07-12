@@ -24,6 +24,7 @@ export interface LeaveRequestRecord {
   status: 'pending' | 'approved' | 'rejected';
   approved_by?: string;
   approved_at?: string;
+  updated_at?: string;
   reviewer_note?: string;
   created_at: string;
   employee_name?: string;
@@ -32,6 +33,12 @@ export interface LeaveRequestRecord {
   branch_name?: string;
   leave_type_name?: string;
   leave_type_code?: string;
+  approved_by_name?: string | null;
+}
+
+interface BranchOption {
+  id: string;
+  name: string;
 }
 
 interface LeaveManagementPanelProps {
@@ -40,6 +47,7 @@ interface LeaveManagementPanelProps {
 
 export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role }) => {
   const [leaves, setLeaves] = useState<LeaveRequestRecord[]>([]);
+  const [branches, setBranches] = useState<BranchOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusTab, setStatusTab] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
@@ -49,19 +57,37 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
   const [modalAction, setModalAction] = useState<'approve' | 'reject'>('approve');
   const [reviewerNote, setReviewerNote] = useState('');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  // MISS-N4 fix: date range filter state
+  const [branchFilter, setBranchFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+
+  // Fetch branches if admin
+  useEffect(() => {
+    if (role !== 'admin') return;
+    const loadBranches = async () => {
+      try {
+        const res = await fetch('/api/branches');
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setBranches(json.data.map((b: { id: string; name: string }) => ({ id: String(b.id), name: b.name })));
+        }
+      } catch (err) {
+        console.error('Failed to load branches', err);
+      }
+    };
+    loadBranches();
+  }, [role]);
 
   const fetchLeaves = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      // MISS-N4 fix: pass date range to API
       const params = new URLSearchParams();
       if (statusTab !== 'all') params.set('status', statusTab);
+      if (branchFilter !== 'all') params.set('branch_id', branchFilter);
       if (dateFrom) params.set('start_date', dateFrom);
       if (dateTo) params.set('end_date', dateTo);
+
       const res = await fetch(`/api/leaves/list?${params.toString()}`);
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -73,7 +99,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
     } finally {
       setLoading(false);
     }
-  }, [statusTab, dateFrom, dateTo]);
+  }, [statusTab, branchFilter, dateFrom, dateTo]);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -94,7 +120,6 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
         throw new Error(result.error?.message || result.error || `Failed to ${action} leave request`);
       }
       setFeedback({ type: 'success', text: `Leave request ${action}d successfully.` });
-      // Refresh list
       await fetchLeaves();
       setNoteModalLeave(null);
       setReviewerNote('');
@@ -137,7 +162,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
       </div>
 
       {/* Tabs & Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex bg-[#ffffff]/90 border border-slate-200 p-1 rounded-xl shadow-inner overflow-x-auto">
           {(['pending', 'approved', 'rejected', 'all'] as const).map((tab) => (
             <button
@@ -158,42 +183,64 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
           ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-          {/* MISS-N4 fix: date range inputs */}
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto flex-wrap">
+          {/* Branch filter (only for admin) */}
+          {role === 'admin' && branches.length > 0 && (
+            <div className="flex items-center gap-2 bg-[#ffffff]/90 border border-slate-200 rounded-xl px-3 py-2">
+              <Building2 className="w-4 h-4 text-[#1dbf73] shrink-0" />
+              <select
+                value={branchFilter}
+                onChange={(e) => setBranchFilter(e.target.value)}
+                className="bg-transparent text-sm text-slate-700 focus:outline-none"
+              >
+                <option value="all">All Stores / Branches</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Date range inputs */}
+          <div className="flex items-center gap-2 bg-[#ffffff]/90 border border-slate-200 rounded-xl px-3 py-1.5">
             <input
               type="date"
               value={dateFrom}
-              onChange={e => setDateFrom(e.target.value)}
-              className="bg-[#ffffff]/90 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-[#1dbf73]"
+              max={dateTo || undefined}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="bg-transparent text-sm text-slate-700 focus:outline-none"
               title="Start Date"
             />
-            <span className="text-slate-400">-</span>
+            <span className="text-slate-400 font-bold">-</span>
             <input
               type="date"
               value={dateTo}
-              onChange={e => setDateTo(e.target.value)}
-              className="bg-[#ffffff]/90 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-[#1dbf73]"
+              min={dateFrom || undefined}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="bg-transparent text-sm text-slate-700 focus:outline-none"
               title="End Date"
             />
             {(dateFrom || dateTo) && (
               <button
                 onClick={() => { setDateFrom(''); setDateTo(''); }}
-                className="text-xs text-slate-400 hover:text-rose-500 transition-colors px-1"
+                className="text-xs text-slate-400 hover:text-rose-500 transition-colors font-bold px-1"
                 title="Clear Dates"
               >
-                Clear
+                ✕
               </button>
             )}
           </div>
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-600" />
+
+          <div className="relative w-full sm:w-72">
+            <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
             <input
               type="text"
               placeholder="Search employee, ID, branch, reason..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#ffffff]/90 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73] transition-colors"
+              className="w-full bg-[#ffffff]/90 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73] transition-colors"
             />
           </div>
         </div>
@@ -277,9 +324,9 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                               </span>
                             )}
                             <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider ${
-                              isPending ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                              isPending ? 'bg-amber-500/20 text-amber-600 border border-amber-500/30' :
                               isApproved ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' :
-                              'bg-red-500/20 text-red-300 border border-red-500/30'
+                              'bg-red-500/20 text-red-500 border border-red-500/30'
                             }`}>
                               {l.status}
                             </span>
@@ -290,7 +337,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                               {l.branch_name}
                             </span>
                             <span className="text-slate-500">•</span>
-                            <span className="text-purple-400 font-medium">
+                            <span className="text-purple-600 font-semibold">
                               {l.leave_type_name || l.leave_type_code || 'Casual Leave'}
                             </span>
                             <span className="text-slate-500">•</span>
@@ -301,10 +348,17 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                               &quot;{l.reason}&quot;
                             </p>
                           </div>
+                          {!isPending && (l.approved_by_name || l.approved_at) && (
+                            <div className="pt-1 text-xs text-slate-500 flex items-center gap-1.5">
+                              <span className="font-bold text-slate-700">Reviewed by:</span>
+                              <span className="text-slate-800 font-medium">{l.approved_by_name || 'Management'}</span>
+                              {l.approved_at && <span>on {new Date(l.approved_at).toLocaleDateString()}</span>}
+                            </div>
+                          )}
                           {l.reviewer_note && (
                             <div className="pt-1 flex items-center gap-1.5 text-xs text-slate-600">
-                              <MessageSquare className="w-3.5 h-3.5 text-slate-500" />
-                              <span className="font-semibold text-slate-600">Reviewer Note:</span> {l.reviewer_note}
+                              <MessageSquare className="w-3.5 h-3.5 text-[#1dbf73] shrink-0" />
+                              <span className="font-semibold text-slate-700">Reviewer Note:</span> {l.reviewer_note}
                             </div>
                           )}
                         </div>
@@ -316,7 +370,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                         <p className="text-lg font-bold text-slate-900 mt-1">
                           {l.total_days || 1} {Number(l.total_days) === 1 ? 'Day' : 'Days'}
                         </p>
-                        <p className="text-xs text-[#1dbf73] font-mono mt-0.5">
+                        <p className="text-xs text-[#1dbf73] font-mono mt-0.5 font-bold">
                           {l.start_date} &rarr; {l.end_date}
                         </p>
                       </div>
@@ -329,7 +383,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                             size="sm"
                             onClick={() => handleQuickAction(l.id, 'approve')}
                             disabled={actingId === l.id}
-                            className="bg-[#16965a] hover:bg-[#1dbf73] text-slate-900 shadow-lg shadow-emerald-950/40"
+                            className="bg-[#16965a] hover:bg-[#1dbf73] text-white shadow-lg shadow-emerald-950/20 font-bold"
                           >
                             <CheckCircle2 className="w-4 h-4 mr-1.5" />
                             {actingId === l.id ? 'Approving...' : 'Approve'}
@@ -343,7 +397,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                               setReviewerNote('');
                             }}
                             disabled={actingId === l.id}
-                            className="border-red-500/40 text-red-400 hover:bg-red-500/10"
+                            className="border-red-500/40 text-red-500 hover:bg-red-500/10 font-bold"
                           >
                             <XCircle className="w-4 h-4 mr-1.5" />
                             Reject
@@ -358,9 +412,9 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                             }}
                             disabled={actingId === l.id}
                             title="Add Reviewer Note before approving"
-                            className="px-2"
+                            className="px-2.5 bg-slate-100 hover:bg-slate-200"
                           >
-                            <MessageSquare className="w-4 h-4 text-slate-600" />
+                            <MessageSquare className="w-4 h-4 text-slate-700" />
                           </Button>
                         </div>
                       )}
@@ -409,7 +463,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                 variant="primary"
                 onClick={() => handleQuickAction(noteModalLeave.id, modalAction, reviewerNote)}
                 disabled={actingId === noteModalLeave.id}
-                className={modalAction === 'approve' ? 'bg-[#16965a] hover:bg-[#1dbf73]' : 'bg-red-600 hover:bg-red-500'}
+                className={modalAction === 'approve' ? 'bg-[#16965a] hover:bg-[#1dbf73] text-white' : 'bg-red-600 hover:bg-red-500 text-white'}
               >
                 {actingId === noteModalLeave.id ? 'Processing...' : `Confirm ${modalAction === 'approve' ? 'Approval' : 'Rejection'}`}
               </Button>
@@ -420,4 +474,5 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
     </div>
   );
 };
+
 

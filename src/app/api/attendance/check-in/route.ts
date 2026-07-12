@@ -3,6 +3,7 @@ import { requireRole, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { isWithinGeofence } from '@/lib/geo';
 import { getEuclideanDistance } from '@/lib/biometric';
+import { dispatchToBranchManagers, dispatchToAdmins } from '@/lib/notification-service';
 import { z } from 'zod';
 
 const checkInSchema = z.object({
@@ -280,25 +281,29 @@ export async function POST(request: NextRequest) {
       throw new Error(`Database Insert Failed: ${insertErr?.message}`);
     }
 
-    // Notify Branch Manager about pending check-in approval
+    // Notify Branch Managers AND Admins about pending check-in approval (with email & action_url)
     try {
-      const { data: branchManager } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .eq('branch_id', targetBranchId)
-        .eq('role', 'branch_manager')
-        .eq('is_active', true)
-        .maybeSingle();
+      const timeStr = new Date(checkInTime).toLocaleTimeString('en-BD', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dhaka' });
+      const notifTitle = '⏳ Attendance Check-In Approval Required';
+      const notifMsg = `${profile?.full_name || 'An employee'} has checked in at ${branch.name} at ${timeStr}. Please approve or reject.`;
 
-      if (branchManager) {
-        await supabase.from('notifications').insert({
-          user_id: branchManager.id,
-          title: '⏳ Attendance Approval Required',
-          message: `${profile?.full_name || 'An employee'} has checked in at ${branch.name} at ${new Date(checkInTime).toLocaleTimeString('en-BD', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dhaka' })}. Please approve or reject.`,
+      await Promise.all([
+        dispatchToBranchManagers({
+          branchId: targetBranchId,
+          title: notifTitle,
+          message: notifMsg,
           type: 'attendance_approval',
-          action_url: '/branch-manager/attendance',
-        });
-      }
+          actionUrl: '/branch-manager/attendance',
+          sendEmail: true,
+        }),
+        dispatchToAdmins({
+          title: notifTitle,
+          message: notifMsg,
+          type: 'attendance_approval',
+          actionUrl: '/admin/attendance',
+          sendEmail: true,
+        }),
+      ]);
     } catch {
       // Non-fatal: notification failure should not block check-in
     }

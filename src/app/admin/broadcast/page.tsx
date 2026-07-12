@@ -1,23 +1,40 @@
-﻿'use client';
+'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Bell, Send, ChevronLeft, AlertTriangle, CheckCircle2, Users, Megaphone } from 'lucide-react';
+import { Bell, Send, ChevronLeft, AlertTriangle, CheckCircle2, Users, Megaphone, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createClient } from '@/lib/supabase/client';
+
+interface Branch {
+  id: string;
+  name: string;
+}
 
 export default function BroadcastPage() {
   const router = useRouter();
+  const supabase = createClient();
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState<string>('all');
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const TITLE_MAX = 100;
   const MESSAGE_MAX = 500;
+
+  useEffect(() => {
+    async function loadBranches() {
+      const { data } = await supabase.from('branches').select('id, name').eq('is_active', true).order('name');
+      if (data) setBranches(data);
+    }
+    loadBranches();
+  }, [supabase]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,27 +48,31 @@ export default function BroadcastPage() {
     setFeedback(null);
 
     try {
-      // Fetch all active employee user IDs to broadcast individually
-      const empRes = await fetch('/api/employees?limit=200');
+      // Fetch employee list (if specific branch selected, filter by branch)
+      const queryUrl = selectedBranch === 'all' 
+        ? '/api/employees?limit=300' 
+        : `/api/employees?limit=300&branch_id=${selectedBranch}`;
+      const empRes = await fetch(queryUrl);
       const empJson = await empRes.json();
 
       if (!empJson.success) {
         throw new Error('Failed to fetch employee list for broadcast.');
       }
 
-      const employees: Array<{ id: string }> = empJson.data || [];
+      const employees: Array<{ id: string; role: string }> = empJson.data || [];
 
       if (employees.length === 0) {
-        setFeedback({ type: 'error', text: 'No active employees found to broadcast to.' });
+        setFeedback({ type: 'error', text: 'No active staff found in the selected target group.' });
         return;
       }
 
-      // Send notification to each employee
+      // Send notification to each employee/manager with direct navigation action_url and email
       let successCount = 0;
       let failCount = 0;
 
       await Promise.all(
         employees.map(async (emp) => {
+          const targetUrl = emp.role === 'branch_manager' ? '/branch-manager' : '/employee/history';
           const res = await fetch('/api/notifications', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -60,6 +81,7 @@ export default function BroadcastPage() {
               title: title.trim(),
               message: message.trim(),
               type: 'alert',
+              action_url: targetUrl,
             }),
           });
           if (res.ok) successCount++;
@@ -126,6 +148,26 @@ export default function BroadcastPage() {
 
       <Card className="bg-white border-slate-200 p-6 shadow-2xl">
         <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+              Target Audience / Store Branch
+            </label>
+            <div className="relative">
+              <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
+              <select
+                value={selectedBranch}
+                onChange={(e) => setSelectedBranch(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
+              >
+                <option value="all">🌐 All Store Branches (Universal Broadcast)</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    🏪 {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">Message Title</label>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { dispatchNotification } from '@/lib/notification-service';
 import { z } from 'zod';
 
 const actionSchema = z.object({
@@ -68,13 +69,19 @@ export async function POST(
           .update({
             ...updateField,
             is_manual_entry: true,
+            is_manual_override: true,
+            approval_status: 'approved',
             manual_reason: `Approved Correction: ${correction.reason}`,
           })
           .eq('id', recordId);
 
         if (recUpdErr) {
           // If is_manual_entry column is missing on older schema, update timestamp directly
-          await supabase.from('attendance_records').update(updateField).eq('id', recordId);
+          await supabase.from('attendance_records').update({
+            ...updateField,
+            approval_status: 'approved',
+            is_manual_override: true,
+          }).eq('id', recordId);
         }
       } else {
         // No record_id attached: search for existing record on that date or insert new one
@@ -92,7 +99,12 @@ export async function POST(
         if (existingRecs && existingRecs.length > 0) {
           const targetRec = correction.type === 'check_in' ? existingRecs[0] : existingRecs[existingRecs.length - 1];
           const updateField = correction.type === 'check_in' ? { check_in_time: requestedISO } : { check_out_time: requestedISO };
-          await supabase.from('attendance_records').update(updateField).eq('id', targetRec.id);
+          await supabase.from('attendance_records').update({
+            ...updateField,
+            approval_status: 'approved',
+            is_manual_override: true,
+            is_manual_entry: true,
+          }).eq('id', targetRec.id);
         } else if (correction.type === 'check_in') {
           // Create new attendance check-in record
           await supabase.from('attendance_records').insert({
@@ -100,6 +112,8 @@ export async function POST(
             branch_id: correction.branch_id,
             check_in_time: requestedISO,
             status: 'present',
+            approval_status: 'approved',
+            is_manual_override: true,
             is_manual_entry: true,
             manual_reason: `Approved Correction: ${correction.reason}`,
           });
@@ -121,6 +135,21 @@ export async function POST(
       .single();
 
     if (updErr) throw new Error(updErr.message);
+
+    // Notify employee of the decision (real-time pip sound + beautiful email)
+    try {
+      const actionText = input.action === 'approve' ? 'Approved ✅' : 'Rejected ❌';
+      await dispatchNotification({
+        userId: correction.employee_id,
+        title: `Attendance Correction ${actionText}`,
+        message: `Your attendance correction request for ${correction.date} (${correction.type.replace('_', ' ')}) has been ${input.action === 'approve' ? 'approved' : 'rejected'}.${input.reviewer_note ? ` Note: ${input.reviewer_note}` : ''}`,
+        type: 'attendance_decision',
+        actionUrl: '/employee/history',
+        sendEmail: true,
+      });
+    } catch {
+      // Non-fatal
+    }
 
     return NextResponse.json({
       success: true,

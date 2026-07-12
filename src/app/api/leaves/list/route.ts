@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 /**
  * GET /api/leaves/list
  * Lists leave requests scoped by role:
- * - Admin: All leave requests across all branches
+ * - Admin: All leave requests across all branches (or filtered by branch_id)
  * - Branch Manager: Leave requests for employees in their branch
  * - Employee: Own leave requests only
  */
@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get('status'); // e.g. 'pending', 'approved', 'rejected', or null for all
     const branchIdFilter = searchParams.get('branch_id');
+    const startDateFilter = searchParams.get('start_date');
+    const endDateFilter = searchParams.get('end_date');
 
     let query = supabase.from('leave_requests').select('*').order('created_at', { ascending: false });
 
@@ -35,6 +37,14 @@ export async function GET(request: NextRequest) {
       query = query.eq('status', statusFilter);
     }
 
+    // Bug #1 Fix: Apply start_date and end_date range filtering when specified
+    if (startDateFilter) {
+      query = query.gte('start_date', startDateFilter);
+    }
+    if (endDateFilter) {
+      query = query.lte('end_date', endDateFilter);
+    }
+
     const { data: leaves, error: leaveErr } = await query;
     if (leaveErr) throw new Error(leaveErr.message);
 
@@ -44,12 +54,14 @@ export async function GET(request: NextRequest) {
 
     // Collect distinct IDs to fetch profile, branch, and leave type metadata resiliently
     const userIds = Array.from(new Set(leaves.map((l) => l.user_id || l.employee_id).filter(Boolean)));
+    const reviewerIds = Array.from(new Set(leaves.map((l) => l.approved_by).filter(Boolean)));
+    const allProfileIds = Array.from(new Set([...userIds, ...reviewerIds]));
     const branchIds = Array.from(new Set(leaves.map((l) => l.branch_id).filter(Boolean)));
     const leaveTypeIds = Array.from(new Set(leaves.map((l) => l.leave_type_id).filter(Boolean)));
 
-    // Fetch profiles
-    const { data: profiles } = userIds.length > 0
-      ? await supabase.from('profiles').select('id, full_name, email, role, employee_id').in('id', userIds)
+    // Fetch profiles for both applicants and reviewers
+    const { data: profiles } = allProfileIds.length > 0
+      ? await supabase.from('profiles').select('id, full_name, email, role, employee_id').in('id', allProfileIds)
       : { data: [] };
     const profMap: Record<string, Record<string, unknown>> = {};
     (profiles || []).forEach((p) => { profMap[p.id] = p as unknown as Record<string, unknown>; });
@@ -72,6 +84,7 @@ export async function GET(request: NextRequest) {
     const enriched = leaves.map((l) => {
       const targetUserId = l.user_id || l.employee_id;
       const prof = profMap[targetUserId] || {};
+      const reviewerProf = l.approved_by ? (profMap[l.approved_by] || {}) : {};
       const branch = branchMap[l.branch_id] || {};
       const lType = typeMap[l.leave_type_id] || {};
 
@@ -84,6 +97,7 @@ export async function GET(request: NextRequest) {
         branch_code: branch.code || '',
         leave_type_name: lType.name || l.type || 'General Leave',
         leave_type_code: lType.code || l.type || 'CASUAL',
+        approved_by_name: reviewerProf.full_name || (l.approved_by ? 'Authorized Reviewer' : null),
       };
     });
 
@@ -95,4 +109,5 @@ export async function GET(request: NextRequest) {
     return handleApiError(error);
   }
 }
+
 

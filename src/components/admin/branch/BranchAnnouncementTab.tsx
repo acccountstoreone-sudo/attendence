@@ -33,9 +33,10 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user_id: emp.id,
-            title: `Branch Announcement (${announcementType})`,
+            title: `📢 Store Announcement: ${branch.name}`,
             message: message.trim(),
-            type: 'info'
+            type: 'alert',
+            action_url: '/employee/history',
           })
         });
         if (res.ok) successCount++;

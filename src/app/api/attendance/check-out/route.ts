@@ -3,6 +3,7 @@ import { requireRole, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { isWithinGeofence } from '@/lib/geo';
 import { getEuclideanDistance } from '@/lib/biometric';
+import { dispatchToBranchManagers, dispatchToAdmins } from '@/lib/notification-service';
 import { z } from 'zod';
 
 const checkOutSchema = z.object({
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     const payload = checkOutSchema.parse(body);
 
     const supabase = await createClient();
-    const { data: profile } = await supabase.from('profiles').select('face_descriptor').eq('id', user.id).single();
+    const { data: profile } = await supabase.from('profiles').select('full_name, face_descriptor').eq('id', user.id).single();
 
     // 3. Biometric Verification Check (face match only — no liveness challenge required)
     if (!payload.webauthn_verified) {
@@ -224,6 +225,33 @@ export async function POST(request: NextRequest) {
 
     if (updateErr || !updatedRecord) {
       throw new Error(`Database Update Failed: ${updateErr?.message}`);
+    }
+
+    // Notify Branch Managers and Admins about check-out event (with email & action_url)
+    try {
+      const timeStr = new Date(checkOutTime).toLocaleTimeString('en-BD', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dhaka' });
+      const notifTitle = '🏁 Employee Check-Out Logged';
+      const notifMsg = `${profile?.full_name || 'An employee'} has checked out at ${timeStr}. Overtime: ${updatedRecord.overtime_minutes || 0} mins.`;
+
+      await Promise.all([
+        dispatchToBranchManagers({
+          branchId: targetBranchId,
+          title: notifTitle,
+          message: notifMsg,
+          type: 'attendance',
+          actionUrl: '/branch-manager/attendance',
+          sendEmail: true,
+        }),
+        dispatchToAdmins({
+          title: notifTitle,
+          message: notifMsg,
+          type: 'attendance',
+          actionUrl: '/admin/attendance',
+          sendEmail: true,
+        }),
+      ]);
+    } catch {
+      // Non-fatal
     }
 
     return NextResponse.json(

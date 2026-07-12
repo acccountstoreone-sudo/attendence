@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
+import { dispatchNotification } from '@/lib/notification-service';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -59,6 +60,16 @@ export async function POST(request: NextRequest) {
         .eq('id', userId);
 
       if (updateError) throw updateError;
+
+      await dispatchNotification({
+        userId,
+        title: '🎉 Account Approved & Activated!',
+        message: 'Congratulations! Your KYC documents and biometric verification have been approved by management. You can now log in and check in.',
+        type: 'welcome',
+        actionUrl: '/employee/check-in',
+        sendEmail: true,
+      });
+
       return NextResponse.json({ success: true, message: 'Employee successfully approved and activated.' });
     } else if (action === 'reject') {
       const { error: updateError } = await adminClient
@@ -71,6 +82,16 @@ export async function POST(request: NextRequest) {
         .eq('id', userId);
 
       if (updateError) throw updateError;
+
+      await dispatchNotification({
+        userId,
+        title: '⚠️ Account Registration Rejected',
+        message: 'Your registration request was not approved by management. Please contact your Branch Manager or HR for clarification.',
+        type: 'warning',
+        actionUrl: '/login',
+        sendEmail: true,
+      });
+
       return NextResponse.json({ success: true, message: 'Employee registration rejected.' });
     } else {
       return NextResponse.json({ error: 'Invalid action specified. Must be "approve" or "reject".' }, { status: 400 });

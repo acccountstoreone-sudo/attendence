@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { dispatchNotification } from '@/lib/notification-service';
 import { z } from 'zod';
 
 const approveSchema = z.object({
@@ -9,8 +10,8 @@ const approveSchema = z.object({
   note: z.string().optional(),
 });
 
-// GET /api/attendance/approve?date=YYYY-MM-DD
-// Returns pending (or all) attendance records for the BM's branch
+// GET /api/attendance/approve?date=YYYY-MM-DD|all&status=pending|approved|rejected|all
+// Returns pending (or all) attendance records for Admins & Branch Managers
 export async function GET(request: NextRequest) {
   try {
     const user = await requireRole(['admin', 'branch_manager']);
@@ -19,21 +20,6 @@ export async function GET(request: NextRequest) {
 
     const dateParam = searchParams.get('date');
     const statusFilter = searchParams.get('status') || 'pending'; // pending | approved | rejected | all
-
-    // Build date range (Asia/Dhaka)
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Dhaka',
-      year: 'numeric', month: '2-digit', day: '2-digit',
-    });
-    const targetDate = dateParam || (() => {
-      const [m, d, y] = formatter.format(now).split('/');
-      return `${y}-${m}-${d}`;
-    })();
-
-    const [year, month, day] = targetDate.split('-');
-    const startOfDay = new Date(`${year}-${month}-${day}T00:00:00+06:00`);
-    const endOfDay   = new Date(`${year}-${month}-${day}T23:59:59+06:00`);
 
     let query = supabase
       .from('attendance_records')
@@ -45,6 +31,7 @@ export async function GET(request: NextRequest) {
         check_out_time,
         status,
         approval_status,
+        is_manual_override,
         approved_by,
         approved_at,
         approval_note,
@@ -56,20 +43,38 @@ export async function GET(request: NextRequest) {
           employee_id
         ),
         branches!attendance_records_branch_id_fkey (
-          name,
-          work_start_time:branch_settings(work_start_time),
-          work_end_time:branch_settings(work_end_time)
+          name
         )
       `)
-      .gte('check_in_time', startOfDay.toISOString())
-      .lte('check_in_time', endOfDay.toISOString())
       .order('check_in_time', { ascending: false });
+
+    // Handle date filtering (if not 'all' or when specific date requested)
+    if (dateParam && dateParam !== 'all' && dateParam.includes('-')) {
+      const [year, month, day] = dateParam.split('-');
+      const startOfDay = new Date(`${year}-${month}-${day}T00:00:00+06:00`);
+      const endOfDay   = new Date(`${year}-${month}-${day}T23:59:59+06:00`);
+      query = query.gte('check_in_time', startOfDay.toISOString()).lte('check_in_time', endOfDay.toISOString());
+    } else if (!dateParam && statusFilter !== 'pending') {
+      // Default to today if no date specified and not fetching pending list
+      const now = new Date();
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Dhaka',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+      });
+      const [m, d, y] = formatter.format(now).split('/');
+      const startOfDay = new Date(`${y}-${m}-${d}T00:00:00+06:00`);
+      const endOfDay   = new Date(`${y}-${m}-${d}T23:59:59+06:00`);
+      query = query.gte('check_in_time', startOfDay.toISOString()).lte('check_in_time', endOfDay.toISOString());
+    } else {
+      // Limit to 300 recent items when querying across all dates to keep performance snappy
+      query = query.limit(300);
+    }
 
     // Scope to BM's branch
     if (user.role === 'branch_manager') {
       if (!user.branch_id) throw new Error('Branch Manager has no assigned branch.');
       query = query.eq('branch_id', user.branch_id);
-    } else if (searchParams.get('branch_id')) {
+    } else if (searchParams.get('branch_id') && searchParams.get('branch_id') !== 'all') {
       query = query.eq('branch_id', searchParams.get('branch_id')!);
     }
 
@@ -131,6 +136,7 @@ export async function POST(request: NextRequest) {
       .from('attendance_records')
       .update({
         approval_status: payload.action === 'approve' ? 'approved' : 'rejected',
+        is_manual_override: payload.action === 'approve' ? true : false,
         approved_by: user.id,
         approved_at: new Date().toISOString(),
         approval_note: payload.note || null,
@@ -143,18 +149,19 @@ export async function POST(request: NextRequest) {
       throw new Error(`Failed to update approval: ${updateErr?.message}`);
     }
 
-    // Notify the employee about the decision
+    // Notify the employee about the decision (with email & action_url)
     try {
       const actionText = payload.action === 'approve' ? 'approved ✅' : 'rejected ❌';
       const checkInTime = new Date(record.check_in_time).toLocaleTimeString('en-BD', {
         hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dhaka',
       });
-      await supabase.from('notifications').insert({
-        user_id: record.employee_id,
+      await dispatchNotification({
+        userId: record.employee_id,
         title: `Check-in ${payload.action === 'approve' ? 'Approved ✅' : 'Rejected ❌'}`,
-        message: `Your ${checkInTime} check-in has been ${actionText} by the Branch Manager.${payload.note ? ` Note: ${payload.note}` : ''}`,
+        message: `Your ${checkInTime} check-in has been ${actionText} by Management.${payload.note ? ` Note: ${payload.note}` : ''}`,
         type: 'attendance_decision',
-        action_url: '/employee',
+        actionUrl: '/employee/history',
+        sendEmail: true,
       });
     } catch {
       // Non-fatal

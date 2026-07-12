@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { dispatchNotification } from '@/lib/notification-service';
 import { z } from 'zod';
 
 const actionSchema = z.object({
@@ -59,10 +60,44 @@ export async function POST(
     const leaveYear = new Date(leave.start_date || new Date()).getFullYear();
     const totalDays = Number(leave.total_days || 1);
 
-    // 4. Handle Approval & Balance deduction
+    // 4. Update leave request status FIRST before mutating balances
+    const updatePayload: Record<string, unknown> = {
+      status: input.action === 'approve' ? 'approved' : 'rejected',
+      updated_at: new Date().toISOString(),
+    };
+
+    updatePayload.approved_by = user.id;
+    updatePayload.approved_at = new Date().toISOString();
+    if (input.reviewer_note) {
+      updatePayload.reviewer_note = input.reviewer_note;
+    }
+
+    let updatedLeave;
+    const { data: primaryLeave, error: updErr } = await supabase
+      .from('leave_requests')
+      .update(updatePayload)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updErr) {
+      // If approved_by/approved_at columns caused error on older schema, fallback update with status only
+      const { data: fallbackLeave, error: fallbackErr } = await supabase
+        .from('leave_requests')
+        .update({ status: input.action === 'approve' ? 'approved' : 'rejected', updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (fallbackErr) throw new Error(fallbackErr.message);
+      updatedLeave = fallbackLeave;
+    } else {
+      updatedLeave = primaryLeave;
+    }
+
+    // 5. If approved successfully, safely increment used_days in the employee's leave_balances
     if (input.action === 'approve') {
       if (leave.leave_type_id && targetUserId) {
-        // Fetch existing leave balance for that year
         const { data: balance } = await supabase
           .from('leave_balances')
           .select('*')
@@ -81,41 +116,21 @@ export async function POST(
       }
     }
 
-    // 5. Update leave request status
-    const updatePayload: Record<string, unknown> = {
-      status: input.action === 'approve' ? 'approved' : 'rejected',
-      updated_at: new Date().toISOString(),
-    };
-
-    // Try setting reviewer details (if columns exist or fallback cleanly)
-    updatePayload.approved_by = user.id;
-    updatePayload.approved_at = new Date().toISOString();
-    if (input.reviewer_note) {
-      updatePayload.reviewer_note = input.reviewer_note;
-    }
-
-    const { data: updatedLeave, error: updErr } = await supabase
-      .from('leave_requests')
-      .update(updatePayload)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (updErr) {
-      // If approved_by/approved_at columns caused error on older schema, fallback update with status only
-      const { data: fallbackLeave, error: fallbackErr } = await supabase
-        .from('leave_requests')
-        .update({ status: input.action === 'approve' ? 'approved' : 'rejected', updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (fallbackErr) throw new Error(fallbackErr.message);
-      return NextResponse.json({
-        success: true,
-        data: fallbackLeave,
-        message: `Leave request has been ${input.action}d successfully.`,
-      });
+    // Notify the employee about the decision (real-time pip sound + beautiful email)
+    if (targetUserId) {
+      try {
+        const actionText = input.action === 'approve' ? 'Approved ✅' : 'Rejected ❌';
+        await dispatchNotification({
+          userId: targetUserId,
+          title: `Leave Request ${actionText}`,
+          message: `Your leave request for ${totalDays} day(s) starting ${leave.start_date} has been ${input.action === 'approve' ? 'approved' : 'rejected'}.${input.reviewer_note ? ` Note: ${input.reviewer_note}` : ''}`,
+          type: 'leave',
+          actionUrl: '/employee/leaves',
+          sendEmail: true,
+        });
+      } catch {
+        // Non-fatal
+      }
     }
 
     return NextResponse.json({
@@ -127,3 +142,4 @@ export async function POST(
     return handleApiError(error);
   }
 }
+

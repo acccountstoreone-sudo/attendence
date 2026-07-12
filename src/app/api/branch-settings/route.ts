@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError, getSafeIpAddress } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { dispatchToBranchStaff, dispatchToBranchManagers } from '@/lib/notification-service';
 import { z } from 'zod';
 
 const updateBranchSettingsSchema = z.object({
@@ -133,6 +134,35 @@ export async function PUT(request: NextRequest) {
 
     if (error || !updatedSettings) {
       throw new Error(`Failed to update branch settings: ${error?.message}`);
+    }
+
+    // Notify Branch Employees and Managers about the Duty Hours change (with email & action_url)
+    try {
+      const startStr = updatedSettings.work_start_time || payload.work_start_time || '09:00:00';
+      const endStr = updatedSettings.work_end_time || payload.work_end_time || '17:00:00';
+      const notifTitle = '🕒 Store Duty Hours Updated';
+      const notifMsg = `The working schedule for your store branch has been updated: Start Time: ${startStr}, End Time: ${endStr}.`;
+
+      await Promise.all([
+        dispatchToBranchStaff({
+          branchId,
+          title: notifTitle,
+          message: notifMsg,
+          type: 'info',
+          actionUrl: '/employee/profile',
+          sendEmail: true,
+        }),
+        dispatchToBranchManagers({
+          branchId,
+          title: notifTitle,
+          message: notifMsg,
+          type: 'info',
+          actionUrl: '/branch-manager/salary',
+          sendEmail: true,
+        }),
+      ]);
+    } catch {
+      // Non-fatal
     }
 
     return NextResponse.json({

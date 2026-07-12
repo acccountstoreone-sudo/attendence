@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
+import { dispatchToAdmins } from '@/lib/notification-service';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function uploadDataUrl(supabase: any, dataUrl: string, pathPrefix: string, userId: string) {
@@ -102,6 +103,15 @@ export async function POST(request: Request) {
        }
        return NextResponse.json({ error: `Database error during profile update: ${errMsg}` }, { status: 400 });
     }
+
+    // Notify all Admins about new KYC application requiring review (with email)
+    await dispatchToAdmins({
+      title: '📋 New KYC Application & Biometrics Submitted',
+      message: `${user.email} has submitted their NID and biometric enrollment data for management review.`,
+      type: 'info',
+      actionUrl: '/admin/employees',
+      sendEmail: true,
+    });
 
     return NextResponse.json({ success: true, message: 'KYC Documents & Biometric Verification Submitted. Waiting for approval.' });
 
