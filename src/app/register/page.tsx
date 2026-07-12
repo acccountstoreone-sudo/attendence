@@ -240,6 +240,16 @@ export default function RegisterPage() {
       const data = await parseJsonResponse(res);
       if (!res.ok) throw new Error(data.error || 'OTP Verification failed');
 
+      // Sign the user in to establish a session for subsequent steps (WebAuthn & KYC)
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (signInError) {
+        throw new Error('Failed to establish session after OTP verification: ' + signInError.message);
+      }
+
       setFeedback({ type: 'success', message: 'Email verified successfully! Now upload your NID document copies.' });
       setStep('kyc');
 
@@ -385,7 +395,13 @@ export default function RegisterPage() {
     setLoading(true);
     setFeedback(null);
     try {
-      const resp = await fetch('/api/auth/webauthn/register/generate', { method: 'POST' });
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const resp = await fetch('/api/auth/webauthn/register/generate', { method: 'POST', headers });
       const options = await parseJsonResponse(resp);
       if (!resp.ok) {
         throw new Error(options.error || 'Failed to generate fingerprint options.');
@@ -403,7 +419,7 @@ export default function RegisterPage() {
 
       const verifyResp = await fetch('/api/auth/webauthn/register/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(asseResp),
       });
 
@@ -440,15 +456,21 @@ export default function RegisterPage() {
     setFeedback(null);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const res = await fetch('/api/auth/kyc-submit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ 
           nidFrontDataUrl: nidFront, 
           nidBackDataUrl: nidBack, 
           facePhotoDataUrl: faceImage || null,
           faceDescriptor: faceDescriptor || null,
-          fingerprintEnrolled: fingerprintEnrolled
+          fingerprintEnrolled,
         }),
       });
 
