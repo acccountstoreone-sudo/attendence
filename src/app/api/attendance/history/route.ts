@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
       .from('attendance_records')
       // BUG FIX #2: Changed profiles!inner to a left join so records with a
       // deleted/missing profile are not silently dropped from history results.
-      .select('*, profiles(full_name, photo_url, role), branches(name)', { count: 'exact' });
+      // Remove photo_url from select to prevent schema cache errors if migration is pending
+      .select('*, profiles(full_name, role), branches(name)', { count: 'exact' });
 
     // Role-based scoping enforcement (in addition to database RLS)
     if (user.role === 'employee') {
@@ -37,11 +38,15 @@ export async function GET(request: NextRequest) {
       if (employeeId) query = query.eq('employee_id', employeeId);
     }
 
-    // Date filtering: exact date (YYYY-MM-DD) takes priority over month+year.
+    // Date filtering: attendance_records doesn't have a native 'date' column, use check_in_time
     const date = searchParams.get('date');
     if (date) {
-      // Filter on the `date` column (plain date, no timezone issues).
-      query = query.eq('date', date);
+      // Create a range for the specific date
+      const startOfDay = new Date(`${date}T00:00:00.000Z`);
+      const endOfDay = new Date(`${date}T23:59:59.999Z`);
+      query = query
+        .gte('check_in_time', startOfDay.toISOString())
+        .lte('check_in_time', endOfDay.toISOString());
     } else if (month && year) {
       const startOfMonth = new Date(Number(year), Number(month) - 1, 1, 0, 0, 0);
       const endOfMonth = new Date(Number(year), Number(month), 0, 23, 59, 59, 999);
