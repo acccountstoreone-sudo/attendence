@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -36,6 +36,24 @@ export default function EmployeeProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  // BUG-NEW-07 fix: password reset state
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMsg, setResetMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handlePasswordReset = async () => {
+    if (!profile?.email) return;
+    setResetLoading(true);
+    setResetMsg(null);
+    const { error: resetErr } = await supabase.auth.resetPasswordForEmail(profile.email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
+    });
+    setResetLoading(false);
+    if (resetErr) {
+      setResetMsg({ type: 'error', text: `Failed: ${resetErr.message}` });
+    } else {
+      setResetMsg({ type: 'success', text: 'Password reset email sent! Check your inbox.' });
+    }
+  };
 
   useEffect(() => {
     async function loadProfile() {
@@ -193,18 +211,30 @@ export default function EmployeeProfilePage() {
               <ShieldCheck className="w-5 h-5 text-slate-600" />
               <h3 className="font-semibold text-base">Account Security</h3>
             </div>
-            <div className="space-y-4">
+              <div className="space-y-4">
               <p className="text-sm text-slate-600">
-                To update your password or edit your personal details, please contact your Branch Manager or HQ Administrator. This ensures all employee records remain verified and secure.
+                You can request a password reset link to be sent to your email address below.
               </p>
-              <div className="pt-2">
-                <Button variant="outline" size="sm" className="border-slate-200 text-slate-600 cursor-not-allowed opacity-50" icon={<Key className="w-4 h-4" />}>
-                  Change Password (Locked)
+              <div className="pt-2 flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-200 text-slate-700 hover:border-[#1dbf73] hover:text-[#1dbf73]"
+                  icon={<Key className="w-4 h-4" />}
+                  onClick={handlePasswordReset}
+                  disabled={resetLoading || !profile?.email}
+                >
+                  {resetLoading ? 'Sending...' : 'Send Password Reset Email'}
                 </Button>
+                {resetMsg && (
+                  <p className={`text-xs px-2 py-1 rounded ${resetMsg.type === 'success' ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50'}`}>
+                    {resetMsg.text}
+                  </p>
+                )}
               </div>
-              
+
               <div className="w-full h-px bg-slate-100 my-6" />
-              
+
               <WebAuthnRegister />
             </div>
           </Card>

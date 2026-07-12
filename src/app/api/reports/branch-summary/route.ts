@@ -78,18 +78,27 @@ export async function GET(request: NextRequest) {
        const attendanceRate = Math.min(100, Math.max(0, (totalPresent / totalDays) * 100));
        const punctualityRate = totalPresent > 0 ? (present / totalPresent) * 100 : 0;
 
+       // NEW-01 fix: use Dhaka timezone (UTC+6) for today's boundary
+       const now2 = new Date();
+       const dhakaFmt = new Intl.DateTimeFormat('en-US', {
+         timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit',
+       });
+       const [mo2, da2, yr2] = dhakaFmt.format(now2).split('/');
+       const todayStartDhaka = new Date(`${yr2}-${mo2}-${da2}T00:00:00+06:00`);
+       const todayEndDhaka = new Date(`${yr2}-${mo2}-${da2}T23:59:59+06:00`);
+
        const { count: presentTodayCount } = await supabase
          .from('attendance_records')
          .select('*', { count: 'exact', head: true })
          .eq('branch_id', branch.id)
          .eq('status', 'present')
-         .gte('check_in_time', new Date(new Date().setHours(0,0,0,0)).toISOString())
-         .lte('check_in_time', new Date(new Date().setHours(23,59,59,999)).toISOString());
+         .gte('check_in_time', todayStartDhaka.toISOString())
+         .lte('check_in_time', todayEndDhaka.toISOString());
 
        return {
          branch_id: branch.id,
          branch_name: branch.name,
-         branch_code: branch.id.split('-')[0].toUpperCase(),
+         branch_code: branch.code || branch.id.split('-')[0].toUpperCase(), // NEW-10 fix: use branch.code
          total_days: totalWorkingDays,
          present_days: present,
          late_days: late,

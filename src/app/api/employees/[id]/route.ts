@@ -142,8 +142,8 @@ export async function PUT(
       action: 'UPDATE_EMPLOYEE',
       table_name: 'profiles',
       record_id: targetId,
-      old_values: { role: oldProfile.role, branch_id: oldProfile.branch_id, is_active: oldProfile.is_active },
-      new_values: payload,
+      old_value: { role: oldProfile.role, branch_id: oldProfile.branch_id, is_active: oldProfile.is_active },
+      new_value: payload,
       ip_address: getSafeIpAddress(request),
     });
 
@@ -181,11 +181,11 @@ export async function DELETE(
 
     await supabase.from('audit_logs').insert({
       user_id: user.id,
-      action: 'OFFBOARD_EMPLOYEE',
+      action: 'DEACTIVATE',
       table_name: 'profiles',
       record_id: targetId,
-      old_values: { is_active: true },
-      new_values: { is_active: false },
+      old_value: { is_active: true },
+      new_value: { is_active: false },
       ip_address: getSafeIpAddress(request),
     });
 

@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       }, { status: 422 });
     }
 
-    // 4. Insert Leave Request
+    // 4. Insert Leave Request (NEW-04 fix: clean single insert after SQL-07 migration)
     const insertPayload: Record<string, unknown> = {
       user_id: user.id,
       employee_id: user.id,
@@ -121,36 +121,38 @@ export async function POST(request: NextRequest) {
       end_date: input.end_date,
       total_days: requestedDays,
       reason: input.reason,
-      status: 'pending'
+      status: 'pending',
     };
 
-    const { data: initialRecord, error: reqErr } = await supabase
+    const { data: requestRecord, error: reqErr } = await supabase
       .from('leave_requests')
       .insert(insertPayload)
       .select()
       .single();
 
-    let requestRecord = initialRecord;
+    if (reqErr || !requestRecord) throw new Error(reqErr?.message || 'Failed to submit leave request.');
 
-    if (reqErr) {
-      // Fallback if one of the columns doesn't exist in active schema
-      delete insertPayload.employee_id;
-      delete insertPayload.type;
-      const res = await supabase.from('leave_requests').insert(insertPayload).select().single();
-      if (res.error) {
-        delete insertPayload.user_id;
-        delete insertPayload.leave_type_id;
-        insertPayload.employee_id = user.id;
-        insertPayload.type = (leaveType.code || 'CASUAL').toLowerCase();
-        const res2 = await supabase.from('leave_requests').insert(insertPayload).select().single();
-        if (res2.error) throw new Error(res2.error.message);
-        requestRecord = res2.data;
-      } else {
-        requestRecord = res.data;
+    // APP-07 fix: Notify the Branch Manager about this new leave application
+    if (user.branch_id) {
+      const { data: bm } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('branch_id', user.branch_id)
+        .eq('role', 'branch_manager')
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+
+      if (bm?.id) {
+        await supabase.from('notifications').insert({
+          user_id: bm.id,
+          title: 'New Leave Application',
+          message: `${user.full_name || 'An employee'} has applied for ${requestedDays} day(s) of ${input.leave_type_code} leave starting ${input.start_date}.`,
+          type: 'leave',
+          is_read: false,
+        }); // Non-fatal
       }
     }
-
-    if (!requestRecord && reqErr) throw new Error(reqErr.message);
 
     return NextResponse.json({
       success: true,

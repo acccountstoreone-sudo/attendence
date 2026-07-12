@@ -7,8 +7,13 @@ const createNotificationSchema = z.object({
   user_id: z.string().uuid(),
   title: z.string().min(2),
   message: z.string().min(2),
-  type: z.enum(['info', 'warning', 'alert', 'success']).default('info'),
-  link_url: z.string().optional(),
+  // SQL-04 fix: expanded type enum to match DB CHECK constraint
+  type: z.enum([
+    'info', 'warning', 'leave', 'attendance',
+    'attendance_approval', 'attendance_decision',
+    'system', 'welcome', 'correction', 'payroll', 'alert', 'success',
+  ]).default('info'),
+  action_url: z.string().optional(), // SQL-05 fix: was link_url, DB column is action_url
 });
 
 export async function GET(request: NextRequest) {
@@ -81,7 +86,7 @@ export async function POST(request: NextRequest) {
         title: payload.title,
         message: payload.message,
         type: payload.type,
-        link_url: payload.link_url || null,
+        action_url: payload.action_url || null, // SQL-05 fix: was link_url
         is_read: false,
       })
       .select()
@@ -97,4 +102,5 @@ export async function POST(request: NextRequest) {
     return handleApiError(error);
   }
 }
+
 

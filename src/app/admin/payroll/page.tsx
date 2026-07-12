@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -20,6 +20,7 @@ import {
 // Bug 5 fix: Proper typed interfaces instead of any[]
 interface PayrollRecord {
   user_id: string;
+  full_name?: string; // APP-06 fix: was missing from interface
   status: 'success' | 'error';
   reason?: string;
   data?: {
@@ -67,8 +68,9 @@ export default function AdminPayrollDashboard() {
   // Bug 8 fix: Export payroll as CSV
   const handleExport = useCallback(() => {
     if (!results) return;
-    const headers = ['Employee ID', 'Status', 'Payable Days', 'Gross Salary', 'Deductions', 'Net Payable', 'Reason'];
+    const headers = ['Employee Name', 'Employee ID', 'Status', 'Payable Days', 'Gross Salary', 'Deductions', 'Net Payable', 'Reason'];
     const rows = results.map((r) => [
+      r.full_name || r.user_id,
       r.user_id,
       r.status,
       r.data?.total_payable_days ?? '',
@@ -214,7 +216,7 @@ export default function AdminPayrollDashboard() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-600 font-bold">
-                      <th className="py-3 px-5">Employee ID</th>
+                      <th className="py-3 px-5">Employee</th>
                       <th className="py-3 px-5">Status</th>
                       <th className="py-3 px-5 text-right">Payable Days</th>
                       <th className="py-3 px-5 text-right">Gross Salary</th>
@@ -225,8 +227,13 @@ export default function AdminPayrollDashboard() {
                   <tbody className="divide-y divide-slate-200/50 text-sm">
                     {results.map((res, idx) => (
                       <tr key={idx} className="hover:bg-slate-100/30 transition-colors">
-                        <td className="py-3 px-5 font-mono text-xs text-slate-600">
-                          {res.user_id.split('-')[0]}...
+                        <td className="py-3 px-5">
+                          <div className="font-medium text-slate-800 text-sm">
+                            {res.full_name || 'Unknown Employee'}
+                          </div>
+                          <div className="font-mono text-[10px] text-slate-400 truncate max-w-[120px]">
+                            {res.user_id.split('-')[0]}...
+                          </div>
                         </td>
                         <td className="py-3 px-5">
                           {res.status === 'success' ? (

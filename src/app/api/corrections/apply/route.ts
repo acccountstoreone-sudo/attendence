@@ -24,15 +24,29 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Ensure requested_time is formatted as valid ISO timestamp
+    // BUG-NEW-09 fix: normalize requested_time to Dhaka offset (+06:00) so DB stores correct UTC
     let requestedISO = input.requested_time;
     if (!requestedISO.includes('T')) {
-      requestedISO = `${input.date}T${input.requested_time}:00.000+06:00`;
+      requestedISO = `${input.date}T${input.requested_time}:00+06:00`;
+    } else if (!requestedISO.includes('+') && !requestedISO.endsWith('Z')) {
+      // Assume Dhaka local time if no offset given
+      requestedISO = `${input.date}T${input.requested_time.split('T')[1] || input.requested_time}+06:00`;
+    }
+
+    // APP-08 fix: resolve branch_id — admins have null branch_id so look it up
+    let branchId = user.branch_id ?? null;
+    if (!branchId && input.record_id) {
+      const { data: rec } = await supabase
+        .from('attendance_records')
+        .select('branch_id')
+        .eq('id', input.record_id)
+        .single();
+      branchId = rec?.branch_id ?? null;
     }
 
     const payload: Record<string, unknown> = {
       employee_id: user.id,
-      branch_id: user.branch_id,
+      branch_id: branchId,
       record_id: input.record_id || null,
       date: input.date,
       type: input.type,
@@ -61,4 +75,5 @@ export async function POST(request: NextRequest) {
     return handleApiError(error);
   }
 }
+
 

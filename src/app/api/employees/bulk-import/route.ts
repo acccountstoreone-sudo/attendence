@@ -117,9 +117,9 @@ export async function POST(request: NextRequest) {
 
     await supabase.from('audit_logs').insert({
       user_id: user.id,
-      action: 'BULK_IMPORT_EMPLOYEES',
+      action: 'BULK_IMPORT',
       table_name: 'profiles',
-      new_values: { success_count: successCount, error_count: errorCount },
+      new_value: { success_count: successCount, error_count: errorCount },
       ip_address: getSafeIpAddress(request),
     });
 

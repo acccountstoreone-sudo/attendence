@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -49,12 +49,20 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
   const [modalAction, setModalAction] = useState<'approve' | 'reject'>('approve');
   const [reviewerNote, setReviewerNote] = useState('');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  // MISS-N4 fix: date range filter state
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const fetchLeaves = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/leaves/list?status=${statusTab === 'all' ? '' : statusTab}`);
+      // MISS-N4 fix: pass date range to API
+      const params = new URLSearchParams();
+      if (statusTab !== 'all') params.set('status', statusTab);
+      if (dateFrom) params.set('start_date', dateFrom);
+      if (dateTo) params.set('end_date', dateTo);
+      const res = await fetch(`/api/leaves/list?${params.toString()}`);
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.error?.message || data.error || 'Failed to fetch leave requests');
@@ -65,7 +73,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
     } finally {
       setLoading(false);
     }
-  }, [statusTab]);
+  }, [statusTab, dateFrom, dateTo]);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -150,15 +158,44 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
           ))}
         </div>
 
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-600" />
-          <input
-            type="text"
-            placeholder="Search employee, ID, branch, reason..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#ffffff]/90 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73] transition-colors"
-          />
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          {/* MISS-N4 fix: date range inputs */}
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="bg-[#ffffff]/90 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-[#1dbf73]"
+              title="Start Date"
+            />
+            <span className="text-slate-400">-</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              className="bg-[#ffffff]/90 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-[#1dbf73]"
+              title="End Date"
+            />
+            {(dateFrom || dateTo) && (
+              <button
+                onClick={() => { setDateFrom(''); setDateTo(''); }}
+                className="text-xs text-slate-400 hover:text-rose-500 transition-colors px-1"
+                title="Clear Dates"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-600" />
+            <input
+              type="text"
+              placeholder="Search employee, ID, branch, reason..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#ffffff]/90 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73] transition-colors"
+            />
+          </div>
         </div>
       </div>
 

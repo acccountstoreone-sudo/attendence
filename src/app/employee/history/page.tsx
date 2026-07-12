@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -137,12 +137,13 @@ export default function EmployeeHistoryPage() {
     setCorrectionSuccess('');
 
     try {
-      // Assemble datetime correctly by combining the record's date and the time input
+      // Assemble datetime correctly with Dhaka offset (+06:00) — BUG-NEW-09 fix
       const dateStr = selectedRecord.date || selectedRecord.check_in_time?.slice(0, 10) || new Date().toISOString().slice(0, 10);
-      const requestedDateTime = new Date(`${dateStr}T${requestedTime}:00`).toISOString();
+      const requestedDateTime = `${dateStr}T${requestedTime}:00+06:00`;
       const originalTime = correctionType === 'check_in' ? selectedRecord.check_in_time : selectedRecord.check_out_time;
 
-      const res = await fetch('/api/attendance/request-correction', {
+      // MISS-N2 fix: use correct API endpoint /api/corrections/apply
+      const res = await fetch('/api/corrections/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -322,15 +323,38 @@ export default function EmployeeHistoryPage() {
                           </div>
                         </td>
                         <td className="py-4 px-5 text-right">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => openCorrectionModal(rec)}
-                            title="Request Correction"
-                            className="text-slate-600 hover:text-blue-400"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            {/* MISS-N2 fix: show a 'Missing Day' button for absent records */}
+                            {!rec.check_in_time && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setSelectedRecord(rec);
+                                  setCorrectionType('check_in');
+                                  setRequestedTime('');
+                                  setCorrectionReason('Missing attendance for this day — requesting check-in correction.');
+                                  setCorrectionSuccess('');
+                                  setError(null);
+                                  setIsCorrectionModalOpen(true);
+                                }}
+                                title="Request Missing Day Correction"
+                                className="text-amber-500 hover:text-amber-700 text-[10px] px-2"
+                              >
+                                <AlertCircle className="w-3.5 h-3.5 mr-1" />
+                                Missing Day
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => openCorrectionModal(rec)}
+                              title="Request Correction"
+                              className="text-slate-600 hover:text-blue-400"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     );

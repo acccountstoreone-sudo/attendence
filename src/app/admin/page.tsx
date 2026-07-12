@@ -21,6 +21,7 @@ import {
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 
+
 interface CompanySummary {
   total_branches: number;
   total_employees: number;
@@ -100,6 +101,7 @@ export default function AdminDashboardPage() {
   
   const { onlineUsers } = useActivePresence();
   const [showActiveUsersModal, setShowActiveUsersModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(''); // APP-03 fix: search state
 
   const totalCheckins = React.useMemo(() => {
     return weeklyTrendData.reduce((sum, item) => sum + (item.val || 0), 0);
@@ -197,7 +199,14 @@ export default function AdminDashboardPage() {
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder="Type to search..."
+              placeholder="Search branches or employees..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  router.push(`/admin/employees?search=${encodeURIComponent(searchQuery.trim())}`);
+                }
+              }}
               className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-slate-700 placeholder:text-slate-600 focus:outline-none focus:border-[#1dbf73] transition-colors shadow-inner"
             />
           </div>
@@ -421,7 +430,10 @@ export default function AdminDashboardPage() {
             )}
           </div>
           
-          <button className="w-full py-3.5 mt-4 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 transition-all border border-transparent rounded-2xl hover:bg-slate-100 hover:border-slate-200 relative z-10">
+          <button
+            className="w-full py-3.5 mt-4 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 transition-all border border-transparent rounded-2xl hover:bg-slate-100 hover:border-slate-200 relative z-10"
+            onClick={() => router.push('/admin/reports')}
+          >
             View All Activity
           </button>
         </div>

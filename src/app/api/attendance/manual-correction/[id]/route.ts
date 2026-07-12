@@ -29,9 +29,20 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Request not found' }, { status: 404 });
     }
 
-    // Branch manager constraint
-    if (user.role === 'branch_manager' && correctionRequest.branch_id !== user.branch_id) {
-      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    // Branch manager constraint — NEW-06 fix: handle null branch_id (admin-created corrections)
+    if (user.role === 'branch_manager') {
+      // If correction has a branch_id, use it; otherwise look up the employee's branch
+      const correctionBranchId = correctionRequest.branch_id || await (async () => {
+        const { data: emp } = await supabase
+          .from('profiles')
+          .select('branch_id')
+          .eq('id', correctionRequest.employee_id)
+          .single();
+        return emp?.branch_id;
+      })();
+      if (correctionBranchId !== user.branch_id) {
+        return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     if (correctionRequest.status !== 'pending') {

@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
@@ -40,7 +40,7 @@ function fmt12(time: string): string {
 }
 
 export default function BranchManagerShiftsPage() {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []); // BUG-NEW-08 fix: memoize client
   const [branchId, setBranchId] = useState<string | null>(null);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);

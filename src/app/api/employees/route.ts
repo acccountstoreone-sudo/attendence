@@ -58,12 +58,15 @@ export async function GET(request: NextRequest) {
 
     const employeeList = employees || [];
     
-    // Fetch today's attendance for these employees
+    // Fetch today's attendance for these employees (APP-09 fix: use Dhaka UTC+6 timezone)
     if (employeeList.length > 0) {
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const todayEnd = new Date();
-      todayEnd.setHours(23, 59, 59, 999);
+      const now = new Date();
+      const dhakaFormatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit',
+      });
+      const [mo, da, yr] = dhakaFormatter.format(now).split('/');
+      const todayStart = new Date(`${yr}-${mo}-${da}T00:00:00+06:00`);
+      const todayEnd = new Date(`${yr}-${mo}-${da}T23:59:59+06:00`);
       
       const { data: attendanceData } = await supabase
         .from('attendance_records')
@@ -171,12 +174,28 @@ export async function POST(request: NextRequest) {
 
     await supabase.from('audit_logs').insert({
       user_id: user.id,
-      action: 'ONBOARD_EMPLOYEE',
+      action: 'CREATE',
       table_name: 'profiles',
       record_id: newProfile.id,
-      new_values: { email: payload.email, full_name: payload.full_name, role: payload.role, branch_id: payload.branch_id },
+      new_value: { email: payload.email, full_name: payload.full_name, role: payload.role, branch_id: payload.branch_id },
       ip_address: getSafeIpAddress(request),
     });
+
+    // MISS-01: Initialize leave balances for new employees
+    if (payload.role === 'employee') {
+      const currentYear = new Date().getFullYear();
+      const { data: leaveTypes } = await supabase.from('leave_types').select('id, default_days').eq('is_active', true);
+      if (leaveTypes && leaveTypes.length > 0) {
+        const balances = leaveTypes.map((lt: { id: string; default_days?: number }) => ({
+          user_id: newProfile.id,
+          leave_type_id: lt.id,
+          year: currentYear,
+          allocated_days: lt.default_days ?? 10,
+          used_days: 0,
+        }));
+        await supabase.from('leave_balances').upsert(balances, { onConflict: 'user_id,leave_type_id,year', ignoreDuplicates: true });
+      }
+    }
 
     return NextResponse.json(
       {

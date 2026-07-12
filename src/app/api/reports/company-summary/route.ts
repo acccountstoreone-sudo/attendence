@@ -16,12 +16,12 @@ export async function GET(request: NextRequest) {
       .from('branches')
       .select('*', { count: 'exact', head: true });
 
-    // Get all employees
+    // APP-04 fix: Count both employees AND branch managers as "staff"
     let empQuery = supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true })
-      .eq('role', 'employee');
-      
+      .in('role', ['employee', 'branch_manager']);
+
     if (user.role === 'branch_manager') {
       empQuery = empQuery.eq('branch_id', user.branch_id);
     }
