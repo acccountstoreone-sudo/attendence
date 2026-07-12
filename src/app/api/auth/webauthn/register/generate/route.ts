@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { generateRegistrationOptions } from '@simplewebauthn/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
@@ -7,7 +7,7 @@ import { getRPID, getRPName } from '@/lib/webauthn';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -31,7 +31,7 @@ export async function POST() {
 
     const options = await generateRegistrationOptions({
       rpName: getRPName(),
-      rpID: getRPID(),
+      rpID: getRPID(req),
       userID: new Uint8Array(Buffer.from(user.id)),
       userName: profile.employee_id || user.email || 'employee',
       // Don't prompt users for their authenticator if they've already registered it

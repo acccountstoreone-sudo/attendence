@@ -32,8 +32,8 @@ export async function POST(req: NextRequest) {
       verification = await verifyRegistrationResponse({
         response: body,
         expectedChallenge,
-        expectedOrigin: getExpectedOrigin(),
-        expectedRPID: getRPID(),
+        expectedOrigin: getExpectedOrigin(req),
+        expectedRPID: getRPID(req),
       });
     } catch (error: unknown) {
       console.error('Verification error:', error);

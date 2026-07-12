@@ -55,8 +55,8 @@ export async function POST(req: NextRequest) {
       verification = await verifyAuthenticationResponse({
         response: body,
         expectedChallenge,
-        expectedOrigin: getExpectedOrigin(),
-        expectedRPID: getRPID(),
+        expectedOrigin: getExpectedOrigin(req),
+        expectedRPID: getRPID(req),
         credential: {
           id: credential.credential_id,
           publicKey: new Uint8Array(pubKeyBuffer),

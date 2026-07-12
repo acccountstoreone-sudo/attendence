@@ -740,7 +740,7 @@ export default function RegisterPage() {
 
                 <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-xs text-slate-700 leading-relaxed">
                   <p className="font-bold text-slate-900 mb-1">Flexible Biometric Security</p>
-                  <p>Enroll either **Facial Recognition**, **Device Fingerprint / Sensor**, or **both**. At least one method must be registered to finalize your onboarding package.</p>
+                  <p>Enroll either <strong>Facial Recognition</strong>, <strong>Device Fingerprint / Sensor</strong>, or <strong>both</strong>. At least one method must be registered to finalize your onboarding package.</p>
                 </div>
 
                 {/* Option Card 1: Facial Recognition */}

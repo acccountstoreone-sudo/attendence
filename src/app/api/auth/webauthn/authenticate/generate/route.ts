@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { generateAuthenticationOptions } from '@simplewebauthn/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
@@ -7,7 +7,7 @@ import { getRPID } from '@/lib/webauthn';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -29,7 +29,7 @@ export async function POST() {
     }
 
     const options = await generateAuthenticationOptions({
-      rpID: getRPID(),
+      rpID: getRPID(req),
       allowCredentials: credentials.map((cred: { credential_id: string; transports?: any[] }) => ({
         id: cred.credential_id,
         type: 'public-key',
