@@ -177,6 +177,7 @@ export default function EmployeeCheckInPage() {
   } | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isReverifyMode, setIsReverifyMode] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<'face' | 'fingerprint' | 'selector' | 'none'>('selector');
 
   const gps = useGPS(profile, loading);
   const offline = useOfflineQueue();
@@ -196,9 +197,23 @@ export default function EmployeeCheckInPage() {
 
       const { data: prof, error: profErr } = await supabase
         .from('profiles')
-        .select('id, branch_id, role')
+        .select('id, branch_id, role, face_enrolled, fingerprint_enrolled')
         .eq('id', user.id)
         .single();
+
+      if (prof) {
+        if (isReverifyMode) {
+          setSelectedMethod('face');
+        } else if (prof.face_enrolled && prof.fingerprint_enrolled) {
+          setSelectedMethod('selector');
+        } else if (prof.face_enrolled) {
+          setSelectedMethod('face');
+        } else if (prof.fingerprint_enrolled) {
+          setSelectedMethod('fingerprint');
+        } else {
+          setSelectedMethod('none');
+        }
+      }
 
       let bList: Array<{ id: string; name: string; latitude: number | null; longitude: number | null; geofence_radius_meters: number | null }> = [];
       const { data: allB } = await supabase
@@ -610,20 +625,93 @@ export default function EmployeeCheckInPage() {
         </div>
       )}
 
-      {/* ── FaceCapture fills remaining space ── */}
-      <div className="flex-1 relative min-h-0 mt-2 flex flex-col">
-        <FaceCapture
-          checkType={checkType}
-          onCapture={handleBiometricSubmit}
-          onUseFingerprint={handleFingerprintSubmit}
-          gpsVerified={gps.verified}
-          gpsStatus={gps.status}
-          gpsDistance={gps.distance}
-          gpsRefresh={gps.refresh}
-          branchName={profile?.branch_name}
-          isLoading={submitting}
-          gpsErrorMsg={gps.errorMsg}
-        />
+      {/* ── Dynamic Biometric Verification Area ── */}
+      <div className="flex-1 relative min-h-0 mt-2 flex flex-col justify-center items-center">
+        {selectedMethod === 'selector' && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-sm bg-[#0A1628]/95 backdrop-blur-sm border border-slate-300 rounded-2xl p-6 shadow-2xl flex flex-col items-center space-y-4"
+          >
+            <h2 className="text-white text-lg font-bold mb-2">How would you like to verify?</h2>
+            <Button
+              onClick={() => setSelectedMethod('face')}
+              className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg flex items-center justify-center space-x-2"
+            >
+              <span className="text-lg">📷</span>
+              <span className="font-bold text-base">Face Match</span>
+            </Button>
+            <Button
+              onClick={() => setSelectedMethod('fingerprint')}
+              className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg flex items-center justify-center space-x-2"
+            >
+              <span className="text-lg">👆</span>
+              <span className="font-bold text-base">Fingerprint Scan</span>
+            </Button>
+          </motion.div>
+        )}
+
+        {selectedMethod === 'none' && (
+          <div className="w-full max-w-sm p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-center shadow-lg">
+            <h3 className="text-amber-500 font-bold mb-2">No Biometrics Set Up</h3>
+            <p className="text-slate-300 text-sm mb-4">You have not enrolled any biometric verification methods (Face or Fingerprint).</p>
+            <Button onClick={() => router.push('/employee/profile')} className="w-full">
+              Go to Profile to Set Up
+            </Button>
+          </div>
+        )}
+
+        {selectedMethod === 'face' && (
+          <FaceCapture
+            checkType={checkType}
+            onCapture={handleBiometricSubmit}
+            onUseFingerprint={undefined} // Hide fingerprint fallback if they explicitly chose face or only have face
+            gpsVerified={gps.verified}
+            gpsStatus={gps.status}
+            gpsDistance={gps.distance}
+            gpsRefresh={gps.refresh}
+            branchName={profile?.branch_name}
+            isLoading={submitting}
+            gpsErrorMsg={gps.errorMsg}
+          />
+        )}
+
+        {selectedMethod === 'fingerprint' && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-sm bg-[#0A1628]/95 backdrop-blur-sm border border-slate-300 rounded-2xl p-6 shadow-2xl flex flex-col items-center justify-center text-center space-y-6"
+          >
+            <div className="p-4 bg-indigo-500/10 rounded-full">
+              <span className="text-5xl">👆</span>
+            </div>
+            <div>
+              <h2 className="text-white text-lg font-bold mb-1">Fingerprint Verification</h2>
+              <p className="text-slate-400 text-sm">Please verify your identity using your device's fingerprint scanner or passkey.</p>
+            </div>
+            <Button
+              onClick={handleFingerprintSubmit}
+              disabled={submitting || (gps.status !== 'inside' && profile?.role !== 'admin' && profile?.role !== 'branch_manager')}
+              isLoading={submitting}
+              className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg rounded-xl shadow-lg"
+            >
+              Scan Fingerprint
+            </Button>
+            
+            {(gps.status !== 'inside' && profile?.role !== 'admin' && profile?.role !== 'branch_manager') && (
+               <p className="text-rose-400 text-xs font-semibold mt-2 bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">
+                  {gps.status === 'locating' ? 'Locating...' : 'You must be inside the store to check in.'}
+               </p>
+            )}
+
+            <button 
+               onClick={gps.refresh}
+               className="text-slate-400 hover:text-white text-xs underline mt-2"
+            >
+               Refresh Location
+            </button>
+          </motion.div>
+        )}
       </div>
 
       {/* ── Feedback Banner ── */}

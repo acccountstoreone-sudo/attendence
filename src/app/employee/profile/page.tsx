@@ -21,6 +21,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { WebAuthnRegister } from '@/components/auth/WebAuthnRegister';
 import { EditProfileModal } from '@/components/employee/EditProfileModal';
+import { FaceRegister } from '@/components/auth/FaceRegister';
 
 interface ProfileData {
   id: string;
@@ -276,7 +277,11 @@ export default function EmployeeProfilePage() {
 
               <div className="w-full h-px bg-slate-100 my-6" />
 
-              <WebAuthnRegister />
+              <div className="grid grid-cols-1 gap-6">
+                <WebAuthnRegister />
+                <div className="w-full h-px bg-slate-100 my-2" />
+                <FaceRegister />
+              </div>
             </div>
           </Card>
         </div>
