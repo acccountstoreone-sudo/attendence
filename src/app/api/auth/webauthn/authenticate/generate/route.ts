@@ -30,7 +30,7 @@ export async function POST() {
 
     const options = await generateAuthenticationOptions({
       rpID: getRPID(),
-      allowCredentials: credentials.map(cred => ({
+      allowCredentials: credentials.map((cred: { credential_id: string; transports?: any[] }) => ({
         id: cred.credential_id,
         type: 'public-key',
         transports: cred.transports || ['internal'],

@@ -35,7 +35,7 @@ export async function POST() {
       userID: new Uint8Array(Buffer.from(user.id)),
       userName: profile.employee_id || user.email || 'employee',
       // Don't prompt users for their authenticator if they've already registered it
-      excludeCredentials: existingCredentials?.map(cred => ({
+      excludeCredentials: existingCredentials?.map((cred: { credential_id: string }) => ({
         id: cred.credential_id,
         type: 'public-key',
         transports: ['internal'],
