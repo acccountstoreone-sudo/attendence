@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -53,6 +53,16 @@ export default function AdminReportsPage() {
   const [exporting, setExporting] = useState<'pdf' | 'excel' | 'csv' | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [branches, setBranches] = useState<{id: string, name: string}[]>([]);
+
+  React.useEffect(() => {
+    fetch('/api/branches')
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) setBranches(json.data);
+      })
+      .catch(console.error);
+  }, []);
 
   const months = [
     'January','February','March','April','May','June',
@@ -263,13 +273,32 @@ export default function AdminReportsPage() {
 
           <div className="flex flex-col space-y-1 min-w-[200px]">
             <label className="text-[10px] uppercase font-bold text-slate-600 tracking-wider">
-              <Building2 className="w-3 h-3 inline mr-1" />Branch Filter
+              <Building2 className="w-3 h-3 inline mr-1" />Branch Server Filter
+            </label>
+            <div className="relative">
+              <select
+                value={filter.branchId}
+                onChange={(e) => setFilter((f) => ({ ...f, branchId: e.target.value }))}
+                className="w-full appearance-none bg-white border border-slate-200 rounded-xl text-sm text-slate-900 px-3 py-2 pr-8 focus:outline-none focus:border-blue-500 transition-colors"
+              >
+                <option value="">All Branches</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-600 absolute right-2.5 top-2.5 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="flex flex-col space-y-1 min-w-[200px]">
+            <label className="text-[10px] uppercase font-bold text-slate-600 tracking-wider">
+              <Search className="w-3 h-3 inline mr-1" />Local Search
             </label>
             <div className="relative">
               <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Filter by branch..."
+                placeholder="Filter results locally..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"

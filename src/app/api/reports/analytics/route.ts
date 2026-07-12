@@ -59,11 +59,17 @@ export async function GET(request: NextRequest) {
       .slice(0, 20);
 
     // ── 2. Branch Leaderboard ─────────────────────────────────────
-    const { data: branchStats } = await supabase
+    let branchStatsQuery = supabase
       .from('attendance_records')
       .select('branch_id, status, branches!branch_id(name, code)')
       .gte('check_in_time', monthStart)
       .lte('check_in_time', monthEnd);
+      
+    if (targetBranchId) {
+      branchStatsQuery = branchStatsQuery.eq('branch_id', targetBranchId);
+    }
+    
+    const { data: branchStats } = await branchStatsQuery;
 
     const branchMap: Record<string, { name: string; code: string; total: number; late: number; absent: number }> = {};
     for (const rec of branchStats ?? []) {

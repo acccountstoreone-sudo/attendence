@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -57,6 +57,16 @@ export default function AdminAnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [branchId, setBranchId] = useState('');
+  const [branches, setBranches] = useState<{id: string, name: string}[]>([]);
+
+  useEffect(() => {
+    fetch('/api/branches')
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) setBranches(json.data);
+      })
+      .catch(console.error);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -85,7 +95,17 @@ export default function AdminAnalyticsPage() {
             <p className="text-sm text-slate-600">{data?.month_label ?? 'Loading…'} — Powered by database analytics, no AI cost.</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <select
+            value={branchId}
+            onChange={(e) => setBranchId(e.target.value)}
+            className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500"
+          >
+            <option value="">All Branches</option>
+            {branches.map(b => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
           <Button id="refresh-analytics-btn" variant="secondary" onClick={load} disabled={loading}>
             <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
