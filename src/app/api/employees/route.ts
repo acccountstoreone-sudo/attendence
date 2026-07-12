@@ -70,15 +70,25 @@ export async function GET(request: NextRequest) {
       
       const { data: attendanceData } = await supabase
         .from('attendance_records')
-        .select('employee_id')
+        .select('employee_id, status, check_in_time, check_out_time, overtime_minutes')
         .in('employee_id', employeeList.map(e => e.id))
         .gte('check_in_time', todayStart.toISOString())
         .lte('check_in_time', todayEnd.toISOString());
         
-      const presentIds = new Set(attendanceData?.map(a => a.employee_id) || []);
+      const attMap = new Map();
+      attendanceData?.forEach(a => attMap.set(a.employee_id, a));
       
       employeeList.forEach(e => {
-        e.is_present_today = presentIds.has(e.id);
+        const att = attMap.get(e.id);
+        e.is_present_today = !!att;
+        e.today_status = att?.status || 'none';
+        
+        let workedMins = 0;
+        if (att?.check_in_time && att?.check_out_time) {
+          workedMins = Math.round((new Date(att.check_out_time).getTime() - new Date(att.check_in_time).getTime()) / 60000);
+        }
+        e.today_working_minutes = workedMins > 0 ? workedMins : 0;
+        e.today_overtime_minutes = att?.overtime_minutes || 0;
       });
     }
 

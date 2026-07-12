@@ -1,10 +1,25 @@
-﻿import React from 'react';
+import React from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { FileText, Download, FileSpreadsheet, FileIcon } from 'lucide-react';
 
-export const BranchReportsTab: React.FC = () => {
-  const reports: { title: string; description: string }[] = [];
+import { Branch } from './types';
+
+interface BranchReportsTabProps {
+  branch: Branch;
+}
+
+export const BranchReportsTab: React.FC<BranchReportsTabProps> = ({ branch }) => {
+  const reports = [
+    { type: 'monthly_attendance', title: 'Monthly Attendance Report', description: 'Comprehensive view of all attendance records for the month.' },
+    { type: 'late_arrivals', title: 'Late Arrivals Summary', description: 'List of all employees who were late, including total duration.' },
+    { type: 'overtime', title: 'Overtime Analytics', description: 'Detailed breakdown of overtime hours worked by branch employees.' }
+  ];
+
+  const handleExport = (type: string, format: string) => {
+    const url = `/api/reports/export?branch_id=${branch.id}&type=${type}&format=${format}`;
+    window.open(url, '_blank');
+  };
 
   return (
     <div className="space-y-4">
@@ -31,13 +46,13 @@ export const BranchReportsTab: React.FC = () => {
               </div>
               
               <div className="mt-auto pt-4 border-t border-slate-200/50 flex flex-wrap gap-2">
-                <Button variant="secondary" size="sm" className="text-xs flex-1">
+                <Button variant="secondary" size="sm" className="text-xs flex-1" onClick={() => handleExport(report.type, 'excel')}>
                   <FileSpreadsheet className="w-3.5 h-3.5 mr-1" /> Excel
                 </Button>
-                <Button variant="secondary" size="sm" className="text-xs flex-1">
+                <Button variant="secondary" size="sm" className="text-xs flex-1" onClick={() => handleExport(report.type, 'pdf')}>
                   <FileIcon className="w-3.5 h-3.5 mr-1 text-red-400" /> PDF
                 </Button>
-                <Button variant="secondary" size="sm" className="text-xs flex-1">
+                <Button variant="secondary" size="sm" className="text-xs flex-1" onClick={() => handleExport(report.type, 'csv')}>
                   <Download className="w-3.5 h-3.5 mr-1" /> CSV
                 </Button>
               </div>

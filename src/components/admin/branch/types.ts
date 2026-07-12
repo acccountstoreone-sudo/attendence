@@ -27,5 +27,8 @@ export interface BranchEmployee {
   employee_id?: string;
   is_active?: boolean;
   is_present_today?: boolean;
+  today_status?: string;
+  today_working_minutes?: number;
+  today_overtime_minutes?: number;
 }
 

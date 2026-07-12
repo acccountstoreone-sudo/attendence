@@ -49,8 +49,12 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
           const json = await res.json();
           const mapped: BranchEmployee[] = (json.data || []).map((e: Record<string, unknown>) => ({
             ...e,
+            profile_picture: e.photo_url as string,
             is_active: e.is_active as boolean,
-            is_present_today: !!e.is_present_today
+            is_present_today: !!e.is_present_today,
+            today_status: e.today_status as string,
+            today_working_minutes: e.today_working_minutes as number,
+            today_overtime_minutes: e.today_overtime_minutes as number
           }));
           setEmployees(mapped);
         }
@@ -123,24 +127,24 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
          </div>
          <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-600">Present</span>
-            <span className="text-lg font-bold text-[#1dbf73]">{employees.filter(e => e.is_present_today).length}</span>
+            <span className="text-lg font-bold text-[#1dbf73]">{employees.filter(e => e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day').length}</span>
          </div>
          <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-600">Absent</span>
-            <span className="text-lg font-bold text-red-500">{employees.filter(e => !e.is_present_today).length}</span>
+            <span className="text-lg font-bold text-red-500">{employees.length - employees.filter(e => e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day').length}</span>
          </div>
          <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-600">Active Now</span>
-            <span className="text-lg font-bold text-blue-500">{employees.filter(e => e.is_active).length}</span>
+            <span className="text-lg font-bold text-blue-500">{employees.filter(e => e.is_active !== false).length}</span>
          </div>
          <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-600">Late</span>
-            <span className="text-lg font-bold text-orange-500">2</span>
+            <span className="text-lg font-bold text-orange-500">{employees.filter(e => e.today_status === 'late').length}</span>
          </div>
          <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
             <span className="text-xs text-slate-600">Attendance %</span>
             <span className="text-lg font-bold text-[#1dbf73]">
-              {employees.length > 0 ? Math.round((employees.filter(e => e.is_present_today).length / employees.length) * 100) : 0}%
+              {employees.length > 0 ? Math.round((employees.filter(e => e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day').length / employees.length) * 100) : 0}%
             </span>
          </div>
       </div>
@@ -177,10 +181,10 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
             onBack={() => setActiveTab('employees')} 
           />
         )}
-        {activeTab === 'attendance' && <BranchAttendanceTab />}
-        {activeTab === 'reports' && <BranchReportsTab />}
+        {activeTab === 'attendance' && <BranchAttendanceTab branch={branch} />}
+        {activeTab === 'reports' && <BranchReportsTab branch={branch} />}
         {activeTab === 'settings' && <BranchSettingsTab branch={branch} />}
-        {activeTab === 'announcements' && <BranchAnnouncementTab branch={branch} />}
+        {activeTab === 'announcements' && <BranchAnnouncementTab branch={branch} employees={employees} />}
       </div>
     </div>
   );

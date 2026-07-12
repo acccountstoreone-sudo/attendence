@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -11,16 +11,40 @@ import { Branch } from './types';
 
 interface BranchAnnouncementTabProps {
   branch: Branch;
+  employees: { id: string }[];
 }
 
-export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ branch }) => {
+export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ branch, employees }) => {
   const [announcementType, setAnnouncementType] = useState<'text' | 'sound'>('text');
   const [message, setMessage] = useState('');
 
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const handleSend = () => {
-    setFeedback({ type: 'success', text: `Sent ${announcementType} announcement to ${branch.name}.` });
+  const handleSend = async () => {
+    if (!message.trim() || employees.length === 0) return;
+    
+    setFeedback({ type: 'success', text: `Sending...` });
+    
+    let successCount = 0;
+    for (const emp of employees) {
+      try {
+        const res = await fetch('/api/notifications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: emp.id,
+            title: `Branch Announcement (${announcementType})`,
+            message: message.trim(),
+            type: 'info'
+          })
+        });
+        if (res.ok) successCount++;
+      } catch (err) {
+        console.error('Failed to notify', emp.id, err);
+      }
+    }
+    
+    setFeedback({ type: 'success', text: `Sent ${announcementType} announcement to ${successCount} employees in ${branch.name}.` });
     setMessage('');
     setTimeout(() => setFeedback(null), 3000);
   };

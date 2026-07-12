@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { Card } from '@/components/ui/Card';
@@ -37,7 +37,7 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-slate-200">
                 {employees.map((emp) => (
                   <tr key={emp.id} className="hover:bg-slate-50/30 transition-colors">
                     <td className="px-6 py-4">

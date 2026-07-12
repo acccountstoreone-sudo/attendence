@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { Card } from '@/components/ui/Card';
@@ -13,18 +13,29 @@ interface BranchOverviewTabProps {
 export const BranchOverviewTab: React.FC<BranchOverviewTabProps> = ({ branch, employees = [] }) => {
   const manager = employees.find(e => (branch.manager_id && e.id === branch.manager_id) || (!branch.manager_id && e.role === 'branch_manager'));
 
-  const presentCount = employees.filter(e => e.is_present_today).length;
+  const presentCount = employees.filter(e => e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day').length;
   const activeCount = employees.filter(e => e.is_active !== false).length;
+  const lateCount = employees.filter(e => e.today_status === 'late').length;
+  
+  const totalWorkingMinutes = employees.reduce((sum, e) => sum + (e.today_working_minutes || 0), 0);
+  const totalOvertimeMinutes = employees.reduce((sum, e) => sum + (e.today_overtime_minutes || 0), 0);
+  
+  const formatMinutes = (minutes: number) => {
+    if (!minutes) return '0 hrs';
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}h ${m}m`;
+  };
 
   const stats = {
     totalEmployees: employees.length,
     present: presentCount,
     absent: employees.length - presentCount,
-    late: 0,
+    late: lateCount,
     active: activeCount,
     offline: employees.length - activeCount,
-    todayWorkingHours: '0 hrs',
-    todayOvertime: '0 hrs',
+    todayWorkingHours: formatMinutes(totalWorkingMinutes),
+    todayOvertime: formatMinutes(totalOvertimeMinutes),
   };
 
   return (
