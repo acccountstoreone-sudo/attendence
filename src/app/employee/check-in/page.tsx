@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { FaceCapture } from '@/components/attendance/FaceCapture';
 import { Spinner } from '@/components/ui/Spinner';
 import { createClient } from '@/lib/supabase/client';
@@ -414,8 +414,12 @@ export default function EmployeeCheckInPage() {
     setTimeout(() => router.push('/employee'), 2200);
   }, [gps.coords, gps.verified, gps.distance, profile, checkType, router, offline, isReverifyMode]);
 
+  const isSubmittingRef = useRef(false);
+
   const handleFingerprintSubmit = useCallback(async () => {
+    if (isSubmittingRef.current) return;
     try {
+      isSubmittingRef.current = true;
       const isAdminOrManager = profile?.role === 'admin' || profile?.role === 'branch_manager';
       
       setSubmitting(true);
@@ -483,6 +487,8 @@ export default function EmployeeCheckInPage() {
       } else {
         setFeedback({ type: 'error', text: 'Fingerprint check-in failed' });
       }
+    } finally {
+      isSubmittingRef.current = false;
     }
   }, [gps.coords, gps.verified, gps.distance, profile, checkType, router]);
 

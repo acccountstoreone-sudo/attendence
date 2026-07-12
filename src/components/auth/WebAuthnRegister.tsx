@@ -17,7 +17,10 @@ async function parseJsonResponse(res: Response) {
   }
 }
 
+import { createClient } from '@/lib/supabase/client';
+
 export function WebAuthnRegister() {
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
