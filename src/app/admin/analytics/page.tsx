@@ -15,8 +15,6 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export const dynamic = 'force-dynamic';
-
 interface ChronicEmployee {
   employee_id: string;
   name: string;

@@ -13,8 +13,6 @@ import {
 import Abstract3DBackground from '@/components/Abstract3DBackground';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export const dynamic = 'force-dynamic';
-
 type Tab = 'pending' | 'approved' | 'all';
 
 interface AttendanceRecord {
