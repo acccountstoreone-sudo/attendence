@@ -85,27 +85,30 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
         </Button>
       </div>
 
-      {/* Automated Payroll Settings (NEW) */}
-      <Card className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border-slate-700 p-6 shadow-2xl rounded-2xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-700/80 pb-4 mb-5">
+      {/* Automated Payroll Settings */}
+      <Card className="bg-gradient-to-br from-[#1dbf73]/[0.06] via-white to-slate-50/80 border border-[#1dbf73]/25 p-6 shadow-xl rounded-3xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#1dbf73]/10 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16"></div>
+        
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/80 pb-4 mb-5 relative z-10">
           <div>
-            <h4 className="text-base font-bold text-[#1dbf73] uppercase tracking-wider flex items-center">
-              <DollarSign className="w-5 h-5 mr-1.5" /> Automated Payroll Calculation Rates
+            <h4 className="text-base font-extrabold text-[#1dbf73] uppercase tracking-wider flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-[#1dbf73]/10 text-[#1dbf73]"><DollarSign className="w-5 h-5" /></div>
+              Automated Payroll Calculation Rates
             </h4>
-            <p className="text-xs text-slate-300 mt-1">
+            <p className="text-xs text-slate-600 font-medium mt-1">
               Set branch-level hourly rates for overtime and daily snack/refreshment allowance. The system automatically multiplies exact work minutes & present days on payroll!
             </p>
           </div>
           {saveMessage && (
-            <span className="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+            <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
               {saveMessage}
             </span>
           )}
         </div>
 
-        <form onSubmit={handleSavePayrollConfig} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+        <form onSubmit={handleSavePayrollConfig} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end relative z-10">
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-slate-300 uppercase">Overtime Rate (Tk / Hour)</Label>
+            <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Overtime Rate (Tk / Hour)</Label>
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">৳</span>
               <Input
@@ -114,15 +117,15 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
                 min="0"
                 value={overtimeRate}
                 onChange={(e) => setOvertimeRate(Number(e.target.value))}
-                className="pl-8 bg-slate-800/80 border-slate-600 text-white font-bold focus:ring-[#1dbf73]"
+                className="pl-8 bg-white border border-slate-200 text-slate-900 font-extrabold text-base rounded-xl shadow-sm focus:border-[#1dbf73] focus:ring-2 focus:ring-[#1dbf73]/20 transition-all"
                 required
               />
             </div>
-            <span className="text-[11px] text-slate-400 block">System auto-calculates: Total Overtime Hours × Rate</span>
+            <span className="text-[11px] text-slate-500 font-medium block">System auto-calculates: Total Overtime Hours × Rate</span>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-slate-300 uppercase">Daily Snack Allowance (Tk / Present Day)</Label>
+            <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Daily Snack Allowance (Tk / Present Day)</Label>
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">৳</span>
               <Input
@@ -131,18 +134,18 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
                 min="0"
                 value={snackAllowance}
                 onChange={(e) => setSnackAllowance(Number(e.target.value))}
-                className="pl-8 bg-slate-800/80 border-slate-600 text-white font-bold focus:ring-[#1dbf73]"
+                className="pl-8 bg-white border border-slate-200 text-slate-900 font-extrabold text-base rounded-xl shadow-sm focus:border-[#1dbf73] focus:ring-2 focus:ring-[#1dbf73]/20 transition-all"
                 required
               />
             </div>
-            <span className="text-[11px] text-slate-400 block">System auto-calculates: Total Present Days × Allowance</span>
+            <span className="text-[11px] text-slate-500 font-medium block">System auto-calculates: Total Present Days × Allowance</span>
           </div>
 
           <div>
             <Button
               type="submit"
               disabled={savingRates || loadingRates}
-              className="w-full bg-[#1dbf73] hover:bg-[#19a563] text-white font-bold py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-2"
+              className="w-full bg-[#1dbf73] hover:bg-[#19a563] text-white font-extrabold py-3 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm"
             >
               <Save className="w-4 h-4" />
               {savingRates ? 'Saving Rates...' : 'Save Automated Rates'}
