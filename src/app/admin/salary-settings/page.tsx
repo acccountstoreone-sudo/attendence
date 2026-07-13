@@ -197,23 +197,25 @@ export default function AdminSalarySettingsPage() {
               className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-3xl w-full overflow-hidden my-8"
             >
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-6 text-white flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-[#1dbf73]/20 rounded-2xl border border-[#1dbf73]/30">
-                    <DollarSign className="w-6 h-6 text-[#1dbf73]" />
+              <div className="bg-gradient-to-r from-emerald-50/90 via-white to-slate-50 border-b border-slate-200/80 p-6 text-slate-900 flex items-center justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-[#1dbf73]/10 rounded-full blur-2xl pointer-events-none -mr-12 -mt-12"></div>
+                <div className="flex items-center gap-3.5 relative z-10">
+                  <div className="p-3 bg-[#1dbf73]/15 rounded-2xl border border-[#1dbf73]/30 text-[#1dbf73] shadow-sm">
+                    <DollarSign className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold tracking-tight">
+                    <h2 className="text-xl font-extrabold tracking-tight text-slate-900">
                       {editingId ? `Update Rates — ${currentEditingProfile?.full_name}` : 'Setup Employee Salary & Rates'}
                     </h2>
-                    <p className="text-xs text-slate-300 font-medium mt-0.5">
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">
                       {editingId ? `Employee ID: ${currentEditingProfile?.employee_id || 'N/A'}` : 'Assign fixed base salary, allowances & optional rate overrides'}
                     </p>
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => { setShowModal(false); setEditingId(null); }}
-                  className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-300 hover:text-white"
+                  className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 rounded-2xl transition-all relative z-10 shadow-sm"
                 >
                   <X className="w-5 h-5" />
                 </button>
