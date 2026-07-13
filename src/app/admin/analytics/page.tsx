@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -14,6 +14,8 @@ import {
   TrendingUp, AlertTriangle, Trophy, UserX, RefreshCcw, Filter,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+export const dynamic = 'force-dynamic';
 
 interface ChronicEmployee {
   employee_id: string;
@@ -54,8 +56,9 @@ interface AnalyticsData {
   month_label: string;
 }
 
-export default function AdminAnalyticsPage() {
+function AdminAnalyticsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [branchId, setBranchId] = useState('');
@@ -275,9 +278,9 @@ export default function AdminAnalyticsPage() {
                   {data.absent_today.map((e) => (
                     <div 
                       key={e.id} 
-                      onClick={(ev) => { ev.stopPropagation(); router.push(`/admin/attendance?search=${encodeURIComponent(e.full_name)}&tab=all`); }}
+                      onClick={(ev) => { ev.stopPropagation(); router.push(`/admin/attendance?search=${encodeURIComponent(e.full_name || '')}&tab=all`); }}
                       className="flex items-center gap-3 p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 cursor-pointer transition-all duration-200 group/item"
-                      title={`Click to check attendance logs for ${e.full_name}`}
+                      title={`Click to check attendance logs for ${e.full_name || 'employee'}`}
                     >
                       <div className="p-1.5 bg-red-500/10 rounded-lg group-hover/item:bg-red-500/20 transition-colors"><UserX className="w-4 h-4 text-red-500 flex-shrink-0" /></div>
                       <div className="min-w-0">
@@ -293,6 +296,14 @@ export default function AdminAnalyticsPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function AdminAnalyticsPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center py-24"><Spinner className="w-10 h-10 text-indigo-500" /></div>}>
+      <AdminAnalyticsContent />
+    </Suspense>
   );
 }
 

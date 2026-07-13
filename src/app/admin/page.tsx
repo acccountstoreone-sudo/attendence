@@ -469,18 +469,18 @@ export default function AdminDashboardPage() {
             {liveFeed.slice(0,4).map((feed) => (
               <div 
                 key={feed.id} 
-                onClick={() => router.push(`/admin/attendance?search=${encodeURIComponent(feed.full_name)}&tab=all`)}
+                onClick={() => router.push(`/admin/attendance?search=${encodeURIComponent(feed.full_name || '')}&tab=all`)}
                 className="p-4 bg-slate-50 rounded-2xl border border-slate-200 hover:border-[#1dbf73]/40 hover:bg-[#1dbf73]/5 cursor-pointer transition-all duration-300 flex items-start gap-3 group/item"
-                title={`Click to view check-in details for ${feed.full_name}`}
+                title={`Click to view check-in details for ${feed.full_name || 'employee'}`}
               >
                 <div className="mt-0.5 p-1.5 bg-slate-100 rounded-lg group-hover/item:bg-[#1dbf73]/10 transition-colors"><Bell className="w-3.5 h-3.5 text-slate-600 group-hover/item:text-[#1dbf73]" /></div>
                 <div className="flex-1">
-                  <h3 className="text-sm font-bold text-slate-900 tracking-tight group-hover/item:text-[#1dbf73] transition-colors">{feed.full_name}</h3>
+                  <h3 className="text-sm font-bold text-slate-900 tracking-tight group-hover/item:text-[#1dbf73] transition-colors">{feed.full_name || 'Unknown Employee'}</h3>
                   <p className="text-[10px] text-slate-600 mt-1 font-medium leading-relaxed">
                     {feed.type} recorded at {feed.branch_name}. Status: <span className={feed.status === 'late' ? 'text-amber-500 font-bold' : feed.status === 'absent' ? 'text-rose-500 font-bold' : 'text-[#1dbf73] font-bold'}>{feed.status}</span>.
                   </p>
                   <button 
-                    onClick={(e) => { e.stopPropagation(); router.push(`/admin/attendance?search=${encodeURIComponent(feed.full_name)}&tab=all`); }}
+                    onClick={(e) => { e.stopPropagation(); router.push(`/admin/attendance?search=${encodeURIComponent(feed.full_name || '')}&tab=all`); }}
                     className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-3 hover:text-[#1dbf73] flex items-center gap-1 transition-colors"
                   >
                     View details <ChevronDown className="w-3 h-3 -rotate-90" />

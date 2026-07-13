@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +12,8 @@ import {
 } from 'lucide-react';
 import Abstract3DBackground from '@/components/Abstract3DBackground';
 import { motion, AnimatePresence } from 'framer-motion';
+
+export const dynamic = 'force-dynamic';
 
 type Tab = 'pending' | 'approved' | 'all';
 
@@ -41,7 +44,8 @@ function formatOvertime(minutes: number) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-export default function AdminAttendancePage() {
+function AdminAttendanceContent() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>('pending');
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
@@ -52,23 +56,22 @@ export default function AdminAttendancePage() {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const tabParam = params.get('tab') as Tab;
+    if (searchParams) {
+      const tabParam = searchParams.get('tab') as Tab;
       if (tabParam && ['pending', 'approved', 'all'].includes(tabParam)) {
         setActiveTab(tabParam);
       }
-      const searchParam = params.get('search');
+      const searchParam = searchParams.get('search');
       if (searchParam) {
         setSearchTerm(searchParam);
       }
-      const stParam = params.get('status');
+      const stParam = searchParams.get('status');
       if (stParam) {
         setStatusFilter(stParam);
         if (!tabParam) setActiveTab('all');
       }
     }
-  }, []);
+  }, [searchParams]);
 
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
@@ -478,6 +481,14 @@ export default function AdminAttendancePage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+export default function AdminAttendancePage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center py-24"><Spinner className="w-10 h-10 text-[#1dbf73]" /></div>}>
+      <AdminAttendanceContent />
+    </Suspense>
   );
 }
 
