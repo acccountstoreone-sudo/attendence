@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 export interface NotificationItem {
@@ -56,7 +56,11 @@ export function useRealtimeNotifications(userId: string | undefined) {
   const [loading, setLoading] = useState<boolean>(true);
   const [latestToast, setLatestToast] = useState<NotificationItem | null>(null);
 
-  const supabase = createClient();
+  // useRef ensures the supabase client is created only once — not on every render.
+  // This prevents the infinite subscribe/unsubscribe loop caused by a new object
+  // reference being created each render and appearing as a changed dependency.
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
 
   // Fetch initial notifications
   const fetchNotifications = useCallback(async () => {
@@ -155,6 +159,22 @@ export function useRealtimeNotifications(userId: string | undefined) {
     }
   };
 
+  const dismiss = async (id: string) => {
+    // Optimistic update: remove immediately from UI
+    setNotifications((prev) => {
+      const notif = prev.find((n) => n.id === id);
+      if (notif && !notif.is_read) {
+        setUnreadCount((c) => Math.max(0, c - 1));
+      }
+      return prev.filter((n) => n.id !== id);
+    });
+    try {
+      await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
+    } catch (err) {
+      console.error('Error dismissing notification:', err);
+    }
+  };
+
   const clearToast = () => setLatestToast(null);
 
   return {
@@ -165,7 +185,7 @@ export function useRealtimeNotifications(userId: string | undefined) {
     clearToast,
     markAsRead,
     markAllAsRead,
+    dismiss,
     refetch: fetchNotifications,
   };
 }
-

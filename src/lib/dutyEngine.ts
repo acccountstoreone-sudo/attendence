@@ -45,6 +45,12 @@ export interface DutySummaryResult {
     total_overtime_hours: number;
     total_late_minutes: number;
     total_late_hours: number;
+    overtime_rate_per_hour?: number;
+    daily_snack_allowance?: number;
+    base_salary?: number;
+    total_overtime_pay?: number;
+    total_snack_allowance_pay?: number;
+    estimated_payable_salary?: number;
     today_status?: string;
     today_duty_hours?: number;
     today_late_minutes?: number;
@@ -108,6 +114,8 @@ export async function computeEmployeeDutySummary(
   let overtimeAfterMinutes = 30;
   let halfDayHours = 4.0;
   let weeklyOffDays: number[] = [5]; // Default: Friday (5)
+  let branchOvertimeRate = 100.0;
+  let branchSnackAllowance = 50.0;
 
   const { data: cp } = await supabase.from('company_profile').select('*').single();
   if (cp) {
@@ -124,7 +132,26 @@ export async function computeEmployeeDutySummary(
       if (bs.overtime_after_minutes !== undefined && bs.overtime_after_minutes !== null) overtimeAfterMinutes = bs.overtime_after_minutes;
       if (bs.half_day_hours) halfDayHours = bs.half_day_hours;
       if (bs.weekly_off_days && Array.isArray(bs.weekly_off_days)) weeklyOffDays = bs.weekly_off_days;
+      if (bs.overtime_rate_per_hour !== undefined && bs.overtime_rate_per_hour !== null) branchOvertimeRate = Number(bs.overtime_rate_per_hour);
+      if (bs.daily_snack_allowance !== undefined && bs.daily_snack_allowance !== null) branchSnackAllowance = Number(bs.daily_snack_allowance);
     }
+  }
+
+  // Fetch individual employee salary settings and overrides
+  let baseSalary = 0;
+  let houseRentAllowance = 0;
+  let medicalAllowance = 0;
+  let transportAllowance = 0;
+  let finalOvertimeRate = branchOvertimeRate;
+  let finalSnackAllowance = branchSnackAllowance;
+  const { data: sal } = await supabase.from('salary_settings').select('*').eq('user_id', targetEmployeeId).maybeSingle();
+  if (sal) {
+    baseSalary = Number(sal.base_salary || 0);
+    houseRentAllowance = Number(sal.house_rent_allowance || 0);
+    medicalAllowance = Number(sal.medical_allowance || 0);
+    transportAllowance = Number(sal.transport_allowance || 0);
+    if (sal.overtime_rate_per_hour !== undefined && sal.overtime_rate_per_hour !== null) finalOvertimeRate = Number(sal.overtime_rate_per_hour);
+    if (sal.daily_snack_allowance !== undefined && sal.daily_snack_allowance !== null) finalSnackAllowance = Number(sal.daily_snack_allowance);
   }
 
   const parseTimeToMinutes = (timeStr: string) => {
@@ -468,6 +495,12 @@ export async function computeEmployeeDutySummary(
   const profileRec = targetProfile as Record<string, unknown>;
   const branchesRec = profileRec.branches as { name?: string; code?: string } | undefined;
 
+  const totalOvertimeHoursCalc = Number((totalOvertimeMinutes / 60).toFixed(2));
+  const totalOvertimePay = Math.round(totalOvertimeHoursCalc * finalOvertimeRate);
+  const totalSnackPay = Math.round(totalPresentDays * finalSnackAllowance);
+  const totalGrossPackage = baseSalary + houseRentAllowance + medicalAllowance + transportAllowance;
+  const estimatedPayableSalary = Math.round(totalGrossPackage + totalOvertimePay + totalSnackPay);
+
   return {
     employee: {
       id: profileRec.id as string,
@@ -504,9 +537,15 @@ export async function computeEmployeeDutySummary(
       total_holiday_days: totalHolidayDays,
       total_duty_hours: Number(totalDutyHours.toFixed(2)),
       total_overtime_minutes: totalOvertimeMinutes,
-      total_overtime_hours: Number((totalOvertimeMinutes / 60).toFixed(2)),
+      total_overtime_hours: totalOvertimeHoursCalc,
       total_late_minutes: totalLateMinutes,
       total_late_hours: Number((totalLateMinutes / 60).toFixed(2)),
+      overtime_rate_per_hour: finalOvertimeRate,
+      daily_snack_allowance: finalSnackAllowance,
+      base_salary: baseSalary,
+      total_overtime_pay: totalOvertimePay,
+      total_snack_allowance_pay: totalSnackPay,
+      estimated_payable_salary: estimatedPayableSalary,
       today_status: todayStatus,
       today_duty_hours: todayDutyHours,
       today_late_minutes: todayLateMinutes,

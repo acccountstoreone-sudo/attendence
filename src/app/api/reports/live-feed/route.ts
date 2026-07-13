@@ -30,14 +30,11 @@ export async function GET(request: NextRequest) {
         status,
         check_in_time,
         check_out_time,
-        branches (
+        branches!attendance_records_branch_id_fkey (
            name
         ),
-        profiles (
-           full_name,
-           branches!profiles_branch_id_fkey (
-             name
-           )
+        profiles!attendance_records_employee_id_fkey (
+           full_name
         )
       `)
       .gte('check_in_time', startOfDay.toISOString())

@@ -28,6 +28,15 @@ interface PayrollRecord {
     gross_salary: number;
     deductions: number;
     net_payable: number;
+    overtime_hours?: number;
+    overtime_pay?: number;
+    snack_allowance_pay?: number;
+    duty_summary_snapshot?: {
+      present_days?: number;
+      overtime_hours?: number;
+      overtime_pay?: number;
+      snack_allowance_pay?: number;
+    };
   };
 }
 
@@ -68,13 +77,16 @@ export default function AdminPayrollDashboard() {
   // Bug 8 fix: Export payroll as CSV
   const handleExport = useCallback(() => {
     if (!results) return;
-    const headers = ['Employee Name', 'Employee ID', 'Status', 'Payable Days', 'Gross Salary', 'Deductions', 'Net Payable', 'Reason'];
+    const headers = ['Employee Name', 'Employee ID', 'Status', 'Payable Days', 'Gross Salary', 'Overtime (Hrs)', 'Overtime Pay', 'Snacks Allowance Pay', 'Deductions', 'Net Payable', 'Reason'];
     const rows = results.map((r) => [
       r.full_name || r.user_id,
       r.user_id,
       r.status,
       r.data?.total_payable_days ?? '',
       r.data?.gross_salary ?? '',
+      r.data?.duty_summary_snapshot?.overtime_hours ?? r.data?.overtime_hours ?? 0,
+      r.data?.duty_summary_snapshot?.overtime_pay ?? r.data?.overtime_pay ?? 0,
+      r.data?.duty_summary_snapshot?.snack_allowance_pay ?? r.data?.snack_allowance_pay ?? 0,
       r.data?.deductions ?? '',
       r.data?.net_payable ?? '',
       r.reason ?? '',
@@ -216,18 +228,20 @@ export default function AdminPayrollDashboard() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-600 font-bold">
-                      <th className="py-3 px-5">Employee</th>
-                      <th className="py-3 px-5">Status</th>
-                      <th className="py-3 px-5 text-right">Payable Days</th>
-                      <th className="py-3 px-5 text-right">Gross Salary</th>
-                      <th className="py-3 px-5 text-right">Deductions</th>
-                      <th className="py-3 px-5 text-right">Net Payable</th>
+                      <th className="py-3 px-4">Employee</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4 text-right">Payable Days</th>
+                      <th className="py-3 px-4 text-right">Gross Salary</th>
+                      <th className="py-3 px-4 text-right text-emerald-600">Overtime Pay</th>
+                      <th className="py-3 px-4 text-right text-amber-600">Snacks Bill</th>
+                      <th className="py-3 px-4 text-right text-rose-500">Deductions</th>
+                      <th className="py-3 px-4 text-right font-extrabold text-[#1dbf73]">Net Payable</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200/50 text-sm">
                     {results.map((res, idx) => (
                       <tr key={idx} className="hover:bg-slate-100/30 transition-colors">
-                        <td className="py-3 px-5">
+                        <td className="py-3 px-4">
                           <div className="font-medium text-slate-800 text-sm">
                             {res.full_name || 'Unknown Employee'}
                           </div>
@@ -235,7 +249,7 @@ export default function AdminPayrollDashboard() {
                             {res.user_id.split('-')[0]}...
                           </div>
                         </td>
-                        <td className="py-3 px-5">
+                        <td className="py-3 px-4">
                           {res.status === 'success' ? (
                             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-[#1dbf73]/10 border border-emerald-500/20 text-[#1dbf73]">
                               <CheckCircle2 className="w-3 h-3" /> Success
@@ -248,19 +262,24 @@ export default function AdminPayrollDashboard() {
                         </td>
                         {res.status === 'success' && res.data ? (
                           <>
-                            <td className="py-3 px-5 text-right text-slate-600">{res.data.total_payable_days}</td>
-                            <td className="py-3 px-5 text-right text-slate-600">৳{res.data.gross_salary.toLocaleString()}</td>
-                            <td className="py-3 px-5 text-right text-rose-400">-৳{res.data.deductions.toLocaleString()}</td>
-                            <td className="py-3 px-5 text-right font-bold text-[#1dbf73]">৳{res.data.net_payable.toLocaleString()}</td>
+                            <td className="py-3 px-4 text-right text-slate-600 font-semibold">{res.data.total_payable_days}</td>
+                            <td className="py-3 px-4 text-right text-slate-600">৳{res.data.gross_salary.toLocaleString()}</td>
+                            <td className="py-3 px-4 text-right text-emerald-600 font-bold">
+                              +৳{(res.data.duty_summary_snapshot?.overtime_pay ?? res.data.overtime_pay ?? 0).toLocaleString()}
+                              <span className="block text-[10px] text-slate-400 font-normal">{(res.data.duty_summary_snapshot?.overtime_hours ?? res.data.overtime_hours ?? 0)} hrs</span>
+                            </td>
+                            <td className="py-3 px-4 text-right text-amber-600 font-bold">+৳{(res.data.duty_summary_snapshot?.snack_allowance_pay ?? res.data.snack_allowance_pay ?? 0).toLocaleString()}</td>
+                            <td className="py-3 px-4 text-right text-rose-400 font-semibold">-৳{res.data.deductions.toLocaleString()}</td>
+                            <td className="py-3 px-4 text-right font-extrabold text-[#1dbf73] text-base">৳{res.data.net_payable.toLocaleString()}</td>
                           </>
                         ) : (
-                          <td colSpan={4} className="py-3 px-5 text-slate-500 text-xs italic">{res.reason}</td>
+                          <td colSpan={6} className="py-3 px-4 text-slate-500 text-xs italic">{res.reason}</td>
                         )}
                       </tr>
                     ))}
                     {results.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="text-center py-8 text-slate-500 text-sm">
+                        <td colSpan={8} className="text-center py-8 text-slate-500 text-sm">
                           No employees found in your scope.
                         </td>
                       </tr>

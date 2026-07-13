@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       .from('attendance_records')
       .select('check_in_time, status')
       .gte('check_in_time', firstDayOfYear.toISOString())
-      .in('status', ['present', 'late', 'half-day', 'half_day']);
+      .in('status', ['present', 'late', 'half_day']);
 
     if (error) {
       console.error('Error fetching trends:', error);

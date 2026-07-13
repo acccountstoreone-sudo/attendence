@@ -8,11 +8,12 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 const exportSchema = z.object({
-  format: z.enum(['pdf', 'excel', 'csv']),
+  format: z.enum(['pdf', 'excel', 'csv']).default('excel'),
+  type: z.string().optional(),
   branch_id: z.string().uuid().optional(),
   employee_id: z.string().uuid().optional(),
-  month: z.number().min(1).max(12),
-  year: z.number().min(2020).max(2100),
+  month: z.number().min(1).max(12).optional().default(() => new Date().getMonth() + 1),
+  year: z.number().min(2020).max(2100).optional().default(() => new Date().getFullYear()),
   direct_download: z.boolean().optional(),
 });
 
@@ -277,12 +278,16 @@ export async function GET(request: NextRequest) {
     const user = await requireRole(['admin', 'branch_manager', 'employee']);
     const { searchParams } = new URL(request.url);
     
+    const monthParam = parseInt(searchParams.get('month') || '0', 10);
+    const yearParam = parseInt(searchParams.get('year') || '0', 10);
+
     const payload = exportSchema.parse({
-      format: searchParams.get('format') || 'pdf',
+      format: (searchParams.get('format') as any) || 'excel',
+      type: searchParams.get('type') || undefined,
       branch_id: searchParams.get('branch_id') || undefined,
       employee_id: searchParams.get('employee_id') || undefined,
-      month: parseInt(searchParams.get('month') || '0', 10),
-      year: parseInt(searchParams.get('year') || '0', 10),
+      month: monthParam >= 1 && monthParam <= 12 ? monthParam : new Date().getMonth() + 1,
+      year: yearParam >= 2020 ? yearParam : new Date().getFullYear(),
       direct_download: true, // GET requests return raw binary blob for clean browser downloads
     });
 

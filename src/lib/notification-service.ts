@@ -1,4 +1,3 @@
-import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { Resend } from 'resend';
 
@@ -165,8 +164,14 @@ export async function dispatchNotification(options: DispatchNotificationOptions)
   const { userId, title, message, type = 'info', actionUrl = null, sendEmail = true, emailSubject } = options;
 
   try {
-    const supabase = await createClient();
-    const adminClient = getAdminClient(supabase);
+    // Always use the service-role admin client so RLS never blocks the insert.
+    // getAdminClient() returns a service-role client when SUPABASE_SERVICE_ROLE_KEY is set.
+    // Without that env var the notification will silently fail — check your .env.local!
+    const adminClient = getAdminClient();
+    if (!adminClient) {
+      console.error('[DispatchNotification] SUPABASE_SERVICE_ROLE_KEY is not set. Notification insert skipped.');
+      return false;
+    }
 
     // 1. Insert into public.notifications table
     const { error: dbError } = await adminClient.from('notifications').insert({
@@ -256,8 +261,8 @@ export async function dispatchToAdmins(options: {
   sendEmail?: boolean;
 }): Promise<number> {
   try {
-    const supabase = await createClient();
-    const adminClient = getAdminClient(supabase);
+    const adminClient = getAdminClient();
+    if (!adminClient) return 0;
 
     const { data: admins, error } = await adminClient
       .from('profiles')
@@ -298,8 +303,8 @@ export async function dispatchToBranchManagers(options: {
   sendEmail?: boolean;
 }): Promise<number> {
   try {
-    const supabase = await createClient();
-    const adminClient = getAdminClient(supabase);
+    const adminClient = getAdminClient();
+    if (!adminClient) return 0;
 
     let query = adminClient
       .from('profiles')
@@ -346,8 +351,8 @@ export async function dispatchToBranchStaff(options: {
   includeManagers?: boolean;
 }): Promise<number> {
   try {
-    const supabase = await createClient();
-    const adminClient = getAdminClient(supabase);
+    const adminClient = getAdminClient();
+    if (!adminClient) return 0;
 
     let query = adminClient
       .from('profiles')

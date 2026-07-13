@@ -9,6 +9,8 @@ const salarySchema = z.object({
   house_rent_allowance: z.number().min(0).default(0),
   medical_allowance: z.number().min(0).default(0),
   transport_allowance: z.number().min(0).default(0),
+  overtime_rate_per_hour: z.number().nullable().optional(),
+  daily_snack_allowance: z.number().nullable().optional(),
 });
 
 /** GET /api/salary-settings?branch_id=xxx  — List salary settings for employees */

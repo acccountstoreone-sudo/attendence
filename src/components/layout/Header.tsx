@@ -5,7 +5,7 @@ import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { useActivePresence } from '@/hooks/useActivePresence';
 import { Badge } from '@/components/ui/Badge';
 import { Toast } from '@/components/ui/Toast';
-import { Bell, Menu, Store, User as UserIcon, CheckCheck, ExternalLink } from 'lucide-react';
+import { Bell, Menu, Store, User as UserIcon, CheckCheck, ExternalLink, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
@@ -34,6 +34,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
     clearToast,
     markAsRead,
     markAllAsRead,
+    dismiss,
   } = useRealtimeNotifications(user.id);
 
   // Broadcast user presence globally while the app is open
@@ -164,6 +165,14 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
                             </span>
                           )}
                         </div>
+                        {/* Dismiss button */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); dismiss(n.id); }}
+                          className="shrink-0 p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                          title="Dismiss"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     );
                   })

@@ -39,10 +39,15 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {employees.map((emp) => (
-                  <tr key={emp.id} className="hover:bg-slate-50/30 transition-colors">
+                  <tr 
+                    key={emp.id} 
+                    onClick={() => onViewProfile(emp.id)}
+                    className="hover:bg-[#1dbf73]/5 hover:scale-[1.002] transition-all cursor-pointer group"
+                    title={`Click to view full profile and attendance for ${emp.full_name}`}
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 group-hover:ring-2 ring-[#1dbf73]/30 transition-all">
                           {emp.profile_picture ? (
                             <img src={emp.profile_picture} alt={emp.full_name} className="w-full h-full object-cover" />
                           ) : (
@@ -50,13 +55,13 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
                           )}
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900">{emp.full_name}</div>
+                          <div className="font-bold text-slate-900 group-hover:text-[#1dbf73] transition-colors">{emp.full_name}</div>
                           <div className="text-xs text-slate-500">{emp.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-slate-600">{emp.employee_id || 'N/A'}</div>
+                      <div className="text-slate-600 font-medium">{emp.employee_id || 'N/A'}</div>
                       <div className="text-xs text-slate-500 mt-1">{emp.phone || 'No phone'}</div>
                     </td>
                     <td className="px-6 py-4">
@@ -83,10 +88,10 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
                       <Button
                         variant="secondary"
                         size="sm"
-                        className="text-xs"
-                        onClick={() => onViewProfile(emp.id)}
+                        className="text-xs group-hover:bg-[#1dbf73] group-hover:text-white transition-colors"
+                        onClick={(e) => { e.stopPropagation(); onViewProfile(emp.id); }}
                       >
-                        View Profile
+                        View Profile &rarr;
                       </Button>
                     </td>
                   </tr>

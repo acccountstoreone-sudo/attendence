@@ -1,11 +1,11 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { Badge } from '@/components/ui/Badge';
-import { DollarSign, Plus, Pencil, Save, X, Search, RefreshCcw, AlertTriangle } from 'lucide-react';
+import { DollarSign, Plus, Pencil, Save, X, Search, RefreshCcw, AlertTriangle, Clock, Coffee } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 
@@ -15,6 +15,8 @@ interface SalarySetting {
   house_rent_allowance: number;
   medical_allowance: number;
   transport_allowance: number;
+  overtime_rate_per_hour?: number | null;
+  daily_snack_allowance?: number | null;
   updated_at: string;
   profiles: {
     id: string;
@@ -32,7 +34,7 @@ interface Employee {
   branches?: { name?: string } | Array<{ name?: string }> | null;
 }
 
-const defaultForm = { user_id: '', base_salary: 0, house_rent_allowance: 0, medical_allowance: 0, transport_allowance: 0 };
+const defaultForm = { user_id: '', base_salary: 0, house_rent_allowance: 0, medical_allowance: 0, transport_allowance: 0, overtime_rate_per_hour: '' as string | number, daily_snack_allowance: '' as string | number };
 
 export default function AdminSalarySettingsPage() {
   const supabase = createClient();
@@ -64,19 +66,29 @@ export default function AdminSalarySettingsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.user_id || form.base_salary <= 0) {
+    if (!form.user_id || Number(form.base_salary) <= 0) {
       setFeedback({ type: 'error', text: 'Please select an employee and enter a valid base salary.' });
       return;
     }
     setSaving(true);
+    const payload = {
+      user_id: form.user_id,
+      base_salary: Number(form.base_salary),
+      house_rent_allowance: Number(form.house_rent_allowance || 0),
+      medical_allowance: Number(form.medical_allowance || 0),
+      transport_allowance: Number(form.transport_allowance || 0),
+      overtime_rate_per_hour: form.overtime_rate_per_hour === '' || form.overtime_rate_per_hour === null ? null : Number(form.overtime_rate_per_hour),
+      daily_snack_allowance: form.daily_snack_allowance === '' || form.daily_snack_allowance === null ? null : Number(form.daily_snack_allowance),
+    };
+
     const res = await fetch('/api/salary-settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
     const json = await res.json();
     if (json.success) {
-      setFeedback({ type: 'success', text: 'Salary settings saved.' });
+      setFeedback({ type: 'success', text: 'Salary settings saved successfully.' });
       setForm(defaultForm);
       setShowAddForm(false);
       setEditingId(null);
@@ -88,7 +100,15 @@ export default function AdminSalarySettingsPage() {
   };
 
   const startEdit = (s: SalarySetting) => {
-    setForm({ user_id: s.user_id, base_salary: s.base_salary, house_rent_allowance: s.house_rent_allowance, medical_allowance: s.medical_allowance, transport_allowance: s.transport_allowance });
+    setForm({
+      user_id: s.user_id,
+      base_salary: s.base_salary,
+      house_rent_allowance: s.house_rent_allowance,
+      medical_allowance: s.medical_allowance,
+      transport_allowance: s.transport_allowance,
+      overtime_rate_per_hour: s.overtime_rate_per_hour ?? '',
+      daily_snack_allowance: s.daily_snack_allowance ?? ''
+    });
     setEditingId(s.user_id);
     setShowAddForm(false);
   };
@@ -108,8 +128,8 @@ export default function AdminSalarySettingsPage() {
         <div className="flex items-center gap-3">
           <DollarSign className="w-7 h-7 text-[#1dbf73]" />
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Salary Settings</h1>
-            <p className="text-sm text-slate-600">Configure base salary and allowances per employee.</p>
+            <h1 className="text-2xl font-bold text-slate-900">Salary Settings & Custom Rates</h1>
+            <p className="text-sm text-slate-600">Configure base salary, allowances, and custom overtime/snack rate overrides per employee.</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -145,18 +165,19 @@ export default function AdminSalarySettingsPage() {
       <AnimatePresence>
         {(showAddForm || editingId) && (
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
-            <Card className="p-5 border border-emerald-500/30 bg-slate-50/60">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">
-                {editingId ? 'Edit Salary' : 'Set Employee Salary'}
+            <Card className="p-5 border border-emerald-500/30 bg-slate-50/60 shadow-xl rounded-2xl">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-[#1dbf73]" />
+                {editingId ? 'Edit Salary & Overtime/Snack Rates' : 'Set Employee Salary & Rates'}
               </h2>
-              <form onSubmit={handleSave} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              <form onSubmit={handleSave} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {!editingId && (
                   <div className="col-span-2 sm:col-span-3 lg:col-span-2">
-                    <label className="text-xs text-slate-600 mb-1 block">Employee *</label>
+                    <label className="text-xs text-slate-600 mb-1 block font-semibold">Employee *</label>
                     <select id="salary-employee-select" required value={form.user_id}
                       onChange={(e) => setForm({ ...form, user_id: e.target.value })}
                       className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
-                      <option value="">Select…</option>
+                      <option value="">Select Employee…</option>
                       {employeesWithoutSalary.map((emp) => (
                         <option key={emp.id} value={emp.id}>
                           {emp.full_name}{emp.employee_id ? ` (${emp.employee_id})` : ''}
@@ -166,27 +187,30 @@ export default function AdminSalarySettingsPage() {
                   </div>
                 )}
                 {[
-                  { key: 'base_salary', label: 'Base Salary ৳ *', id: 'salary-base-input' },
-                  { key: 'house_rent_allowance', label: 'House Rent ৳', id: 'salary-hra-input' },
-                  { key: 'medical_allowance', label: 'Medical ৳', id: 'salary-medical-input' },
-                  { key: 'transport_allowance', label: 'Transport ৳', id: 'salary-transport-input' },
-                ].map(({ key, label, id }) => (
+                  { key: 'base_salary', label: 'Base Salary ৳ *', id: 'salary-base-input', placeholder: 'e.g. 25000' },
+                  { key: 'house_rent_allowance', label: 'House Rent ৳', id: 'salary-hra-input', placeholder: '0' },
+                  { key: 'medical_allowance', label: 'Medical ৳', id: 'salary-medical-input', placeholder: '0' },
+                  { key: 'transport_allowance', label: 'Transport ৳', id: 'salary-transport-input', placeholder: '0' },
+                  { key: 'overtime_rate_per_hour', label: 'Overtime Rate ৳/Hr (Optional)', id: 'salary-ot-input', placeholder: 'Leave blank for store default' },
+                  { key: 'daily_snack_allowance', label: 'Snack Allowance ৳/Day (Optional)', id: 'salary-snack-input', placeholder: 'Leave blank for store default' },
+                ].map(({ key, label, id, placeholder }) => (
                   <div key={key}>
-                    <label className="text-xs text-slate-600 mb-1 block">{label}</label>
+                    <label className="text-xs text-slate-600 mb-1 block font-semibold">{label}</label>
                     <input id={id} type="number" min={0} step={0.01}
                       value={form[key as keyof typeof form]}
-                      onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })}
+                      placeholder={placeholder}
+                      onChange={(e) => setForm({ ...form, [key]: e.target.value === '' ? '' : Number(e.target.value) })}
                       className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 ))}
-                <div className="col-span-2 sm:col-span-3 lg:col-span-6 flex gap-2 justify-end pt-1">
+                <div className="col-span-2 sm:col-span-3 lg:col-span-4 flex gap-2 justify-end pt-3 border-t border-slate-200">
                   <div className="flex-1 flex items-center text-sm text-[#1dbf73] font-semibold">
-                    Total: ৳{(form.base_salary + form.house_rent_allowance + form.medical_allowance + form.transport_allowance).toLocaleString()}
+                    Fixed Monthly Total: ৳{(Number(form.base_salary || 0) + Number(form.house_rent_allowance || 0) + Number(form.medical_allowance || 0) + Number(form.transport_allowance || 0)).toLocaleString()} + Overtime/Snacks
                   </div>
                   <Button id="cancel-salary-btn" type="button" variant="secondary" onClick={() => { setShowAddForm(false); setEditingId(null); }}>Cancel</Button>
                   <Button id="save-salary-btn" type="submit" disabled={saving}>
-                    {saving ? <Spinner className="w-4 h-4" /> : <><Save className="w-4 h-4 mr-1" />Save</>}
+                    {saving ? <Spinner className="w-4 h-4" /> : <><Save className="w-4 h-4 mr-1" />Save Settings</>}
                   </Button>
                 </div>
               </form>
@@ -217,51 +241,97 @@ export default function AdminSalarySettingsPage() {
           {filtered.map((s) => (
             <motion.div key={s.user_id} layout>
               {editingId === s.user_id ? (
-                <Card className="p-5 border border-emerald-500/30 bg-slate-50/60">
+                <Card className="p-5 border border-emerald-500/30 bg-slate-50/60 shadow-xl rounded-2xl">
                   <form onSubmit={handleSave} className="grid grid-cols-2 gap-3">
                     {[
-                      { key: 'base_salary', label: 'Base ৳', id: `edit-base-${s.user_id}` },
+                      { key: 'base_salary', label: 'Base ৳ *', id: `edit-base-${s.user_id}` },
                       { key: 'house_rent_allowance', label: 'HRA ৳', id: `edit-hra-${s.user_id}` },
                       { key: 'medical_allowance', label: 'Medical ৳', id: `edit-med-${s.user_id}` },
                       { key: 'transport_allowance', label: 'Transport ৳', id: `edit-trans-${s.user_id}` },
+                      { key: 'overtime_rate_per_hour', label: 'OT Rate ৳/Hr (Override)', id: `edit-ot-${s.user_id}` },
+                      { key: 'daily_snack_allowance', label: 'Snack Allowance ৳/Day (Override)', id: `edit-snack-${s.user_id}` },
                     ].map(({ key, label, id }) => (
                       <div key={key}>
-                        <label className="text-xs text-slate-600 mb-1 block">{label}</label>
+                        <label className="text-xs text-slate-600 mb-1 block font-semibold">{label}</label>
                         <input id={id} type="number" min={0} step={0.01}
                           value={form[key as keyof typeof form]}
-                          onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })}
+                          placeholder="Store Default"
+                          onChange={(e) => setForm({ ...form, [key]: e.target.value === '' ? '' : Number(e.target.value) })}
                           className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
                         />
                       </div>
                     ))}
-                    <div className="col-span-2 flex gap-2 justify-end">
+                    <div className="col-span-2 flex gap-2 justify-end pt-2">
                       <Button id={`cancel-edit-${s.user_id}`} type="button" variant="secondary" onClick={() => setEditingId(null)}>Cancel</Button>
                       <Button id={`save-edit-${s.user_id}`} type="submit" disabled={saving}>
-                        {saving ? <Spinner className="w-4 h-4" /> : 'Update'}
+                        {saving ? <Spinner className="w-4 h-4" /> : 'Update Rates'}
                       </Button>
                     </div>
                   </form>
                 </Card>
               ) : (
-                <Card className="p-4 bg-slate-50/60 flex items-center justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-slate-900 font-semibold">{s.profiles?.full_name}</p>
-                      {s.profiles?.employee_id && <Badge variant="info">{s.profiles.employee_id}</Badge>}
+                <Card className="p-5 bg-white border border-slate-200 shadow-sm rounded-xl flex flex-col justify-between gap-3 hover:shadow-md transition-shadow">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2 mb-3">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-slate-900 font-bold text-base">{s.profiles?.full_name}</p>
+                          {s.profiles?.employee_id && <Badge variant="info">{s.profiles.employee_id}</Badge>}
+                        </div>
+                        <p className="text-slate-500 text-xs mt-0.5">{(Array.isArray(s.profiles?.branches) ? s.profiles.branches[0]?.name : s.profiles?.branches?.name) ?? 'No branch assigned'}</p>
+                      </div>
+                      <button id={`edit-salary-${s.user_id}`} onClick={() => startEdit(s)}
+                        className="text-slate-600 hover:text-[#1dbf73] transition-colors p-2 bg-slate-50 rounded-lg flex-shrink-0">
+                        <Pencil className="w-4 h-4" />
+                      </button>
                     </div>
-                    <p className="text-slate-600 text-xs">{(Array.isArray(s.profiles?.branches) ? s.profiles.branches[0]?.name : s.profiles?.branches?.name) ?? 'No branch'}</p>
-                    <div className="mt-2 grid grid-cols-2 gap-x-4 text-xs">
-                      <span className="text-slate-600">Base: <span className="text-slate-900">৳{s.base_salary.toLocaleString()}</span></span>
-                      <span className="text-slate-600">HRA: <span className="text-slate-900">৳{s.house_rent_allowance.toLocaleString()}</span></span>
-                      <span className="text-slate-600">Medical: <span className="text-slate-900">৳{s.medical_allowance.toLocaleString()}</span></span>
-                      <span className="text-slate-600">Transport: <span className="text-slate-900">৳{s.transport_allowance.toLocaleString()}</span></span>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs mb-3 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                      <div>
+                        <span className="text-slate-500 block">Base Salary</span>
+                        <span className="font-bold text-slate-900">৳{s.base_salary.toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block">House Rent</span>
+                        <span className="font-medium text-slate-700">৳{s.house_rent_allowance.toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block">Medical</span>
+                        <span className="font-medium text-slate-700">৳{s.medical_allowance.toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block">Transport</span>
+                        <span className="font-medium text-slate-700">৳{s.transport_allowance.toLocaleString()}</span>
+                      </div>
                     </div>
-                    <p className="text-[#1dbf73] text-sm font-bold mt-1">Total: ৳{totalPackage(s).toLocaleString()}/month</p>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100">
+                      <div className="flex items-center gap-1.5 p-2 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-100">
+                        <Clock className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                        <div>
+                          <span className="text-[10px] text-emerald-600 font-semibold block uppercase">Overtime Rate</span>
+                          <span className="font-bold">
+                            {s.overtime_rate_per_hour !== null && s.overtime_rate_per_hour !== undefined ? `৳${s.overtime_rate_per_hour}/Hr (Custom)` : 'Branch Default'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 p-2 rounded-md bg-amber-50 text-amber-800 border border-amber-100">
+                        <Coffee className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                        <div>
+                          <span className="text-[10px] text-amber-600 font-semibold block uppercase">Snack Allowance</span>
+                          <span className="font-bold">
+                            {s.daily_snack_allowance !== null && s.daily_snack_allowance !== undefined ? `৳${s.daily_snack_allowance}/Day (Custom)` : 'Branch Default'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <button id={`edit-salary-${s.user_id}`} onClick={() => startEdit(s)}
-                    className="text-slate-600 hover:text-indigo-400 transition-colors p-2 flex-shrink-0">
-                    <Pencil className="w-4 h-4" />
-                  </button>
+
+                  <div className="pt-2 flex justify-between items-center text-sm border-t border-slate-100">
+                    <span className="text-slate-600 font-medium">Monthly Basic Package:</span>
+                    <span className="text-[#1dbf73] font-extrabold text-base">৳{totalPackage(s).toLocaleString()}</span>
+                  </div>
                 </Card>
               )}
             </motion.div>

@@ -234,68 +234,84 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         
         {/* Card 1: Total & Present */}
-        <div className="group rounded-3xl p-6 relative overflow-hidden bg-white border border-slate-200 shadow-sm hover:-translate-y-1 transition-all duration-300">
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#1dbf73]/10 rounded-full blur-3xl group-hover:bg-[#1dbf73]/10 transition-all duration-500"></div>
-          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-600" /></div>
+        <div 
+          onClick={() => router.push('/admin/employees')}
+          className="group rounded-3xl p-6 relative overflow-hidden bg-white border border-slate-200 shadow-sm hover:-translate-y-1 hover:border-[#1dbf73]/50 hover:shadow-md cursor-pointer transition-all duration-300"
+          title="Click to manage all staff and present records"
+        >
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#1dbf73]/10 rounded-full blur-3xl group-hover:bg-[#1dbf73]/20 transition-all duration-500"></div>
+          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" /></div>
           <div className="flex items-center gap-3 mb-6 relative z-10">
             <div className="p-2 bg-[#1dbf73]/10 rounded-xl ring-1 ring-[#1dbf73]/20 shadow-[0_0_15px_rgba(0,170,68,0.2)]"><Users className="w-4 h-4 text-[#1dbf73]" /></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Total Staff</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 group-hover:text-slate-900 transition-colors">Total Staff</span>
           </div>
           <div className="flex items-end justify-between relative z-10">
             <div>
-              <div className="text-4xl font-extrabold text-slate-900 tracking-tight">{summary?.total_employees || 0}</div>
-              <div className="text-[10px] text-slate-500 font-medium mt-1">Total in company</div>
+              <div className="text-4xl font-extrabold text-slate-900 tracking-tight group-hover:text-[#1dbf73] transition-colors">{summary?.total_employees || 0}</div>
+              <div className="text-[10px] text-slate-500 font-medium mt-1">Total in company &rarr;</div>
             </div>
             <CircularProgress percentage={presentRate} color="#1dbf73" />
           </div>
         </div>
 
         {/* Card 2: Late / Risks */}
-        <div className="group rounded-3xl p-6 relative overflow-hidden bg-white border border-slate-200 shadow-sm hover:-translate-y-1 transition-all duration-300">
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl group-hover:bg-amber-500/20 transition-all duration-500"></div>
-          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-600" /></div>
+        <div 
+          onClick={() => router.push('/admin/attendance?tab=all&status=late')}
+          className="group rounded-3xl p-6 relative overflow-hidden bg-white border border-slate-200 shadow-sm hover:-translate-y-1 hover:border-amber-500/50 hover:shadow-md cursor-pointer transition-all duration-300"
+          title="Click to review late arrival records"
+        >
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl group-hover:bg-amber-500/25 transition-all duration-500"></div>
+          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" /></div>
           <div className="flex items-center gap-3 mb-6 relative z-10">
             <div className="p-2 bg-amber-500/10 rounded-xl ring-1 ring-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.2)]"><AlertTriangle className="w-4 h-4 text-amber-500" /></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Late Arrivals</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 group-hover:text-slate-900 transition-colors">Late Arrivals</span>
           </div>
           <div className="flex items-end justify-between relative z-10">
             <div>
-              <div className="text-4xl font-extrabold text-slate-900 tracking-tight">{summary?.late_today || 0}</div>
-              <div className="text-[10px] text-slate-500 font-medium mt-1">Requires review</div>
+              <div className="text-4xl font-extrabold text-slate-900 tracking-tight group-hover:text-amber-600 transition-colors">{summary?.late_today || 0}</div>
+              <div className="text-[10px] text-slate-500 font-medium mt-1">Requires review &rarr;</div>
             </div>
             <CircularProgress percentage={lateRate} color="#f59e0b" />
           </div>
         </div>
 
         {/* Card 3: Leaves */}
-        <div className="group rounded-3xl p-6 relative overflow-hidden bg-white border border-slate-200 shadow-sm hover:-translate-y-1 transition-all duration-300">
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-500"></div>
-          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-600" /></div>
+        <div 
+          onClick={() => router.push('/admin/leaves')}
+          className="group rounded-3xl p-6 relative overflow-hidden bg-white border border-slate-200 shadow-sm hover:-translate-y-1 hover:border-blue-500/50 hover:shadow-md cursor-pointer transition-all duration-300"
+          title="Click to view staff on leave"
+        >
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/25 transition-all duration-500"></div>
+          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" /></div>
           <div className="flex items-center gap-3 mb-6 relative z-10">
-            <div className="p-2 bg-blue-500/10 rounded-xl ring-1 ring-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]"><Users className="w-4 h-4 text-blue-400" /></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">On Leave</span>
+            <div className="p-2 bg-blue-500/10 rounded-xl ring-1 ring-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]"><Users className="w-4 h-4 text-blue-500" /></div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 group-hover:text-slate-900 transition-colors">On Leave</span>
           </div>
           <div className="flex items-end justify-between relative z-10">
             <div>
-              <div className="text-4xl font-extrabold text-slate-900 tracking-tight">{summary?.on_leave_today || 0}</div>
-              <div className="text-[10px] text-slate-500 font-medium mt-1">Approved absences</div>
+              <div className="text-4xl font-extrabold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">{summary?.on_leave_today || 0}</div>
+              <div className="text-[10px] text-slate-500 font-medium mt-1">Approved absences &rarr;</div>
             </div>
             <CircularProgress percentage={leaveRate} color="#3b82f6" />
           </div>
         </div>
 
         {/* Card 4: Alerts */}
-        <div className="group rounded-3xl p-6 relative overflow-hidden bg-white border border-slate-200 shadow-sm hover:-translate-y-1 transition-all duration-300">
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl group-hover:bg-rose-500/20 transition-all duration-500"></div>
-          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-600" /></div>
+        <div 
+          onClick={() => router.push('/admin/corrections')}
+          className="group rounded-3xl p-6 relative overflow-hidden bg-white border border-slate-200 shadow-sm hover:-translate-y-1 hover:border-rose-500/50 hover:shadow-md cursor-pointer transition-all duration-300"
+          title="Click to resolve branch alerts and corrections"
+        >
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl group-hover:bg-rose-500/25 transition-all duration-500"></div>
+          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" /></div>
           <div className="flex items-center gap-3 mb-6 relative z-10">
             <div className="p-2 bg-rose-500/10 rounded-xl ring-1 ring-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]"><Activity className="w-4 h-4 text-rose-500" /></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Branch Alerts</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 group-hover:text-slate-900 transition-colors">Branch Alerts</span>
           </div>
           <div className="flex items-end justify-between relative z-10">
             <div>
-              <div className="text-4xl font-extrabold text-slate-900 tracking-tight">{alertsCount < 10 ? `0${alertsCount}` : alertsCount}</div>
-              <div className="text-[10px] text-slate-500 font-medium mt-1">Action required</div>
+              <div className="text-4xl font-extrabold text-slate-900 tracking-tight group-hover:text-rose-600 transition-colors">{alertsCount < 10 ? `0${alertsCount}` : alertsCount}</div>
+              <div className="text-[10px] text-slate-500 font-medium mt-1">Action required &rarr;</div>
             </div>
             <CircularProgress percentage={Math.min(100, alertsCount * 10)} color="#ef4444" />
           </div>
@@ -304,11 +320,18 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Main Line Chart */}
-      <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 relative overflow-hidden group">
+      <div 
+        onClick={() => router.push('/admin/analytics')}
+        className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 relative overflow-hidden group cursor-pointer hover:border-[#1dbf73]/50 hover:shadow-md transition-all duration-300"
+        title="Click to open full Attendance Analytics page"
+      >
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#1dbf73]/5 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
         <div className="flex items-center justify-between mb-8 relative z-10">
           <div>
-            <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Attendance in time</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-extrabold text-slate-900 tracking-tight group-hover:text-[#1dbf73] transition-colors">Attendance in time</h2>
+              <span className="text-[10px] text-[#1dbf73] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">View Full Analytics &rarr;</span>
+            </div>
             <p className="text-[11px] font-medium text-slate-600 mt-0.5">Historical trend across all branches</p>
           </div>
           <div className="px-4 py-1.5 bg-white backdrop-blur-md border border-[#1dbf73]/20 rounded-full text-[10px] font-bold text-[#1dbf73] shadow-[0_0_15px_rgba(0,170,68,0.15)] uppercase tracking-wider">
@@ -385,11 +408,18 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Middle Col: Area Chart */}
-        <div className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden group">
+        <div 
+          onClick={() => router.push('/admin/attendance?tab=all')}
+          className="bg-white border border-slate-200 shadow-sm rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:border-[#1dbf73]/50 hover:shadow-md transition-all duration-300"
+          title="Click to view all attendance check-ins"
+        >
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#1dbf73]/10 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
-          <div className="relative z-10">
-            <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Weekly Check-ins</h2>
-            <p className="text-[10px] text-slate-500 font-medium">Last 10 days</p>
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 group-hover:text-slate-900 transition-colors">Weekly Check-ins</h2>
+              <p className="text-[10px] text-slate-500 font-medium">Last 10 days</p>
+            </div>
+            <span className="text-[10px] text-[#1dbf73] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">View Grid &rarr;</span>
           </div>
           
           <div className="h-[200px] w-full mt-4 relative z-10">
@@ -422,7 +452,7 @@ export default function AdminDashboardPage() {
           
           <div className="flex items-center justify-between mt-4 relative z-10">
             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Total Check-ins</div>
-            <div className="text-2xl font-extrabold text-slate-900 tracking-tight">{totalCheckins > 0 ? totalCheckins.toLocaleString() : '00'}</div>
+            <div className="text-2xl font-extrabold text-slate-900 tracking-tight group-hover:text-[#1dbf73] transition-colors">{totalCheckins > 0 ? totalCheckins.toLocaleString() : '00'}</div>
           </div>
         </div>
 
@@ -437,14 +467,22 @@ export default function AdminDashboardPage() {
 
           <div className="flex-1 overflow-y-auto space-y-3 max-h-[300px] relative z-10 scrollbar-thin scrollbar-thumb-slate-300 pr-2">
             {liveFeed.slice(0,4).map((feed) => (
-              <div key={feed.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 hover:border-slate-200 hover:bg-slate-50 transition-all duration-300 flex items-start gap-3 group/item">
-                <div className="mt-0.5 p-1.5 bg-slate-100 rounded-lg group-hover/item:bg-slate-200 transition-colors"><Bell className="w-3.5 h-3.5 text-slate-600" /></div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 tracking-tight">{feed.full_name}</h3>
+              <div 
+                key={feed.id} 
+                onClick={() => router.push(`/admin/attendance?search=${encodeURIComponent(feed.full_name)}&tab=all`)}
+                className="p-4 bg-slate-50 rounded-2xl border border-slate-200 hover:border-[#1dbf73]/40 hover:bg-[#1dbf73]/5 cursor-pointer transition-all duration-300 flex items-start gap-3 group/item"
+                title={`Click to view check-in details for ${feed.full_name}`}
+              >
+                <div className="mt-0.5 p-1.5 bg-slate-100 rounded-lg group-hover/item:bg-[#1dbf73]/10 transition-colors"><Bell className="w-3.5 h-3.5 text-slate-600 group-hover/item:text-[#1dbf73]" /></div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-bold text-slate-900 tracking-tight group-hover/item:text-[#1dbf73] transition-colors">{feed.full_name}</h3>
                   <p className="text-[10px] text-slate-600 mt-1 font-medium leading-relaxed">
-                    {feed.type} recorded at {feed.branch_name}. Status: <span className={feed.status === 'late' ? 'text-amber-400' : feed.status === 'absent' ? 'text-rose-400' : 'text-[#1dbf73]'}>{feed.status}</span>.
+                    {feed.type} recorded at {feed.branch_name}. Status: <span className={feed.status === 'late' ? 'text-amber-500 font-bold' : feed.status === 'absent' ? 'text-rose-500 font-bold' : 'text-[#1dbf73] font-bold'}>{feed.status}</span>.
                   </p>
-                  <button className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-3 hover:text-slate-900 flex items-center gap-1 transition-colors">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); router.push(`/admin/attendance?search=${encodeURIComponent(feed.full_name)}&tab=all`); }}
+                    className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-3 hover:text-[#1dbf73] flex items-center gap-1 transition-colors"
+                  >
                     View details <ChevronDown className="w-3 h-3 -rotate-90" />
                   </button>
                 </div>

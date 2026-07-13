@@ -81,13 +81,21 @@ export async function POST(request: NextRequest) {
         const dailyRate = grossSalary / daysInMonth;
         const deductions = totalAbsences * dailyRate;
 
-        // Overtime: standard 1.5x hourly rate based on base salary (8 hrs/day)
-        const hourlyRate = baseSalary > 0 ? (baseSalary / daysInMonth) / 8 : dailyRate / 8;
-        const overtimePay = (summary.total_overtime_minutes / 60) * hourlyRate * 1.5;
+        // Overtime & Snack Allowance Calculation (using custom override or store default rates from dutyEngine)
+        const hourlyFallbackRate = baseSalary > 0 ? (baseSalary / daysInMonth) / 8 : dailyRate / 8;
+        const overtimeRateUsed = summary.overtime_rate_per_hour ?? (hourlyFallbackRate * 1.5);
+        const overtimePay = summary.total_overtime_pay !== undefined
+          ? summary.total_overtime_pay
+          : ((summary.total_overtime_minutes / 60) * overtimeRateUsed);
 
-        const netPayable = grossSalary - deductions + overtimePay;
+        const snackRateUsed = summary.daily_snack_allowance ?? 0;
+        const snackPay = summary.total_snack_allowance_pay !== undefined
+          ? summary.total_snack_allowance_pay
+          : (summary.total_present_days * snackRateUsed);
 
-        // 4. Save/Upsert into payroll_sheets
+        const netPayable = grossSalary - deductions + overtimePay + snackPay;
+
+        // 4. Save/Upsert into payroll_sheets with exact audit breakdown
         const { data: sheet, error: sheetErr } = await supabase
           .from('payroll_sheets')
           .upsert({
@@ -97,6 +105,12 @@ export async function POST(request: NextRequest) {
             gross_salary: parseFloat(grossSalary.toFixed(2)),
             deductions: parseFloat(deductions.toFixed(2)),
             net_payable: parseFloat(netPayable.toFixed(2)),
+            overtime_hours: summary.total_overtime_hours,
+            overtime_rate_used: parseFloat(Number(overtimeRateUsed).toFixed(2)),
+            overtime_pay: parseFloat(overtimePay.toFixed(2)),
+            present_days: summary.total_present_days,
+            snack_allowance_used: parseFloat(Number(snackRateUsed).toFixed(2)),
+            snack_allowance_pay: parseFloat(snackPay.toFixed(2)),
             status: 'draft',
             created_at: new Date().toISOString()
           }, { onConflict: 'user_id, month_year' })
@@ -117,7 +131,10 @@ export async function POST(request: NextRequest) {
                 on_leave_days: summary.total_on_leave_days,
                 missed_days: summary.total_missed_days,
                 overtime_hours: summary.total_overtime_hours,
-                overtime_pay: parseFloat(overtimePay.toFixed(2))
+                overtime_rate_used: parseFloat(Number(overtimeRateUsed).toFixed(2)),
+                overtime_pay: parseFloat(overtimePay.toFixed(2)),
+                snack_allowance_used: parseFloat(Number(snackRateUsed).toFixed(2)),
+                snack_allowance_pay: parseFloat(snackPay.toFixed(2)),
               }
             }
           });

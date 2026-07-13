@@ -1,4 +1,5 @@
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { FileText, Download, FileSpreadsheet, FileIcon } from 'lucide-react';
@@ -10,14 +11,16 @@ interface BranchReportsTabProps {
 }
 
 export const BranchReportsTab: React.FC<BranchReportsTabProps> = ({ branch }) => {
+  const router = useRouter();
   const reports = [
-    { type: 'monthly_attendance', title: 'Monthly Attendance Report', description: 'Comprehensive view of all attendance records for the month.' },
-    { type: 'late_arrivals', title: 'Late Arrivals Summary', description: 'List of all employees who were late, including total duration.' },
-    { type: 'overtime', title: 'Overtime Analytics', description: 'Detailed breakdown of overtime hours worked by branch employees.' }
+    { type: 'monthly_attendance', title: 'Monthly Attendance Report', description: 'Comprehensive view of all attendance records for the month.', statusFilter: 'all' },
+    { type: 'late_arrivals', title: 'Late Arrivals Summary', description: 'List of all employees who were late, including total duration.', statusFilter: 'late' },
+    { type: 'overtime', title: 'Overtime Analytics', description: 'Detailed breakdown of overtime hours worked by branch employees.', statusFilter: 'all' }
   ];
 
   const handleExport = (type: string, format: string) => {
-    const url = `/api/reports/export?branch_id=${branch.id}&type=${type}&format=${format}`;
+    const now = new Date();
+    const url = `/api/reports/export?branch_id=${branch.id}&type=${type}&format=${format}&month=${now.getMonth() + 1}&year=${now.getFullYear()}`;
     window.open(url, '_blank');
   };
 
@@ -34,26 +37,34 @@ export const BranchReportsTab: React.FC<BranchReportsTabProps> = ({ branch }) =>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {reports.map((report, idx) => (
-            <Card key={idx} className="bg-white border-slate-200 p-6 flex flex-col h-full shadow-xl">
+            <Card 
+              key={idx} 
+              onClick={() => router.push(`/admin/attendance?status=${report.statusFilter}&tab=all`)}
+              className="bg-white border-slate-200 p-6 flex flex-col h-full shadow-xl cursor-pointer hover:border-[#1dbf73]/50 hover:-translate-y-1 transition-all duration-300 group"
+              title={`Click to view ${report.title} live logs`}
+            >
               <div className="flex items-start space-x-4 mb-4">
-                 <div className="p-3 bg-white rounded-lg">
+                 <div className="p-3 bg-slate-50 rounded-xl group-hover:bg-[#1dbf73]/10 transition-colors">
                    <FileText className="w-6 h-6 text-[#1dbf73]" />
                  </div>
-                 <div>
-                   <h5 className="text-md font-bold text-slate-900">{report.title}</h5>
+                 <div className="flex-1">
+                   <h5 className="text-md font-bold text-slate-900 group-hover:text-[#1dbf73] transition-colors flex items-center justify-between">
+                     {report.title}
+                     <span className="text-[10px] text-slate-400 group-hover:text-[#1dbf73] font-bold uppercase transition-colors">View &rarr;</span>
+                   </h5>
                    <p className="text-xs text-slate-600 mt-1">{report.description}</p>
                  </div>
               </div>
               
-              <div className="mt-auto pt-4 border-t border-slate-200/50 flex flex-wrap gap-2">
-                <Button variant="secondary" size="sm" className="text-xs flex-1" onClick={() => handleExport(report.type, 'excel')}>
-                  <FileSpreadsheet className="w-3.5 h-3.5 mr-1" /> Excel
+              <div className="mt-auto pt-4 border-t border-slate-200/50 flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                <Button variant="secondary" size="sm" className="text-xs flex-1 hover:border-[#1dbf73]/40" onClick={() => handleExport(report.type, 'excel')}>
+                  <FileSpreadsheet className="w-3.5 h-3.5 mr-1 text-emerald-600" /> Excel
                 </Button>
-                <Button variant="secondary" size="sm" className="text-xs flex-1" onClick={() => handleExport(report.type, 'pdf')}>
-                  <FileIcon className="w-3.5 h-3.5 mr-1 text-red-400" /> PDF
+                <Button variant="secondary" size="sm" className="text-xs flex-1 hover:border-red-400/40" onClick={() => handleExport(report.type, 'pdf')}>
+                  <FileIcon className="w-3.5 h-3.5 mr-1 text-red-500" /> PDF
                 </Button>
-                <Button variant="secondary" size="sm" className="text-xs flex-1" onClick={() => handleExport(report.type, 'csv')}>
-                  <Download className="w-3.5 h-3.5 mr-1" /> CSV
+                <Button variant="secondary" size="sm" className="text-xs flex-1 hover:border-blue-400/40" onClick={() => handleExport(report.type, 'csv')}>
+                  <Download className="w-3.5 h-3.5 mr-1 text-blue-500" /> CSV
                 </Button>
               </div>
             </Card>

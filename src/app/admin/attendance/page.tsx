@@ -47,8 +47,28 @@ export default function AdminAttendancePage() {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab') as Tab;
+      if (tabParam && ['pending', 'approved', 'all'].includes(tabParam)) {
+        setActiveTab(tabParam);
+      }
+      const searchParam = params.get('search');
+      if (searchParam) {
+        setSearchTerm(searchParam);
+      }
+      const stParam = params.get('status');
+      if (stParam) {
+        setStatusFilter(stParam);
+        if (!tabParam) setActiveTab('all');
+      }
+    }
+  }, []);
 
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
@@ -120,10 +140,12 @@ export default function AdminAttendancePage() {
     }
   };
 
-  const filteredRecords = records.filter(r =>
-    (r.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (r.branch_name || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRecords = records.filter(r => {
+    const matchesSearch = (r.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (r.branch_name || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || r.status.toLowerCase() === statusFilter.toLowerCase();
+    return matchesSearch && matchesStatus;
+  });
 
   const pendingCount = records.filter(r => r.approval_status === 'pending').length;
 
@@ -265,16 +287,38 @@ export default function AdminAttendancePage() {
             />
           </div>
 
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2">
-            <Calendar className="w-4 h-4 text-[#1dbf73] shrink-0" />
-            <select
-              value={selectedDate}
-              onChange={e => setSelectedDate(e.target.value)}
-              className="bg-transparent text-sm text-slate-600 focus:outline-none"
-            >
-              <option value="all">All Dates / Recent</option>
-              <option value={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`}>Today</option>
-            </select>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2">
+              <Filter className="w-4 h-4 text-amber-500 shrink-0" />
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+                className="bg-transparent text-sm text-slate-600 focus:outline-none capitalize font-medium"
+              >
+                <option value="all">All Statuses</option>
+                <option value="present">Present</option>
+                <option value="late">Late</option>
+                <option value="absent">Absent</option>
+                <option value="on_leave">On Leave</option>
+              </select>
+              {statusFilter !== 'all' && (
+                <button onClick={() => setStatusFilter('all')} className="text-xs text-rose-500 font-bold hover:underline ml-1">
+                  Clear
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2">
+              <Calendar className="w-4 h-4 text-[#1dbf73] shrink-0" />
+              <select
+                value={selectedDate}
+                onChange={e => setSelectedDate(e.target.value)}
+                className="bg-transparent text-sm text-slate-600 focus:outline-none font-medium"
+              >
+                <option value="all">All Dates / Recent</option>
+                <option value={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`}>Today</option>
+              </select>
+            </div>
           </div>
         </div>
 

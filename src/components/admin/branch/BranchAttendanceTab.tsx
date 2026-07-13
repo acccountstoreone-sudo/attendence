@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Calendar, Filter, Download, User, MapPin } from 'lucide-react';
@@ -11,6 +12,7 @@ interface BranchAttendanceTabProps {
 }
 
 export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch }) => {
+  const router = useRouter();
   const [view, setView] = useState<'daily' | 'monthly'>('daily');
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -99,13 +101,18 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {records.map((record) => (
-                  <tr key={record.id} className="hover:bg-slate-50/30 transition-colors">
+                  <tr 
+                    key={record.id} 
+                    onClick={() => router.push(`/admin/attendance?search=${encodeURIComponent(record.profiles?.full_name || '')}&tab=all`)}
+                    className="hover:bg-[#1dbf73]/5 hover:scale-[1.002] transition-all cursor-pointer group"
+                    title={`Click to view full attendance history for ${record.profiles?.full_name || 'Unknown'}`}
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                          <User className="w-4 h-4 text-slate-500" />
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-[#1dbf73]/10 transition-colors">
+                          <User className="w-4 h-4 text-slate-500 group-hover:text-[#1dbf73] transition-colors" />
                         </div>
-                        <div className="font-bold text-slate-900">{record.profiles?.full_name || 'Unknown'}</div>
+                        <div className="font-bold text-slate-900 group-hover:text-[#1dbf73] transition-colors">{record.profiles?.full_name || 'Unknown'}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-slate-600">

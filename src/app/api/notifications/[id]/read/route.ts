@@ -19,7 +19,7 @@ export async function PUT(
     const supabase = await createClient();
     const { data: updated, error } = await supabase
       .from('notifications')
-      .update({ is_read: true, read_at: new Date().toISOString() })
+      .update({ is_read: true })
       .eq('id', notificationId)
       .eq('user_id', user.id) // Ensure users can only mark their own notifications read
       .select()

@@ -15,7 +15,7 @@ export async function PUT() {
     const supabase = await createClient();
     const { data: updatedList, error } = await supabase
       .from('notifications')
-      .update({ is_read: true, read_at: new Date().toISOString() })
+      .update({ is_read: true })
       .eq('user_id', user.id)
       .eq('is_read', false)
       .select();

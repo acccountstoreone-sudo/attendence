@@ -92,6 +92,16 @@ export default function AdminEmployeesPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadData(); }, [loadData]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const searchParam = params.get('search');
+      if (searchParam) {
+        setSearchTerm(searchParam);
+      }
+    }
+  }, []);
+
   const openAddModal = () => router.push('/admin/employees/new');
   const openEditModal = (emp: Employee) => router.push(`/admin/employees/${emp.id}/edit`);
   const openDutyReport = (emp: Employee) => router.push(`/admin/employees/${emp.id}/duty-report`);

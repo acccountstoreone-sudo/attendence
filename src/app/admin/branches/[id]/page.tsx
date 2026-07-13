@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { ChevronLeft, Store, LayoutDashboard, Users, Calendar, FileText, Settings, Bell } from 'lucide-react';
+import { ChevronLeft, Store, LayoutDashboard, Users, Calendar, FileText, Settings, Bell, Clock } from 'lucide-react';
 import { Branch, BranchEmployee } from '@/components/admin/branch/types';
 
 import { BranchOverviewTab } from '@/components/admin/branch/BranchOverviewTab';
@@ -14,9 +14,10 @@ import { BranchAttendanceTab } from '@/components/admin/branch/BranchAttendanceT
 import { BranchReportsTab } from '@/components/admin/branch/BranchReportsTab';
 import { BranchSettingsTab } from '@/components/admin/branch/BranchSettingsTab';
 import { BranchAnnouncementTab } from '@/components/admin/branch/BranchAnnouncementTab';
+import { BranchGatePassTab } from '@/components/admin/branch/BranchGatePassTab';
 import { Card } from '@/components/ui/Card';
 
-type TabType = 'overview' | 'employees' | 'profile' | 'attendance' | 'reports' | 'settings' | 'announcements';
+type TabType = 'overview' | 'employees' | 'profile' | 'attendance' | 'reports' | 'settings' | 'announcements' | 'gate_pass';
 
 export default function BranchWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -95,6 +96,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4 mr-2" /> },
     { id: 'employees', label: 'Employees', icon: <Users className="w-4 h-4 mr-2" /> },
+    { id: 'gate_pass', label: 'Gate-Pass & Breaks', icon: <Clock className="w-4 h-4 mr-2 text-[#1dbf73]" /> },
     { id: 'attendance', label: 'Attendance', icon: <Calendar className="w-4 h-4 mr-2" /> },
     { id: 'reports', label: 'Reports', icon: <FileText className="w-4 h-4 mr-2" /> },
     { id: 'announcements', label: 'Announcements', icon: <Bell className="w-4 h-4 mr-2" /> },
@@ -121,29 +123,53 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
 
       {/* Quick Statistics Top Bar */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-         <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
-            <span className="text-xs text-slate-600">Total Staff</span>
-            <span className="text-lg font-bold text-slate-900">{employees.length}</span>
+         <div 
+           onClick={() => setActiveTab('employees')}
+           className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#1dbf73]/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
+           title="Click to view all branch staff"
+         >
+            <span className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">Total Staff</span>
+            <span className="text-lg font-bold text-slate-900 group-hover:scale-105 transition-transform">{employees.length}</span>
          </div>
-         <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
-            <span className="text-xs text-slate-600">Present</span>
-            <span className="text-lg font-bold text-[#1dbf73]">{employees.filter(e => e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day').length}</span>
+         <div 
+           onClick={() => setActiveTab('attendance')}
+           className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#1dbf73]/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
+           title="Click to view present check-ins in Attendance tab"
+         >
+            <span className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">Present</span>
+            <span className="text-lg font-bold text-[#1dbf73] group-hover:scale-105 transition-transform">{employees.filter(e => e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day').length}</span>
          </div>
-         <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
-            <span className="text-xs text-slate-600">Absent</span>
-            <span className="text-lg font-bold text-red-500">{employees.length - employees.filter(e => e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day').length}</span>
+         <div 
+           onClick={() => setActiveTab('attendance')}
+           className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:border-red-500/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
+           title="Click to check absent records in Attendance tab"
+         >
+            <span className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">Absent</span>
+            <span className="text-lg font-bold text-red-500 group-hover:scale-105 transition-transform">{employees.length - employees.filter(e => e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day').length}</span>
          </div>
-         <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
-            <span className="text-xs text-slate-600">Active Now</span>
-            <span className="text-lg font-bold text-blue-500">{employees.filter(e => e.is_active !== false).length}</span>
+         <div 
+           onClick={() => setActiveTab('employees')}
+           className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:border-blue-500/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
+           title="Click to check active staff in Employees tab"
+         >
+            <span className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">Active Now</span>
+            <span className="text-lg font-bold text-blue-500 group-hover:scale-105 transition-transform">{employees.filter(e => e.is_active !== false).length}</span>
          </div>
-         <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
-            <span className="text-xs text-slate-600">Late</span>
-            <span className="text-lg font-bold text-orange-500">{employees.filter(e => e.today_status === 'late').length}</span>
+         <div 
+           onClick={() => setActiveTab('attendance')}
+           className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:border-orange-500/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
+           title="Click to check late check-ins in Attendance tab"
+         >
+            <span className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">Late</span>
+            <span className="text-lg font-bold text-orange-500 group-hover:scale-105 transition-transform">{employees.filter(e => e.today_status === 'late').length}</span>
          </div>
-         <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col items-center justify-center text-center">
-            <span className="text-xs text-slate-600">Attendance %</span>
-            <span className="text-lg font-bold text-[#1dbf73]">
+         <div 
+           onClick={() => setActiveTab('overview')}
+           className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#1dbf73]/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
+           title="Click to view branch overview stats"
+         >
+            <span className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">Attendance %</span>
+            <span className="text-lg font-bold text-[#1dbf73] group-hover:scale-105 transition-transform">
               {employees.length > 0 ? Math.round((employees.filter(e => e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day').length / employees.length) * 100) : 0}%
             </span>
          </div>
@@ -171,7 +197,19 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
 
       {/* Tab Content */}
       <div className="mt-6">
-        {activeTab === 'overview' && <BranchOverviewTab branch={branch} employees={employees} />}
+        {activeTab === 'overview' && (
+          <BranchOverviewTab 
+            branch={branch} 
+            employees={employees} 
+            onSelectTab={(tab, empId) => {
+              if (tab === 'profile' && empId) {
+                handleViewProfile(empId);
+              } else {
+                setActiveTab(tab as TabType);
+              }
+            }} 
+          />
+        )}
         {activeTab === 'employees' && <BranchEmployeesTab employees={employees} onViewProfile={handleViewProfile} />}
         {activeTab === 'profile' && selectedEmployeeId && (
           <BranchEmployeeProfileTab 
@@ -182,6 +220,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
           />
         )}
         {activeTab === 'attendance' && <BranchAttendanceTab branch={branch} />}
+        {activeTab === 'gate_pass' && <BranchGatePassTab branch={branch} />}
         {activeTab === 'reports' && <BranchReportsTab branch={branch} />}
         {activeTab === 'settings' && <BranchSettingsTab branch={branch} />}
         {activeTab === 'announcements' && <BranchAnnouncementTab branch={branch} employees={employees} />}
