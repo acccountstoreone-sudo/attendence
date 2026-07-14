@@ -20,8 +20,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from('public_holidays')
       .select('*')
-      .or(`holiday_date.gte.${year}-01-01,is_recurring.eq.true`)
-      .lte('holiday_date', `${year}-12-31`)
+      .or(`and(holiday_date.gte.${year}-01-01,holiday_date.lte.${year}-12-31),is_recurring.eq.true`)
       .order('holiday_date');
 
     if (error) throw error;

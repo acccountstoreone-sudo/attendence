@@ -51,11 +51,11 @@ export async function GET() {
     if (company) {
       mappedCompany = {
         ...company,
-        hq_address: company.address,
-        working_hours_start: company.default_work_start_time ? company.default_work_start_time.slice(0, 5) : '09:00',
-        working_hours_end: company.default_work_end_time ? company.default_work_end_time.slice(0, 5) : '18:00',
-        grace_period_minutes: 15,
-        overtime_multiplier: 1.5,
+        hq_address: company.hq_address || company.address || '',
+        working_hours_start: (company.working_hours_start || company.default_work_start_time || '09:00').slice(0, 5),
+        working_hours_end: (company.working_hours_end || company.default_work_end_time || '18:00').slice(0, 5),
+        grace_period_minutes: company.grace_period_minutes !== undefined && company.grace_period_minutes !== null ? Number(company.grace_period_minutes) : 15,
+        overtime_multiplier: company.overtime_multiplier !== undefined && company.overtime_multiplier !== null ? Number(company.overtime_multiplier) : 1.5,
       };
     }
 
@@ -86,32 +86,60 @@ export async function PUT(request: NextRequest) {
       .limit(1)
       .maybeSingle();
 
-    // Map frontend keys to database columns
-    const dbPayload = {
+    // Try modern schema first (hq_address, working_hours_start, grace_period_minutes, overtime_multiplier)
+    const modernPayload = {
+      name: payload.name,
+      hq_address: payload.hq_address || '',
+      working_hours_start: payload.working_hours_start,
+      working_hours_end: payload.working_hours_end,
+      grace_period_minutes: payload.grace_period_minutes,
+      overtime_multiplier: payload.overtime_multiplier,
+    };
+
+    const legacyPayload = {
       name: payload.name,
       address: payload.hq_address || '',
       default_work_start_time: payload.working_hours_start,
       default_work_end_time: payload.working_hours_end,
-      // Note: grace_period_minutes and overtime_multiplier are not currently in the company_profile table schema.
-      // We omit them here to prevent PostgREST errors.
     };
 
     let result;
     if (existing) {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('company_profile')
-        .update(dbPayload)
+        .update(modernPayload)
         .eq('id', existing.id)
         .select()
         .single();
+
+      if (error && (error.code === 'PGRST204' || error.message.includes('column'))) {
+        const fallback = await supabase
+          .from('company_profile')
+          .update(legacyPayload)
+          .eq('id', existing.id)
+          .select()
+          .single();
+        data = fallback.data;
+        error = fallback.error;
+      }
       if (error) throw new Error(`Update failed: ${error.message}`);
       result = data;
     } else {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('company_profile')
-        .insert(dbPayload)
+        .insert(modernPayload)
         .select()
         .single();
+
+      if (error && (error.code === 'PGRST204' || error.message.includes('column'))) {
+        const fallback = await supabase
+          .from('company_profile')
+          .insert(legacyPayload)
+          .select()
+          .single();
+        data = fallback.data;
+        error = fallback.error;
+      }
       if (error) throw new Error(`Insert failed: ${error.message}`);
       result = data;
     }
@@ -119,20 +147,20 @@ export async function PUT(request: NextRequest) {
     // Map result back to frontend expected structure for Audit and Return
     const frontendResult = {
       ...result,
-      hq_address: result.address,
-      working_hours_start: result.default_work_start_time,
-      working_hours_end: result.default_work_end_time,
-      grace_period_minutes: payload.grace_period_minutes,
-      overtime_multiplier: payload.overtime_multiplier,
+      hq_address: result.hq_address || result.address || payload.hq_address || '',
+      working_hours_start: (result.working_hours_start || result.default_work_start_time || payload.working_hours_start).slice(0, 5),
+      working_hours_end: (result.working_hours_end || result.default_work_end_time || payload.working_hours_end).slice(0, 5),
+      grace_period_minutes: result.grace_period_minutes !== undefined && result.grace_period_minutes !== null ? Number(result.grace_period_minutes) : payload.grace_period_minutes,
+      overtime_multiplier: result.overtime_multiplier !== undefined && result.overtime_multiplier !== null ? Number(result.overtime_multiplier) : payload.overtime_multiplier,
     };
 
     // Audit log
     await supabase.from('audit_logs').insert({
-      user_id: user.id,
+      actor_id: user.id,
       action: 'UPDATE_COMPANY_PROFILE',
       table_name: 'company_profile',
       record_id: result.id,
-      new_values: frontendResult,
+      new_value: frontendResult,
       ip_address: request.headers.get('x-forwarded-for') || '127.0.0.1',
     });
 

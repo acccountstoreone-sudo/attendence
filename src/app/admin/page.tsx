@@ -156,7 +156,7 @@ export default function AdminDashboardPage() {
                 status: rec.status || 'present',
                 timestamp: rec.check_out_time || rec.check_in_time || new Date().toISOString(),
               };
-            });
+            }).sort((a: AttendanceRecord, b: AttendanceRecord) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
             setLiveFeed(records);
           }
         }

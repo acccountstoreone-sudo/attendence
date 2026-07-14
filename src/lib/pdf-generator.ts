@@ -187,13 +187,10 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
     alternateRowStyles: {
       fillColor: [250, 250, 250],
     },
-    didDrawPage: (data: any) => {
-      // Re-draw watermark on new pages if the table breaks onto multiple pages
+    willDrawPage: (data: any) => {
+      // Draw watermark before autotable cells are drawn on new pages
       if (data.pageNumber > 1) {
-        // Unfortunately, drawing the watermark after the table is drawn will overlay it, 
-        // so we need a hook before the page starts, but jspdf-autotable handles pages automatically.
-        // We will just draw the footer here.
-        drawFooter(doc, data.pageNumber, printDate);
+        drawWatermark();
       }
     },
   });
@@ -216,7 +213,7 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
   }
 
   // Ensure there's space for Notes & Signatures, else add a new page
-  if (finalY > pageHeight - 80) {
+  if (finalY > pageHeight - 85) {
     doc.addPage();
     drawWatermark();
     finalY = 20;

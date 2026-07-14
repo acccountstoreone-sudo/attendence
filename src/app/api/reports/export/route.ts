@@ -26,6 +26,7 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
 
   let exportData: Array<Record<string, unknown>> = [];
   let reportTitle = 'Attendance_Report';
+  let branchDisplayName = 'All Branches';
 
   // Option A: Specific Employee Detailed Daily Duty Breakdown Export
   if (payload.employee_id) {
@@ -40,6 +41,7 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
 
     const dutySummary = await computeEmployeeDutySummary(supabase, payload.employee_id, payload.month, payload.year);
     const empName = dutySummary.employee.full_name.replace(/\s+/g, '_');
+    branchDisplayName = dutySummary.employee.branch_name || 'Assigned Branch';
     reportTitle = `${empName}_Duty_Report_${payload.year}_${payload.month}`;
 
     exportData = dutySummary.daily_breakdown.map((row) => ({
@@ -59,6 +61,7 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
   else if (targetBranchId) {
     const { data: branch } = await supabase.from('branches').select('name').eq('id', targetBranchId).single();
     const bName = (branch?.name || 'Store').replace(/\s+/g, '_');
+    branchDisplayName = branch?.name || 'Store';
     reportTitle = `${bName}_Attendance_Summary_${payload.year}_${payload.month}`;
 
     // Try RPC first or fallback to dutyEngine across all branch employees
@@ -107,6 +110,14 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
           }
         }
       }
+    }
+
+    if (payload.type === 'late_arrivals') {
+      reportTitle = `${bName}_Late_Arrivals_Summary_${payload.year}_${payload.month}`;
+      exportData = exportData.filter(row => Number(row['Late Days'] || 0) > 0);
+    } else if (payload.type === 'overtime') {
+      reportTitle = `${bName}_Overtime_Summary_${payload.year}_${payload.month}`;
+      exportData = exportData.filter(row => Number(row['Overtime (Mins)'] || 0) > 0);
     }
   } 
   // Option C: Company-Wide All Branches Summary Export (Admin Only)
@@ -158,9 +169,15 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
   let contentType: string;
 
   if (payload.format === 'csv') {
-    const columns = Object.keys(exportData[0] || {});
+    const columnsSet = new Set<string>();
+    exportData.forEach(row => Object.keys(row || {}).forEach(k => columnsSet.add(k)));
+    const columns = Array.from(columnsSet);
     const csvHeader = columns.map(c => `"${c.replace(/"/g, '""')}"`).join(',');
-    const csvRows = exportData.map(row => columns.map(c => `"${String(row[c] ?? '').replace(/"/g, '""')}"`).join(','));
+    const csvRows = exportData.map(row => columns.map(c => {
+      let val = String(row[c] ?? '');
+      if (/^[=+\-@]/.test(val)) val = "'" + val;
+      return `"${val.replace(/"/g, '""')}"`;
+    }).join(','));
     const csvContent = [csvHeader, ...csvRows].join('\r\n');
     fileBuffer = Buffer.from('\uFEFF' + csvContent, 'utf-8');
     fileName = `${reportTitle}.csv`;
@@ -175,7 +192,9 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
     contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
   } else {
     // PDF Format using new generator
-    const columns = Object.keys(exportData[0] || {});
+    const columnsSet = new Set<string>();
+    exportData.forEach(row => Object.keys(row || {}).forEach(k => columnsSet.add(k)));
+    const columns = Array.from(columnsSet);
     const rows = exportData.map(row => columns.map(col => String(row[col] ?? '')));
 
     let cleanTitle = 'ATTENDANCE REPORT';
@@ -186,11 +205,11 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
       reportTitle: cleanTitle,
       reportSubtitle: 'Statement',
       metaRef: `REP-${Math.floor(Math.random() * 100000000)}`,
-      metaBranch: targetBranchId ? (exportData[0]?.['Branch Name'] as string || 'Specific Branch') : 'All Branches',
+      metaBranch: branchDisplayName,
       metaPeriod: `${payload.month}/${payload.year}`,
       metaPreparedBy: user.full_name,
       metaRecordsCount: rows.length,
-      tableTitle: 'Transaction details',
+      tableTitle: 'Attendance Records & Summary',
       columns,
       rows
     });

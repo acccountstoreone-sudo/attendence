@@ -197,8 +197,9 @@ export async function GET(request: NextRequest) {
         const columns = Object.keys(exportRows[0] || {});
         const csvHeader = columns.map(c => `"${c.replace(/"/g, '""')}"`).join(',');
         const csvBody = exportRows.map(row => columns.map((c) => {
-          const val = (row as any)[c] ?? '';
-          return `"${String(val).replace(/"/g, '""')}"`;
+          let val = String((row as any)[c] ?? '');
+          if (/^[=+\-@]/.test(val)) val = "'" + val;
+          return `"${val.replace(/"/g, '""')}"`;
         }).join(','));
         const csvContent = [csvHeader, ...csvBody].join('\r\n');
         fileBuffer = Buffer.from('\uFEFF' + csvContent, 'utf-8');
@@ -243,7 +244,7 @@ export async function GET(request: NextRequest) {
             `${r.duty_hours}h`,
             `${Number((r.logged_overtime_minutes / 60).toFixed(2))}h`,
             `${Number((r.approved_overtime_minutes / 60).toFixed(2))}h`,
-            r.is_holiday_duty ? '2.0x 🎉' : 'No',
+            r.is_holiday_duty ? '2.0x (Holiday)' : 'No',
             `BDT ${estPay.toLocaleString()}`,
             r.overtime_approval_status.toUpperCase(),
           ];
@@ -252,8 +253,8 @@ export async function GET(request: NextRequest) {
         fileBuffer = generateAnchorFashionPDF({
           reportTitle: 'OVERTIME HISTORY',
           reportSubtitle: 'Statement',
-          metaRef: `EXP-${Math.floor(Math.random() * 100000000)}`,
-          metaBranch: targetBranchId ? targetBranchId : 'All Branches',
+          metaRef: `OTH-${Math.floor(Math.random() * 100000000)}`,
+          metaBranch: targetBranchId ? (rows[0]?.branch_name || 'Specific Branch') : 'All Branches',
           metaPeriod: `${startDate} to ${endDate}`,
           metaPreparedBy: user.full_name,
           metaRecordsCount: rows.length,

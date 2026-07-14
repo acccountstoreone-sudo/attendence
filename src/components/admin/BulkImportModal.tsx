@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -34,8 +34,8 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
   if (!isOpen) return null;
 
   const handleDownloadTemplate = () => {
-    const csvContent = 'full_name,email,phone,employee_id,role\nRahim Uddin,rahim@company.com,01711111111,EMP-101,employee\nKarim Ahmed,karim@company.com,01822222222,EMP-102,employee\n';
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const csvContent = 'full_name,email,phone,employee_id,role\r\nRahim Uddin,rahim@company.com,01711111111,EMP-101,employee\r\nKarim Ahmed,karim@company.com,01822222222,EMP-102,employee\r\n';
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -43,6 +43,7 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

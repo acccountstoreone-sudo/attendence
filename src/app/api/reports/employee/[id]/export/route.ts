@@ -89,6 +89,15 @@ export async function GET(
         .lte('check_in_time', endOfMonthISO)
         .order('check_in_time', { ascending: true });
 
+      const presentRecords = records?.filter(r => r.status === 'present' || r.status === 'late' || r.status === 'half_day') || [];
+      const totalDutyHours = presentRecords.reduce((acc, r) => {
+        if (!r.check_out_time) return acc;
+        return acc + Number(((new Date(r.check_out_time).getTime() - new Date(r.check_in_time).getTime()) / 3600000).toFixed(2));
+      }, 0);
+      const totalOvertimeMins = (records || []).reduce((acc, r) => acc + (r.overtime_minutes || 0), 0);
+      const lateRecords = records?.filter(r => r.status === 'late') || [];
+      const missedRecords = records?.filter(r => r.status === 'absent') || [];
+
       dutyData = {
         employee: {
           full_name: targetProfile.full_name,
@@ -97,13 +106,13 @@ export async function GET(
         },
         period: { month, year },
         summary: {
-          total_duty_hours: 0,
-          total_overtime_hours: 0,
-          total_overtime_minutes: 0,
-          total_missed_days: 0,
-          total_late_minutes: 0,
-          total_late_days: 0,
-          total_present_days: records?.filter(r => r.status === 'present').length || 0,
+          total_duty_hours: Number(totalDutyHours.toFixed(2)),
+          total_overtime_hours: Number((totalOvertimeMins / 60).toFixed(2)),
+          total_overtime_minutes: totalOvertimeMins,
+          total_missed_days: missedRecords.length,
+          total_late_minutes: lateRecords.length * 15, // estimate or zero if not stored directly
+          total_late_days: lateRecords.length,
+          total_present_days: presentRecords.length,
         },
         daily_breakdown: (records || []).map(r => ({
           date: r.check_in_time.split('T')[0],
@@ -112,8 +121,13 @@ export async function GET(
           check_in_time: new Date(r.check_in_time).toLocaleTimeString(),
           check_out_time: r.check_out_time ? new Date(r.check_out_time).toLocaleTimeString() : '--:--',
           duty_hours: r.check_out_time ? Number(((new Date(r.check_out_time).getTime() - new Date(r.check_in_time).getTime()) / 3600000).toFixed(2)) : 0,
-          late_minutes: 0,
+          late_minutes: r.status === 'late' ? 15 : 0,
           overtime_minutes: r.overtime_minutes || 0,
+          overtime_hours: Number(((r.overtime_minutes || 0) / 60).toFixed(2)),
+          is_right_time: r.status === 'present',
+          face_verified: r.face_verified ?? false,
+          check_in_lat: r.check_in_lat,
+          check_in_lng: r.check_in_lng,
           notes: r.status,
         }))
       };
@@ -224,7 +238,7 @@ export async function GET(
         `${d.duty_hours || 0}h`,
         d.is_right_time ? 'Right Time' : `${d.late_minutes || 0}m late`,
         d.overtime_minutes ? `${d.overtime_hours}h (${d.overtime_minutes}m)` : '0m',
-        `${d.face_verified ? '✓ Face' : '✗ Face'} | ${d.check_in_lat && d.check_in_lng ? `${Number(d.check_in_lat).toFixed(2)}, ${Number(d.check_in_lng).toFixed(2)}` : 'No GPS'}`,
+        `${d.face_verified ? 'Yes (Face)' : 'No (Face)'} | ${d.check_in_lat && d.check_in_lng ? `${Number(d.check_in_lat).toFixed(2)}, ${Number(d.check_in_lng).toFixed(2)}` : 'No GPS'}`,
         d.notes || '',
       ]);
 
@@ -234,7 +248,7 @@ export async function GET(
         metaRef: `EMP-${employee.employee_id || Math.floor(Math.random() * 10000)}`,
         metaBranch: employee.branch_name || 'All Branches',
         metaPeriod: `${month}/${year}`,
-        metaPreparedBy: currentUser?.full_name || 'Admin',
+        metaPreparedBy: user?.full_name || 'Admin',
         metaRecordsCount: body.length,
         tableTitle: `Daily Roster: ${employee.full_name}`,
         columns: head,

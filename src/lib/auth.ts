@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
 // Bug 22 fix: Validate x-forwarded-for before trusting it to prevent spoofing in audit logs
@@ -32,23 +32,7 @@ export interface AuthUser {
  * Throws a typed error string if unauthenticated.
  */
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const { cookies } = await import('next/headers');
-  const cookieStore = await cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            try { cookieStore.set(name, value, options); } catch { /* Server component read-only */ }
-          });
-        },
-      },
-    }
-  );
+  const supabase = await createClient();
 
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) return null;

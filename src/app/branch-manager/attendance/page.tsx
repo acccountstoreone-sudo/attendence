@@ -129,13 +129,17 @@ export default function BranchManagerAttendancePage() {
     const headers = ['Employee', 'Branch', 'Check-In', 'Check-Out', 'Status', 'Approval', 'Overtime'];
     const rows = filteredRecords.map(r => [
       r.full_name, r.branch_name,
-      r.check_in_time ? new Date(r.check_in_time).toISOString() : '',
-      r.check_out_time ? new Date(r.check_out_time).toISOString() : 'Not checked out',
+      r.check_in_time ? new Date(r.check_in_time).toLocaleString() : '',
+      r.check_out_time ? new Date(r.check_out_time).toLocaleString() : 'Not checked out',
       r.status, r.approval_status,
       r.overtime_minutes > 0 ? `${r.overtime_minutes} min` : '0',
     ]);
-    const csv = [headers, ...rows].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const csv = [headers, ...rows].map(row => row.map(v => {
+      let s = String(v ?? '');
+      if (/^[=+\-@]/.test(s)) s = "'" + s;
+      return `"${s.replace(/"/g, '""')}"`;
+    }).join(',')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

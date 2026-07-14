@@ -82,10 +82,12 @@ export default function BranchManagerReportsPage() {
   const handleExport = async (format: 'pdf' | 'excel' | 'csv') => {
     setExporting(format);
     try {
+      const branchId = reportData[0]?.branch_id || '';
       const params = new URLSearchParams({
         month: String(filter.month),
         year: String(filter.year),
         format,
+        ...(branchId ? { branch_id: branchId } : {}),
       });
       const res = await fetch(`/api/reports/export?${params}`);
       if (!res.ok) throw new Error('Export request failed');
@@ -417,12 +419,7 @@ export default function BranchManagerReportsPage() {
                         size="sm"
                         variant="ghost"
                         icon={<Download className="w-3.5 h-3.5" />}
-                        onClick={() =>
-                          window.open(
-                            `/api/reports/export?branch_id=${storeData.branch_id}&month=${filter.month}&year=${filter.year}&format=excel`,
-                            '_blank'
-                          )
-                        }
+                        onClick={() => handleExport('excel')}
                       >
                         Download
                       </Button>

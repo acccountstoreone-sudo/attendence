@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -13,6 +13,8 @@ interface CompanyProfile {
   working_hours_end: string;
   grace_period_minutes: number;
   overtime_multiplier: number;
+  strict_face_matching?: boolean;
+  device_spoof_protection?: boolean;
 }
 
 export default function AdminSettingsPage() {
@@ -28,6 +30,8 @@ export default function AdminSettingsPage() {
     working_hours_end: '18:00',
     grace_period_minutes: 15,
     overtime_multiplier: 1.5,
+    strict_face_matching: true,
+    device_spoof_protection: true,
   });
 
   // Bug 9 fix: Load real data from API on mount
@@ -44,6 +48,8 @@ export default function AdminSettingsPage() {
           working_hours_end: json.data.working_hours_end || '18:00',
           grace_period_minutes: json.data.grace_period_minutes ?? 15,
           overtime_multiplier: json.data.overtime_multiplier ?? 1.5,
+          strict_face_matching: json.data.strict_face_matching ?? true,
+          device_spoof_protection: json.data.device_spoof_protection ?? true,
         });
       }
     } catch (e) {
@@ -72,6 +78,8 @@ export default function AdminSettingsPage() {
           working_hours_end: profile.working_hours_end,
           grace_period_minutes: Number(profile.grace_period_minutes),
           overtime_multiplier: Number(profile.overtime_multiplier),
+          strict_face_matching: profile.strict_face_matching ?? true,
+          device_spoof_protection: profile.device_spoof_protection ?? true,
         }),
       });
       const json = await res.json();
@@ -263,32 +271,41 @@ export default function AdminSettingsPage() {
                     <p className="text-xs text-slate-600">Biometric and session policies — managed at infrastructure level.</p>
                   </div>
                   <div className="space-y-4">
-                    {[
-                      {
-                        title: 'Strict Face Matching',
-                        desc: 'Require higher confidence score (distance < 0.4) for check-in.',
-                        enabled: true,
-                      },
-                      {
-                        title: 'Device Spoof Protection',
-                        desc: 'Block fake GPS mock locations and rooted devices.',
-                        enabled: true,
-                      },
-                    ].map((item) => (
-                      <div key={item.title} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl">
-                        <div>
-                          <p className="text-sm font-bold text-slate-900">{item.title}</p>
-                          <p className="text-xs text-slate-600 mt-0.5">{item.desc}</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" defaultChecked={item.enabled} className="sr-only peer" />
-                          <div className="w-11 h-6 bg-slate-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-200 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1dbf73]"></div>
-                        </label>
+                    <div className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl">
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">Strict Face Matching</p>
+                        <p className="text-xs text-slate-600 mt-0.5">Require higher confidence score (distance &lt; 0.4) for check-in.</p>
                       </div>
-                    ))}
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={profile.strict_face_matching ?? true}
+                          onChange={(e) => setProfile({ ...profile, strict_face_matching: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-200 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1dbf73]"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl">
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">Device Spoof Protection</p>
+                        <p className="text-xs text-slate-600 mt-0.5">Block fake GPS mock locations and rooted devices.</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={profile.device_spoof_protection ?? true}
+                          onChange={(e) => setProfile({ ...profile, device_spoof_protection: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-200 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1dbf73]"></div>
+                      </label>
+                    </div>
+
                     <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-300">
                       <Bell className="w-4 h-4 inline mr-1" />
-                      Security policy changes require a server redeploy to take effect. Contact the DevOps team.
+                      Security policy parameters are enforced dynamically by the check-in verification engine.
                     </div>
                   </div>
                 </motion.div>

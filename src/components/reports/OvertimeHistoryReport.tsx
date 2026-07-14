@@ -114,10 +114,11 @@ export function OvertimeHistoryReport({ role }: OvertimeHistoryReportProps) {
   const applyPreset = (preset: 'today' | 'yesterday' | 'week' | 'month' | 'last_month') => {
     const d = new Date();
     const fmt = (dt: Date) => dt.toISOString().split('T')[0];
-    if (preset === 'today') { setStartDate(fmt(d)); setEndDate(fmt(d)); }
+    const todayStr = fmt(d);
+    if (preset === 'today') { setStartDate(todayStr); setEndDate(todayStr); }
     else if (preset === 'yesterday') { const y = new Date(d); y.setDate(d.getDate() - 1); setStartDate(fmt(y)); setEndDate(fmt(y)); }
-    else if (preset === 'week') { const mon = new Date(d); mon.setDate(d.getDate() - d.getDay() + (d.getDay() === 0 ? -6 : 1)); setStartDate(fmt(mon)); setEndDate(today); }
-    else if (preset === 'month') { setStartDate(fmt(new Date(d.getFullYear(), d.getMonth(), 1))); setEndDate(today); }
+    else if (preset === 'week') { const mon = new Date(d); mon.setDate(d.getDate() - d.getDay() + (d.getDay() === 0 ? -6 : 1)); setStartDate(fmt(mon)); setEndDate(todayStr); }
+    else if (preset === 'month') { setStartDate(fmt(new Date(d.getFullYear(), d.getMonth(), 1))); setEndDate(todayStr); }
     else if (preset === 'last_month') { setStartDate(fmt(new Date(d.getFullYear(), d.getMonth() - 1, 1))); setEndDate(fmt(new Date(d.getFullYear(), d.getMonth(), 0))); }
   };
 
@@ -160,13 +161,16 @@ export function OvertimeHistoryReport({ role }: OvertimeHistoryReportProps) {
         fetch('/api/attendance/overtime/approve', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ record_id: id, status: action, reviewer_note: bulkNote || undefined }),
+          body: JSON.stringify({
+            record_id: id,
+            status: action === 'approve' ? 'approved' : 'rejected',
+            note: bulkNote || undefined
+          }),
         })
       ));
       await fetchHistory();
       setSelectedIds(new Set());
       setBulkNote('');
-      setBulkAction(null);
     } catch { alert('Bulk action failed.'); } finally { setBulkLoading(false); }
   };
 

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -122,15 +122,19 @@ export default function AdminAuditPage() {
   const handleExport = () => {
     const headers = ['Timestamp', 'Actor', 'Action', 'Table', 'IP Address', 'Severity'];
     const rows = filteredLogs.map((log) => [
-      new Date(log.created_at).toISOString(),
+      new Date(log.created_at).toLocaleString(),
       log.actor_name || 'System',
       log.action,
       log.table_name || '',
       log.ip_address || '',
       getSeverity(log.action),
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const csv = [headers, ...rows].map((r) => r.map((v) => {
+      let s = String(v ?? '');
+      if (/^[=+\-@]/.test(s)) s = "'" + s;
+      return `"${s.replace(/"/g, '""')}"`;
+    }).join(',')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
