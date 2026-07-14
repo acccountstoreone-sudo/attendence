@@ -152,7 +152,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
                       >
                         <div
                           className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                            n.type === 'alert' || n.type === 'error' ? 'bg-rose-500' :
+                            n.type === 'alert' ? 'bg-rose-500' :
                             n.type === 'warning' || n.type === 'attendance_approval' || n.type === 'correction' || n.type === 'leave' ? 'bg-amber-500' :
                             n.type === 'system' || n.type === 'info' || n.type === 'welcome' ? 'bg-blue-500' :
                             'bg-[#1dbf73]'
