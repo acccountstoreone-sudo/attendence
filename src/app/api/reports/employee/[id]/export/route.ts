@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { generateAnchorFashionPDF } from '@/lib/pdf-generator';
 
 interface DutyDataPayload {
   employee: {
@@ -215,52 +214,8 @@ export async function GET(
 
     } else {
       // PDF Format (`format === 'pdf'`)
-      const doc = new jsPDF('landscape');
-      const primaryColor: [number, number, number] = [10, 16, 28]; // #ffffff
-      const accentColor: [number, number, number] = [210, 160, 42]; // #1dbf73
-      const whiteColor: [number, number, number] = [255, 255, 255];
-
-      // Header Banner
-      doc.setFillColor(...primaryColor);
-      doc.rect(0, 0, 297, 36, 'F');
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(...whiteColor);
-      doc.text('ANCHOR FASHION MANAGEMENT — MONTHLY DUTY & OVERTIME REPORT', 14, 15);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(11);
-      doc.setTextColor(...accentColor);
-      doc.text(`Employee: ${employee.full_name} (${employee.employee_id || 'N/A'}) | Store: ${employee.branch_name} | Period: ${month}/${year}`, 14, 25);
-      doc.setFontSize(9);
-      doc.setTextColor(180, 195, 220);
-      doc.text(`Generated on: ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}`, 14, 32);
-
-      // KPI Boxes Block
-      const kpis = [
-        { label: 'Total Duty Hours', val: `${summary.total_duty_hours} hrs` },
-        { label: 'Total Overtime', val: `${summary.total_overtime_hours}h (${summary.total_overtime_minutes}m)` },
-        { label: 'Missed / Absent Days', val: `${summary.total_missed_days} days` },
-        { label: 'Late Arrival', val: `${summary.total_late_minutes}m (${summary.total_late_days}d)` },
-        { label: 'Present Days', val: `${summary.total_present_days} days` },
-      ];
-
-      kpis.forEach((kpi, idx) => {
-        const x = 14 + idx * 54;
-        doc.setFillColor(245, 247, 250);
-        doc.roundedRect(x, 42, 51, 18, 2, 2, 'F');
-        doc.setFontSize(8);
-        doc.setTextColor(100, 116, 139);
-        doc.text(kpi.label, x + 4, 48);
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(15, 23, 42);
-        doc.text(kpi.val, x + 4, 56);
-      });
-
-      // Table Data
-      const head = [['Date', 'Day', 'Status', 'In / Out', 'Duty', 'Late/Right', 'Overtime', 'Face/Loc', 'Notes']];
+      
+      const head = ['Date', 'Day', 'Status', 'In / Out', 'Duty', 'Late/Right', 'Overtime', 'Face/Loc', 'Notes'];
       const body = (daily_breakdown || []).map((d: Record<string, unknown>) => [
         d.date,
         String(d.day_name || '').slice(0, 3),
@@ -273,36 +228,19 @@ export async function GET(
         d.notes || '',
       ]);
 
-      // @ts-expect-error autotable method on jsPDF
-      doc.autoTable({
-        head,
-        body,
-        startY: 65,
-        theme: 'grid',
-        headStyles: { fillColor: primaryColor, textColor: accentColor, fontStyle: 'bold' },
-        styles: { font: 'helvetica', fontSize: 8, cellPadding: 3 },
-        columnStyles: {
-          0: { cellWidth: 22 },
-          1: { cellWidth: 14 },
-          2: { cellWidth: 22 },
-          3: { cellWidth: 36 },
-          4: { cellWidth: 16, halign: 'center' },
-          5: { cellWidth: 24, halign: 'center' },
-          6: { cellWidth: 24, halign: 'center' },
-          7: { cellWidth: 38 },
-          8: { cellWidth: 'auto' },
-        },
-        didParseCell: function (data: Record<string, unknown> & { section?: string; column?: { index?: number }; cell?: { raw?: unknown; styles: { textColor?: number[] } } }) {
-          if (data.section === 'body' && data.column?.index === 2) {
-            const st = data.cell?.raw;
-            if (st === 'MISSED' || st === 'ABSENT') { if (data.cell) data.cell.styles.textColor = [225, 29, 72]; }
-            else if (st === 'LATE') { if (data.cell) data.cell.styles.textColor = [217, 119, 6]; }
-            else if (st === 'PRESENT') { if (data.cell) data.cell.styles.textColor = [16, 185, 129]; }
-          }
-        }
+      fileBuffer = generateAnchorFashionPDF({
+        reportTitle: 'EMPLOYEE DUTY REPORT',
+        reportSubtitle: 'Statement',
+        metaRef: `EMP-${employee.employee_id || Math.floor(Math.random() * 10000)}`,
+        metaBranch: employee.branch_name || 'All Branches',
+        metaPeriod: `${month}/${year}`,
+        metaPreparedBy: currentUser?.full_name || 'Admin',
+        metaRecordsCount: body.length,
+        tableTitle: `Daily Roster: ${employee.full_name}`,
+        columns: head,
+        rows: body,
       });
 
-      fileBuffer = Buffer.from(doc.output('arraybuffer'));
       fileName = `${reportTitle}.pdf`;
       contentType = 'application/pdf';
     }

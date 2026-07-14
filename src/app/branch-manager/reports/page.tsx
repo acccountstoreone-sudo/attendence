@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -17,8 +17,10 @@ import {
   TrendingUp,
   TrendingDown,
   UserCheck,
+  Clock,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { OvertimeHistoryReport } from '@/components/reports/OvertimeHistoryReport';
 
 interface BranchReportRow {
   branch_id: string;
@@ -38,6 +40,7 @@ interface FilterState {
 }
 
 export default function BranchManagerReportsPage() {
+  const [activeTab, setActiveTab] = useState<'attendance' | 'overtime'>('attendance');
   const router = useRouter();
   const currentDate = new Date();
   const [filter, setFilter] = useState<FilterState>({
@@ -135,6 +138,34 @@ export default function BranchManagerReportsPage() {
 
   return (
     <div className="space-y-8 pb-12">
+      {/* Tab Switcher */}
+      <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-2xl border border-slate-200 shadow-inner w-fit">
+        <button
+          onClick={() => setActiveTab('attendance')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
+            activeTab === 'attendance'
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
+              : 'text-slate-600 hover:text-slate-800 hover:bg-white/60'
+          }`}
+        >
+          <BarChart3 className="w-4 h-4" />
+          Store Attendance Summary
+        </button>
+        <button
+          onClick={() => setActiveTab('overtime')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
+            activeTab === 'overtime'
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
+              : 'text-slate-600 hover:text-slate-800 hover:bg-white/60'
+          }`}
+        >
+          <Clock className="w-4 h-4" />
+          ⏱️ Store Overtime History
+        </button>
+      </div>
+
+      {activeTab === 'overtime' && <OvertimeHistoryReport role="branch_manager" />}
+      {activeTab !== 'attendance' ? null : <>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-white via-blue-950/30 to-slate-50 p-6 rounded-3xl border border-slate-200 shadow-2xl">
         <div>
@@ -402,6 +433,7 @@ export default function BranchManagerReportsPage() {
           </div>
         </Card>
       )}
+      </>}
     </div>
   );
 }

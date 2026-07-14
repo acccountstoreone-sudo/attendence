@@ -36,6 +36,10 @@ export async function GET(request: NextRequest) {
         approved_at,
         approval_note,
         overtime_minutes,
+        overtime_approval_status,
+        approved_overtime_minutes,
+        overtime_approval_note,
+        is_holiday_duty,
         face_verified,
         profiles!attendance_records_employee_id_fkey (
           full_name,
@@ -78,8 +82,17 @@ export async function GET(request: NextRequest) {
       query = query.eq('branch_id', searchParams.get('branch_id')!);
     }
 
-    // Status filter
-    if (statusFilter !== 'all') {
+    // Status / Overtime filter
+    if (searchParams.get('type') === 'overtime') {
+      query = query.gt('overtime_minutes', 0);
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'pending') {
+          query = query.or('overtime_approval_status.eq.pending,overtime_approval_status.is.null');
+        } else {
+          query = query.eq('overtime_approval_status', statusFilter);
+        }
+      }
+    } else if (statusFilter !== 'all') {
       query = query.eq('approval_status', statusFilter);
     }
 

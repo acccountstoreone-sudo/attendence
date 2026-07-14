@@ -39,6 +39,10 @@ export interface AttendanceApprovalRecord {
   check_out_time: string | null;
   status: string;
   approval_status: 'pending' | 'approved' | 'rejected';
+  overtime_approval_status?: 'pending' | 'approved' | 'rejected' | null;
+  approved_overtime_minutes?: number | null;
+  overtime_approval_note?: string | null;
+  is_holiday_duty?: boolean;
   is_manual_override?: boolean;
   approved_by?: string | null;
   approved_at?: string | null;
@@ -54,13 +58,14 @@ interface CorrectionsManagementPanelProps {
 }
 
 export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProps> = ({ role }) => {
-  const [categoryTab, setCategoryTab] = useState<'checkins' | 'corrections'>('checkins');
+  const [categoryTab, setCategoryTab] = useState<'checkins' | 'corrections' | 'overtime'>('checkins');
   const [statusTab, setStatusTab] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   
   // Data states
   const [corrections, setCorrections] = useState<CorrectionRequestRecord[]>([]);
   const [checkins, setCheckins] = useState<AttendanceApprovalRecord[]>([]);
+  const [overtimes, setOvertimes] = useState<AttendanceApprovalRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -69,6 +74,8 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
   // Note modals
   const [noteModalReq, setNoteModalReq] = useState<CorrectionRequestRecord | null>(null);
   const [checkinModalReq, setCheckinModalReq] = useState<AttendanceApprovalRecord | null>(null);
+  const [overtimeModalReq, setOvertimeModalReq] = useState<AttendanceApprovalRecord | null>(null);
+  const [approvedMinutesInput, setApprovedMinutesInput] = useState<number>(0);
   const [modalAction, setModalAction] = useState<'approve' | 'reject'>('approve');
   const [reviewerNote, setReviewerNote] = useState('');
 
@@ -78,14 +85,16 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
     try {
       const statusParam = statusTab === 'all' ? 'all' : statusTab;
       
-      // Fetch both check-in approvals and correction requests simultaneously
-      const [corrRes, checkinRes] = await Promise.all([
+      // Fetch check-in approvals, correction requests, and overtime verification list simultaneously
+      const [corrRes, checkinRes, overtimeRes] = await Promise.all([
         fetch(`/api/corrections/list?status=${statusParam}`),
-        fetch(`/api/attendance/approve?status=${statusParam}&date=all`)
+        fetch(`/api/attendance/approve?status=${statusParam}&date=all`),
+        fetch(`/api/attendance/approve?status=${statusParam}&date=all&type=overtime`)
       ]);
 
       const corrData = await corrRes.json();
       const checkinData = await checkinRes.json();
+      const overtimeData = await overtimeRes.json();
 
       if (!corrRes.ok || !corrData.success) {
         throw new Error(corrData.error?.message || corrData.error || 'Failed to fetch correction requests');
@@ -96,6 +105,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
 
       setCorrections(corrData.data || []);
       setCheckins(checkinData.data || []);
+      setOvertimes(overtimeData.data || []);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred fetching records.');
     } finally {
@@ -157,6 +167,35 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
     }
   };
 
+  // Action for overtime approval/rejection
+  const handleOvertimeAction = async (id: string, action: 'approved' | 'rejected', approvedMinutes?: number, note?: string) => {
+    setActingId(id);
+    try {
+      const res = await fetch('/api/attendance/overtime/approve', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          record_id: id,
+          status: action,
+          approved_minutes: approvedMinutes,
+          note: note,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        throw new Error(result.error?.message || result.error || `Failed to ${action} overtime`);
+      }
+      setFeedback({ type: 'success', text: `Overtime ${action} successfully (${approvedMinutes ?? 0} mins).` });
+      await fetchAllData();
+      setOvertimeModalReq(null);
+      setReviewerNote('');
+    } catch (err: unknown) {
+      setFeedback({ type: 'error', text: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setActingId(null);
+    }
+  };
+
   const formatTimeStr = (isoString?: string | null) => {
     if (!isoString) return 'Missing / Not Recorded';
     try {
@@ -192,8 +231,18 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
     return name.toLowerCase().includes(q) || code.toLowerCase().includes(q) || branch.toLowerCase().includes(q);
   });
 
+  const filteredOvertimes = overtimes.filter((c) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    const name = c.profiles?.full_name || '';
+    const code = c.profiles?.employee_id || '';
+    const branch = c.branches?.name || '';
+    return name.toLowerCase().includes(q) || code.toLowerCase().includes(q) || branch.toLowerCase().includes(q);
+  });
+
   const checkinsPendingCount = checkins.filter(c => c.approval_status === 'pending').length;
   const correctionsPendingCount = corrections.filter(c => c.status === 'pending').length;
+  const overtimesPendingCount = overtimes.filter(c => !c.overtime_approval_status || c.overtime_approval_status === 'pending').length;
 
   return (
     <div className="space-y-6">
@@ -205,7 +254,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
             {role === 'admin' ? 'HQ Manual Corrections & Overrides' : 'Store Manual Corrections & Overrides'}
           </h1>
           <p className="text-sm text-slate-600 mt-1">
-            Review live check-in approvals, manual override entries, and employee time adjustment requests.
+            Review live check-in approvals, manual override entries, employee time adjustment requests, and overtime sign-offs.
           </p>
         </div>
         <Button onClick={fetchAllData} variant="secondary" className="flex items-center gap-2 shrink-0">
@@ -214,8 +263,8 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
         </Button>
       </div>
 
-      {/* Category Tabs (Check-ins vs Corrections) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Category Tabs (Check-ins vs Corrections vs Overtime) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <button
           onClick={() => setCategoryTab('checkins')}
           className={`p-5 rounded-2xl border transition-all text-left flex items-center justify-between ${
@@ -230,10 +279,10 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-                Live Check-In & Check-Out Approvals
+                Live Check-In Approvals
               </h3>
               <p className="text-xs text-slate-600 mt-0.5">
-                Everyday attendance timestamps & geofence overrides
+                Attendance timestamps & geofence overrides
               </p>
             </div>
           </div>
@@ -258,16 +307,44 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-                Time Correction & Missing Day Requests
+                Time Corrections
               </h3>
               <p className="text-xs text-slate-600 mt-0.5">
-                Employee submitted requests to modify past records
+                Past record modification requests
               </p>
             </div>
           </div>
           {correctionsPendingCount > 0 && (
             <span className="px-3 py-1 bg-amber-500 text-amber-950 text-xs font-extrabold rounded-full shrink-0 animate-pulse">
               {correctionsPendingCount} Pending
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setCategoryTab('overtime')}
+          className={`p-5 rounded-2xl border transition-all text-left flex items-center justify-between ${
+            categoryTab === 'overtime'
+              ? 'bg-[#1dbf73]/10 border-[#1dbf73] shadow-lg shadow-emerald-500/10 ring-2 ring-[#1dbf73]/20'
+              : 'bg-white border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <div className="flex items-center gap-3.5">
+            <div className={`p-3 rounded-xl ${categoryTab === 'overtime' ? 'bg-[#1dbf73] text-white' : 'bg-slate-100 text-slate-600'}`}>
+              <TrendingUp className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                Overtime Verification
+              </h3>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Review & approve extra duty hours
+              </p>
+            </div>
+          </div>
+          {overtimesPendingCount > 0 && (
+            <span className="px-3 py-1 bg-amber-500 text-amber-950 text-xs font-extrabold rounded-full shrink-0 animate-pulse">
+              {overtimesPendingCount} Pending
             </span>
           )}
         </button>
@@ -500,7 +577,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
             </AnimatePresence>
           </div>
         )
-      ) : (
+      ) : categoryTab === 'corrections' ? (
         /* ── Time Correction & Missing Day Requests List ── */
         filteredCorrections.length === 0 ? (
           <Card className="p-12 text-center border-dashed border-slate-200 bg-[#ffffff]/50">
@@ -651,6 +728,233 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
             </AnimatePresence>
           </div>
         )
+      ) : (
+        /* ── Overtime Verification & Approvals List ── */
+        filteredOvertimes.length === 0 ? (
+          <Card className="p-12 text-center border-dashed border-slate-200 bg-[#ffffff]/50">
+            <TrendingUp className="w-12 h-12 text-slate-500 mx-auto mb-3 opacity-60" />
+            <h3 className="text-lg font-semibold text-slate-900">No Overtime Verification Records Found</h3>
+            <p className="text-sm text-slate-600 mt-1 max-w-md mx-auto">
+              {statusTab === 'pending'
+                ? 'There are currently no pending overtime hours awaiting verification.'
+                : `No ${statusTab} overtime verification records match your filter criteria.`}
+            </p>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            <AnimatePresence>
+              {filteredOvertimes.map((c) => {
+                const otStatus = c.overtime_approval_status || 'pending';
+                const isPending = otStatus === 'pending';
+                const isApproved = otStatus === 'approved';
+                const checkInDate = c.check_in_time ? new Date(c.check_in_time).toLocaleDateString('en-US', { timeZone: 'Asia/Dhaka', month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+                
+                return (
+                  <motion.div
+                    key={`ot-${c.id}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                  >
+                    <Card className={`p-6 border transition-all ${
+                      isPending ? 'border-[#1dbf73]/40 bg-gradient-to-r from-[#ffffff] to-[#f1f5f9]' :
+                      isApproved ? 'border-emerald-500/30 bg-[#ffffff]/70' :
+                      'border-red-500/30 bg-[#ffffff]/50'
+                    }`}>
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        {/* Left: Employee details */}
+                        <div className="flex items-start gap-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 ${
+                            isPending ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/30' :
+                            isApproved ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' :
+                            'bg-red-500/20 text-red-400 border border-red-500/30'
+                          }`}>
+                            {(c.profiles?.full_name || 'E').charAt(0).toUpperCase()}
+                          </div>
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-base font-bold text-slate-900 tracking-wide truncate">
+                                {c.profiles?.full_name || 'Unknown Employee'}
+                              </h3>
+                              {c.profiles?.employee_id && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono">
+                                  #{c.profiles.employee_id}
+                                </span>
+                              )}
+                              <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider ${
+                                isPending ? 'bg-amber-500/20 text-amber-700 border border-amber-500/30' :
+                                isApproved ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' :
+                                'bg-red-500/20 text-red-600 border border-red-500/30'
+                              }`}>
+                                {otStatus}
+                              </span>
+                              {c.is_holiday_duty && (
+                                <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-purple-100 text-purple-700 border border-purple-300">
+                                  🎉 Holiday Duty
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
+                              <span className="flex items-center gap-1.5">
+                                <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                                {c.branches?.name || 'Assigned Branch'}
+                              </span>
+                              <span className="text-slate-500">•</span>
+                              <span className="flex items-center gap-1 text-blue-600 font-medium">
+                                <Calendar className="w-3.5 h-3.5" />
+                                {checkInDate}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-6 pt-2 text-sm">
+                              <div>
+                                <span className="text-xs text-slate-500 block">Check-In</span>
+                                <span className="font-mono font-medium text-slate-800">{formatTimeStr(c.check_in_time)}</span>
+                              </div>
+                              <div>
+                                <span className="text-xs text-slate-500 block">Check-Out</span>
+                                <span className="font-mono font-medium text-slate-800">{formatTimeStr(c.check_out_time)}</span>
+                              </div>
+                            </div>
+                            {c.overtime_approval_note && (
+                              <div className="pt-1 flex items-center gap-1.5 text-xs text-slate-700">
+                                <MessageSquare className="w-3.5 h-3.5 text-slate-500" />
+                                <span className="font-semibold">Reviewer Note:</span> {c.overtime_approval_note}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Middle: Overtime minutes badge */}
+                        <div className="bg-white/90 border border-slate-200/80 rounded-xl p-4 flex items-center justify-between gap-6 shrink-0 min-w-[220px]">
+                          <div className="text-center">
+                            <p className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold">Logged OT</p>
+                            <p className="text-lg font-bold text-amber-600 mt-1 font-mono">
+                              {c.overtime_minutes || 0} <span className="text-xs font-normal text-slate-500">mins</span>
+                            </p>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-[#1dbf73] shrink-0" />
+                          <div className="text-center">
+                            <p className="text-[10px] text-[#1dbf73] uppercase tracking-wider font-bold">Approved OT</p>
+                            <p className="text-lg font-bold text-emerald-700 mt-1 font-mono bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-500/30">
+                              {c.approved_overtime_minutes !== null && c.approved_overtime_minutes !== undefined ? c.approved_overtime_minutes : (c.overtime_minutes || 0)} <span className="text-xs font-normal text-slate-500">mins</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Right: Actions */}
+                        {isPending && (
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleOvertimeAction(c.id, 'approved', c.overtime_minutes || 0)}
+                              disabled={actingId === c.id}
+                              className="bg-[#16965a] hover:bg-[#1dbf73] text-white shadow-lg shadow-emerald-950/20 font-bold px-4 py-2.5"
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                              {actingId === c.id ? 'Approving...' : 'Approve Full'}
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                setOvertimeModalReq(c);
+                                setApprovedMinutesInput(c.approved_overtime_minutes !== null && c.approved_overtime_minutes !== undefined ? c.approved_overtime_minutes : (c.overtime_minutes || 0));
+                                setModalAction('approve');
+                                setReviewerNote('');
+                              }}
+                              disabled={actingId === c.id}
+                              className="font-bold px-3 py-2.5 text-blue-700 hover:bg-blue-50 border-blue-200"
+                            >
+                              Adjust Mins & Note
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                setOvertimeModalReq(c);
+                                setModalAction('reject');
+                                setReviewerNote('');
+                              }}
+                              disabled={actingId === c.id}
+                              className="border-red-500/40 text-red-600 hover:bg-red-500/10 font-bold px-3 py-2.5"
+                            >
+                              <XCircle className="w-4 h-4 mr-1.5" />
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        )
+      )}
+
+      {/* Review Note / Adjust Minutes Modal for Overtime Approval */}
+      {overtimeModalReq && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <Card className="w-full max-w-md p-6 bg-[#ffffff] border border-slate-200 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                {modalAction === 'approve' ? (
+                  <CheckCircle2 className="w-5 h-5 text-[#1dbf73]" />
+                ) : (
+                  <XCircle className="w-5 h-5 text-red-600" />
+                )}
+                {modalAction === 'approve' ? 'Verify & Approve Overtime' : 'Reject Overtime'}
+              </h3>
+              <button onClick={() => setOvertimeModalReq(null)} className="text-slate-600 hover:text-slate-900 text-sm">✕</button>
+            </div>
+            <p className="text-sm text-slate-600">
+              {modalAction === 'approve' 
+                ? `Verify approved overtime minutes for ${overtimeModalReq.profiles?.full_name || 'this employee'}.`
+                : `Provide a reason for rejecting ${overtimeModalReq.profiles?.full_name || 'this employee'}'s overtime claim.`}
+            </p>
+            {modalAction === 'approve' && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Approved Overtime Minutes</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={1440}
+                  value={approvedMinutesInput}
+                  onChange={(e) => setApprovedMinutesInput(Number(e.target.value))}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1dbf73]"
+                />
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Reviewer Note / Reason</label>
+              <textarea
+                rows={3}
+                placeholder={modalAction === 'approve' ? 'e.g., Verified store closing CCTV & daily sales report.' : 'e.g., Overtime not pre-approved by store manager.'}
+                value={reviewerNote}
+                onChange={(e) => setReviewerNote(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73]"
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="secondary" onClick={() => setOvertimeModalReq(null)}>Cancel</Button>
+              <Button
+                variant="primary"
+                onClick={() => handleOvertimeAction(
+                  overtimeModalReq.id,
+                  modalAction === 'approve' ? 'approved' : 'rejected',
+                  modalAction === 'approve' ? approvedMinutesInput : 0,
+                  reviewerNote
+                )}
+                disabled={actingId === overtimeModalReq.id}
+                className={modalAction === 'approve' ? 'bg-[#16965a] hover:bg-[#1dbf73] text-white' : 'bg-red-600 hover:bg-red-500 text-white'}
+              >
+                {actingId === overtimeModalReq.id ? 'Processing...' : `Confirm ${modalAction === 'approve' ? 'Overtime Approval' : 'Rejection'}`}
+              </Button>
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* Review Note Modal for Time Correction */}

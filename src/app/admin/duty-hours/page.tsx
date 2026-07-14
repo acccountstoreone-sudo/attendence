@@ -22,6 +22,9 @@ interface BranchSettings {
   late_grace_minutes: number;
   overtime_after_minutes: number;
   half_day_hours: number;
+  overtime_slot_minutes: number;
+  holiday_overtime_multiplier: number;
+  require_overtime_approval: boolean;
 }
 
 interface HistoryEntry {
@@ -31,6 +34,9 @@ interface HistoryEntry {
   late_grace_minutes: number;
   overtime_after_minutes: number;
   half_day_hours: number;
+  overtime_slot_minutes?: number;
+  holiday_overtime_multiplier?: number;
+  require_overtime_approval?: boolean;
   change_reason: string | null;
   effective_from: string;
   effective_to: string | null;
@@ -52,6 +58,9 @@ export default function AdminDutyHoursPage() {
     late_grace_minutes: 15,
     overtime_after_minutes: 0,
     half_day_hours: 4,
+    overtime_slot_minutes: 15,
+    holiday_overtime_multiplier: 2.0,
+    require_overtime_approval: false,
   });
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loadingBranches, setLoadingBranches] = useState(true);
@@ -96,10 +105,16 @@ export default function AdminDutyHoursPage() {
           late_grace_minutes: json.data.late_grace_minutes ?? 15,
           overtime_after_minutes: json.data.overtime_after_minutes ?? 0,
           half_day_hours: json.data.half_day_hours ?? 4,
+          overtime_slot_minutes: json.data.overtime_slot_minutes ?? 15,
+          holiday_overtime_multiplier: json.data.holiday_overtime_multiplier ?? 2.0,
+          require_overtime_approval: Boolean(json.data.require_overtime_approval),
         });
       } else {
         // No settings yet — use defaults
-        setSettings({ work_start_time: '09:00', work_end_time: '17:00', late_grace_minutes: 15, overtime_after_minutes: 0, half_day_hours: 4 });
+        setSettings({ 
+          work_start_time: '09:00', work_end_time: '17:00', late_grace_minutes: 15, overtime_after_minutes: 0, half_day_hours: 4,
+          overtime_slot_minutes: 15, holiday_overtime_multiplier: 2.0, require_overtime_approval: false
+        });
       }
 
       // Fetch history
@@ -157,6 +172,9 @@ export default function AdminDutyHoursPage() {
           late_grace_minutes: Number(settings.late_grace_minutes),
           overtime_after_minutes: Number(settings.overtime_after_minutes),
           half_day_hours: Number(settings.half_day_hours),
+          overtime_slot_minutes: Number(settings.overtime_slot_minutes),
+          holiday_overtime_multiplier: Number(settings.holiday_overtime_multiplier),
+          require_overtime_approval: Boolean(settings.require_overtime_approval),
           change_reason: changeReason || undefined,
         }),
       });
@@ -332,14 +350,70 @@ export default function AdminDutyHoursPage() {
                     <p className="text-xs text-slate-600 mt-1">If worked hours are below this, attendance is marked as Half Day</p>
                   </div>
 
-                  {/* Change reason */}
+                  {/* Overtime Slot Rounding */}
                   <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                      Overtime Slot Rounding (minutes)
+                    </label>
+                    <select
+                      value={settings.overtime_slot_minutes}
+                      onChange={e => setSettings(s => ({ ...s, overtime_slot_minutes: Number(e.target.value) }))}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                    >
+                      <option value={0}>Exact minutes (0m rounding)</option>
+                      <option value={15}>15-minute intervals (Standard)</option>
+                      <option value={30}>30-minute intervals (Half-hour)</option>
+                      <option value={60}>60-minute intervals (Hourly)</option>
+                    </select>
+                    <p className="text-xs text-slate-600 mt-1">Round overtime down to the nearest block</p>
+                  </div>
+
+                  {/* Holiday Overtime Multiplier */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                      Holiday / Off-Day Overtime Multiplier
+                    </label>
+                    <select
+                      value={settings.holiday_overtime_multiplier}
+                      onChange={e => setSettings(s => ({ ...s, holiday_overtime_multiplier: Number(e.target.value) }))}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                    >
+                      <option value={1.0}>1.0x (Standard Rate)</option>
+                      <option value={1.5}>1.5x (Time & Half)</option>
+                      <option value={2.0}>2.0x (Double Rate - Default)</option>
+                      <option value={2.5}>2.5x (Double & Half)</option>
+                      <option value={3.0}>3.0x (Triple Rate)</option>
+                    </select>
+                    <p className="text-xs text-slate-600 mt-1">Pay rate multiplier for duties on Fridays and holidays</p>
+                  </div>
+
+                  {/* Require Overtime Approval Toggle */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                      Overtime Approval Workflow
+                    </label>
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+                      <div>
+                        <span className="text-sm font-bold text-slate-900 block">Require Verification</span>
+                        <span className="text-xs text-slate-600">Overtime requires BM/Admin sign-off before payout</span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={settings.require_overtime_approval}
+                        onChange={e => setSettings(s => ({ ...s, require_overtime_approval: e.target.checked }))}
+                        className="w-5 h-5 text-[#1dbf73] rounded border-slate-300 focus:ring-0 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Change reason */}
+                  <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
                       Change Reason (optional)
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Ramadan schedule, summer hours..."
+                      placeholder="e.g. Ramadan schedule, summer hours, updated holiday multiplier..."
                       value={changeReason}
                       onChange={e => setChangeReason(e.target.value)}
                       className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
@@ -361,6 +435,15 @@ export default function AdminDutyHoursPage() {
                   <div className="text-slate-600 flex items-center gap-1">
                     <span>Overtime: after</span> <span className="text-amber-700 font-mono font-bold">{settings.work_end_time}</span>
                     {settings.overtime_after_minutes > 0 && <span className="text-amber-800 font-semibold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">+{settings.overtime_after_minutes}min threshold</span>}
+                  </div>
+                  <div className="text-slate-600 flex items-center gap-1">
+                    <span>Slot: <strong className="text-slate-900">{settings.overtime_slot_minutes}m</strong></span>
+                  </div>
+                  <div className="text-slate-600 flex items-center gap-1">
+                    <span>Holiday OT: <strong className="text-purple-800 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded">{settings.holiday_overtime_multiplier}x</strong></span>
+                  </div>
+                  <div className="text-slate-600 flex items-center gap-1">
+                    <span>Status: <strong className={`px-1.5 py-0.5 rounded font-bold ${settings.require_overtime_approval ? 'text-rose-800 bg-rose-50 border border-rose-200' : 'text-emerald-800 bg-emerald-50 border border-emerald-200'}`}>{settings.require_overtime_approval ? 'Approval Required' : 'Auto-Approved'}</strong></span>
                   </div>
                 </div>
 
@@ -443,6 +526,9 @@ export default function AdminDutyHoursPage() {
                                 <span>Grace: <strong className="text-slate-900">{entry.late_grace_minutes}min</strong></span>
                                 <span>OT Threshold: <strong className="text-slate-900">{entry.overtime_after_minutes}min after end</strong></span>
                                 <span>Half-day: <strong className="text-slate-900">&lt;{entry.half_day_hours}h</strong></span>
+                                {entry.overtime_slot_minutes !== undefined && <span>Slot: <strong className="text-slate-900">{entry.overtime_slot_minutes}m</strong></span>}
+                                {entry.holiday_overtime_multiplier !== undefined && <span>Holiday: <strong className="text-purple-800 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded">{entry.holiday_overtime_multiplier}x</strong></span>}
+                                {entry.require_overtime_approval !== undefined && <span>OT Workflow: <strong className={`px-1.5 py-0.5 rounded font-bold ${entry.require_overtime_approval ? 'text-rose-800 bg-rose-50 border border-rose-200' : 'text-emerald-800 bg-emerald-50 border border-emerald-200'}`}>{entry.require_overtime_approval ? 'Required' : 'Auto'}</strong></span>}
                                 {entry.change_reason && (
                                   <span>Reason: <strong className="text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">{entry.change_reason}</strong></span>
                                 )}

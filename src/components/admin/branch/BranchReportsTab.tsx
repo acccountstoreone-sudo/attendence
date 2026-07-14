@@ -18,10 +18,40 @@ export const BranchReportsTab: React.FC<BranchReportsTabProps> = ({ branch }) =>
     { type: 'overtime', title: 'Overtime Analytics', description: 'Detailed breakdown of overtime hours worked by branch employees.', statusFilter: 'all' }
   ];
 
-  const handleExport = (type: string, format: string) => {
-    const now = new Date();
-    const url = `/api/reports/export?branch_id=${branch.id}&type=${type}&format=${format}&month=${now.getMonth() + 1}&year=${now.getFullYear()}`;
-    window.open(url, '_blank');
+  const [exporting, setExporting] = React.useState<string | null>(null);
+
+  const handleExport = async (type: string, format: string) => {
+    try {
+      setExporting(`${type}-${format}`);
+      const now = new Date();
+      const url = `/api/reports/export?branch_id=${branch.id}&type=${type}&format=${format}&month=${now.getMonth() + 1}&year=${now.getFullYear()}`;
+      
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Export failed');
+      
+      const blob = await res.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      
+      const contentDisposition = res.headers.get('Content-Disposition');
+      let fileName = `Branch_Report_${now.getFullYear()}_${now.getMonth() + 1}.${format === 'excel' ? 'xlsx' : format}`;
+      if (contentDisposition && contentDisposition.includes('filename="')) {
+        const match = contentDisposition.match(/filename="([^"]+)"/);
+        if (match && match[1]) fileName = match[1];
+      }
+      
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Export Error:', error);
+      alert('Failed to export report. Please try again.');
+    } finally {
+      setExporting(null);
+    }
   };
 
   return (
@@ -57,14 +87,14 @@ export const BranchReportsTab: React.FC<BranchReportsTabProps> = ({ branch }) =>
               </div>
               
               <div className="mt-auto pt-4 border-t border-slate-200/50 flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
-                <Button variant="secondary" size="sm" className="text-xs flex-1 hover:border-[#1dbf73]/40" onClick={() => handleExport(report.type, 'excel')}>
-                  <FileSpreadsheet className="w-3.5 h-3.5 mr-1 text-emerald-600" /> Excel
+                <Button variant="secondary" size="sm" className="text-xs flex-1 hover:border-[#1dbf73]/40" onClick={() => handleExport(report.type, 'excel')} isLoading={exporting === `${report.type}-excel`} disabled={exporting !== null}>
+                  {!exporting && <FileSpreadsheet className="w-3.5 h-3.5 mr-1 text-emerald-600" />} Excel
                 </Button>
-                <Button variant="secondary" size="sm" className="text-xs flex-1 hover:border-red-400/40" onClick={() => handleExport(report.type, 'pdf')}>
-                  <FileIcon className="w-3.5 h-3.5 mr-1 text-red-500" /> PDF
+                <Button variant="secondary" size="sm" className="text-xs flex-1 hover:border-red-400/40" onClick={() => handleExport(report.type, 'pdf')} isLoading={exporting === `${report.type}-pdf`} disabled={exporting !== null}>
+                  {!exporting && <FileIcon className="w-3.5 h-3.5 mr-1 text-red-500" />} PDF
                 </Button>
-                <Button variant="secondary" size="sm" className="text-xs flex-1 hover:border-blue-400/40" onClick={() => handleExport(report.type, 'csv')}>
-                  <Download className="w-3.5 h-3.5 mr-1 text-blue-500" /> CSV
+                <Button variant="secondary" size="sm" className="text-xs flex-1 hover:border-blue-400/40" onClick={() => handleExport(report.type, 'csv')} isLoading={exporting === `${report.type}-csv`} disabled={exporting !== null}>
+                  {!exporting && <Download className="w-3.5 h-3.5 mr-1 text-blue-500" />} CSV
                 </Button>
               </div>
             </Card>

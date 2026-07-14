@@ -213,3 +213,30 @@ body {
   }
 }
 
+/* ── Print Styles ─────────────────────────────── */
+@media print {
+  /* Hide sidebar, topbar, nav, and all print:hidden elements */
+  nav, aside, header,
+  [class*="sidebar"],
+  [class*="topbar"] {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12px !important;
+  }
+
+  @page {
+    margin: 1.5cm;
+    size: A4 landscape;
+  }
+
+  /* Ensure tables don't break mid-row */
+  tr, td, th {
+    page-break-inside: avoid;
+  }
+}
+
+

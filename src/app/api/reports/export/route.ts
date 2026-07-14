@@ -4,8 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { computeEmployeeDutySummary } from '@/lib/dutyEngine';
 import { z } from 'zod';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { generateAnchorFashionPDF } from '@/lib/pdf-generator';
 
 const exportSchema = z.object({
   format: z.enum(['pdf', 'excel', 'csv']).default('excel'),
@@ -175,34 +174,27 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
     fileName = `${reportTitle}.xlsx`;
     contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
   } else {
-    // PDF Format using jsPDF and autotable
-    const doc = new jsPDF('landscape');
-    const primaryColor: [number, number, number] = [6, 18, 36];
-    const accentColor: [number, number, number] = [210, 160, 42];
-
-    doc.setFontSize(16);
-    doc.setTextColor(...primaryColor);
-    doc.text('Anchor Fashion Management - Official Report', 14, 18);
-    
-    doc.setFontSize(11);
-    doc.setTextColor(...accentColor);
-    doc.text(`${reportTitle.replace(/_/g, ' ')}`, 14, 26);
-    
+    // PDF Format using new generator
     const columns = Object.keys(exportData[0] || {});
     const rows = exportData.map(row => columns.map(col => String(row[col] ?? '')));
 
-    // @ts-expect-error - jspdf-autotable adds autoTable to jsPDF instance
-    doc.autoTable({
-      head: [columns],
-      body: rows,
-      startY: 32,
-      theme: 'grid',
-      headStyles: { fillColor: primaryColor, textColor: accentColor, fontSize: 8 },
-      alternateRowStyles: { fillColor: [240, 244, 248] },
-      styles: { font: 'helvetica', fontSize: 8, cellPadding: 3 }
+    let cleanTitle = 'ATTENDANCE REPORT';
+    if (reportTitle.includes('Duty_Report')) cleanTitle = 'DUTY REPORT';
+    else if (reportTitle.includes('Summary')) cleanTitle = 'MONTHLY SUMMARY';
+
+    fileBuffer = generateAnchorFashionPDF({
+      reportTitle: cleanTitle,
+      reportSubtitle: 'Statement',
+      metaRef: `REP-${Math.floor(Math.random() * 100000000)}`,
+      metaBranch: targetBranchId ? (exportData[0]?.['Branch Name'] as string || 'Specific Branch') : 'All Branches',
+      metaPeriod: `${payload.month}/${payload.year}`,
+      metaPreparedBy: user.full_name,
+      metaRecordsCount: rows.length,
+      tableTitle: 'Transaction details',
+      columns,
+      rows
     });
 
-    fileBuffer = Buffer.from(doc.output('arraybuffer'));
     fileName = `${reportTitle}.pdf`;
     contentType = 'application/pdf';
   }

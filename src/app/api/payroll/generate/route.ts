@@ -131,8 +131,13 @@ export async function POST(request: NextRequest) {
                 on_leave_days: summary.total_on_leave_days,
                 missed_days: summary.total_missed_days,
                 overtime_hours: summary.total_overtime_hours,
+                regular_overtime_hours: summary.total_regular_overtime_hours ?? summary.total_overtime_hours,
+                holiday_overtime_hours: summary.total_holiday_overtime_hours ?? 0,
                 overtime_rate_used: parseFloat(Number(overtimeRateUsed).toFixed(2)),
+                holiday_overtime_multiplier: summary.holiday_overtime_multiplier ?? 2.0,
                 overtime_pay: parseFloat(overtimePay.toFixed(2)),
+                regular_overtime_pay: summary.regular_overtime_pay ?? parseFloat(overtimePay.toFixed(2)),
+                holiday_overtime_pay: summary.holiday_overtime_pay ?? 0,
                 snack_allowance_used: parseFloat(Number(snackRateUsed).toFixed(2)),
                 snack_allowance_pay: parseFloat(snackPay.toFixed(2)),
               }

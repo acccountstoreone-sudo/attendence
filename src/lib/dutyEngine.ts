@@ -43,12 +43,19 @@ export interface DutySummaryResult {
     total_duty_hours: number;
     total_overtime_minutes: number;
     total_overtime_hours: number;
+    total_regular_overtime_minutes?: number;
+    total_regular_overtime_hours?: number;
+    total_holiday_overtime_minutes?: number;
+    total_holiday_overtime_hours?: number;
     total_late_minutes: number;
     total_late_hours: number;
     overtime_rate_per_hour?: number;
+    holiday_overtime_multiplier?: number;
     daily_snack_allowance?: number;
     base_salary?: number;
     total_overtime_pay?: number;
+    regular_overtime_pay?: number;
+    holiday_overtime_pay?: number;
     total_snack_allowance_pay?: number;
     estimated_payable_salary?: number;
     today_status?: string;
@@ -81,6 +88,9 @@ export interface DutySummaryResult {
     check_out_lat?: number | null;
     check_out_lng?: number | null;
     is_right_time: boolean;
+    is_holiday_duty?: boolean;
+    overtime_approval_status?: string;
+    approved_overtime_minutes?: number | null;
   }>;
 }
 
@@ -116,6 +126,7 @@ export async function computeEmployeeDutySummary(
   let weeklyOffDays: number[] = [5]; // Default: Friday (5)
   let branchOvertimeRate = 100.0;
   let branchSnackAllowance = 50.0;
+  let branchHolidayMultiplier = 2.0;
 
   const { data: cp } = await supabase.from('company_profile').select('*').single();
   if (cp) {
@@ -134,6 +145,7 @@ export async function computeEmployeeDutySummary(
       if (bs.weekly_off_days && Array.isArray(bs.weekly_off_days)) weeklyOffDays = bs.weekly_off_days;
       if (bs.overtime_rate_per_hour !== undefined && bs.overtime_rate_per_hour !== null) branchOvertimeRate = Number(bs.overtime_rate_per_hour);
       if (bs.daily_snack_allowance !== undefined && bs.daily_snack_allowance !== null) branchSnackAllowance = Number(bs.daily_snack_allowance);
+      if (bs.holiday_overtime_multiplier !== undefined && bs.holiday_overtime_multiplier !== null) branchHolidayMultiplier = Number(bs.holiday_overtime_multiplier);
     }
   }
 
@@ -144,6 +156,7 @@ export async function computeEmployeeDutySummary(
   let transportAllowance = 0;
   let finalOvertimeRate = branchOvertimeRate;
   let finalSnackAllowance = branchSnackAllowance;
+  let finalHolidayMultiplier = branchHolidayMultiplier;
   const { data: sal } = await supabase.from('salary_settings').select('*').eq('user_id', targetEmployeeId).maybeSingle();
   if (sal) {
     baseSalary = Number(sal.base_salary || 0);
@@ -152,6 +165,7 @@ export async function computeEmployeeDutySummary(
     transportAllowance = Number(sal.transport_allowance || 0);
     if (sal.overtime_rate_per_hour !== undefined && sal.overtime_rate_per_hour !== null) finalOvertimeRate = Number(sal.overtime_rate_per_hour);
     if (sal.daily_snack_allowance !== undefined && sal.daily_snack_allowance !== null) finalSnackAllowance = Number(sal.daily_snack_allowance);
+    if (sal.holiday_overtime_multiplier !== undefined && sal.holiday_overtime_multiplier !== null) finalHolidayMultiplier = Number(sal.holiday_overtime_multiplier);
   }
 
   const parseTimeToMinutes = (timeStr: string) => {
@@ -248,6 +262,8 @@ export async function computeEmployeeDutySummary(
   let totalHolidayDays = 0;
   let totalDutyHours = 0;
   let totalOvertimeMinutes = 0;
+  let totalRegularOvertimeMinutes = 0;
+  let totalHolidayOvertimeMinutes = 0;
   let totalLateMinutes = 0;
 
   let todayStatus = 'upcoming';
@@ -325,12 +341,67 @@ export async function computeEmployeeDutySummary(
         evaluatedStatus = 'half_day';
       }
 
-      let otMins = checkOutLog.overtime_minutes || firstLog.overtime_minutes || 0;
-      if (checkOutMs) {
-        const checkOutMinutes = getDhakaMinutesOfDay(checkOutLog.check_out_time!);
-        if (checkOutMinutes > endMinutesOfDay + overtimeAfterMinutes) {
-          const computedOt = checkOutMinutes - endMinutesOfDay;
-          otMins = Math.max(otMins, computedOt);
+      let otMins = 0;
+      const approvalStatus = checkOutLog.overtime_approval_status || firstLog.overtime_approval_status || 'auto';
+      const approvedOt = checkOutLog.approved_overtime_minutes !== undefined && checkOutLog.approved_overtime_minutes !== null 
+        ? Number(checkOutLog.approved_overtime_minutes) 
+        : (firstLog.approved_overtime_minutes !== undefined && firstLog.approved_overtime_minutes !== null ? Number(firstLog.approved_overtime_minutes) : null);
+
+      if (approvalStatus === 'rejected') {
+        otMins = 0;
+      } else if (approvedOt !== null) {
+        otMins = approvedOt;
+      } else {
+        otMins = checkOutLog.overtime_minutes || firstLog.overtime_minutes || 0;
+        if (checkOutMs) {
+          const checkOutMinutes = getDhakaMinutesOfDay(checkOutLog.check_out_time!);
+          if (checkOutMinutes > endMinutesOfDay + overtimeAfterMinutes) {
+            const computedOt = checkOutMinutes - endMinutesOfDay;
+            otMins = Math.max(otMins, computedOt);
+          }
+        }
+      }
+
+      const isHolidayDuty = isOffDay || Boolean(holidayMatch) || Boolean(firstLog.is_holiday_duty);
+
+      // --- Overtime Calculation Logic ---
+      // Scenario 1: Off-day / Holiday duty → ALL duty hours = OT (no regular shift applies)
+      // Scenario 2: After-shift pure OT → employee checks in AFTER shift end, all hours = OT
+      // Scenario 3: Normal shift OT → time beyond (shift_end + grace) = OT
+      let effectiveOtMins = 0;
+
+      if (isHolidayDuty) {
+        // On holidays/off-days: entire duration is overtime
+        if (approvalStatus === 'rejected') {
+          effectiveOtMins = 0;
+        } else if (approvedOt !== null) {
+          effectiveOtMins = approvedOt;
+        } else if (dutyHours > 0) {
+          effectiveOtMins = otMins > 0 ? otMins : Math.round(dutyHours * 60);
+        }
+      } else {
+        // Regular work day
+        if (approvalStatus === 'rejected') {
+          effectiveOtMins = 0;
+        } else if (approvedOt !== null) {
+          effectiveOtMins = approvedOt;
+        } else {
+          // Check if employee checked in AFTER the shift end (pure after-hours OT)
+          const isAfterShiftCheckIn = checkInMinutes >= endMinutesOfDay;
+          if (isAfterShiftCheckIn && dutyHours > 0) {
+            // Pure after-shift overtime: entire duration counts as OT
+            effectiveOtMins = otMins > 0 ? otMins : Math.round(dutyHours * 60);
+          } else if (checkOutMs) {
+            const checkOutMinutes = getDhakaMinutesOfDay(checkOutLog.check_out_time!);
+            if (checkOutMinutes > endMinutesOfDay + overtimeAfterMinutes) {
+              const computedOt = checkOutMinutes - endMinutesOfDay;
+              effectiveOtMins = Math.max(otMins, computedOt);
+            } else {
+              effectiveOtMins = otMins;
+            }
+          } else {
+            effectiveOtMins = otMins;
+          }
         }
       }
 
@@ -345,7 +416,12 @@ export async function computeEmployeeDutySummary(
       if (evaluatedStatus === 'half_day') totalHalfDays++;
 
       totalDutyHours += dutyHours;
-      totalOvertimeMinutes += otMins;
+      totalOvertimeMinutes += effectiveOtMins;
+      if (isHolidayDuty) {
+        totalHolidayOvertimeMinutes += effectiveOtMins;
+      } else {
+        totalRegularOvertimeMinutes += effectiveOtMins;
+      }
 
       const isVerified = Boolean(firstLog.face_match_score !== null && firstLog.face_match_score !== undefined || firstLog.face_verified || (targetProfile as Record<string, unknown>).face_enrolled);
       const rightTime = (lateMins === 0 && evaluatedStatus === 'present');
@@ -355,8 +431,8 @@ export async function computeEmployeeDutySummary(
         todayDutyHours = Number(dutyHours.toFixed(2));
         todayLateMinutes = lateMins;
         todayLateHours = Number((lateMins / 60).toFixed(2));
-        todayOvertimeMinutes = otMins;
-        todayOvertimeHours = Number((otMins / 60).toFixed(2));
+        todayOvertimeMinutes = effectiveOtMins;
+        todayOvertimeHours = Number((effectiveOtMins / 60).toFixed(2));
         todayFaceVerified = isVerified;
         todayCheckInTime = checkInFormatted;
         todayCheckOutTime = checkOutFormatted || 'Working...';
@@ -374,9 +450,9 @@ export async function computeEmployeeDutySummary(
         duty_hours: Number(dutyHours.toFixed(2)),
         late_minutes: lateMins,
         late_hours: Number((lateMins / 60).toFixed(2)),
-        overtime_minutes: otMins,
-        overtime_hours: Number((otMins / 60).toFixed(2)),
-        notes: evaluatedStatus === 'late' ? `${lateMins} mins late` : otMins > 0 ? `${otMins} mins overtime` : 'Checked In right time',
+        overtime_minutes: effectiveOtMins,
+        overtime_hours: Number((effectiveOtMins / 60).toFixed(2)),
+        notes: evaluatedStatus === 'late' ? `${lateMins} mins late` : effectiveOtMins > 0 ? `${effectiveOtMins} mins ${isHolidayDuty ? '(Holiday/Off-day 2x OT)' : 'overtime'}` : 'Checked In right time',
         face_verified: isVerified,
         face_match_score: firstLog.face_match_score ? Number(firstLog.face_match_score) : null,
         check_in_lat: firstLog.check_in_lat ? Number(firstLog.check_in_lat) : null,
@@ -384,6 +460,9 @@ export async function computeEmployeeDutySummary(
         check_out_lat: checkOutLog.check_out_lat ? Number(checkOutLog.check_out_lat) : null,
         check_out_lng: checkOutLog.check_out_lng ? Number(checkOutLog.check_out_lng) : null,
         is_right_time: rightTime,
+        is_holiday_duty: isHolidayDuty,
+        overtime_approval_status: approvalStatus,
+        approved_overtime_minutes: approvedOt,
       });
     } else {
       if (isFutureDay) {
@@ -495,8 +574,13 @@ export async function computeEmployeeDutySummary(
   const profileRec = targetProfile as Record<string, unknown>;
   const branchesRec = profileRec.branches as { name?: string; code?: string } | undefined;
 
+  const totalRegularOvertimeHoursCalc = Number((totalRegularOvertimeMinutes / 60).toFixed(2));
+  const totalHolidayOvertimeHoursCalc = Number((totalHolidayOvertimeMinutes / 60).toFixed(2));
   const totalOvertimeHoursCalc = Number((totalOvertimeMinutes / 60).toFixed(2));
-  const totalOvertimePay = Math.round(totalOvertimeHoursCalc * finalOvertimeRate);
+
+  const regularOvertimePay = Math.round(totalRegularOvertimeHoursCalc * finalOvertimeRate);
+  const holidayOvertimePay = Math.round(totalHolidayOvertimeHoursCalc * finalOvertimeRate * finalHolidayMultiplier);
+  const totalOvertimePay = regularOvertimePay + holidayOvertimePay;
   const totalSnackPay = Math.round(totalPresentDays * finalSnackAllowance);
   const totalGrossPackage = baseSalary + houseRentAllowance + medicalAllowance + transportAllowance;
   const estimatedPayableSalary = Math.round(totalGrossPackage + totalOvertimePay + totalSnackPay);
@@ -538,12 +622,19 @@ export async function computeEmployeeDutySummary(
       total_duty_hours: Number(totalDutyHours.toFixed(2)),
       total_overtime_minutes: totalOvertimeMinutes,
       total_overtime_hours: totalOvertimeHoursCalc,
+      total_regular_overtime_minutes: totalRegularOvertimeMinutes,
+      total_regular_overtime_hours: totalRegularOvertimeHoursCalc,
+      total_holiday_overtime_minutes: totalHolidayOvertimeMinutes,
+      total_holiday_overtime_hours: totalHolidayOvertimeHoursCalc,
       total_late_minutes: totalLateMinutes,
       total_late_hours: Number((totalLateMinutes / 60).toFixed(2)),
       overtime_rate_per_hour: finalOvertimeRate,
+      holiday_overtime_multiplier: finalHolidayMultiplier,
       daily_snack_allowance: finalSnackAllowance,
       base_salary: baseSalary,
       total_overtime_pay: totalOvertimePay,
+      regular_overtime_pay: regularOvertimePay,
+      holiday_overtime_pay: holidayOvertimePay,
       total_snack_allowance_pay: totalSnackPay,
       estimated_payable_salary: estimatedPayableSalary,
       today_status: todayStatus,

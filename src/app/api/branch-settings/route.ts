@@ -11,6 +11,9 @@ const updateBranchSettingsSchema = z.object({
   overtime_after_minutes: z.number().int().min(0).optional(),
   half_day_hours: z.number().min(1).max(8).optional(),
   weekly_off_days: z.array(z.number().int().min(0).max(6)).optional(),
+  overtime_slot_minutes: z.number().int().min(0).max(60).optional(),
+  holiday_overtime_multiplier: z.number().min(1).max(5).optional(),
+  require_overtime_approval: z.boolean().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -69,7 +72,7 @@ export async function PUT(request: NextRequest) {
     // 1. Fetch current settings before updating (to log history)
     const { data: currentSettings } = await supabase
       .from('branch_settings')
-      .select('work_start_time, work_end_time, late_grace_minutes, overtime_after_minutes, half_day_hours')
+      .select('work_start_time, work_end_time, late_grace_minutes, overtime_after_minutes, half_day_hours, overtime_slot_minutes, holiday_overtime_multiplier, require_overtime_approval')
       .eq('branch_id', branchId)
       .maybeSingle();
 
@@ -93,6 +96,9 @@ export async function PUT(request: NextRequest) {
           late_grace_minutes: payload.late_grace_minutes ?? currentSettings.late_grace_minutes ?? 15,
           overtime_after_minutes: payload.overtime_after_minutes ?? currentSettings.overtime_after_minutes ?? 0,
           half_day_hours: payload.half_day_hours ?? currentSettings.half_day_hours ?? 4.0,
+          overtime_slot_minutes: payload.overtime_slot_minutes ?? currentSettings.overtime_slot_minutes ?? 15,
+          holiday_overtime_multiplier: payload.holiday_overtime_multiplier ?? currentSettings.holiday_overtime_multiplier ?? 2.0,
+          require_overtime_approval: payload.require_overtime_approval ?? currentSettings.require_overtime_approval ?? false,
           changed_by: user.id,
           change_reason: body.change_reason || null,
           effective_from: now,
@@ -111,6 +117,9 @@ export async function PUT(request: NextRequest) {
           late_grace_minutes: payload.late_grace_minutes ?? 15,
           overtime_after_minutes: payload.overtime_after_minutes ?? 0,
           half_day_hours: payload.half_day_hours ?? 4.0,
+          overtime_slot_minutes: payload.overtime_slot_minutes ?? 15,
+          holiday_overtime_multiplier: payload.holiday_overtime_multiplier ?? 2.0,
+          require_overtime_approval: payload.require_overtime_approval ?? false,
           changed_by: user.id,
           change_reason: body.change_reason || 'Initial configuration',
           effective_from: now,
