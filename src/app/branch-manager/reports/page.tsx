@@ -90,8 +90,14 @@ export default function BranchManagerReportsPage() {
         ...(branchId ? { branch_id: branchId } : {}),
       });
       const res = await fetch(`/api/reports/export?${params}`);
-      if (!res.ok) throw new Error('Export request failed');
-
+      if (!res.ok) {
+        let errorMsg = 'Export request failed';
+        try {
+          const errData = await res.json();
+          if (errData.error?.message) errorMsg = errData.error.message;
+        } catch (_) {}
+        throw new Error(errorMsg);
+      }
       const contentType = res.headers.get('content-type') || '';
       if (contentType.includes('application/json')) {
         const json = await res.json();
