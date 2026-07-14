@@ -82,16 +82,19 @@ export async function syncOfflineQueue(onProgress?: (synced: number, total: numb
 
   for (const action of queue) {
     try {
-      const endpoint = action.type === 'check_in' ? '/api/attendance/check-in' : '/api/attendance/check-out';
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/attendance/sync-offline', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: action.id,
+          type: action.type,
+          timestamp: action.created_at,
           latitude: action.latitude,
           longitude: action.longitude,
+          face_verified: true,
+          liveness_passed: true,
           photo_url: action.photo_url,
           device_info: action.device_info,
-          offline_queued_at: action.created_at,
         }),
       });
 

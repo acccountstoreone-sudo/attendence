@@ -95,7 +95,20 @@ export async function POST(request: NextRequest) {
 
         const netPayable = grossSalary - deductions + overtimePay + snackPay;
 
-        // 4. Save/Upsert into payroll_sheets with exact audit breakdown
+        // 4. Check for existing finalized/paid payroll sheet
+        const { data: existingSheet } = await supabase
+          .from('payroll_sheets')
+          .select('id, status')
+          .eq('user_id', employee.id)
+          .eq('month_year', input.month_year)
+          .maybeSingle();
+
+        if (existingSheet && (existingSheet.status === 'finalized' || existingSheet.status === 'paid')) {
+          results.push({ user_id: employee.id, full_name: employee.full_name, status: 'error', reason: `Payroll is already ${existingSheet.status}. Cannot overwrite.` });
+          continue;
+        }
+
+        // 5. Save/Upsert into payroll_sheets with exact audit breakdown
         const { data: sheet, error: sheetErr } = await supabase
           .from('payroll_sheets')
           .upsert({

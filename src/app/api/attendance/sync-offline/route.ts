@@ -34,20 +34,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const payload = syncSchema.parse(body);
 
-    // Validate timestamp is from today in Asia/Dhaka timezone
+    // Validate timestamp (HIGH-04: allow up to 36 hours window for delayed sync or overnight check-outs)
     const offlineDate = new Date(payload.timestamp);
-    const dhaka = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' });
-    const today = dhaka.format(new Date());
-    const recordDay = dhaka.format(offlineDate);
+    const now = new Date();
+    const diffHours = (now.getTime() - offlineDate.getTime()) / (1000 * 3600);
 
-    if (recordDay !== today) {
+    if (diffHours < -0.1 || diffHours > 36) {
       return NextResponse.json({
         success: false,
         data: null,
-        error: { code: 'OFFLINE_SYNC_DATE_MISMATCH', message: 'Offline record is from a different day. Backdated sync is not allowed.' },
+        error: { code: 'OFFLINE_SYNC_DATE_MISMATCH', message: 'Offline record is either in the future or older than 36 hours. Manual correction required.' },
         timestamp: new Date().toISOString(),
       }, { status: 400 });
     }
+
+    const dhaka = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' });
+    const recordDay = dhaka.format(offlineDate);
 
     const supabase = await createClient();
 

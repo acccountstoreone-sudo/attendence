@@ -21,6 +21,11 @@ const playPipSound = () => {
     const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextClass) return;
     const ctx = new AudioContextClass();
+    
+    // Resume context if suspended (browser autoplay policies)
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
 
     // First pip note (A5 - 880 Hz)
     const osc1 = ctx.createOscillator();
@@ -55,6 +60,11 @@ export function useRealtimeNotifications(userId: string | undefined) {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [latestToast, setLatestToast] = useState<NotificationItem | null>(null);
+
+  const notificationsRef = useRef<NotificationItem[]>([]);
+  useEffect(() => {
+    notificationsRef.current = notifications;
+  }, [notifications]);
 
   // useRef ensures the supabase client is created only once — not on every render.
   // This prevents the infinite subscribe/unsubscribe loop caused by a new object
@@ -111,6 +121,12 @@ export function useRealtimeNotifications(userId: string | undefined) {
         },
         (payload) => {
           const newNotif = payload.new as NotificationItem;
+          
+          // Prevent duplicates
+          if (notificationsRef.current.some((n) => n.id === newNotif.id)) {
+            return;
+          }
+
           // Play the double-pip sound immediately
           playPipSound();
           // Update state immediately

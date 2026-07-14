@@ -77,6 +77,13 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
               message={latestToast.message}
               type={latestToast.type as any}
               onDismiss={clearToast}
+              onClick={() => {
+                const targetUrl = latestToast.action_url || latestToast.link_url;
+                if (targetUrl) {
+                  router.push(targetUrl);
+                  clearToast();
+                }
+              }}
             />
           </div>
         )}
@@ -145,14 +152,22 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
                       >
                         <div
                           className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                            n.type === 'alert' ? 'bg-rose-500' : n.type === 'warning' ? 'bg-amber-500' : n.type === 'success' ? 'bg-[#1dbf73]' : 'bg-[#1dbf73]'
+                            n.type === 'alert' || n.type === 'error' ? 'bg-rose-500' :
+                            n.type === 'warning' || n.type === 'attendance_approval' || n.type === 'correction' || n.type === 'leave' ? 'bg-amber-500' :
+                            n.type === 'system' || n.type === 'info' || n.type === 'welcome' ? 'bg-blue-500' :
+                            'bg-[#1dbf73]'
                           }`}
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <p className="text-xs font-bold text-slate-900 truncate">{n.title}</p>
                             <span className="text-[10px] text-slate-600 shrink-0">
-                              {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {(() => {
+                                const d = new Date(n.created_at);
+                                const isToday = d.toDateString() === new Date().toDateString();
+                                const t = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                return isToday ? t : `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${t}`;
+                              })()}
                             </span>
                           </div>
                           <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">{n.message}</p>

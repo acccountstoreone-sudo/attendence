@@ -141,6 +141,26 @@ export async function POST(request: NextRequest) {
 
     // 5. Fetch Branch Geofence Coordinates & Settings
     let targetBranchId = payload.branch_id || user.branch_id;
+    
+    // Security Fix: Prevent Employees from spoofing their branch_id
+    if (user.role === 'employee') {
+      if (payload.branch_id && user.branch_id && payload.branch_id !== user.branch_id) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: 'FORBIDDEN_BRANCH',
+              message: 'Check-in denied: You cannot check into a branch other than your assigned store.',
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
+      targetBranchId = user.branch_id;
+    }
+
     if (!targetBranchId && (user.role === 'admin' || user.role === 'branch_manager')) {
       const { data: firstActive } = await supabase
         .from('branches')

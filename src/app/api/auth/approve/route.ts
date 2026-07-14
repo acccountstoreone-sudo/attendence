@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     // 2. Check caller authorization (Must be admin or branch manager)
     const { data: callerProfile, error: callerError } = await adminClient
       .from('profiles')
-      .select('role')
+      .select('role, branch_id')
       .eq('id', currentUser.id)
       .single();
 
@@ -43,6 +43,16 @@ export async function POST(request: NextRequest) {
 
     if (targetError || !targetProfile) {
       return NextResponse.json({ error: 'Target employee profile not found.' }, { status: 404 });
+    }
+
+    // 4. Enforce Branch Manager boundaries (Spec P33)
+    if (callerProfile.role === 'branch_manager') {
+      if (targetProfile.branch_id !== callerProfile.branch_id) {
+        return NextResponse.json({ error: 'Forbidden: You can only approve or reject employees assigned to your branch.' }, { status: 403 });
+      }
+      if (targetProfile.role === 'admin' || targetProfile.role === 'branch_manager') {
+        return NextResponse.json({ error: 'Forbidden: Only HQ Administrators can review managerial accounts.' }, { status: 403 });
+      }
     }
 
     if (action === 'approve') {

@@ -103,20 +103,17 @@ export async function POST(request: NextRequest) {
     
     if (payload.is_offline_sync && payload.timestamp) {
       targetDate = new Date(payload.timestamp);
-      
       const todayDate = new Date();
-      const offlineFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' });
-      const [offMonth, offDay, offYear] = offlineFormatter.format(targetDate).split('/');
-      const [curMonth, curDay, curYear] = offlineFormatter.format(todayDate).split('/');
+      const diffHours = (todayDate.getTime() - targetDate.getTime()) / (1000 * 3600);
       
-      if (`${offYear}-${offMonth}-${offDay}` !== `${curYear}-${curMonth}-${curDay}`) {
+      if (diffHours < -0.1 || diffHours > 36) {
         return NextResponse.json(
           {
             success: false,
             data: null,
             error: {
               code: 'OFFLINE_SYNC_DATE_MISMATCH',
-              message: 'Offline check-out timestamp must be for today. Backdated sync is not permitted.',
+              message: 'Offline check-out timestamp must be within the last 36 hours. Backdated or future sync is not permitted.',
             },
             timestamp: new Date().toISOString(),
           },
@@ -175,7 +172,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify Geofence if branch is assigned
-    const targetBranchId = payload.branch_id || user.branch_id;
+    let targetBranchId = payload.branch_id || user.branch_id;
+    
+    // Security Fix: Prevent Employees from spoofing their branch_id on check-out
+    if (user.role === 'employee') {
+      if (payload.branch_id && user.branch_id && payload.branch_id !== user.branch_id) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: 'FORBIDDEN_BRANCH',
+              message: 'Check-out denied: You cannot check out of a branch other than your assigned store.',
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
+      targetBranchId = user.branch_id;
+    }
+
     if (targetBranchId) {
       const { data: branch } = await supabase
         .from('branches')

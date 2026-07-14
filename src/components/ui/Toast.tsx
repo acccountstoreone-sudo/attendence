@@ -26,6 +26,7 @@ export interface ToastProps {
   type?: ToastType;
   duration?: number; // in milliseconds
   onDismiss?: () => void;
+  onClick?: () => void;
 }
 
 export const Toast: React.FC<ToastProps> = ({
@@ -34,6 +35,7 @@ export const Toast: React.FC<ToastProps> = ({
   type = 'info',
   duration = 5000,
   onDismiss,
+  onClick,
 }) => {
   useEffect(() => {
     if (duration > 0 && onDismiss) {
@@ -80,8 +82,10 @@ export const Toast: React.FC<ToastProps> = ({
     <div
       className={cn(
         'flex items-start space-x-3 p-4 rounded-xl border shadow-2xl backdrop-blur-sm animate-in slide-in-from-bottom-5 fade-in duration-300 max-w-sm w-full',
-        borders[type]
+        borders[type],
+        onClick && 'cursor-pointer hover:opacity-95 transition-opacity hover:shadow-xl'
       )}
+      onClick={onClick}
     >
       <div className="mt-0.5">{icons[type]}</div>
       <div className="flex-1 min-w-0">
@@ -90,8 +94,11 @@ export const Toast: React.FC<ToastProps> = ({
       </div>
       {onDismiss && (
         <button
-          onClick={onDismiss}
-          className="p-1 rounded-lg opacity-70 hover:opacity-100 hover:bg-slate-100 transition-all shrink-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDismiss();
+          }}
+          className="p-1 rounded-lg opacity-70 hover:opacity-100 hover:bg-slate-100/20 transition-all shrink-0"
         >
           <X className="w-4 h-4" />
         </button>

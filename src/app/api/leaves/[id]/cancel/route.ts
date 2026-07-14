@@ -38,13 +38,21 @@ export async function POST(
       );
     }
 
-    // Employees can only cancel their own leave requests
+    // Employees can only cancel their own PENDING leave requests (HIGH-03)
     const employeeOwnerId = leave.user_id || leave.employee_id;
-    if (user.role === 'employee' && employeeOwnerId !== user.id) {
-      return NextResponse.json(
-        { success: false, error: 'You can only cancel your own leave requests.' },
-        { status: 403 }
-      );
+    if (user.role === 'employee') {
+      if (employeeOwnerId !== user.id) {
+        return NextResponse.json(
+          { success: false, error: 'You can only cancel your own leave requests.' },
+          { status: 403 }
+        );
+      }
+      if (leave.status !== 'pending') {
+        return NextResponse.json(
+          { success: false, error: 'You can only cancel pending leave requests. Once a leave is approved or processed, please contact your Branch Manager or HR to make adjustments.' },
+          { status: 403 }
+        );
+      }
     }
 
     // Branch managers can only cancel leaves in their branch

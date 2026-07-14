@@ -105,7 +105,13 @@ export async function POST(
             is_manual_override: true,
             is_manual_entry: true,
           }).eq('id', targetRec.id);
-        } else if (correction.type === 'check_in') {
+        } else if (correction.type === 'check_out') {
+          // Cannot approve check_out without a check_in record
+          return NextResponse.json(
+            { success: false, error: 'Cannot approve check-out correction: No check-in record exists for this date. Please ask the employee to submit a check-in correction first.' },
+            { status: 422 }
+          );
+        } else {
           // Create new attendance check-in record
           await supabase.from('attendance_records').insert({
             employee_id: correction.employee_id,

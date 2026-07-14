@@ -73,8 +73,49 @@ export async function POST(request: NextRequest) {
     }
 
     const diffTime = end.getTime() - start.getTime();
-    // Use Math.round to avoid Daylight Saving Time issues
-    const requestedDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    const calendarDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    // HIGH-02 fix: Exclude weekly off days and public holidays from requestedDays computation
+    let weeklyOffDays: number[] = [5]; // Default Friday
+    if (user.branch_id) {
+      const { data: branchSettings } = await supabase
+        .from('branch_settings')
+        .select('weekly_off_days')
+        .eq('branch_id', user.branch_id)
+        .maybeSingle();
+      if (branchSettings?.weekly_off_days && Array.isArray(branchSettings.weekly_off_days)) {
+        weeklyOffDays = branchSettings.weekly_off_days.map(Number);
+      }
+    }
+
+    const { data: holidaysList } = await supabase
+      .from('holidays')
+      .select('start_date, end_date')
+      .lte('start_date', input.end_date)
+      .gte('end_date', input.start_date);
+
+    let effectiveLeaveDays = 0;
+    const cur = new Date(start);
+    while (cur <= end) {
+      const dayOfWeek = cur.getDay(); // 0 = Sunday, 5 = Friday
+      const curIso = cur.toISOString().split('T')[0];
+      const isOffDay = weeklyOffDays.includes(dayOfWeek);
+      const isHoliday = holidaysList?.some(h => curIso >= h.start_date && curIso <= h.end_date);
+
+      if (!isOffDay && !isHoliday) {
+        effectiveLeaveDays++;
+      }
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    if (effectiveLeaveDays <= 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'The requested dates fall entirely on weekly off days or holidays. No leave request is required.',
+      }, { status: 422 });
+    }
+
+    const requestedDays = effectiveLeaveDays;
 
     // Check for overlapping leaves
     const { data: overlapping } = await supabase

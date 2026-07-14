@@ -1,10 +1,50 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { checkRateLimit, RATE_LIMIT_CONFIGS } from '@/lib/rate-limit';
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
+
+  const pathname = request.nextUrl.pathname;
+
+  // Allow static files, Next.js internal requests, and public routes without running edge network queries right away if possible
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/models') ||
+    pathname.startsWith('/favicon.ico') ||
+    pathname.startsWith('/~offline')
+  ) {
+    return supabaseResponse;
+  }
+
+  // Enforce API Rate Limiting (Spec P24)
+  if (pathname.startsWith('/api/')) {
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : '127.0.0.1';
+    let limitResult;
+
+    if (pathname.startsWith('/api/auth/')) {
+      limitResult = checkRateLimit(`auth_${ip}`, RATE_LIMIT_CONFIGS.AUTH_LOGIN);
+    } else if (pathname.startsWith('/api/attendance/check-in') || pathname.startsWith('/api/attendance/check-out')) {
+      limitResult = checkRateLimit(`checkin_${ip}`, RATE_LIMIT_CONFIGS.BIOMETRIC_CHECKIN);
+    } else {
+      limitResult = checkRateLimit(`general_${ip}`, RATE_LIMIT_CONFIGS.GENERAL_API);
+    }
+
+    if (!limitResult.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: { code: 'RATE_LIMIT', message: 'Too many requests from this IP. Please wait before trying again.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 429, headers: { 'Retry-After': String(limitResult.resetInSeconds) } }
+      );
+    }
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,18 +66,6 @@ export async function updateSession(request: NextRequest) {
       },
     }
   );
-
-  const pathname = request.nextUrl.pathname;
-
-  // Allow static files, Next.js internal requests, and public routes without running edge network queries right away if possible
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/models') ||
-    pathname.startsWith('/favicon.ico') ||
-    pathname.startsWith('/~offline')
-  ) {
-    return supabaseResponse;
-  }
 
   try {
     // IMPORTANT: Do not run code between createServerClient and
@@ -71,8 +99,19 @@ export async function updateSession(request: NextRequest) {
       return supabaseResponse;
     }
 
-    // If unauthenticated user tries to access any protected route, redirect to /login
+    // If unauthenticated user tries to access any protected route, handle cleanly
     if (!user) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: { code: 'UNAUTHORIZED', message: 'Authentication required. Please provide valid credentials.' },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 401 }
+        );
+      }
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirectTo', pathname);
       return NextResponse.redirect(loginUrl);
