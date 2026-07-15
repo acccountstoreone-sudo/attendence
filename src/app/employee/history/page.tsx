@@ -78,7 +78,11 @@ export default function EmployeeHistoryPage() {
           let message = `Request failed (${res.status})`;
           try {
             const errJson = JSON.parse(text);
-            if (errJson?.error) message = errJson.error;
+            if (errJson?.error) {
+              message = typeof errJson.error === 'object' && errJson.error !== null && errJson.error.message 
+                ? errJson.error.message 
+                : typeof errJson.error === 'string' ? errJson.error : 'An error occurred';
+            }
           } catch {
             // non-JSON body — use status text
           }
@@ -91,7 +95,7 @@ export default function EmployeeHistoryPage() {
           setRecords(json.data || []);
           setTotalPages(json.meta?.total_pages ?? 1);
         } else {
-          setError(json.error || 'Failed to load attendance history.');
+          setError(json.error?.message || (typeof json.error === 'string' ? json.error : 'Failed to load attendance history.'));
         }
       } catch (err) {
         console.error('History load error:', err);

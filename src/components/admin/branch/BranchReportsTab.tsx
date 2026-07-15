@@ -13,9 +13,7 @@ interface BranchReportsTabProps {
 export const BranchReportsTab: React.FC<BranchReportsTabProps> = ({ branch }) => {
   const router = useRouter();
   const reports = [
-    { type: 'monthly_attendance', title: 'Monthly Attendance Report', description: 'Comprehensive view of all attendance records for the month.', statusFilter: 'all' },
-    { type: 'late_arrivals', title: 'Late Arrivals Summary', description: 'List of all employees who were late, including total duration.', statusFilter: 'late' },
-    { type: 'overtime', title: 'Overtime Analytics', description: 'Detailed breakdown of overtime hours worked by branch employees.', statusFilter: 'all' }
+    { type: 'monthly_attendance', title: 'Complete Attendance & Duty Report', description: 'Comprehensive view of all attendance records, including late arrivals and overtime analytics for the month.', statusFilter: 'all' }
   ];
 
   const [exporting, setExporting] = React.useState<string | null>(null);
@@ -27,7 +25,14 @@ export const BranchReportsTab: React.FC<BranchReportsTabProps> = ({ branch }) =>
       const url = `/api/reports/export?branch_id=${branch.id}&type=${type}&format=${format}&month=${now.getMonth() + 1}&year=${now.getFullYear()}`;
       
       const res = await fetch(url);
-      if (!res.ok) throw new Error('Export failed');
+      if (!res.ok) {
+        let errorMsg = 'Export failed';
+        try {
+          const errData = await res.json();
+          if (errData.error?.message) errorMsg = errData.error.message;
+        } catch (_) {}
+        throw new Error(errorMsg);
+      }
       
       const blob = await res.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
@@ -47,8 +52,7 @@ export const BranchReportsTab: React.FC<BranchReportsTabProps> = ({ branch }) =>
       a.remove();
       window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
-      console.error('Export Error:', error);
-      alert('Failed to export report. Please try again.');
+      alert(error instanceof Error ? error.message : 'Failed to export report. Please try again.');
     } finally {
       setExporting(null);
     }

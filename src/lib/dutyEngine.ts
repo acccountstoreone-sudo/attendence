@@ -6,6 +6,7 @@ export interface DutySummaryResult {
     full_name: string;
     email?: string;
     phone?: string;
+    whatsapp_number?: string;
     photo_url?: string;
     role?: string;
     branch_id?: string;
@@ -107,7 +108,7 @@ export async function computeEmployeeDutySummary(
   // 1. Fetch Target Profile
   const { data: targetProfile, error: profErr } = await supabase
     .from('profiles')
-    .select('*, branches(name, code)')
+    .select('*')
     .eq('id', targetEmployeeId)
     .single();
 
@@ -135,6 +136,12 @@ export async function computeEmployeeDutySummary(
   }
 
   if (targetProfile.branch_id) {
+    // Manually fetch branch details to avoid relationship ambiguity
+    const { data: branchData } = await supabase.from('branches').select('name, code').eq('id', targetProfile.branch_id).single();
+    if (branchData) {
+      targetProfile.branches = branchData;
+    }
+
     const { data: bs } = await supabase.from('branch_settings').select('*').eq('branch_id', targetProfile.branch_id).single();
     if (bs) {
       if (bs.work_start_time) workStartTime = bs.work_start_time;
@@ -326,12 +333,20 @@ export async function computeEmployeeDutySummary(
         if (nowMs > checkInMs) {
           dutyHours = Math.max(0, Number(((nowMs - checkInMs) / 3600000).toFixed(2)));
         }
+      } else if (!checkOutMs) {
+        const stLower = String(firstLog.status || '').toLowerCase().replace('_', '-');
+        if (firstLog.working_minutes) dutyHours = Number((firstLog.working_minutes / 60).toFixed(2));
+        else if (firstLog.duty_hours) dutyHours = Number(firstLog.duty_hours);
+        else if (stLower === 'half-day') dutyHours = 4;
+        else dutyHours = 8; // fallback full shift
       }
 
       const checkInMinutes = getDhakaMinutesOfDay(firstLog.check_in_time);
       let lateMins = 0;
       if (checkInMinutes > startMinutesOfDay) {
         lateMins = checkInMinutes - startMinutesOfDay;
+      } else if (firstLog.status === 'late' || firstLog.is_late) {
+        lateMins = 15;
       }
 
       let evaluatedStatus = firstLog.status || 'present';
@@ -591,6 +606,7 @@ export async function computeEmployeeDutySummary(
       full_name: profileRec.full_name as string,
       email: profileRec.email as string | undefined,
       phone: profileRec.phone as string | undefined,
+      whatsapp_number: profileRec.whatsapp_number as string | undefined,
       photo_url: profileRec.photo_url as string | undefined,
       role: profileRec.role as string | undefined,
       branch_id: profileRec.branch_id as string | undefined,

@@ -4,7 +4,7 @@ import React from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { BranchEmployee } from './types';
-import { UserCheck, User, Circle } from 'lucide-react';
+import { UserCheck, User, Circle, Phone, MessageSquare, Building2 } from 'lucide-react';
 
 interface BranchEmployeesTabProps {
   employees: BranchEmployee[];
@@ -30,7 +30,8 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
               <thead className="bg-white text-slate-600 border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Employee</th>
-                  <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">ID & Phone</th>
+                  <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Branch & ID</th>
+                  <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">WhatsApp / Contact</th>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Designation</th>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Status</th>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Attendance</th>
@@ -47,9 +48,9 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 group-hover:ring-2 ring-[#1dbf73]/30 transition-all">
-                          {emp.profile_picture ? (
-                            <img src={emp.profile_picture} alt={emp.full_name} className="w-full h-full object-cover" />
+                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 group-hover:ring-2 ring-[#1dbf73]/30 transition-all border border-slate-200">
+                          {(emp.photo_url || emp.profile_picture) ? (
+                            <img src={emp.photo_url || emp.profile_picture} alt={emp.full_name} className="w-full h-full object-cover" />
                           ) : (
                             <User className="w-5 h-5 text-slate-500" />
                           )}
@@ -61,8 +62,22 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-slate-600 font-medium">{emp.employee_id || 'N/A'}</div>
-                      <div className="text-xs text-slate-500 mt-1">{emp.phone || 'No phone'}</div>
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
+                        <Building2 className="w-3.5 h-3.5 text-[#1dbf73]" />
+                        <span>{emp.branch_name || 'Assigned Branch'}</span>
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1 font-mono">ID: {emp.employee_id || 'N/A'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-[#1dbf73] bg-[#1dbf73]/10 px-2.5 py-1 rounded-md w-fit">
+                        <MessageSquare className="w-3.5 h-3.5 fill-current" />
+                        <span>WA: {emp.whatsapp_number || emp.phone || 'N/A'}</span>
+                      </div>
+                      {emp.phone && emp.phone !== (emp.whatsapp_number || emp.phone) && (
+                        <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                          <Phone className="w-3 h-3 text-slate-400" /> Phone: {emp.phone}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate-600">

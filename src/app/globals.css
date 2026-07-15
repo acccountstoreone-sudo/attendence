@@ -45,12 +45,8 @@
   --color-rose-accent: var(--rose);
   --color-amber-accent: var(--amber);
 
-  --color-[#ffffff]: #f8fafc;
-  --color-[#ffffff]: #ffffff;
-  --color-[#1dbf73]: #1dbf73;
-  --color-[#16965a]: #16965a;
-  --color-[#f1f5f9]: #e2e8f0;
-  --color-[#f1f5f9]: #f1f5f9;
+  --color-brand-emerald: #1dbf73;
+  --color-brand-emerald-dark: #16965a;
 }
 
 body {

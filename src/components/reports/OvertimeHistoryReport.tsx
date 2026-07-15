@@ -128,7 +128,14 @@ export function OvertimeHistoryReport({ role }: OvertimeHistoryReportProps) {
     try {
       const params = new URLSearchParams({ start_date: startDate, end_date: endDate, status, export: format, ...(branchId !== 'all' ? { branch_id: branchId } : {}), ...(employeeId !== 'all' ? { employee_id: employeeId } : {}) });
       const res = await fetch(`/api/reports/overtime-history?${params}`);
-      if (!res.ok) throw new Error('Export failed');
+      if (!res.ok) {
+        let errorMsg = 'Export failed';
+        try {
+          const errData = await res.json();
+          if (errData.error?.message) errorMsg = errData.error.message;
+        } catch (_) {}
+        throw new Error(errorMsg);
+      }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -136,7 +143,9 @@ export function OvertimeHistoryReport({ role }: OvertimeHistoryReportProps) {
       a.download = `Overtime_History_${startDate}_to_${endDate}.${format === 'excel' ? 'xlsx' : format}`;
       document.body.appendChild(a); a.click(); a.remove();
       window.URL.revokeObjectURL(url);
-    } catch (err) { alert('Export failed. Please try again.'); } finally { setExporting(null); }
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Export failed. Please try again.');
+    } finally { setExporting(null); }
   };
 
   // ─── Print ────────────────────────────────────────────────────

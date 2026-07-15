@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const unreadOnly = searchParams.get('unread') === 'true';
+    const typeFilter = searchParams.get('type');
     const limit = Number(searchParams.get('limit')) || 30;
 
     const supabase = await createClient();
@@ -41,6 +42,10 @@ export async function GET(request: NextRequest) {
 
     if (unreadOnly) {
       query = query.eq('is_read', false);
+    }
+    
+    if (typeFilter) {
+      query = query.eq('type', typeFilter);
     }
 
     const { data: notifications, error } = await query;

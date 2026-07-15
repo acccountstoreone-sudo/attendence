@@ -103,7 +103,7 @@ export default function BranchManagerShiftsPage() {
       setShowShiftForm(false);
       loadData();
     } else {
-      setFeedback({ type: 'error', text: json.error?.message ?? 'Failed to create shift.' });
+      setFeedback({ type: 'error', text: json.error?.message || (typeof json.error === 'string' ? json.error : 'Failed to create shift.') });
     }
     setSavingShift(false);
   };
@@ -116,7 +116,7 @@ export default function BranchManagerShiftsPage() {
       setFeedback({ type: 'success', text: `"${name}" deleted.` });
       loadData();
     } else {
-      setFeedback({ type: 'error', text: json.error?.message ?? 'Failed to delete.' });
+      setFeedback({ type: 'error', text: json.error?.message || (typeof json.error === 'string' ? json.error : 'Failed to delete.') });
     }
   };
 
@@ -135,7 +135,7 @@ export default function BranchManagerShiftsPage() {
       setShowAssignForm(false);
       loadData();
     } else {
-      setFeedback({ type: 'error', text: json.error?.message ?? 'Failed to assign shift.' });
+      setFeedback({ type: 'error', text: json.error?.message || (typeof json.error === 'string' ? json.error : 'Failed to assign shift.') });
     }
     setSavingAssign(false);
   };

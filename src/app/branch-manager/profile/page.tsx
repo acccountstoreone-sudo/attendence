@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -22,6 +22,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ProfileAnnouncements } from '@/components/profile/ProfileAnnouncements';
 
 interface ProfileData {
   id: string;
@@ -427,6 +428,7 @@ export default function BranchManagerProfilePage() {
             </form>
           </Card>
 
+          <ProfileAnnouncements userId={profile.id} role={profile.role} />
         </div>
       </div>
     </div>

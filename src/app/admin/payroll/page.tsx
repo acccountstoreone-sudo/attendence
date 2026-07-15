@@ -65,7 +65,7 @@ export default function AdminPayrollDashboard() {
       if (json.success) {
         setResults(json.data as PayrollRecord[]);
       } else {
-        setError(json.error?.message || json.error || 'Failed to generate payroll.');
+        setError(json.error?.message || (typeof json.error === 'string' ? json.error : 'Failed to generate payroll.'));
       }
     } catch {
       setError('Network error occurred. Please try again.');

@@ -364,7 +364,8 @@ export default function EmployeeCheckInPage() {
         face_verified: true,
         faceDescriptor,
         liveness_passed: true,
-        photo_url: base64Image,
+        // Omit photo_url to prevent local storage quota exhaustion for offline records
+        // photo_url: base64Image,
         timestamp: new Date().toISOString(),
       });
       setSubmitting(false);

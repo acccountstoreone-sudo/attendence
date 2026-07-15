@@ -152,7 +152,6 @@ export default function AdminReportsPage() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (err: unknown) {
-      console.error('Export error:', err);
       alert(`Export failed: ${err instanceof Error ? err.message : 'Please try again.'}`);
     } finally {
       setExporting(null);
@@ -486,7 +485,7 @@ export default function AdminReportsPage() {
                         size="sm"
                         variant="ghost"
                         icon={<Download className="w-3.5 h-3.5" />}
-                        onClick={() => handleExport('excel', row.branch_id)}
+                        onClick={() => handleExport('pdf', row.branch_id)}
                       >
                         Download
                       </Button>

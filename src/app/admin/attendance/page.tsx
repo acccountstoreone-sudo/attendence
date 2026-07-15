@@ -8,12 +8,13 @@ import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import {
   Search, MapPin, Clock, Filter, Download, RefreshCw, Calendar,
-  CheckCircle2, XCircle, AlertCircle, Hourglass, Timer, TrendingUp, Building2
+  CheckCircle2, XCircle, AlertCircle, Hourglass, Timer, TrendingUp, Building2, Coffee
 } from 'lucide-react';
+import { BranchGatePassTab } from '@/components/admin/branch/BranchGatePassTab';
 import Abstract3DBackground from '@/components/Abstract3DBackground';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type Tab = 'pending' | 'approved' | 'all';
+type Tab = 'pending' | 'approved' | 'all' | 'breaks';
 
 interface AttendanceRecord {
   id: string;
@@ -56,7 +57,7 @@ function AdminAttendanceContent() {
   useEffect(() => {
     if (searchParams) {
       const tabParam = searchParams.get('tab') as Tab;
-      if (tabParam && ['pending', 'approved', 'all'].includes(tabParam)) {
+      if (tabParam && ['pending', 'approved', 'all', 'breaks'].includes(tabParam)) {
         setActiveTab(tabParam);
       }
       const searchParam = searchParams.get('search');
@@ -253,16 +254,17 @@ function AdminAttendanceContent() {
       <Card className="bg-white border-slate-200 p-0 overflow-hidden relative z-10 shadow-2xl">
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-200 bg-white">
+        <div className="flex border-b border-slate-200 bg-white overflow-x-auto">
           {([
             { key: 'pending', label: 'Pending Approvals', icon: <Hourglass className="w-3.5 h-3.5" /> },
             { key: 'approved', label: 'Approved Records', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
             { key: 'all', label: 'All Records', icon: <Filter className="w-3.5 h-3.5" /> },
+            { key: 'breaks', label: 'Gate Passes & Breaks', icon: <Coffee className="w-3.5 h-3.5" /> },
           ] as { key: Tab; label: string; icon: React.ReactNode }[]).map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-5 py-3.5 text-xs font-extrabold uppercase tracking-widest transition-all border-b-2 ${
+              className={`flex items-center gap-2 px-5 py-3.5 text-xs font-extrabold uppercase tracking-widest transition-all border-b-2 whitespace-nowrap ${
                 activeTab === tab.key
                   ? 'border-[#1dbf73] text-[#1dbf73] bg-[#1dbf73]/5'
                   : 'border-transparent text-slate-500 hover:text-slate-600'
@@ -279,6 +281,12 @@ function AdminAttendanceContent() {
           ))}
         </div>
 
+        {activeTab === 'breaks' ? (
+          <div className="p-4 md:p-6 bg-slate-50/50">
+            <BranchGatePassTab branch={{ id: 'all', name: 'All HQ & Branch Stores' } as any} />
+          </div>
+        ) : (
+        <>
         {/* Toolbar */}
         <div className="p-4 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row gap-3 justify-between items-center">
           <div className="relative w-full md:w-80">
@@ -481,6 +489,8 @@ function AdminAttendanceContent() {
             </table>
           )}
         </div>
+        </>
+        )}
       </Card>
     </div>
   );

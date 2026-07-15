@@ -94,7 +94,7 @@ export default function AdminSalarySettingsPage() {
       setEditingId(null);
       loadData();
     } else {
-      setFeedback({ type: 'error', text: json.error?.message ?? 'Failed to save.' });
+      setFeedback({ type: 'error', text: json.error?.message || (typeof json.error === 'string' ? json.error : 'Failed to save.') });
     }
     setSaving(false);
   };

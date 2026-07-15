@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import * as XLSX from 'xlsx';
-import { generateAnchorFashionPDF } from '@/lib/pdf-generator';
+import { generateAnchorFashionPDF, generateEmployeeFullDutyPDF } from '@/lib/pdf-generator';
+import { computeEmployeeDutySummary } from '@/lib/dutyEngine';
 
 interface DutyDataPayload {
   employee: {
@@ -23,8 +24,148 @@ interface DutyDataPayload {
     total_on_leave_days?: number;
     total_off_days?: number;
     total_holiday_days?: number;
+    total_working_days?: number;
   };
   daily_breakdown: Array<Record<string, unknown>>;
+}
+
+async function computeAllTimeDutySummary(supabase: any, targetProfile: any) {
+  const { data: records } = await supabase
+    .from('attendance_records')
+    .select('*')
+    .eq('employee_id', targetProfile.id)
+    .order('check_in_time', { ascending: false })
+    .limit(2000);
+
+  const list = records || [];
+  let totalDutyHours = 0;
+  let totalOvertimeMinutes = 0;
+  let totalPresentDays = 0;
+  let totalMissedDays = 0;
+  let totalLateDays = 0;
+  let totalLateMinutes = 0;
+  let totalOnLeaveDays = 0;
+
+  const breakdown = list.map((r: any) => {
+    const d = new Date(r.check_in_time);
+    const dateStr = !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : (r.date || 'N/A');
+    const dayName = !isNaN(d.getTime()) ? d.toLocaleDateString('en-US', { weekday: 'long' }) : 'Day';
+    const status = r.status || 'present';
+    const stLower = String(status).toLowerCase().replace('_', '-');
+    const isToday = dateStr === new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
+    
+    const checkIn = r.check_in_time ? new Date(r.check_in_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
+    const checkOut = r.check_out_time 
+      ? new Date(r.check_out_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) 
+      : isToday ? 'Working...' : '--:--';
+    
+    let dutyHrs = 0;
+    if (r.check_in_time && r.check_out_time) {
+      const diffMs = new Date(r.check_out_time).getTime() - new Date(r.check_in_time).getTime();
+      if (diffMs > 0) dutyHrs = Number((diffMs / (3600 * 1000)).toFixed(1));
+    } else if (r.check_in_time && !r.check_out_time) {
+      if (isToday) {
+        const diffMs = Date.now() - new Date(r.check_in_time).getTime();
+        if (diffMs > 0) dutyHrs = Number((diffMs / (3600 * 1000)).toFixed(1));
+      } else {
+        if (r.working_minutes) dutyHrs = Number((r.working_minutes / 60).toFixed(1));
+        else if (r.duty_hours) dutyHrs = Number(r.duty_hours);
+        else if (stLower === 'half-day') dutyHrs = 4;
+        else dutyHrs = 8;
+      }
+    } else if (r.duty_hours) {
+      dutyHrs = Number(r.duty_hours);
+    }
+    totalDutyHours += dutyHrs;
+
+    const otMins = r.overtime_minutes || 0;
+    totalOvertimeMinutes += otMins;
+
+    let lateMins = Number(r.late_minutes || 0);
+    if (lateMins <= 0 && (stLower === 'late' || r.is_late)) {
+      if (r.check_in_time && !isNaN(d.getTime())) {
+        const dhakaTimeStr = d.toLocaleTimeString('en-US', { timeZone: 'Asia/Dhaka', hour12: false, hour: '2-digit', minute: '2-digit' });
+        const [hh, mm] = dhakaTimeStr.split(':').map(Number);
+        const checkInMins = hh * 60 + mm;
+        
+        let startMins = 9 * 60; // 09:00 AM default
+        const officeStart = (targetProfile as any).branches?.office_start_time || '09:00:00';
+        const [sh, sm] = String(officeStart).split(':').map(Number);
+        if (!isNaN(sh)) startMins = sh * 60 + (sm || 0);
+        
+        if (checkInMins > startMins) {
+          lateMins = checkInMins - startMins;
+        } else {
+          lateMins = 15;
+        }
+      }
+    }
+    if (lateMins > 0 || stLower === 'late') {
+      totalLateDays += 1;
+      totalLateMinutes += lateMins;
+    }
+
+    if (stLower === 'present' || stLower === 'late' || stLower === 'half-day') {
+      totalPresentDays += 1;
+    } else if (stLower === 'absent' || stLower === 'missed') {
+      totalMissedDays += 1;
+    } else if (stLower === 'leave' || stLower === 'on_leave') {
+      totalOnLeaveDays += 1;
+    }
+
+    const otHrs = Math.floor(otMins / 60);
+    const otRem = otMins % 60;
+
+    return {
+      date: dateStr,
+      day_name: dayName,
+      status: status,
+      check_in_time: checkIn,
+      check_out_time: checkOut,
+      duty_hours: dutyHrs,
+      late_minutes: lateMins,
+      late_hours: Number((lateMins / 60).toFixed(1)),
+      overtime_minutes: otRem,
+      overtime_hours: otHrs,
+      is_right_time: lateMins <= 0 && stLower !== 'late',
+      face_verified: r.face_verified || false,
+      check_in_lat: r.check_in_lat || r.latitude || null,
+      check_in_lng: r.check_in_lng || r.longitude || null,
+      notes: r.notes || '',
+    };
+  });
+
+  totalDutyHours = Number(totalDutyHours.toFixed(1));
+  const totalOvertimeHours = Math.floor(totalOvertimeMinutes / 60);
+  const remainingOtMinutes = totalOvertimeMinutes % 60;
+
+  return {
+    employee: {
+      full_name: targetProfile.full_name,
+      employee_id: targetProfile.employee_id,
+      branch_name: (targetProfile as any).branches?.name || 'Assigned Branch',
+      role: targetProfile.role,
+      email: targetProfile.email,
+      phone: targetProfile.phone,
+      created_at: targetProfile.created_at,
+      is_active: targetProfile.is_active,
+    },
+    summary: {
+      total_working_days: totalPresentDays + totalMissedDays + totalOnLeaveDays,
+      total_duty_hours: totalDutyHours,
+      total_overtime_hours: totalOvertimeHours,
+      total_overtime_minutes: remainingOtMinutes,
+      total_missed_days: totalMissedDays,
+      total_late_minutes: totalLateMinutes,
+      total_late_hours: Number((totalLateMinutes / 60).toFixed(1)),
+      total_late_days: totalLateDays,
+      total_present_days: totalPresentDays,
+      total_on_leave_days: totalOnLeaveDays,
+      total_off_days: 0,
+      total_holiday_days: 0,
+    },
+    daily_breakdown: breakdown,
+  };
 }
 
 export async function GET(
@@ -41,7 +182,7 @@ export async function GET(
     // 1. Fetch Profile and check permissions
     const { data: targetProfile, error: profErr } = await supabase
       .from('profiles')
-      .select('id, full_name, email, phone, role, branch_id, employee_id, branches!profiles_branch_id_fkey(name, code)')
+      .select('id, full_name, email, phone, role, branch_id, employee_id, created_at, is_active, branches!profiles_branch_id_fkey(name, code)')
       .eq('id', targetEmployeeId)
       .single();
 
@@ -59,6 +200,7 @@ export async function GET(
     }
 
     const { searchParams } = new URL(request.url);
+    const isAllTime = searchParams.get('all_time') === 'true' || searchParams.get('period') === 'all';
     const now = new Date();
     const month = Number(searchParams.get('month')) || (now.getMonth() + 1);
     const year = Number(searchParams.get('year')) || now.getFullYear();
@@ -66,76 +208,18 @@ export async function GET(
     const directDownload = searchParams.get('download') === 'true';
 
     // 2. Fetch full duty summary internal endpoint or logic
-    const summaryRes = await fetch(new URL(`/api/reports/employee/${targetEmployeeId}/duty-summary?month=${month}&year=${year}`, request.url), {
-      headers: { cookie: request.headers.get('cookie') || '' },
-    }).catch(() => null);
-
-    let dutyData: DutyDataPayload | null = null;
-    if (summaryRes && summaryRes.ok) {
-      const json = await summaryRes.json();
-      if (json.success) dutyData = json.data as DutyDataPayload;
-    }
-
-    // If fetch failed or inside same process, re-run internal computation or use dutyData
-    if (!dutyData) {
-      // Re-query needed internally if absolute fetch failed in local serverless
-      const startOfMonthISO = new Date(year, month - 1, 1, 0, 0, 0).toISOString();
-      const endOfMonthISO = new Date(year, month, 0, 23, 59, 59, 999).toISOString();
-      const { data: records } = await supabase
-        .from('attendance_records')
-        .select('*')
-        .eq('employee_id', targetEmployeeId)
-        .gte('check_in_time', startOfMonthISO)
-        .lte('check_in_time', endOfMonthISO)
-        .order('check_in_time', { ascending: true });
-
-      const presentRecords = records?.filter(r => r.status === 'present' || r.status === 'late' || r.status === 'half_day') || [];
-      const totalDutyHours = presentRecords.reduce((acc, r) => {
-        if (!r.check_out_time) return acc;
-        return acc + Number(((new Date(r.check_out_time).getTime() - new Date(r.check_in_time).getTime()) / 3600000).toFixed(2));
-      }, 0);
-      const totalOvertimeMins = (records || []).reduce((acc, r) => acc + (r.overtime_minutes || 0), 0);
-      const lateRecords = records?.filter(r => r.status === 'late') || [];
-      const missedRecords = records?.filter(r => r.status === 'absent') || [];
-
-      dutyData = {
-        employee: {
-          full_name: targetProfile.full_name,
-          employee_id: targetProfile.employee_id || 'PENDING',
-          branch_name: (targetProfile as Record<string, unknown> & { branches?: { name?: string } }).branches?.name || 'Global HQ',
-        },
-        period: { month, year },
-        summary: {
-          total_duty_hours: Number(totalDutyHours.toFixed(2)),
-          total_overtime_hours: Number((totalOvertimeMins / 60).toFixed(2)),
-          total_overtime_minutes: totalOvertimeMins,
-          total_missed_days: missedRecords.length,
-          total_late_minutes: lateRecords.length * 15, // estimate or zero if not stored directly
-          total_late_days: lateRecords.length,
-          total_present_days: presentRecords.length,
-        },
-        daily_breakdown: (records || []).map(r => ({
-          date: r.check_in_time.split('T')[0],
-          day_name: new Date(r.check_in_time).toLocaleDateString('en-US', { weekday: 'long' }),
-          status: r.status,
-          check_in_time: new Date(r.check_in_time).toLocaleTimeString(),
-          check_out_time: r.check_out_time ? new Date(r.check_out_time).toLocaleTimeString() : '--:--',
-          duty_hours: r.check_out_time ? Number(((new Date(r.check_out_time).getTime() - new Date(r.check_in_time).getTime()) / 3600000).toFixed(2)) : 0,
-          late_minutes: r.status === 'late' ? 15 : 0,
-          overtime_minutes: r.overtime_minutes || 0,
-          overtime_hours: Number(((r.overtime_minutes || 0) / 60).toFixed(2)),
-          is_right_time: r.status === 'present',
-          face_verified: r.face_verified ?? false,
-          check_in_lat: r.check_in_lat,
-          check_in_lng: r.check_in_lng,
-          notes: r.status,
-        }))
-      };
+    let dutyData: any;
+    if (isAllTime) {
+      dutyData = await computeAllTimeDutySummary(supabase, targetProfile);
+    } else {
+      dutyData = await computeEmployeeDutySummary(supabase, targetEmployeeId, month, year);
     }
 
     if (!dutyData) throw new Error('Failed to obtain duty summary data');
     const { employee, summary, daily_breakdown } = dutyData;
-    const reportTitle = `${employee.full_name.replace(/\s+/g, '_')}_Duty_Report_${month}_${year}`;
+    const reportTitle = isAllTime
+      ? `${employee.full_name.replace(/\s+/g, '_')}_Full_Profile_Tenure_Report`
+      : `${employee.full_name.replace(/\s+/g, '_')}_Duty_Report_${month}_${year}`;
 
     let fileBuffer: Buffer;
     let fileName: string;
@@ -236,21 +320,42 @@ export async function GET(
         d.status ? String(d.status).toUpperCase() : '',
         `${d.check_in_time || '--:--'} to ${d.check_out_time || '--:--'}`,
         `${d.duty_hours || 0}h`,
-        d.is_right_time ? 'Right Time' : `${d.late_minutes || 0}m late`,
-        d.overtime_minutes ? `${d.overtime_hours}h (${d.overtime_minutes}m)` : '0m',
+        d.is_right_time ? 'Right Time' : Number(d.late_minutes) >= 60 ? `${Math.floor(Number(d.late_minutes)/60)}h ${Number(d.late_minutes)%60}m late` : `${d.late_minutes || 0}m late`,
+        d.overtime_minutes ? `${d.overtime_hours}h (${d.overtime_minutes}m)` : `${d.overtime_hours || 0}h`,
         `${d.face_verified ? 'Yes (Face)' : 'No (Face)'} | ${d.check_in_lat && d.check_in_lng ? `${Number(d.check_in_lat).toFixed(2)}, ${Number(d.check_in_lng).toFixed(2)}` : 'No GPS'}`,
         d.notes || '',
       ]);
 
-      fileBuffer = generateAnchorFashionPDF({
-        reportTitle: 'EMPLOYEE DUTY REPORT',
-        reportSubtitle: 'Statement',
-        metaRef: `EMP-${employee.employee_id || Math.floor(Math.random() * 10000)}`,
-        metaBranch: employee.branch_name || 'All Branches',
-        metaPeriod: `${month}/${year}`,
-        metaPreparedBy: user?.full_name || 'Admin',
-        metaRecordsCount: body.length,
-        tableTitle: `Daily Roster: ${employee.full_name}`,
+      const periodText = isAllTime ? 'Full Employment History (All Time)' : `${month}/${year}`;
+      const joinDateStr = targetProfile.created_at ? new Date(targetProfile.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+
+      fileBuffer = generateEmployeeFullDutyPDF({
+        reportTitle: isAllTime ? 'EMPLOYEE FULL SUMMARY & TENURE REPORT' : 'EMPLOYEE DUTY SUMMARY REPORT',
+        reportSubtitle: 'Official Statement & Profile Details',
+        employee: {
+          full_name: employee.full_name,
+          employee_id: employee.employee_id || targetProfile.employee_id || 'N/A',
+          role: targetProfile.role || 'Employee',
+          branch_name: employee.branch_name || (targetProfile as any).branches?.name || 'All Branches',
+          email: targetProfile.email || 'N/A',
+          phone: targetProfile.phone || 'N/A',
+          joining_date: joinDateStr,
+          status: targetProfile.is_active !== false ? 'Active' : 'Inactive',
+        },
+        periodText,
+        preparedBy: user?.full_name || 'HR Admin',
+        summary: {
+          total_duty_hours: summary.total_duty_hours || 0,
+          total_overtime_hours: summary.total_overtime_hours || 0,
+          total_overtime_minutes: summary.total_overtime_minutes || 0,
+          total_present_days: summary.total_present_days || 0,
+          total_missed_days: summary.total_missed_days || 0,
+          total_late_minutes: summary.total_late_minutes || 0,
+          total_late_hours: summary.total_late_hours || 0,
+          total_late_days: summary.total_late_days || 0,
+          total_working_days: summary.total_working_days || (summary.total_present_days + summary.total_missed_days),
+          total_on_leave_days: summary.total_on_leave_days || 0,
+        },
         columns: head,
         rows: body,
       });

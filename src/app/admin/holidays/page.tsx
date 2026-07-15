@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -34,7 +34,7 @@ export default function AdminHolidaysPage() {
     const res = await fetch(`/api/holidays?year=${year}`);
     const json = await res.json();
     if (json.success) setHolidays(json.data ?? []);
-    else setFeedback({ type: 'error', text: json.error?.message ?? 'Failed to load holidays.' });
+    else setFeedback({ type: 'error', text: json.error?.message || (typeof json.error === 'string' ? json.error : 'Failed to load holidays.') });
     setLoading(false);
   }, [year]);
 
@@ -56,7 +56,7 @@ export default function AdminHolidaysPage() {
       setShowForm(false);
       loadHolidays();
     } else {
-      setFeedback({ type: 'error', text: json.error?.message ?? 'Failed to add holiday.' });
+      setFeedback({ type: 'error', text: json.error?.message || (typeof json.error === 'string' ? json.error : 'Failed to add holiday.') });
     }
     setSaving(false);
   };
@@ -70,7 +70,7 @@ export default function AdminHolidaysPage() {
       setFeedback({ type: 'success', text: `"${name}" deleted.` });
       setHolidays((prev) => prev.filter((h) => h.id !== id));
     } else {
-      setFeedback({ type: 'error', text: json.error?.message ?? 'Failed to delete.' });
+      setFeedback({ type: 'error', text: json.error?.message || (typeof json.error === 'string' ? json.error : 'Failed to delete.') });
     }
     setDeleting(null);
   };

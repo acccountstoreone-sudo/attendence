@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Clock, History, CalendarDays, User, Store, Users, UserCheck } from 'lucide-react';
+import { LayoutDashboard, Clock, History, CalendarDays, User, Store, Users, UserCheck, Coffee } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export interface BottomNavProps {
@@ -25,6 +25,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ role }) => {
     { label: 'Staff', href: '/branch-manager/employees', icon: <Users className="w-6 h-6" /> },
     { label: 'Live', href: '/branch-manager/attendance', icon: <Clock className="w-6 h-6" /> },
     { label: 'Shifts', href: '/branch-manager/shifts', icon: <CalendarDays className="w-6 h-6" /> },
+    { label: 'Passes', href: '/branch-manager/gate-passes', icon: <Coffee className="w-6 h-6" /> },
     { label: 'Fixes', href: '/branch-manager/corrections', icon: <UserCheck className="w-6 h-6" /> },
   ];
 
@@ -32,6 +33,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ role }) => {
     { label: 'Dash', href: '/employee', icon: <LayoutDashboard className="w-6 h-6" /> },
     { label: 'Check-In', href: '/employee/check-in', icon: <Clock className="w-6 h-6" /> },
     { label: 'History', href: '/employee/history', icon: <History className="w-6 h-6" /> },
+    { label: 'Passes', href: '/employee/gate-pass', icon: <Coffee className="w-6 h-6" /> },
     { label: 'Profile', href: '/employee/profile', icon: <User className="w-6 h-6" /> },
   ];
 

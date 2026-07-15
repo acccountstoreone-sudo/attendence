@@ -21,6 +21,9 @@ import {
   ChevronRight,
   TrendingUp,
   DollarSign,
+  Fingerprint,
+  Coffee,
+  Megaphone,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -62,6 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Duty Hours', href: '/admin/duty-hours', icon: <Clock className="w-5 h-5" /> },
     { label: 'Employees', href: '/admin/employees', icon: <Users className="w-5 h-5" /> },
     { label: 'Attendance Live', href: '/admin/attendance', icon: <Clock className="w-5 h-5" /> },
+    { label: 'Gate Passes Live', href: '/admin/attendance?tab=breaks', icon: <Coffee className="w-5 h-5" /> },
     { label: 'Reports & Exports', href: '/admin/reports', icon: <FileBarChart className="w-5 h-5" /> },
     { label: 'Leave Requests', href: '/admin/leaves', icon: <CalendarDays className="w-5 h-5" /> },
     { label: 'Manual Corrections', href: '/admin/corrections', icon: <UserCheck className="w-5 h-5" /> },
@@ -80,18 +84,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Store Employees', href: '/branch-manager/employees', icon: <Users className="w-5 h-5" /> },
     { label: 'Attendance Live', href: '/branch-manager/attendance', icon: <Clock className="w-5 h-5" /> },
     { label: 'Leave Requests', href: '/branch-manager/leaves', icon: <CalendarDays className="w-5 h-5" /> },
+    { label: 'Gate Passes', href: '/branch-manager/gate-passes', icon: <Coffee className="w-5 h-5" /> },
     { label: 'Shift Roster', href: '/branch-manager/shifts', icon: <CalendarDays className="w-5 h-5" /> },
     { label: 'Store Reports', href: '/branch-manager/reports', icon: <FileBarChart className="w-5 h-5" /> },
     { label: 'Manual Corrections', href: '/branch-manager/corrections', icon: <UserCheck className="w-5 h-5" /> },
     { label: 'Salary Settings', href: '/branch-manager/salary', icon: <DollarSign className="w-5 h-5" /> }, // MISS-N1 fix
+    { label: 'Announcements', href: '/branch-manager/announcements', icon: <Megaphone className="w-5 h-5" /> },
     { label: 'My Profile', href: '/branch-manager/profile', icon: <User className="w-5 h-5" /> },
   ];
 
   const empNav: NavItem[] = [
     { label: 'My Dashboard', href: '/employee', icon: <LayoutDashboard className="w-5 h-5" /> },
-    { label: 'Biometric Check-In', href: '/employee/check-in', icon: <Clock className="w-5 h-5" /> },
+    { label: 'Biometric Check-In', href: '/employee/check-in', icon: <Fingerprint className="w-5 h-5" /> },
     { label: 'My History', href: '/employee/history', icon: <History className="w-5 h-5" /> },
     { label: 'Leave Requests', href: '/employee/leaves', icon: <CalendarDays className="w-5 h-5" /> },
+    { label: 'Gate Pass', href: '/employee/gate-pass', icon: <Coffee className="w-5 h-5" /> },
+    { label: 'Announcements', href: '/employee/announcements', icon: <Megaphone className="w-5 h-5" /> },
     { label: 'My Profile', href: '/employee/profile', icon: <User className="w-5 h-5" /> },
   ];
 
@@ -145,18 +153,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
               href={item.href}
               onClick={() => onCloseMobile()}
               className={cn(
-                'relative flex items-center space-x-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-300 group outline-none',
+                'relative flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-300 group outline-none',
                 isActive
-                  ? 'text-[#1dbf73] font-bold bg-[#1dbf73]/10'
+                  ? 'text-[#1dbf73] font-bold'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               )}
             >
               {isActive && (
                 <motion.div
                   layoutId="activeNavBackground"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-7 bg-[#1dbf73] rounded-r-full shadow-sm z-0"
+                  className="absolute inset-0 bg-[#1dbf73]/10 rounded-xl z-0 pointer-events-none"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
+                >
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-7 bg-[#1dbf73] rounded-r-full shadow-sm" />
+                </motion.div>
               )}
 
               <div className={cn('relative z-10 shrink-0 transition-all duration-300 group-hover:scale-110', isActive ? 'text-[#1dbf73]' : 'text-slate-500 group-hover:text-slate-900')}>

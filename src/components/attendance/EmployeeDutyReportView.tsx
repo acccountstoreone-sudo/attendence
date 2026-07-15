@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   LocateFixed,
   ExternalLink,
+  MessageSquare,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -55,6 +56,7 @@ interface DutySummaryData {
     full_name: string;
     email: string;
     phone?: string;
+    whatsapp_number?: string;
     photo_url?: string;
     role: string;
     branch_id?: string;
@@ -228,60 +230,58 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
     }
   };
 
-  const getStatusBadge = (status: DailyLog['status'], lateMins: number, otMins: number) => {
+  const getStatusBadge = (status: string, lateMinutes: number, overtimeMinutes: number) => {
     switch (status) {
       case 'present':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1dbf73]/10 text-[#1dbf73] border border-emerald-500/20 text-xs font-semibold">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#1dbf73]" />
-            Present
-            {otMins > 0 && <span className="ml-1 px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[10px]">+{otMins}m OT</span>}
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-xs font-semibold shadow-2xs">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>Present {overtimeMinutes > 0 && <strong className="text-emerald-800 font-bold">(+OT)</strong>}</span>
           </span>
         );
       case 'late':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-semibold">
-            <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
-            Late (+{lateMins}m)
-            {otMins > 0 && <span className="ml-1 px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[10px]">+{otMins}m OT</span>}
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200/80 text-xs font-semibold shadow-2xs">
+            <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span>Late ({lateMinutes}m)</span>
           </span>
         );
       case 'half_day':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20 text-xs font-semibold">
-            <Clock className="w-3.5 h-3.5 text-sky-400" />
-            Half Day
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-200/80 text-xs font-semibold shadow-2xs">
+            <Clock className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+            <span>Half Day</span>
           </span>
         );
       case 'missed':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-500/15 text-rose-400 border border-rose-500/30 text-xs font-semibold shadow-sm animate-pulse">
-            <XCircle className="w-3.5 h-3.5 text-rose-400" />
-            Missed / Absent
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-200/80 text-xs font-semibold shadow-2xs">
+            <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+            <span>Missed / Absent</span>
           </span>
         );
       case 'on_leave':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 text-xs font-semibold">
-            <Calendar className="w-3.5 h-3.5 text-purple-400" />
-            Approved Leave
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-200/80 text-xs font-semibold shadow-2xs">
+            <Calendar className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+            <span>Approved Leave</span>
           </span>
         );
       case 'holiday':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-xs font-medium">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200/80 text-xs font-medium shadow-2xs">
             Holiday
           </span>
         );
       case 'off_day':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 text-slate-600 border border-slate-200 text-xs font-medium">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 text-xs font-medium">
             Weekly Off Day
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50/60 text-slate-500 border border-slate-200/60 text-xs">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-500 border border-slate-200 text-xs font-medium">
             Upcoming
           </span>
         );
@@ -306,40 +306,44 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       {/* Top Header Navigation */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#ffffff] border border-[#ffffff] p-6 rounded-2xl shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white border border-slate-200/80 p-6 rounded-2xl shadow-xs">
         <div className="flex items-center space-x-4">
           {backUrl && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => router.push(backUrl)}
-              className="text-slate-600 hover:text-slate-900 mr-1"
+              className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl px-3 py-2 font-medium"
             >
-              <ArrowLeft className="w-5 h-5 mr-1" /> Back
+              <ArrowLeft className="w-4 h-4 mr-1.5" /> Back
             </Button>
           )}
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-slate-100 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-xl shrink-0 shadow-inner">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1dbf73]/15 via-emerald-50 to-slate-100 border border-[#1dbf73]/30 flex items-center justify-center text-[#16965a] font-bold text-xl shrink-0 shadow-inner">
             {data?.employee?.full_name?.charAt(0) || <User className="w-6 h-6" />}
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">
                 {data?.employee?.full_name || 'Loading Employee...'}
               </h1>
               {data?.employee?.employee_id && (
-                <span className="px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-mono text-xs border border-slate-200">
+                <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-mono text-xs font-semibold border border-slate-200/80">
                   ID: {data.employee.employee_id}
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-4 text-xs text-slate-600 mt-1">
-              <span className="flex items-center gap-1">
-                <Building2 className="w-3.5 h-3.5 text-amber-400/80" />
+            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-600 mt-1.5">
+              <span className="flex items-center gap-1.5 text-slate-700 font-semibold">
+                <Building2 className="w-3.5 h-3.5 text-[#1dbf73]" />
                 {data?.employee?.branch_name || 'Assigned Branch'}
               </span>
-              <span className="capitalize px-2 py-0.5 rounded bg-slate-50/80 text-slate-600">
+              <span className="flex items-center gap-1.5 text-[#1dbf73] font-bold bg-[#1dbf73]/10 px-2.5 py-0.5 rounded-md">
+                <MessageSquare className="w-3.5 h-3.5 fill-current" />
+                WA: {data?.employee?.whatsapp_number || data?.employee?.phone || 'N/A'}
+              </span>
+              <span className="capitalize px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200/60 font-medium">
                 {data?.employee?.role?.replace('_', ' ') || 'Staff'}
               </span>
             </div>
@@ -348,25 +352,26 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
 
         {/* Period Picker & Refresh */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center bg-[#f8fafc] border border-[#ffffff] rounded-xl p-1 shadow-inner">
+          <div className="flex items-center bg-slate-100/80 border border-slate-200/80 rounded-xl p-1 shadow-2xs">
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
-              className="bg-transparent text-slate-700 text-sm font-medium px-3 py-1.5 rounded-lg focus:outline-none focus:bg-slate-50 cursor-pointer"
+              className="bg-transparent text-slate-800 text-xs font-bold px-3 py-1.5 rounded-lg focus:outline-none focus:bg-white cursor-pointer transition-colors"
             >
               {months.map((m, i) => (
-                <option key={m} value={i + 1} className="bg-[#ffffff] text-slate-700">
+                <option key={m} value={i + 1} className="bg-white text-slate-800">
                   {m}
                 </option>
               ))}
             </select>
+            <div className="w-[1px] h-5 bg-slate-300 mx-1" />
             <select
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              className="bg-transparent text-slate-700 text-sm font-medium px-3 py-1.5 rounded-lg focus:outline-none focus:bg-slate-50 border-l border-[#ffffff] cursor-pointer"
+              className="bg-transparent text-slate-800 text-xs font-bold px-3 py-1.5 rounded-lg focus:outline-none focus:bg-white cursor-pointer transition-colors"
             >
               {years.map((y) => (
-                <option key={y} value={y} className="bg-[#ffffff] text-slate-700">
+                <option key={y} value={y} className="bg-white text-slate-800">
                   {y}
                 </option>
               ))}
@@ -374,39 +379,39 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
           </div>
 
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => setRefreshIndex((prev) => prev + 1)}
             disabled={loading}
-            className="text-slate-600 hover:text-slate-900 p-2 border border-[#ffffff] rounded-xl"
+            className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 p-2 border border-slate-200 rounded-xl shadow-2xs"
             title="Refresh Data"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#1dbf73]' : ''}`} />
           </Button>
         </div>
       </div>
 
-      {/* Export Controls Toolbar */}
-      <div className="bg-gradient-to-r from-[#ffffff] to-[#f8fafc] border border-amber-500/20 rounded-2xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+      {/* Enterprise Export Controls Toolbar */}
+      <div className="bg-gradient-to-r from-[#1dbf73]/10 via-emerald-50/80 to-slate-100/90 border border-[#1dbf73]/25 rounded-2xl p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-5 shadow-xs">
+        <div className="flex items-center gap-4">
+          <div className="w-11 h-11 rounded-xl bg-white border border-[#1dbf73]/30 flex items-center justify-center text-[#1dbf73] shrink-0 shadow-xs">
             <FileText className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-semibold text-slate-700 text-sm">Detailed Export & Reports</h3>
-            <p className="text-xs text-slate-600">Download complete month-wise and day-wise overtime & duty analytics</p>
+            <h3 className="font-bold text-slate-900 text-base tracking-tight">Detailed Export & Official Reports</h3>
+            <p className="text-xs text-slate-600 mt-0.5">Download complete month-wise duty, overtime, and attendance logs</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 w-full md:w-auto">
+        <div className="flex items-center gap-3 w-full md:w-auto">
           <Button
             onClick={() => handleExport('csv')}
             disabled={exporting !== null || loading || !data}
             variant="outline"
             size="sm"
-            className="flex-1 md:flex-none border-slate-200 bg-slate-50/80 hover:bg-slate-100 text-slate-700 text-xs gap-1.5"
+            className="flex-1 md:flex-none border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs py-2 px-3.5 rounded-xl gap-2 transition-all shadow-2xs hover:border-[#1dbf73]/40"
           >
-            {exporting === 'csv' ? <Spinner size="sm" /> : <FileText className="w-3.5 h-3.5 text-sky-400" />}
+            {exporting === 'csv' ? <Spinner size="sm" /> : <FileText className="w-4 h-4 text-sky-600" />}
             Export CSV
           </Button>
           <Button
@@ -414,9 +419,9 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             disabled={exporting !== null || loading || !data}
             variant="outline"
             size="sm"
-            className="flex-1 md:flex-none border-slate-200 bg-slate-50/80 hover:bg-slate-100 text-slate-700 text-xs gap-1.5"
+            className="flex-1 md:flex-none border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs py-2 px-3.5 rounded-xl gap-2 transition-all shadow-2xs hover:border-[#1dbf73]/40"
           >
-            {exporting === 'excel' ? <Spinner size="sm" /> : <FileSpreadsheet className="w-3.5 h-3.5 text-[#1dbf73]" />}
+            {exporting === 'excel' ? <Spinner size="sm" /> : <FileSpreadsheet className="w-4 h-4 text-[#1dbf73]" />}
             Export Excel
           </Button>
           <Button
@@ -424,18 +429,18 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             disabled={exporting !== null || loading || !data}
             variant="primary"
             size="sm"
-            className="flex-1 md:flex-none bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-semibold text-xs gap-1.5 shadow-md shadow-amber-500/20"
+            className="flex-1 md:flex-none bg-gradient-to-r from-[#1dbf73] to-[#16965a] hover:from-[#16965a] hover:to-[#108a50] text-white font-bold text-xs py-2 px-4 rounded-xl gap-2 shadow-sm shadow-[#1dbf73]/25 transition-all transform hover:-translate-y-0.5 border-0"
           >
-            {exporting === 'pdf' ? <Spinner size="sm" /> : <Download className="w-3.5 h-3.5" />}
+            {exporting === 'pdf' ? <Spinner size="sm" /> : <Download className="w-4 h-4" />}
             Export PDF
           </Button>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-28 bg-[#ffffff] rounded-2xl border border-[#ffffff]">
+        <div className="flex flex-col items-center justify-center py-28 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
           <Spinner size="lg" />
-          <p className="text-sm text-slate-600 mt-3 animate-pulse">Calculating duty hours, overtime, and punctuality breakdown...</p>
+          <p className="text-sm font-semibold text-slate-600 mt-4 animate-pulse">Calculating duty analytics, overtime, and punctuality logs...</p>
         </div>
       ) : data ? (
         <>
@@ -443,86 +448,86 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             {feedback && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className={`p-4 rounded-xl border text-sm font-medium ${
-                  feedback.type === 'success' ? 'bg-[#1dbf73]/10 border-emerald-500/20 text-[#1dbf73]' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                className={`p-4 rounded-xl border text-sm font-semibold shadow-sm ${
+                  feedback.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <XCircle className="w-5 h-5 shrink-0" />}
+                  {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <XCircle className="w-5 h-5 text-rose-600 shrink-0" />}
                   <span>{feedback.text}</span>
-                  <button onClick={() => setFeedback(null)} className="ml-auto opacity-70 hover:opacity-100">X</button>
+                  <button onClick={() => setFeedback(null)} className="ml-auto opacity-70 hover:opacity-100 font-bold">✕</button>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Today's Real-time Duty Spotlight Card */}
+          {/* Today's Real-time Duty Spotlight Card (Sleek High-Contrast) */}
           {month === currentDate.getMonth() + 1 && year === currentDate.getFullYear() && (
-            <div className="bg-gradient-to-r from-amber-500/15 via-[#ffffff] to-cyan-500/15 border border-amber-500/30 rounded-2xl p-5 relative overflow-hidden shadow-2xl">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-amber-500/20 pb-4 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 animate-pulse">
+            <div className="bg-gradient-to-br from-[#1dbf73]/10 via-white to-slate-50 border border-[#1dbf73]/30 rounded-2xl p-6 relative overflow-hidden shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/80 pb-4 mb-5">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-[#1dbf73]/15 border border-[#1dbf73]/30 flex items-center justify-center text-[#16965a] shrink-0 animate-pulse">
                     <Clock className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-900 text-base">Today&apos;s Real-Time Duty Spotlight</h3>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500 text-slate-950">LIVE</span>
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="font-bold text-slate-900 text-base tracking-tight">Today&apos;s Live Attendance Spotlight</h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#1dbf73] text-white shadow-2xs">LIVE</span>
                     </div>
-                    <p className="text-xs text-slate-600 mt-0.5">Instant attendance, punctuality, and face/GPS status for today ({new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Dhaka', month: 'short', day: 'numeric', year: 'numeric' })})</p>
+                    <p className="text-xs text-slate-600 font-medium mt-0.5">Real-time attendance & check-in metrics for today ({new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Dhaka', month: 'short', day: 'numeric', year: 'numeric' })})</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                    data.summary.today_status === 'present' ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/40' :
-                    data.summary.today_status === 'late' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
-                    data.summary.today_status === 'half_day' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' :
-                    'bg-slate-50 text-slate-600 border border-slate-200'
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider shadow-2xs border ${
+                    data.summary.today_status === 'present' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                    data.summary.today_status === 'late' ? 'bg-amber-50 text-amber-800 border-amber-200' :
+                    data.summary.today_status === 'half_day' ? 'bg-sky-50 text-sky-700 border-sky-200' :
+                    'bg-slate-100 text-slate-600 border-slate-200'
                   }`}>
-                    Today: {data.summary.today_status || 'Upcoming'}
+                    Status Today: {data.summary.today_status || 'Upcoming'}
                   </span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-center sm:text-left">
-                <div className="bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff]">
-                  <p className="text-[11px] font-medium text-slate-600">Check-In Time</p>
-                  <p className="text-sm font-bold text-slate-900 mt-1">{data.summary.today_check_in_time || '--:--'}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 text-center sm:text-left">
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs">
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Check-In</p>
+                  <p className="text-sm font-extrabold text-slate-900 mt-1 font-mono">{data.summary.today_check_in_time || '--:--'}</p>
                 </div>
 
-                <div className="bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff]">
-                  <p className="text-[11px] font-medium text-slate-600">Check-Out Time</p>
-                  <p className="text-sm font-bold text-slate-900 mt-1">{data.summary.today_check_out_time || '--:--'}</p>
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs">
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Check-Out</p>
+                  <p className="text-sm font-extrabold text-slate-900 mt-1 font-mono">{data.summary.today_check_out_time || '--:--'}</p>
                 </div>
 
-                <div className="bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff]">
-                  <p className="text-[11px] font-medium text-slate-600">Duty Hours Today</p>
-                  <p className="text-sm font-bold text-amber-400 mt-1">{data.summary.today_duty_hours || 0} hrs</p>
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs">
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Duty Hours</p>
+                  <p className="text-sm font-extrabold text-[#16965a] mt-1">{data.summary.today_duty_hours || 0} hrs</p>
                 </div>
 
-                <div className="bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff]">
-                  <p className="text-[11px] font-medium text-slate-600">Punctuality</p>
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs">
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Punctuality</p>
                   {data.summary.today_late_minutes && data.summary.today_late_minutes > 0 ? (
-                    <p className="text-sm font-bold text-rose-400 mt-1">{data.summary.today_late_minutes}m late ({data.summary.today_late_hours}h)</p>
+                    <p className="text-sm font-extrabold text-amber-700 mt-1">{data.summary.today_late_minutes}m late ({data.summary.today_late_hours}h)</p>
                   ) : data.summary.today_check_in_time !== '--:--' ? (
-                    <p className="text-sm font-bold text-[#1dbf73] mt-1">✓ Right Time</p>
+                    <p className="text-sm font-extrabold text-emerald-600 mt-1">✓ On Time</p>
                   ) : (
-                    <p className="text-sm font-bold text-slate-500 mt-1">Not Check In</p>
+                    <p className="text-sm font-bold text-slate-400 mt-1">Not Checked In</p>
                   )}
                 </div>
 
-                <div className="bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff]">
-                  <p className="text-[11px] font-medium text-slate-600">Today Overtime</p>
-                  <p className="text-sm font-bold text-[#1dbf73] mt-1">{data.summary.today_overtime_minutes || 0}m ({data.summary.today_overtime_hours || 0}h)</p>
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs">
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Overtime</p>
+                  <p className="text-sm font-extrabold text-[#16965a] mt-1">{data.summary.today_overtime_minutes || 0}m ({data.summary.today_overtime_hours || 0}h)</p>
                 </div>
 
-                <div className="bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff] flex flex-col justify-between">
-                  <p className="text-[11px] font-medium text-slate-600">Biometric & GPS</p>
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Verification</p>
                   <div className="flex items-center justify-between gap-1 mt-1">
-                    <span className={`text-xs font-bold ${data.summary.today_face_verified ? 'text-[#1dbf73]' : 'text-slate-600'}`}>
-                      {data.summary.today_face_verified ? '✓ Face' : '✗ Face'}
+                    <span className={`text-xs font-extrabold ${data.summary.today_face_verified ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      {data.summary.today_face_verified ? '✓ Face Match' : '✗ Face Match'}
                     </span>
-                    {data.summary.today_location ? (
+                    {data.summary.today_location && (
                       <button
                         onClick={() => setShowMapModal({
                           lat: data.summary.today_location!.lat,
@@ -530,12 +535,10 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                           title: `Today Check-In Location (${data.employee.full_name})`,
                           subtitle: `Time: ${data.summary.today_check_in_time}`,
                         })}
-                        className="text-[11px] font-bold text-cyan-400 hover:underline flex items-center gap-0.5"
+                        className="text-[11px] font-extrabold text-sky-600 hover:underline flex items-center gap-0.5 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200"
                       >
-                        <MapPin className="w-3 h-3" /> GPS
+                        <MapPin className="w-3 h-3" /> Map
                       </button>
-                    ) : (
-                      <span className="text-[11px] text-slate-500">No GPS</span>
                     )}
                   </div>
                 </div>
@@ -543,40 +546,42 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             </div>
           )}
 
-          {/* Admin & Management Control Center Card */}
-          <div className="bg-[#ffffff] border border-[#ffffff] rounded-2xl p-5 shadow-xl">
+          {/* Admin & Management Profile Control Center Card */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
               {/* Left: Registration & Biometric Status */}
-              <div className="space-y-3 flex-1">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-cyan-400" />
-                  <h3 className="font-bold text-slate-900 text-base">Employee Profile & Biometric Verification Center</h3>
+              <div className="space-y-3.5 flex-1">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-base tracking-tight">Biometric & Identity Status</h3>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="bg-[#f8fafc]/80 p-3 rounded-xl border border-[#ffffff]">
-                    <span className="text-[11px] font-medium text-slate-600 block">App Registration Date</span>
-                    <span className="text-xs font-bold text-slate-700 mt-1 block">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="bg-slate-50/80 p-3.5 rounded-xl border border-slate-200/80">
+                    <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Registration Date</span>
+                    <span className="text-xs font-bold text-slate-800 mt-1 block font-mono">
                       {data.employee.created_at ? new Date(data.employee.created_at).toLocaleDateString('en-US', {
                         year: 'numeric', month: 'long', day: 'numeric',
                       }) : 'Date Not Recorded'}
                     </span>
                   </div>
 
-                  <div className="bg-[#f8fafc]/80 p-3 rounded-xl border border-[#ffffff]">
-                    <span className="text-[11px] font-medium text-slate-600 block">Biometric KYC Status</span>
+                  <div className="bg-slate-50/80 p-3.5 rounded-xl border border-slate-200/80">
+                    <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Facial Biometric Enrollment</span>
                     <div className="flex items-center justify-between mt-1">
-                      <span className={`text-xs font-bold flex items-center gap-1.5 ${
+                      <span className={`text-xs font-extrabold flex items-center gap-1.5 ${
                         data.employee.requires_face_reverification
-                          ? 'text-rose-400 animate-pulse'
+                          ? 'text-rose-600 animate-pulse'
                           : data.employee.face_enrolled
-                          ? 'text-[#1dbf73]'
-                          : 'text-amber-400'
+                          ? 'text-emerald-600'
+                          : 'text-amber-600'
                       }`}>
                         {data.employee.requires_face_reverification
-                          ? <><ShieldAlert className="w-3.5 h-3.5" /> Reverification Required (Cancelled)</>
+                          ? <><ShieldAlert className="w-4 h-4" /> Reverification Required</>
                           : data.employee.face_enrolled
-                          ? <><CheckCircle2 className="w-3.5 h-3.5" /> Verified & Active</>
-                          : <><AlertCircle className="w-3.5 h-3.5" /> Not Enrolled Yet</>}
+                          ? <><CheckCircle2 className="w-4 h-4" /> Active & Enrolled</>
+                          : <><AlertCircle className="w-4 h-4" /> Not Enrolled Yet</>}
                       </span>
                     </div>
                   </div>
@@ -584,42 +589,44 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               </div>
 
               {/* Middle: Now Location vs First Verified Location */}
-              <div className="space-y-3 flex-1 border-t lg:border-t-0 lg:border-l border-[#ffffff] pt-4 lg:pt-0 lg:pl-6">
-                <div className="flex items-center gap-2">
-                  <LocateFixed className="w-5 h-5 text-amber-400" />
-                  <h3 className="font-bold text-slate-900 text-base">Live GPS Coordinates & Verification Tracking</h3>
+              <div className="space-y-3.5 flex-1 border-t lg:border-t-0 lg:border-l border-slate-200 pt-5 lg:pt-0 lg:pl-6">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600">
+                    <LocateFixed className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-base tracking-tight">GPS Coordinates Tracking</h3>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="bg-[#f8fafc]/80 p-3 rounded-xl border border-[#ffffff] relative group">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="bg-slate-50/80 p-3.5 rounded-xl border border-slate-200/80 relative group">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-medium text-slate-600">Now Location (Live)</span>
+                      <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Live GPS Coordinates</span>
                       {data.employee.last_known_latitude && data.employee.last_known_longitude && (
                         <button
                           onClick={() => setShowMapModal({
                             lat: data.employee.last_known_latitude!,
                             lng: data.employee.last_known_longitude!,
-                            title: `Now Location — Live GPS (${data.employee.full_name})`,
+                            title: `Live GPS Location (${data.employee.full_name})`,
                             subtitle: data.employee.last_location_updated_at ? `Last Updated: ${new Date(data.employee.last_location_updated_at).toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}` : undefined,
                           })}
-                          className="text-[11px] font-bold text-amber-400 hover:underline flex items-center gap-1"
+                          className="text-[11px] font-bold text-sky-600 hover:underline flex items-center gap-1 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200"
                         >
-                          <MapPin className="w-3 h-3" /> View Map
+                          <MapPin className="w-3 h-3" /> View
                         </button>
                       )}
                     </div>
-                    <p className="text-xs font-mono font-bold text-slate-700 mt-1">
+                    <p className="text-xs font-mono font-bold text-slate-800 mt-1">
                       {data.employee.last_known_latitude && data.employee.last_known_longitude
                         ? `${data.employee.last_known_latitude.toFixed(5)}, ${data.employee.last_known_longitude.toFixed(5)}`
-                        : 'No Live GPS Received'}
+                        : 'No Live Coordinates'}
                     </p>
                     {data.employee.last_location_updated_at && (
-                      <p className="text-[10px] text-slate-500 mt-0.5">Updated: {new Date(data.employee.last_location_updated_at).toLocaleTimeString('en-US', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-[10px] font-medium text-slate-500 mt-1">Updated: {new Date(data.employee.last_location_updated_at).toLocaleTimeString('en-US', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit' })}</p>
                     )}
                   </div>
 
-                  <div className="bg-[#f8fafc]/80 p-3 rounded-xl border border-[#ffffff] relative group">
+                  <div className="bg-slate-50/80 p-3.5 rounded-xl border border-slate-200/80 relative group">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-medium text-slate-600">First Verified Location</span>
+                      <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">First Verified GPS</span>
                       {data.employee.first_verified_latitude && data.employee.first_verified_longitude && (
                         <button
                           onClick={() => setShowMapModal({
@@ -628,161 +635,195 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                             title: `First Verified Check-in Location (${data.employee.full_name})`,
                             subtitle: data.employee.first_verified_at ? `Verified on: ${new Date(data.employee.first_verified_at).toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })}` : undefined,
                           })}
-                          className="text-[11px] font-bold text-cyan-400 hover:underline flex items-center gap-1"
+                          className="text-[11px] font-bold text-sky-600 hover:underline flex items-center gap-1 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200"
                         >
-                          <MapPin className="w-3 h-3" /> View Map
+                          <MapPin className="w-3 h-3" /> View
                         </button>
                       )}
                     </div>
-                    <p className="text-xs font-mono font-bold text-slate-700 mt-1">
+                    <p className="text-xs font-mono font-bold text-slate-800 mt-1">
                       {data.employee.first_verified_latitude && data.employee.first_verified_longitude
                         ? `${data.employee.first_verified_latitude.toFixed(5)}, ${data.employee.first_verified_longitude.toFixed(5)}`
                         : 'No Initial GPS Logged'}
                     </p>
                     {data.employee.first_verified_at && (
-                      <p className="text-[10px] text-slate-500 mt-0.5">Date: {new Date(data.employee.first_verified_at).toLocaleDateString()}</p>
+                      <p className="text-[10px] font-medium text-slate-500 mt-1">Date: {new Date(data.employee.first_verified_at).toLocaleDateString()}</p>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Right: Actions */}
-              <div className="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0 border-t lg:border-t-0 lg:border-l border-[#ffffff] pt-4 lg:pt-0 lg:pl-6 justify-center">
+              {/* Right: Security Actions */}
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0 border-t lg:border-t-0 lg:border-l border-slate-200 pt-5 lg:pt-0 lg:pl-6 justify-center">
                 <Button
                   onClick={handleResetFaceVerification}
                   disabled={resettingFace || data.employee.requires_face_reverification}
                   variant={data.employee.requires_face_reverification ? 'outline' : 'danger'}
-                  className="w-full text-xs font-semibold flex items-center justify-center gap-2 py-2"
+                  className="w-full text-xs font-bold flex items-center justify-center gap-2 py-2.5 rounded-xl shadow-2xs"
                 >
-                  {resettingFace ? <Spinner size="sm" /> : <ShieldAlert className="w-4 h-4" />}
-                  {data.employee.requires_face_reverification ? 'Already Cancelled / Waiting Re-verify' : 'Cancel & Reset Face Verification'}
+                  {resettingFace ? <Spinner size="sm" /> : <ShieldAlert className="w-4 h-4 shrink-0" />}
+                  {data.employee.requires_face_reverification ? 'Reverification Pending' : 'Cancel & Reset Face ID'}
                 </Button>
                 <Button
                   onClick={() => setRefreshIndex(prev => prev + 1)}
                   variant="outline"
-                  className="w-full text-xs font-semibold flex items-center justify-center gap-2 py-2 border-[#ffffff] hover:bg-slate-50"
+                  className="w-full text-xs font-bold flex items-center justify-center gap-2 py-2.5 rounded-xl border-slate-200 hover:bg-slate-100 text-slate-700 shadow-2xs"
                 >
                   <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
-                  Refresh Location & Status
+                  Refresh Location Status
                 </Button>
               </div>
             </div>
           </div>
 
-          {/* 6 KPI Cards Grid */}
+          {/* 6 KPI Cards Grid (Enterprise High-Contrast Layout) */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {/* 1. Duty Hours */}
-            <Card className="bg-[#ffffff]/90 border-[#ffffff] p-4 relative overflow-hidden group hover:border-amber-500/30 transition-all">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-600">Total Duty Hours</span>
-                <Clock className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+            <Card className="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs hover:shadow-md hover:border-[#1dbf73]/50 transition-all duration-200 flex flex-col justify-between group">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-slate-600 tracking-tight">Total Duty Hours</span>
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+                  <Clock className="w-4 h-4" />
+                </div>
               </div>
-              <p className="text-2xl font-bold text-slate-900 tracking-tight">{data.summary.total_duty_hours} <span className="text-sm font-normal text-slate-600">hrs</span></p>
-              <p className="text-[11px] text-slate-500 mt-1">Across {data.summary.total_present_days + data.summary.total_late_days} working shifts</p>
+              <div>
+                <p className="text-3xl font-extrabold text-slate-900 tracking-tight">{data.summary.total_duty_hours} <span className="text-xs font-semibold text-slate-500">hrs</span></p>
+                <p className="text-[11px] font-medium text-slate-500 mt-1.5">Across {data.summary.total_present_days + data.summary.total_late_days} working shifts</p>
+              </div>
             </Card>
 
             {/* 2. Overtime */}
-            <Card className="bg-[#ffffff]/90 border-[#ffffff] p-4 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-600">Total Overtime</span>
-                <TrendingUp className="w-4 h-4 text-[#1dbf73] group-hover:scale-110 transition-transform" />
+            <Card className="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs hover:shadow-md hover:border-[#1dbf73]/50 transition-all duration-200 flex flex-col justify-between group">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-slate-600 tracking-tight">Total Overtime</span>
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
               </div>
-              <p className="text-2xl font-bold text-[#1dbf73] tracking-tight">{data.summary.total_overtime_hours} <span className="text-sm font-normal text-slate-600">hrs</span></p>
-              <p className="text-[11px] text-slate-500 mt-1">{data.summary.total_overtime_minutes} minutes overtime</p>
+              <div>
+                <p className="text-3xl font-extrabold text-emerald-600 tracking-tight">{data.summary.total_overtime_hours} <span className="text-xs font-semibold text-slate-500">hrs</span></p>
+                <p className="text-[11px] font-semibold text-emerald-700/80 mt-1.5">{data.summary.total_overtime_minutes} total OT minutes</p>
+              </div>
             </Card>
 
             {/* 3. Missed Days */}
-            <Card className="bg-[#ffffff]/90 border-rose-500/20 p-4 relative overflow-hidden group hover:border-rose-500/40 transition-all bg-gradient-to-br from-rose-500/5 to-[#ffffff]">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-rose-300">Missed / Absent</span>
-                <XCircle className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform animate-pulse" />
+            <Card className="bg-rose-50/40 border border-rose-200/80 p-5 rounded-2xl shadow-xs hover:shadow-md hover:border-rose-300 transition-all duration-200 flex flex-col justify-between group">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-rose-800 tracking-tight">Missed / Absent</span>
+                <div className="w-8 h-8 rounded-lg bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-600 group-hover:scale-110 transition-transform">
+                  <XCircle className="w-4 h-4 animate-pulse" />
+                </div>
               </div>
-              <p className="text-2xl font-bold text-rose-400 tracking-tight">{data.summary.total_missed_days} <span className="text-sm font-normal text-slate-600">days</span></p>
-              <p className="text-[11px] text-rose-400/80 mt-1">Unlogged working days</p>
+              <div>
+                <p className="text-3xl font-extrabold text-rose-600 tracking-tight">{data.summary.total_missed_days} <span className="text-xs font-semibold text-rose-700">days</span></p>
+                <p className="text-[11px] font-semibold text-rose-700 mt-1.5">Unlogged working shifts</p>
+              </div>
             </Card>
 
-            {/* 4. Late Minutes & Days */}
-            <Card className="bg-[#ffffff]/90 border-amber-500/20 p-4 relative overflow-hidden group hover:border-amber-500/40 transition-all bg-gradient-to-br from-amber-500/5 to-[#ffffff]">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-amber-300">Total Late Time</span>
-                <AlertCircle className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+            {/* 4. Late Time */}
+            <Card className="bg-amber-50/40 border border-amber-200/80 p-5 rounded-2xl shadow-xs hover:shadow-md hover:border-amber-300 transition-all duration-200 flex flex-col justify-between group">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-amber-900 tracking-tight">Total Late Time</span>
+                <div className="w-8 h-8 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-700 group-hover:scale-110 transition-transform">
+                  <AlertCircle className="w-4 h-4" />
+                </div>
               </div>
-              <p className="text-2xl font-bold text-amber-400 tracking-tight">{data.summary.total_late_minutes} <span className="text-sm font-normal text-slate-600">mins</span></p>
-              <p className="text-[11px] text-amber-400/80 mt-1">Across {data.summary.total_late_days} late days</p>
+              <div>
+                <p className="text-3xl font-extrabold text-amber-700 tracking-tight">{data.summary.total_late_minutes} <span className="text-xs font-semibold text-amber-800">mins</span></p>
+                <p className="text-[11px] font-semibold text-amber-800 mt-1.5">Across {data.summary.total_late_days} late days</p>
+              </div>
             </Card>
 
             {/* 5. Present Days */}
-            <Card className="bg-[#ffffff]/90 border-[#ffffff] p-4 relative overflow-hidden group hover:border-sky-500/30 transition-all">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-600">Present Days</span>
-                <CheckCircle2 className="w-4 h-4 text-sky-400 group-hover:scale-110 transition-transform" />
+            <Card className="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs hover:shadow-md hover:border-sky-300 transition-all duration-200 flex flex-col justify-between group">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-slate-600 tracking-tight">Present Days</span>
+                <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 group-hover:scale-110 transition-transform">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
               </div>
-              <p className="text-2xl font-bold text-slate-900 tracking-tight">{data.summary.total_present_days + data.summary.total_late_days} <span className="text-sm font-normal text-slate-600">days</span></p>
-              <p className="text-[11px] text-slate-500 mt-1">Out of {data.summary.total_working_days} working days</p>
+              <div>
+                <p className="text-3xl font-extrabold text-slate-900 tracking-tight">{data.summary.total_present_days + data.summary.total_late_days} <span className="text-xs font-semibold text-slate-500">days</span></p>
+                <p className="text-[11px] font-medium text-slate-500 mt-1.5">Out of {data.summary.total_working_days} working days</p>
+              </div>
             </Card>
 
             {/* 6. Leave & Off Days */}
-            <Card className="bg-[#ffffff]/90 border-[#ffffff] p-4 relative overflow-hidden group hover:border-purple-500/30 transition-all">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-600">Leave & Off Days</span>
-                <Calendar className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+            <Card className="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs hover:shadow-md hover:border-purple-300 transition-all duration-200 flex flex-col justify-between group">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-slate-600 tracking-tight">Leave & Off Days</span>
+                <div className="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+                  <Calendar className="w-4 h-4" />
+                </div>
               </div>
-              <p className="text-2xl font-bold text-slate-900 tracking-tight">{data.summary.total_on_leave_days + data.summary.total_off_days + data.summary.total_holiday_days} <span className="text-sm font-normal text-slate-600">days</span></p>
-              <p className="text-[11px] text-slate-500 mt-1">{data.summary.total_on_leave_days} leave, {data.summary.total_off_days + data.summary.total_holiday_days} off/holidays</p>
+              <div>
+                <p className="text-3xl font-extrabold text-slate-900 tracking-tight">{data.summary.total_on_leave_days + data.summary.total_off_days + data.summary.total_holiday_days} <span className="text-xs font-semibold text-slate-500">days</span></p>
+                <p className="text-[11px] font-medium text-slate-500 mt-1.5">{data.summary.total_on_leave_days} leave, {data.summary.total_off_days + data.summary.total_holiday_days} off/holidays</p>
+              </div>
             </Card>
           </div>
 
           {/* Daily Breakdown Section */}
-          <div className="bg-[#ffffff] border border-[#ffffff] rounded-2xl overflow-hidden shadow-xl">
+          <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
             {/* Table Header Controls */}
-            <div className="p-5 border-b border-[#ffffff] flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="p-6 border-b border-slate-200/80 bg-slate-50/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h3 className="font-bold text-slate-700 text-base">Day-by-Day Duty Roster ({months[month - 1]} {year})</h3>
-                <p className="text-xs text-slate-600 mt-0.5">Exact daily check-in, check-out, duty hours, overtime, and punctuality log</p>
+                <h3 className="font-bold text-slate-900 text-base tracking-tight">Day-by-Day Duty & Overtime Roster ({months[month - 1]} {year})</h3>
+                <p className="text-xs text-slate-600 font-medium mt-0.5">Exact daily check-in, check-out, duty hours, overtime, GPS, and punctuality logs</p>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-3">
                 {/* Search input */}
                 <div className="relative w-full sm:w-64">
-                  <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     placeholder="Search date, status, notes..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-[#f8fafc] border border-[#ffffff] rounded-xl pl-9 pr-4 py-1.5 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:border-amber-500/50"
+                    className="w-full bg-white border border-slate-200/80 rounded-xl pl-10 pr-4 py-2 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1dbf73]/20 focus:border-[#1dbf73] transition-all shadow-2xs"
                   />
                 </div>
 
-                {/* Filter Tabs */}
-                <div className="flex items-center bg-[#f8fafc] p-1 rounded-xl border border-[#ffffff] w-full sm:w-auto overflow-x-auto">
+                {/* Filter Pills */}
+                <div className="flex items-center bg-slate-200/60 p-1 rounded-xl border border-slate-300/50 w-full sm:w-auto overflow-x-auto gap-1">
                   <button
                     onClick={() => setFilterTab('all')}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'all' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                      filterTab === 'all' ? 'bg-white text-slate-900 shadow-sm border border-slate-300/80' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                    }`}
                   >
                     All ({data.daily_breakdown.length})
                   </button>
                   <button
                     onClick={() => setFilterTab('present')}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'present' ? 'bg-[#1dbf73] text-slate-950 font-bold' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                      filterTab === 'present' ? 'bg-[#1dbf73] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                    }`}
                   >
                     Present
                   </button>
                   <button
                     onClick={() => setFilterTab('late')}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'late' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                      filterTab === 'late' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                    }`}
                   >
                     Late ({data.summary.total_late_days})
                   </button>
                   <button
                     onClick={() => setFilterTab('missed')}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'missed' ? 'bg-rose-500 text-slate-900 font-bold' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                      filterTab === 'missed' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                    }`}
                   >
                     Missed ({data.summary.total_missed_days})
                   </button>
                   <button
                     onClick={() => setFilterTab('overtime')}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filterTab === 'overtime' ? 'bg-sky-500 text-slate-950 font-bold' : 'text-slate-600 hover:text-slate-900'}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                      filterTab === 'overtime' ? 'bg-sky-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                    }`}
                   >
                     Overtime
                   </button>
@@ -794,7 +835,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[#ffffff]/80 text-slate-600 text-xs font-semibold uppercase tracking-wider border-b border-[#ffffff]">
+                  <tr className="bg-slate-50 text-slate-500 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200/80">
                     <th className="py-3.5 px-4">Date</th>
                     <th className="py-3.5 px-4">Day</th>
                     <th className="py-3.5 px-4">Status</th>
@@ -807,45 +848,47 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                     <th className="py-3.5 px-4">Notes / Remark</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#ffffff]/60 text-xs">
+                <tbody className="divide-y divide-slate-100 text-xs font-medium">
                   {filteredLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="py-16 text-center text-slate-500">
-                        No daily logs found matching the selected filter.
+                      <td colSpan={10} className="py-16 text-center text-slate-500 font-semibold">
+                        No daily logs found matching the selected filter or search term.
                       </td>
                     </tr>
                   ) : (
                     filteredLogs.map((log) => (
                       <tr
                         key={log.date}
-                        className={`hover:bg-[#f8fafc]/60 transition-colors ${log.status === 'missed' ? 'bg-rose-500/[0.03]' : log.status === 'late' ? 'bg-amber-500/[0.03]' : ''}`}
+                        className={`hover:bg-slate-50/80 transition-colors ${log.status === 'missed' ? 'bg-rose-50/30' : log.status === 'late' ? 'bg-amber-50/30' : ''}`}
                       >
-                        <td className="py-3.5 px-4 font-mono font-medium text-slate-700">{log.date}</td>
-                        <td className="py-3.5 px-4 text-slate-600">{log.day_name}</td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-slate-800">{log.date}</td>
+                        <td className="py-3.5 px-4 text-slate-700 font-semibold">{log.day_name}</td>
                         <td className="py-3.5 px-4">{getStatusBadge(log.status, log.late_minutes, log.overtime_minutes)}</td>
-                        <td className="py-3.5 px-4 font-mono text-slate-600">{log.check_in_time}</td>
-                        <td className="py-3.5 px-4 font-mono text-slate-600">{log.check_out_time}</td>
-                        <td className="py-3.5 px-4 text-center font-bold text-slate-700">
-                          {log.duty_hours > 0 ? `${log.duty_hours}h` : '-'}
+                        <td className="py-3.5 px-4 font-mono font-bold text-slate-700">{log.check_in_time}</td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-slate-700">{log.check_out_time}</td>
+                        <td className="py-3.5 px-4 text-center font-extrabold text-slate-800">
+                          {log.duty_hours > 0 ? `${log.duty_hours}h` : <span className="text-slate-400 font-normal">-</span>}
                         </td>
                         <td className="py-3.5 px-4 text-center font-mono">
                           {log.is_right_time ? (
-                            <span className="px-2 py-0.5 rounded bg-[#1dbf73]/15 text-[#1dbf73] font-bold border border-emerald-500/20 text-[11px]">
+                            <span className="px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 text-[11px]">
                               Right Time
                             </span>
                           ) : log.late_minutes > 0 ? (
-                            <span className="text-amber-400 font-bold text-[11px]">+{log.late_minutes}m ({log.late_hours}h)</span>
+                            <span className="px-2 py-1 rounded-md bg-amber-50 text-amber-800 font-bold border border-amber-200 text-[11px]">
+                              +{log.late_minutes}m ({log.late_hours}h)
+                            </span>
                           ) : (
-                            <span className="text-slate-600">-</span>
+                            <span className="text-slate-400 font-normal">-</span>
                           )}
                         </td>
                         <td className="py-3.5 px-4 text-center font-mono">
                           {log.overtime_minutes > 0 ? (
-                            <span className="px-2 py-0.5 rounded bg-[#1dbf73]/15 text-[#1dbf73] font-bold border border-emerald-500/20 text-[11px]">
+                            <span className="px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 text-[11px]">
                               +{log.overtime_hours}h ({log.overtime_minutes}m)
                             </span>
                           ) : (
-                            <span className="text-slate-600">-</span>
+                            <span className="text-slate-400 font-normal">-</span>
                           )}
                         </td>
                         <td className="py-3.5 px-4 text-center">
@@ -853,10 +896,10 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                             <div className="flex items-center justify-center gap-2">
                               <span
                                 title={log.face_verified ? 'Verified with facial biometrics' : 'Face verification not matched or bypassed'}
-                                className={`px-1.5 py-0.5 rounded font-bold text-[10px] ${
+                                className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
                                   log.face_verified
-                                    ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30'
-                                    : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : 'bg-rose-50 text-rose-700 border border-rose-200'
                                 }`}
                               >
                                 {log.face_verified ? '✓ Face' : '✗ Face'}
@@ -869,19 +912,19 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                                     title: `Check-in GPS Location (${log.date})`,
                                     subtitle: `Coordinates: ${log.check_in_lat!.toFixed(5)}, ${log.check_in_lng!.toFixed(5)} | Check-in: ${log.check_in_time}`,
                                   })}
-                                  className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold text-[10px] hover:bg-cyan-500/30 flex items-center gap-1"
+                                  className="px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-200 font-bold text-[10px] hover:bg-sky-100 flex items-center gap-1 transition-colors"
                                 >
                                   <MapPin className="w-2.5 h-2.5" /> GPS
                                 </button>
                               ) : (
-                                <span className="text-[10px] text-slate-500">No GPS</span>
+                                <span className="text-[10px] text-slate-400 font-medium">No GPS</span>
                               )}
                             </div>
                           ) : (
-                            <span className="text-slate-600 text-[11px]">-</span>
+                            <span className="text-slate-400 font-normal text-[11px]">-</span>
                           )}
                         </td>
-                        <td className="py-3.5 px-4 text-slate-600">{log.notes}</td>
+                        <td className="py-3.5 px-4 text-slate-600 font-medium">{log.notes}</td>
                       </tr>
                     ))
                   )}
@@ -894,29 +937,29 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
 
       {/* Interactive Map Modal */}
       {showMapModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#ffffff] border border-[#ffffff] rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
-            <div className="p-4 border-b border-[#ffffff] flex items-center justify-between bg-[#f8fafc]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600">
                   <MapPin className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">{showMapModal.title}</h3>
-                  {showMapModal.subtitle && <p className="text-[11px] text-slate-600">{showMapModal.subtitle}</p>}
+                  <h3 className="font-bold text-slate-900 text-base tracking-tight">{showMapModal.title}</h3>
+                  {showMapModal.subtitle && <p className="text-xs text-slate-600 font-medium mt-0.5">{showMapModal.subtitle}</p>}
                 </div>
               </div>
               <button
                 onClick={() => setShowMapModal(null)}
-                className="w-8 h-8 rounded-lg bg-[#ffffff] border border-[#ffffff] text-slate-600 hover:text-slate-900 flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center justify-center transition-colors shadow-2xs font-bold"
               >
                 ✕
               </button>
             </div>
 
-            <div className="p-4 bg-[#ffffff]">
+            <div className="p-5 bg-white">
               {/* Embedded OpenStreetMap / Leaflet preview or Google Maps iframe */}
-              <div className="w-full h-80 rounded-xl overflow-hidden border border-[#ffffff] bg-white relative">
+              <div className="w-full h-80 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 relative">
                 <iframe
                   title="GPS Location Map"
                   width="100%"
@@ -927,20 +970,20 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                 />
               </div>
 
-              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#f8fafc]/60 p-3 rounded-xl border border-[#ffffff]">
-                <div className="text-xs font-mono text-slate-600">
-                  <span className="text-slate-500">Lat:</span> {showMapModal.lat.toFixed(6)}, <span className="text-slate-500">Lng:</span> {showMapModal.lng.toFixed(6)}
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <div className="text-xs font-mono font-bold text-slate-700">
+                  <span className="text-slate-500 font-medium">Lat:</span> {showMapModal.lat.toFixed(6)}, <span className="text-slate-500 font-medium">Lng:</span> {showMapModal.lng.toFixed(6)}
                 </div>
                 <div className="flex items-center gap-2">
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${showMapModal.lat},${showMapModal.lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 flex items-center gap-1.5 shadow"
+                    className="px-3.5 py-2 rounded-xl bg-[#1dbf73] hover:bg-[#16965a] text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
                   >
                     Open in Google Maps <ExternalLink className="w-3.5 h-3.5" />
                   </a>
-                  <Button onClick={() => setShowMapModal(null)} variant="outline" size="sm" className="text-xs">
+                  <Button onClick={() => setShowMapModal(null)} variant="outline" size="sm" className="text-xs font-bold rounded-xl">
                     Close
                   </Button>
                 </div>

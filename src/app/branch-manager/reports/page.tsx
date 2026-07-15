@@ -135,7 +135,6 @@ export default function BranchManagerReportsPage() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (err: unknown) {
-      console.error('Export error:', err);
       alert(`Export failed: ${err instanceof Error ? err.message : 'Please try again.'}`);
     } finally {
       setExporting(null);
@@ -425,7 +424,7 @@ export default function BranchManagerReportsPage() {
                         size="sm"
                         variant="ghost"
                         icon={<Download className="w-3.5 h-3.5" />}
-                        onClick={() => handleExport('excel')}
+                        onClick={() => handleExport('pdf')}
                       >
                         Download
                       </Button>

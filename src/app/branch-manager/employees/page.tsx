@@ -12,6 +12,9 @@ import {
   EyeOff,
   ShieldAlert,
   FileText,
+  MessageSquare,
+  Building2,
+  Phone,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -197,18 +200,30 @@ export default function StoreEmployeesPage() {
                             )}
                           </div>
                           <div>
-                            <p className="font-semibold text-slate-700 text-sm">{emp.full_name}</p>
-                            <p className="text-xs text-slate-500 mt-0.5">{emp.email}</p>
+                            <p className="font-semibold text-slate-900 text-sm">{emp.full_name}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="inline-flex items-center gap-1 bg-[#1dbf73]/10 text-[#1dbf73] px-2 py-0.5 rounded text-[11px] font-bold">
+                                <Building2 className="w-3 h-3" />
+                                {emp.branch_name || 'My Branch'}
+                              </span>
+                              <span className="text-xs text-slate-400">• {emp.email}</span>
+                            </div>
                           </div>
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <p className="text-xs font-mono text-slate-600 mb-0.5">
-                          {emp.employee_id || 'PENDING-ID'}
+                        <p className="text-xs font-mono text-slate-600 font-semibold mb-1">
+                          ID: {emp.employee_id || 'PENDING-ID'}
                         </p>
-                        <p className="text-xs text-slate-500">
-                          {emp.whatsapp_number ? `WA: ${emp.whatsapp_number}` : (emp.phone || 'No phone')}
-                        </p>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#1dbf73] bg-[#1dbf73]/10 px-2 py-0.5 rounded w-fit">
+                          <MessageSquare className="w-3.5 h-3.5 fill-current shrink-0" />
+                          <span>WA: {emp.whatsapp_number || emp.phone || 'N/A'}</span>
+                        </div>
+                        {emp.phone && emp.phone !== (emp.whatsapp_number || emp.phone) && (
+                          <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-1">
+                            <Phone className="w-3 h-3 text-slate-400" /> Phone: {emp.phone}
+                          </div>
+                        )}
                       </td>
                       <td className="py-4 px-6 text-center">
                         {emp.registration_step === 'pending_approval' ? (

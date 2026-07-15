@@ -1,11 +1,11 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
-import { Clock, Calendar, ShieldCheck, MapPin } from 'lucide-react';
+import { Clock, Calendar, ShieldCheck, MapPin, MessageSquare, User, Building2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -13,7 +13,7 @@ export default function EmployeeDashboardPage() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<{ full_name: string; branch_name: string } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string; branch_name: string; photo_url?: string; whatsapp_number?: string; phone?: string } | null>(null);
   const [todayRecord, setTodayRecord] = useState<{ check_in_time?: string; check_out_time?: string; status?: string; approval_status?: string; overtime_minutes?: number } | null>(null);
   // B6 fix: Store real leave balance
   const [leaveBalance, setLeaveBalance] = useState<{ available: number; total: number } | null>(null);
@@ -25,7 +25,7 @@ export default function EmployeeDashboardPage() {
 
       const { data: prof } = await supabase
         .from('profiles')
-        .select('id, full_name, role, branch_id, branches!profiles_branch_id_fkey(name)')
+        .select('id, full_name, role, branch_id, photo_url, phone, whatsapp_number, branches!profiles_branch_id_fkey(name)')
         .eq('id', user.id)
         .single();
 
@@ -33,6 +33,9 @@ export default function EmployeeDashboardPage() {
         setProfile({
           full_name: prof.full_name,
           branch_name: (prof as unknown as { branches?: { name?: string } }).branches?.name || 'Anchor Store',
+          photo_url: prof.photo_url || undefined,
+          whatsapp_number: prof.whatsapp_number || undefined,
+          phone: prof.phone || undefined,
         });
       }
 
@@ -83,17 +86,32 @@ export default function EmployeeDashboardPage() {
       {/* Welcome Banner */}
       <div className="bg-white p-8 rounded-3xl border border-[#1dbf73]/20 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#1dbf73_1px,transparent_1px)] [background-size:40px_40px] mix-blend-overlay z-0" />
-        <div className="relative z-10">
-          <div className="flex items-center space-x-2 text-[#1dbf73] text-xs font-bold uppercase tracking-wider">
-            <MapPin className="w-4 h-4" />
-            <span>{profile?.branch_name}</span>
+        <div className="relative z-10 flex items-center gap-5">
+          <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-[#1dbf73] overflow-hidden flex items-center justify-center shrink-0 shadow-md">
+            {profile?.photo_url ? (
+              <img src={profile.photo_url} alt={profile.full_name} className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-8 h-8 text-slate-400" />
+            )}
           </div>
-          <h1 className="text-2xl md:text-4xl font-extrabold text-slate-900 mt-2 tracking-tight">
-            Welcome, {profile?.full_name || 'Staff Member'}!
-          </h1>
-          <p className="text-sm text-slate-600 mt-1">
-            Biometric facial verification and GPS geofenced attendance tracking portal.
-          </p>
+          <div>
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-[#1dbf73] bg-[#1dbf73]/10 px-2.5 py-1 rounded-md uppercase tracking-wider">
+                <Building2 className="w-3.5 h-3.5" />
+                <span>{profile?.branch_name || 'Assigned Branch'}</span>
+              </span>
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-md">
+                <MessageSquare className="w-3.5 h-3.5 fill-current text-[#1dbf73]" />
+                <span>WA: {profile?.whatsapp_number || profile?.phone || 'N/A'}</span>
+              </span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Welcome, {profile?.full_name || 'Staff Member'}!
+            </h1>
+            <p className="text-sm text-slate-600 mt-0.5">
+              Biometric facial verification and GPS geofenced attendance tracking portal.
+            </p>
+          </div>
         </div>
 
         <Button
@@ -195,14 +213,24 @@ export default function EmployeeDashboardPage() {
           </div>
 
           {/* Fix: Correct route to /employee/leaves */}
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-full mt-6 border-[#1dbf73]/30 text-[#1dbf73] hover:bg-[#1dbf73]/10"
-            onClick={() => router.push('/employee/leaves')}
-          >
-            Request Leave
-          </Button>
+          <div className="flex gap-2 mt-6">
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full border-[#1dbf73]/30 text-[#1dbf73] hover:bg-[#1dbf73]/10"
+              onClick={() => router.push('/employee/leaves')}
+            >
+              Request Leave
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full border-blue-500/30 text-blue-500 hover:bg-blue-500/10"
+              onClick={() => router.push('/employee/gate-pass')}
+            >
+              Gate Pass
+            </Button>
+          </div>
         </Card>
       </div>
     </div>

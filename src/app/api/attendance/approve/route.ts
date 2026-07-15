@@ -43,8 +43,7 @@ export async function GET(request: NextRequest) {
         face_verified,
         profiles!attendance_records_employee_id_fkey (
           full_name,
-          photo_url,
-          employee_id
+          photo_url
         ),
         branches!attendance_records_branch_id_fkey (
           name

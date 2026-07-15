@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     let query = supabase
       .from('attendance_breaks')
-      .select('*, profiles(full_name, employee_id, role, profile_picture), branches(name, code)', { count: 'exact' });
+      .select('*, profiles!attendance_breaks_employee_id_fkey(full_name, employee_id, role, photo_url), branches(name, code)', { count: 'exact' });
 
     if (user.role === 'employee') {
       query = query.eq('employee_id', user.id);
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       if (employeeId) query = query.eq('employee_id', employeeId);
     } else {
       // Admin
-      if (branchId) query = query.eq('branch_id', branchId);
+      if (branchId && branchId !== 'all') query = query.eq('branch_id', branchId);
       if (employeeId) query = query.eq('employee_id', employeeId);
     }
 

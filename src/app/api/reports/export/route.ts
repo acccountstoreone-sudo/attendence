@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { computeEmployeeDutySummary } from '@/lib/dutyEngine';
 import { z } from 'zod';
 import * as XLSX from 'xlsx';
-import { generateAnchorFashionPDF } from '@/lib/pdf-generator';
+import { generateAnchorFashionPDF, generateDetailedCompanyPDF } from '@/lib/pdf-generator';
 
 const exportSchema = z.object({
   format: z.enum(['pdf', 'excel', 'csv']).default('excel'),
@@ -64,31 +64,9 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
     branchDisplayName = branch?.name || 'Store';
     reportTitle = `${bName}_Attendance_Summary_${payload.year}_${payload.month}`;
 
-    // Try RPC first or fallback to dutyEngine across all branch employees
-    const { data: summary, error: rpcErr } = await supabase.rpc('get_branch_monthly_summary', {
-      p_branch_id: targetBranchId,
-      p_month: payload.month,
-      p_year: payload.year,
-    });
-
-    if (!rpcErr && summary && summary.length > 0) {
-      exportData = summary.map((row: Record<string, unknown>) => ({
-        'Employee ID': row.employee_id || 'ID',
-        'Full Name': row.full_name || 'Name',
-        'Working Days': row.total_working_days || 0,
-        'Present Days': row.total_present || 0,
-        'Late Days': row.total_late || 0,
-        'Half Days': row.total_half_day || 0,
-        'Missed Days': row.total_absent || 0,
-        'Leave Days': row.total_on_leave || 0,
-        'Duty Hours': row.total_duty_hours || 0,
-        'Overtime (Mins)': row.total_overtime_minutes || 0,
-        'Overtime (Hrs)': Number(((row.total_overtime_minutes as number || 0) / 60).toFixed(2)),
-      }));
-    } else {
-      // Fallback: use dutyEngine for all branch employees
-      const { data: branchEmployees } = await supabase.from('profiles').select('id, full_name, employee_id').eq('branch_id', targetBranchId);
-      if (branchEmployees && branchEmployees.length > 0) {
+    // Use dutyEngine to accurately calculate each employee's summary for the branch export
+    const { data: branchEmployees } = await supabase.from('profiles').select('id, full_name, employee_id, role, is_active').eq('branch_id', targetBranchId).eq('is_active', true);
+    if (branchEmployees && branchEmployees.length > 0) {
         for (const emp of branchEmployees) {
           try {
             const ds = await computeEmployeeDutySummary(supabase, emp.id, payload.month, payload.year);
@@ -109,7 +87,6 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
             // skip employee error
           }
         }
-      }
     }
 
     if (payload.type === 'late_arrivals') {
@@ -156,12 +133,13 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
     }
   }
 
-  if (exportData.length === 0) {
-    return NextResponse.json(
-      { success: false, data: null, error: { code: 'NO_DATA', message: 'No attendance records found for this period.' } },
-      { status: 404 }
-    );
-  }
+  // Allow exporting empty reports so the user gets a valid document (e.g., 0 overtimes) instead of an error.
+  // if (exportData.length === 0) {
+  //   return NextResponse.json(
+  //     { success: false, data: null, error: { code: 'NO_DATA', message: 'No attendance records found for this period.' } },
+  //     { status: 404 }
+  //   );
+  // }
 
   // Generate File Buffer based on format
   let fileBuffer: Buffer;
@@ -194,25 +172,144 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
     // PDF Format using new generator
     const columnsSet = new Set<string>();
     exportData.forEach(row => Object.keys(row || {}).forEach(k => columnsSet.add(k)));
-    const columns = Array.from(columnsSet);
+    let columns = Array.from(columnsSet);
+    
+    // If no records, provide default columns to avoid autoTable crash
+    if (columns.length === 0) {
+      columns = ['Employee ID', 'Full Name', 'Working Days', 'Present Days', 'Late Days', 'Half Days', 'Missed Days', 'Leave Days', 'Duty Hours', 'Overtime (Mins)', 'Overtime (Hrs)'];
+    }
     const rows = exportData.map(row => columns.map(col => String(row[col] ?? '')));
 
-    let cleanTitle = 'ATTENDANCE REPORT';
-    if (reportTitle.includes('Duty_Report')) cleanTitle = 'DUTY REPORT';
-    else if (reportTitle.includes('Summary')) cleanTitle = 'MONTHLY SUMMARY';
+    if (!targetBranchId && !payload.employee_id) {
+      // It's the admin detailed export for the whole company
+      const companyColumns = Array.from(columnsSet);
+      const companyRows = exportData.map(row => companyColumns.map(col => String(row[col] ?? '')));
+      
+      const { data: allBranches } = await supabase.from('branches').select('id, name').order('name');
+      const branchesData = [];
+      let totalRecords = companyRows.length;
+      
+      if (allBranches) {
+        for (const b of allBranches) {
+          const { data: bSummary } = await supabase.rpc('get_branch_monthly_summary', {
+            p_branch_id: b.id,
+            p_month: payload.month,
+            p_year: payload.year,
+          });
 
-    fileBuffer = generateAnchorFashionPDF({
-      reportTitle: cleanTitle,
-      reportSubtitle: 'Statement',
-      metaRef: `REP-${Math.floor(Math.random() * 100000000)}`,
-      metaBranch: branchDisplayName,
-      metaPeriod: `${payload.month}/${payload.year}`,
-      metaPreparedBy: user.full_name,
-      metaRecordsCount: rows.length,
-      tableTitle: 'Attendance Records & Summary',
-      columns,
-      rows
-    });
+          const branchSummaryCols = ['Employee ID', 'Name', 'Working Days', 'Present', 'Late', 'Missed', 'Duty Hrs', 'Overtime (Hrs)'];
+          let branchSummaryRows = [];
+          if (bSummary && bSummary.length > 0) {
+            branchSummaryRows = bSummary.map((r: any) => [
+              r.employee_id || 'ID',
+              r.full_name || 'Name',
+              String(r.total_working_days || 0),
+              String(r.total_present || 0),
+              String(r.total_late || 0),
+              String(r.total_absent || 0),
+              String(r.total_duty_hours || 0),
+              String(((r.total_overtime_minutes || 0) / 60).toFixed(2))
+            ]);
+          }
+
+          const employeesData = [];
+          const { data: branchEmployees } = await supabase.from('profiles').select('id, full_name, employee_id, role').eq('branch_id', b.id);
+          if (branchEmployees) {
+            for (const emp of branchEmployees) {
+              try {
+                const ds = await computeEmployeeDutySummary(supabase, emp.id, payload.month, payload.year);
+                const dailyCols = ['Date', 'Day', 'Status', 'Check In', 'Check Out', 'Duty Hrs', 'Late (M)', 'OT (M)', 'Biometrics'];
+                const dailyRows = ds.daily_breakdown.map(d => [
+                  d.date,
+                  d.day_name.substring(0,3),
+                  d.status.toUpperCase() + (!d.is_right_time ? ' (Mismatch)' : ''),
+                  d.check_in_time,
+                  d.check_out_time,
+                  String(d.duty_hours),
+                  String(d.late_minutes),
+                  String(d.overtime_minutes),
+                  d.face_verified ? 'Yes' : (d.status === 'absent' || d.status === 'on_leave' ? '-' : 'No')
+                ]);
+
+                const punctuality = ds.summary.total_working_days > 0 
+                  ? Math.round(((ds.summary.total_working_days - ds.summary.total_late_days - ds.summary.total_missed_days) / ds.summary.total_working_days) * 100)
+                  : 0;
+
+                employeesData.push({
+                  employeeName: emp.full_name,
+                  employeeId: emp.employee_id || `ID-${emp.id.substring(0,4).toUpperCase()}`,
+                  role: emp.role || 'Staff',
+                  summaryData: {
+                    working: ds.summary.total_working_days,
+                    present: ds.summary.total_present_days,
+                    late: ds.summary.total_late_days,
+                    dutyHrs: ds.summary.total_duty_hours,
+                    otHrs: ds.summary.total_overtime_hours,
+                    punctuality: punctuality,
+                    payable: ds.summary.estimated_payable_salary || 0,
+                    otPay: ds.summary.total_overtime_pay || 0
+                  },
+                  dailyColumns: dailyCols,
+                  dailyRows: dailyRows
+                });
+                totalRecords += 1 + dailyRows.length;
+              } catch (e) {
+                // skip
+              }
+            }
+          }
+
+            let branchTotalOT = 0;
+            let branchTotalPresent = 0;
+            let branchTotalWorking = 0;
+            employeesData.forEach(e => {
+              branchTotalOT += e.summaryData.otHrs;
+              branchTotalPresent += e.summaryData.present;
+              branchTotalWorking += e.summaryData.working;
+            });
+            const branchAttRate = branchTotalWorking > 0 ? Math.round((branchTotalPresent / branchTotalWorking) * 100) : 0;
+
+            branchesData.push({
+              branchName: b.name,
+              branchMetrics: `Staff: ${employeesData.length} | Attendance: ${branchAttRate}% | Total OT: ${branchTotalOT.toFixed(1)}h`,
+              branchSummaryColumns: branchSummaryCols,
+              branchSummaryRows: branchSummaryRows,
+              employees: employeesData
+            });
+          }
+        }
+
+      fileBuffer = generateDetailedCompanyPDF({
+        reportTitle: 'DETAILED COMPANY-WIDE SUMMARY',
+        reportSubtitle: 'Statement',
+        metaRef: `REP-${Math.floor(Math.random() * 100000000)}`,
+        metaPeriod: `${payload.month}/${payload.year}`,
+        metaPreparedBy: user.full_name,
+        metaRecordsCount: totalRecords,
+        companySummaryColumns: companyColumns,
+        companySummaryRows: companyRows,
+        branches: branchesData
+      });
+    } else {
+      let cleanTitle = 'ATTENDANCE REPORT';
+      if (reportTitle.includes('Late_Arrivals_Summary')) cleanTitle = 'LATE ARRIVALS REPORT';
+      else if (reportTitle.includes('Overtime_Summary')) cleanTitle = 'OVERTIME ANALYTICS REPORT';
+      else if (reportTitle.includes('Summary')) cleanTitle = 'MONTHLY ATTENDANCE REPORT';
+      else if (reportTitle.includes('Duty_Report')) cleanTitle = 'DUTY REPORT';
+
+      fileBuffer = generateAnchorFashionPDF({
+        reportTitle: cleanTitle,
+        reportSubtitle: 'Statement',
+        metaRef: `REP-${Math.floor(Math.random() * 100000000)}`,
+        metaBranch: branchDisplayName,
+        metaPeriod: `${payload.month}/${payload.year}`,
+        metaPreparedBy: user.full_name,
+        metaRecordsCount: rows.length,
+        tableTitle: 'Attendance Records & Summary',
+        columns,
+        rows
+      });
+    }
 
     fileName = `${reportTitle}.pdf`;
     contentType = 'application/pdf';

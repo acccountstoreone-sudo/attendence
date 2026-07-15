@@ -42,7 +42,8 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
 
   const fetchEmployees = async () => {
     try {
-      const res = await fetch(`/api/employees?branch_id=${branch.id}`);
+      const url = branch.id === 'all' ? '/api/employees?limit=200' : `/api/employees?branch_id=${branch.id}&limit=200`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         setEmployees(data.data || []);
@@ -187,20 +188,24 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {breaks.map((item) => {
-            const runningMins = item.status === 'active' ? getRunningMinutes(item.out_time) : item.actual_duration_minutes;
-            const isOver = runningMins > item.expected_duration_minutes;
+            const runningMins = item.status === 'active' 
+              ? getRunningMinutes(item.out_time) 
+              : (item.actual_duration_minutes || (item.return_time ? Math.max(1, Math.round((new Date(item.return_time).getTime() - new Date(item.out_time).getTime()) / 60000)) : getRunningMinutes(item.out_time)));
+            const isReturned = item.status === 'completed' || item.status === 'overstayed';
+            const lateMins = Math.max(0, runningMins - item.expected_duration_minutes);
+            const isLate = lateMins > 0;
             
             return (
               <Card 
                 key={item.id} 
                 className={`p-5 bg-white border shadow-lg relative overflow-hidden transition-all duration-300 ${
-                  item.status === 'active'
-                    ? isOver 
+                  !isReturned
+                    ? isLate 
                       ? 'border-red-500/80 ring-2 ring-red-500/20' 
                       : 'border-amber-500/80 ring-2 ring-amber-500/20'
-                    : item.status === 'overstayed'
-                    ? 'border-red-300 bg-red-50/20'
-                    : 'border-slate-200 opacity-90'
+                    : isLate
+                    ? 'border-red-300 bg-red-50/10'
+                    : 'border-emerald-200 bg-emerald-50/10'
                 }`}
               >
                 {/* Status badge banner */}
@@ -209,34 +214,63 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
                     {formatBreakType(item.break_type)}
                   </span>
                   <span className={`text-[11px] font-extrabold uppercase px-2 py-0.5 rounded ${
-                    item.status === 'active'
-                      ? isOver 
+                    !isReturned
+                      ? isLate 
                         ? 'bg-red-500 text-white animate-pulse' 
                         : 'bg-amber-500 text-white'
-                      : item.status === 'overstayed'
+                      : isLate
                       ? 'bg-red-100 text-red-700 font-bold'
                       : 'bg-emerald-100 text-emerald-700'
                   }`}>
-                    {item.status === 'active' && (isOver ? `Overstayed +${runningMins - item.expected_duration_minutes}m` : 'Outside Now')}
-                    {item.status === 'overstayed' && `Overstayed (${runningMins}m)`}
-                    {item.status === 'completed' && `Returned (${runningMins}m)`}
+                    {!isReturned && (isLate ? `Outside +${lateMins}m Over` : 'Active Outside')}
+                    {isReturned && (isLate ? `Returned (${lateMins}m Late)` : 'Returned On Time')}
                   </span>
                 </div>
 
                 {/* Employee info */}
-                <div className="flex items-center space-x-3 mb-4">
+                <div className="flex items-center space-x-3 mb-3">
                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shrink-0 border border-slate-200">
-                    {item.profiles?.profile_picture ? (
-                      <img src={item.profiles.profile_picture} alt={item.profiles?.full_name} className="w-full h-full object-cover" />
+                    {(item.profiles?.photo_url || item.profiles?.profile_picture) ? (
+                      <img src={item.profiles?.photo_url || item.profiles?.profile_picture} alt={item.profiles?.full_name} className="w-full h-full object-cover" />
                     ) : (
                       <User className="w-5 h-5 text-slate-500" />
                     )}
                   </div>
                   <div>
                     <h5 className="font-bold text-slate-900 leading-tight">{item.profiles?.full_name || 'Staff'}</h5>
-                    <p className="text-xs text-slate-500 mt-0.5">{item.profiles?.employee_id || 'ID N/A'} &bull; {item.profiles?.role?.replace(/_/g, ' ')}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {item.profiles?.employee_id || 'ID N/A'} &bull; {item.profiles?.role?.replace(/_/g, ' ')}
+                      {item.branches?.name ? ` • ${item.branches.name}` : ''}
+                    </p>
                   </div>
                 </div>
+
+                {/* Return vs Outside Prominent Indicator Box */}
+                {!isReturned ? (
+                  isLate ? (
+                    <div className="bg-red-500 text-white p-2.5 rounded-xl font-bold mb-3 flex items-center justify-between animate-pulse shadow-md text-xs">
+                      <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 shrink-0" /> STILL OUTSIDE (LATE!)</span>
+                      <span className="text-xs font-black bg-white text-red-600 px-2 py-0.5 rounded">+{lateMins}m Overstay</span>
+                    </div>
+                  ) : (
+                    <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-xl text-amber-900 font-bold mb-3 flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-amber-600 shrink-0" /> CURRENTLY OUTSIDE</span>
+                      <span className="text-xs font-bold bg-amber-500 text-white px-2 py-0.5 rounded">{runningMins}m / {item.expected_duration_minutes}m limit</span>
+                    </div>
+                  )
+                ) : (
+                  isLate ? (
+                    <div className="bg-red-50 border border-red-200 p-2.5 rounded-xl text-red-800 font-bold mb-3 flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 text-red-600 shrink-0" /> RETURNED LATE</span>
+                      <span className="text-xs font-black bg-red-600 text-white px-2 py-0.5 rounded">+{lateMins} mins late</span>
+                    </div>
+                  ) : (
+                    <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl text-emerald-800 font-bold mb-3 flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> RETURNED ON TIME</span>
+                      <span className="text-xs font-bold bg-emerald-600 text-white px-2 py-0.5 rounded">{runningMins}m / {item.expected_duration_minutes}m</span>
+                    </div>
+                  )
+                )}
 
                 {/* Details box */}
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-1.5 text-xs text-slate-600 mb-4">
@@ -247,12 +281,12 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
                   {item.return_time && (
                     <div className="flex justify-between">
                       <span className="font-medium text-slate-400">Return Time:</span>
-                      <span className="font-bold text-slate-800">{new Date(item.return_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="font-bold text-emerald-700">{new Date(item.return_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="font-medium text-slate-400">Duration:</span>
-                    <span className={`font-bold ${isOver ? 'text-red-600' : 'text-slate-800'}`}>
+                    <span className="font-medium text-slate-400">Total Duration:</span>
+                    <span className={`font-bold ${isLate ? 'text-red-600' : 'text-slate-800'}`}>
                       {runningMins} mins <span className="text-slate-400 font-normal">(/ {item.expected_duration_minutes}m limit)</span>
                     </span>
                   </div>

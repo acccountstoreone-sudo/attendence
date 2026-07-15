@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     // 1. Find active break record
     let query = supabase
       .from('attendance_breaks')
-      .select('*, profiles(full_name, branch_id)')
+      .select('*, profiles!attendance_breaks_employee_id_fkey(full_name, branch_id)')
       .eq('status', 'active');
 
     if (input.break_id) {
@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
     const { data: breakRecord, error: findErr } = await query.order('out_time', { ascending: false }).limit(1).maybeSingle();
 
     if (findErr || !breakRecord) {
+      if (findErr) console.error('[Gate-Pass Return Error]:', findErr);
       return NextResponse.json({
         success: false,
         error: 'No active Gate-Pass found to return from.'
@@ -57,8 +58,8 @@ export async function POST(request: NextRequest) {
     const diffMillis = now.getTime() - outTime.getTime();
     const actualDurationMinutes = Math.max(1, Math.round(diffMillis / 60000));
 
-    // Allow 15 minutes buffer over expected duration before marking as overstayed
-    const isOverstayed = actualDurationMinutes > (breakRecord.expected_duration_minutes + 15);
+    // If actual duration exceeds expected duration (with 2 min buffer), mark as overstayed
+    const isOverstayed = actualDurationMinutes > (breakRecord.expected_duration_minutes + 2);
     const newStatus = isOverstayed ? 'overstayed' : 'completed';
 
     // 2. Update break record

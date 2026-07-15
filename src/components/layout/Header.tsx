@@ -128,13 +128,13 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
                 )}
               </div>
 
-              <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+              <div className="max-h-[440px] overflow-y-auto divide-y divide-slate-100">
                 {notifications.length === 0 ? (
                   <div className="p-6 text-center text-slate-500 text-xs">
                     No notifications to display.
                   </div>
                 ) : (
-                  notifications.slice(0, 10).map((n) => {
+                  notifications.slice(0, 40).map((n) => {
                     const targetUrl = n.action_url || n.link_url;
                     return (
                       <div

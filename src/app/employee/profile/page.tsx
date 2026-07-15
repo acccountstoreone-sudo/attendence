@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation';
 import { WebAuthnRegister } from '@/components/auth/WebAuthnRegister';
 import { EditProfileModal } from '@/components/employee/EditProfileModal';
 import { FaceRegister } from '@/components/auth/FaceRegister';
+import { ProfileAnnouncements } from '@/components/profile/ProfileAnnouncements';
 
 interface ProfileData {
   id: string;
@@ -194,6 +195,10 @@ export default function EmployeeProfilePage() {
               <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
               <span className="truncate">{profile.branch_name}</span>
             </div>
+            <div className="flex items-center space-x-3 text-sm font-bold text-[#1dbf73] bg-[#1dbf73]/10 px-2.5 py-1.5 rounded-lg">
+              <MessageSquare className="w-4 h-4 text-[#1dbf73] fill-current shrink-0" />
+              <span className="truncate">WA: {profile.whatsapp_number || profile.phone || 'N/A'}</span>
+            </div>
             <div className="flex items-center space-x-3 text-sm text-slate-600">
               <Calendar className="w-4 h-4 text-slate-500 shrink-0" />
               <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
@@ -284,6 +289,8 @@ export default function EmployeeProfilePage() {
               </div>
             </div>
           </Card>
+
+          <ProfileAnnouncements userId={profile.id} role={profile.role} />
         </div>
       </div>
       

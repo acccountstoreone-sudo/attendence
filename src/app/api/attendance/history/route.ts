@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       // BUG FIX #2: Changed profiles!inner to a left join so records with a
       // deleted/missing profile are not silently dropped from history results.
       // Remove photo_url from select to prevent schema cache errors if migration is pending
-      .select('*, profiles(full_name, role), branches(name)', { count: 'exact' });
+      .select('*, profiles!attendance_records_employee_id_fkey(full_name, role), branches(name)', { count: 'exact' });
 
     // Role-based scoping enforcement (in addition to database RLS)
     if (user.role === 'employee') {

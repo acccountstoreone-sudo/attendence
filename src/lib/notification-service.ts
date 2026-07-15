@@ -106,22 +106,7 @@ export function getBeautifulEmailHtml(options: {
                     </p>
                   </div>
 
-                  <!-- Action Button -->
-                  ${
-                    actionUrl
-                      ? `
-                  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
-                    <tr>
-                      <td align="center">
-                        <a href="${fullLink}" target="_blank" style="background-color: ${accentColor}; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 12px rgba(29, 191, 115, 0.25); letter-spacing: 0.5px;">
-                          View Details in Portal &rarr;
-                        </a>
-                      </td>
-                    </tr>
-                  </table>
-                  `
-                      : ''
-                  }
+                  <!-- Action Button Removed per User Request -->
 
                   <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-top: 1px solid #f1f5f9; margin-top: 28px; padding-top: 18px;">
                     <tr>

@@ -15,7 +15,6 @@ interface BranchAnnouncementTabProps {
 }
 
 export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ branch, employees }) => {
-  const [announcementType, setAnnouncementType] = useState<'text' | 'sound'>('text');
   const [message, setMessage] = useState('');
 
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -36,7 +35,7 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
             title: `📢 Store Announcement: ${branch.name}`,
             message: message.trim(),
             type: 'alert',
-            action_url: '/employee/history',
+            action_url: '/employee/announcements',
           })
         });
         if (res.ok) successCount++;
@@ -45,7 +44,7 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
       }
     }
     
-    setFeedback({ type: 'success', text: `Sent ${announcementType} announcement to ${successCount} employees in ${branch.name}.` });
+    setFeedback({ type: 'success', text: `Sent announcement to ${successCount} employees in ${branch.name}.` });
     setMessage('');
     setTimeout(() => setFeedback(null), 3000);
   };
@@ -60,45 +59,17 @@ export const BranchAnnouncementTab: React.FC<BranchAnnouncementTabProps> = ({ br
       </div>
 
       <Card className="bg-white border-slate-200 p-6 shadow-xl">
-        <div className="flex space-x-4 mb-6 border-b border-slate-200 pb-4">
-          <button
-            onClick={() => setAnnouncementType('text')}
-            className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              announcementType === 'text' 
-                ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/20' 
-                : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
-            }`}
-          >
-            <MessageSquare className="w-4 h-4 mr-2" /> Text Announcement
-          </button>
-          <button
-            onClick={() => setAnnouncementType('sound')}
-            className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              announcementType === 'sound' 
-                ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/20' 
-                : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900'
-            }`}
-          >
-            <Volume2 className="w-4 h-4 mr-2" /> Sound Notification
-          </button>
-        </div>
-
         <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-slate-600">
-              {announcementType === 'text' ? 'Message Content' : 'Text-to-Speech Message'}
+              Message Content
             </Label>
             <Textarea 
               className="bg-white border-slate-200 min-h-[120px]" 
-              placeholder={announcementType === 'text' ? "Enter your announcement here..." : "Enter text to be played as audio..."}
+              placeholder="Enter your announcement here..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
             />
-            {announcementType === 'sound' && (
-              <p className="text-xs text-slate-500 flex items-center mt-2">
-                <Volume2 className="w-3 h-3 mr-1" /> This message will be played out loud on active employee devices.
-              </p>
-            )}
           </div>
           
           <div className="pt-4 flex justify-end">

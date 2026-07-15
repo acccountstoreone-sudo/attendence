@@ -48,12 +48,16 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
         const res = await fetch(`/api/employees?branch_id=${id}`);
         if (res.ok) {
           const json = await res.json();
-          const mapped: BranchEmployee[] = (json.data || []).map((e: Record<string, unknown>) => ({
+          const mapped: BranchEmployee[] = (json.data || []).map((e: any) => ({
             ...e,
-            profile_picture: e.photo_url as string,
+            profile_picture: e.photo_url || e.profile_picture,
+            whatsapp_number: e.whatsapp_number || e.phone,
+            branch_name: e.branches?.name || e.branch_name || (data as any)?.name,
             is_active: e.is_active as boolean,
             is_present_today: !!e.is_present_today,
             today_status: e.today_status as string,
+            check_in_time: e.check_in_time || null,
+            check_out_time: e.check_out_time || null,
             today_working_minutes: e.today_working_minutes as number,
             today_overtime_minutes: e.today_overtime_minutes as number
           }));
@@ -153,7 +157,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
            title="Click to check active staff in Employees tab"
          >
             <span className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">Active Now</span>
-            <span className="text-lg font-bold text-blue-500 group-hover:scale-105 transition-transform">{employees.filter(e => e.is_active !== false).length}</span>
+            <span className="text-lg font-bold text-blue-500 group-hover:scale-105 transition-transform">{employees.filter(e => (e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day') && !e.check_out_time).length}</span>
          </div>
          <div 
            onClick={() => setActiveTab('attendance')}
@@ -216,7 +220,8 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
             employeeId={selectedEmployeeId} 
             employees={employees} 
             branch={branch}
-            onBack={() => setActiveTab('employees')} 
+            onBack={() => setActiveTab('employees')}
+            onViewFullHistory={() => setActiveTab('attendance')} 
           />
         )}
         {activeTab === 'attendance' && <BranchAttendanceTab branch={branch} />}

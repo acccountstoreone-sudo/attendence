@@ -78,14 +78,17 @@ export async function GET(request: NextRequest) {
       const attMap = new Map();
       attendanceData?.forEach(a => attMap.set(a.employee_id, a));
       
-      employeeList.forEach(e => {
-        const att = attMap.get(e.id);
+      employeeList.forEach((e: Record<string, unknown>) => {
+        const att = attMap.get(e.id as string);
         e.is_present_today = !!att;
         e.today_status = att?.status || 'none';
+        e.check_in_time = att?.check_in_time || null;
+        e.check_out_time = att?.check_out_time || null;
         
         let workedMins = 0;
-        if (att?.check_in_time && att?.check_out_time) {
-          workedMins = Math.round((new Date(att.check_out_time).getTime() - new Date(att.check_in_time).getTime()) / 60000);
+        if (att?.check_in_time) {
+          const endTime = att?.check_out_time ? new Date(att.check_out_time).getTime() : new Date().getTime();
+          workedMins = Math.round((endTime - new Date(att.check_in_time).getTime()) / 60000);
         }
         e.today_working_minutes = workedMins > 0 ? workedMins : 0;
         e.today_overtime_minutes = att?.overtime_minutes || 0;

@@ -72,7 +72,7 @@ export default function BroadcastPage() {
 
       await Promise.all(
         employees.map(async (emp) => {
-          const targetUrl = emp.role === 'branch_manager' ? '/branch-manager' : '/employee/history';
+          const targetUrl = emp.role === 'branch_manager' ? '/branch-manager/announcements' : '/employee/announcements';
           const res = await fetch('/api/notifications', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
