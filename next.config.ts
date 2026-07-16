@@ -23,7 +23,7 @@ const withPWA = (withPWAInit as unknown as (opts: Record<string, unknown>) => (c
   },
 });
 
-const nextConfig: NextConfig = {
+const nextConfig: any = {
   /* config options here */
   eslint: {
     ignoreDuringBuilds: true,
