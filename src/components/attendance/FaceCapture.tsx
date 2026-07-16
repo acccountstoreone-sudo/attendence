@@ -146,7 +146,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       if (ph === 'cam_err' || !mountedRef.current) { stopScan(); return; }
       if (ph !== 'scanning') return;
       if (!fa || !v || v.readyState < 3) {
-        scanTimerRef.current = setTimeout(loop, 150) as any;
+        scanTimerRef.current = setTimeout(loop, 150) as unknown as ReturnType<typeof setInterval>;
         return;
       }
       if (isCapturingRef.current) return;
@@ -182,7 +182,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       } catch { /* silently continue */ }
 
       // Schedule next frame only after current processing finishes
-      scanTimerRef.current = setTimeout(loop, 150) as any;
+      scanTimerRef.current = setTimeout(loop, 150) as unknown as ReturnType<typeof setInterval>;
     };
 
     loop();

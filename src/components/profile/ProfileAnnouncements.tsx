@@ -6,9 +6,17 @@ import { Spinner } from '@/components/ui/Spinner';
 import { Bell, Calendar, Clock, Megaphone } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
 export function ProfileAnnouncements({ userId, role }: { userId?: string, role: string }) {
   const router = useRouter();
-  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,7 +28,7 @@ export function ProfileAnnouncements({ userId, role }: { userId?: string, role: 
         if (json.success) {
           setAnnouncements(json.data || []);
           
-          json.data.forEach(async (a: any) => {
+          json.data.forEach(async (a: Announcement) => {
             if (!a.is_read) {
               await fetch(`/api/notifications/${a.id}/read`, { method: 'PUT' });
             }

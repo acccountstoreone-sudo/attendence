@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 export interface NotificationItem {
@@ -67,11 +67,10 @@ export function useRealtimeNotifications(userId: string | undefined) {
     notificationsRef.current = notifications;
   }, [notifications]);
 
-  // useRef ensures the supabase client is created only once — not on every render.
+  // Use useMemo to ensure the supabase client is created only once — not on every render.
   // This prevents the infinite subscribe/unsubscribe loop caused by a new object
   // reference being created each render and appearing as a changed dependency.
-  const supabaseRef = useRef(createClient());
-  const supabase = supabaseRef.current;
+  const supabase = useMemo(() => createClient(), []);
 
   // Fetch initial notifications
   const fetchNotifications = useCallback(async (silent = false) => {

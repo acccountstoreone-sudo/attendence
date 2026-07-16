@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Clock, User, CheckCircle2, AlertTriangle, Plus, RefreshCw, LogOut } from 'lucide-react';
@@ -10,21 +10,42 @@ interface BranchGatePassTabProps {
   branch: Branch;
 }
 
+interface BreakRecord {
+  id: string;
+  employee_id: string;
+  break_type: string;
+  expected_duration_minutes: number;
+  out_time: string;
+  return_time: string | null;
+  status: string;
+  reason: string;
+  actual_duration_minutes?: number;
+  profiles?: { full_name?: string; photo_url?: string; profile_picture?: string; employee_id?: string; role?: string };
+  branches?: { name?: string };
+}
+
+interface Employee {
+  id: string;
+  full_name: string;
+  employee_id?: string;
+  role: string;
+}
+
 export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) => {
-  const [breaks, setBreaks] = useState<any[]>([]);
+  const [breaks, setBreaks] = useState<BreakRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'overstayed'>('active');
   
   // Modal states for issuing Gate Pass
   const [showIssueModal, setShowIssueModal] = useState(false);
-  const [employees, setEmployees] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmpId, setSelectedEmpId] = useState('');
   const [breakType, setBreakType] = useState('namaz_prayer');
   const [durationMins, setDurationMins] = useState(30);
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchBreaks = async () => {
+  const fetchBreaks = useCallback(async () => {
     setLoading(true);
     try {
       const url = `/api/attendance/breaks/list?branch_id=${branch.id}${filter !== 'all' ? `&status=${filter}` : ''}`;
@@ -38,7 +59,7 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
     } finally {
       setLoading(false);
     }
-  };
+  }, [branch.id, filter]);
 
   const fetchEmployees = async () => {
     try {
@@ -55,10 +76,11 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchBreaks();
     const interval = setInterval(fetchBreaks, 30000); // Live refresh every 30s
     return () => clearInterval(interval);
-  }, [branch.id, filter]);
+  }, [fetchBreaks]);
 
   const handleIssueGatePass = async (e: React.FormEvent) => {
     e.preventDefault();
