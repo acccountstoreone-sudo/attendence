@@ -25,6 +25,18 @@ function formatMins(totalMins: number): string {
   return `${m}m`;
 }
 
+function formatDecimalHours(decimalHours: number | string | null | undefined): string {
+  if (!decimalHours) return '0h';
+  const val = Number(decimalHours);
+  if (isNaN(val) || val === 0) return '0h';
+  const totalMins = Math.round(val * 60);
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
 async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUser) {
   const targetBranchId = user.role === 'branch_manager' ? user.branch_id : payload.branch_id;
   if (user.role === 'branch_manager' && !targetBranchId && !payload.employee_id) {
@@ -59,7 +71,7 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
       Status: row.status.toUpperCase(),
       'Check In': row.check_in_time,
       'Check Out': row.check_out_time,
-      'Duty Hours': row.duty_hours,
+      'Duty Hours': formatDecimalHours(row.duty_hours),
       'Late': formatMins(row.late_minutes),
       'Overtime': formatMins(row.overtime_minutes),
       Notes: row.notes,
@@ -87,7 +99,7 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
               'Half Days': ds.summary.total_half_days,
               'Missed Days': ds.summary.total_missed_days,
               'Leave Days': ds.summary.total_on_leave_days,
-              'Duty Hours': ds.summary.total_duty_hours,
+              'Duty Hours': formatDecimalHours(ds.summary.total_duty_hours),
               'Overtime': formatMins(ds.summary.total_overtime_minutes),
               '_rawLateDays': ds.summary.total_late_days,
               '_rawOTMins': ds.summary.total_overtime_minutes,
@@ -222,7 +234,7 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
               String(r.total_present || 0),
               String(r.total_late || 0),
               String(r.total_absent || 0),
-              String(r.total_duty_hours || 0),
+              formatDecimalHours(r.total_duty_hours || 0),
               formatMins(r.total_overtime_minutes || 0)
             ]);
           }
@@ -240,7 +252,7 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
                   d.status.toUpperCase() + (!d.is_right_time ? ' (Mismatch)' : ''),
                   d.check_in_time,
                   d.check_out_time,
-                  String(d.duty_hours),
+                  formatDecimalHours(d.duty_hours),
                   formatMins(d.late_minutes),
                   formatMins(d.overtime_minutes),
                   d.face_verified ? 'Yes' : (d.status === 'absent' || d.status === 'on_leave' ? '-' : 'No')
