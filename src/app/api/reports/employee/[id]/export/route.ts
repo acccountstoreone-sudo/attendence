@@ -168,6 +168,27 @@ async function computeAllTimeDutySummary(supabase: any, targetProfile: any) {
   };
 }
 
+function formatMins(totalMins: number): string {
+  if (!totalMins) return '0m';
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
+function formatDecimalHours(decimalHours: unknown): string {
+  if (!decimalHours) return '0h';
+  const val = Number(decimalHours);
+  if (isNaN(val) || val === 0) return '0h';
+  const totalMins = Math.round(val * 60);
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -329,15 +350,15 @@ export async function GET(
     } else {
       // PDF Format (`format === 'pdf'`)
       
-      const head = ['Date', 'Day', 'Status', 'In / Out', 'Duty', 'Late/Right', 'Overtime', 'Face/Loc', 'Notes'];
+      const head = ['Date', 'Day', 'Status', 'In / Out', 'Duty Hours', 'Late/Right', 'Overtime', 'Face/Loc', 'Notes'];
       const body = (daily_breakdown || []).map((d: Record<string, unknown>) => [
         d.date,
         String(d.day_name || '').slice(0, 3),
         d.status ? String(d.status).toUpperCase() : '',
         `${d.check_in_time || '--:--'} to ${d.check_out_time || '--:--'}`,
-        `${d.duty_hours || 0}h`,
-        d.is_right_time ? 'Right Time' : Number(d.late_minutes) >= 60 ? `${Math.floor(Number(d.late_minutes)/60)}h ${Number(d.late_minutes)%60}m late` : `${d.late_minutes || 0}m late`,
-        d.overtime_minutes ? `${d.overtime_hours}h (${d.overtime_minutes}m)` : `${d.overtime_hours || 0}h`,
+        formatDecimalHours(d.duty_hours),
+        d.is_right_time ? 'Right Time' : `${formatMins(Number(d.late_minutes || 0))} late`,
+        formatMins(Number(d.overtime_hours || 0) * 60 + Number(d.overtime_minutes || 0)),
         `${d.face_verified ? 'Yes (Face)' : 'No (Face)'} | ${d.check_in_lat && d.check_in_lng ? `${Number(d.check_in_lat).toFixed(2)}, ${Number(d.check_in_lng).toFixed(2)}` : 'No GPS'}`,
         d.notes || '',
       ]);

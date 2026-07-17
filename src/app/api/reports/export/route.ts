@@ -25,7 +25,7 @@ function formatMins(totalMins: number): string {
   return `${m}m`;
 }
 
-function formatDecimalHours(decimalHours: number | string | null | undefined): string {
+function formatDecimalHours(decimalHours: unknown): string {
   if (!decimalHours) return '0h';
   const val = Number(decimalHours);
   if (isNaN(val) || val === 0) return '0h';
