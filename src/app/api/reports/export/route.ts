@@ -16,6 +16,15 @@ const exportSchema = z.object({
   direct_download: z.boolean().optional(),
 });
 
+function formatMins(totalMins: number): string {
+  if (!totalMins) return '0m';
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
 async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUser) {
   const targetBranchId = user.role === 'branch_manager' ? user.branch_id : payload.branch_id;
   if (user.role === 'branch_manager' && !targetBranchId && !payload.employee_id) {
@@ -51,9 +60,8 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
       'Check In': row.check_in_time,
       'Check Out': row.check_out_time,
       'Duty Hours': row.duty_hours,
-      'Late Mins': row.late_minutes,
-      'Overtime Mins': row.overtime_minutes,
-      'Overtime Hours': row.overtime_hours,
+      'Late': formatMins(row.late_minutes),
+      'Overtime': formatMins(row.overtime_minutes),
       Notes: row.notes,
     }));
   } 
@@ -80,8 +88,9 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
               'Missed Days': ds.summary.total_missed_days,
               'Leave Days': ds.summary.total_on_leave_days,
               'Duty Hours': ds.summary.total_duty_hours,
-              'Overtime (Mins)': ds.summary.total_overtime_minutes,
-              'Overtime (Hrs)': ds.summary.total_overtime_hours,
+              'Overtime': formatMins(ds.summary.total_overtime_minutes),
+              '_rawLateDays': ds.summary.total_late_days,
+              '_rawOTMins': ds.summary.total_overtime_minutes,
             });
           } catch {
             // skip employee error
@@ -91,11 +100,17 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
 
     if (payload.type === 'late_arrivals') {
       reportTitle = `${bName}_Late_Arrivals_Summary_${payload.year}_${payload.month}`;
-      exportData = exportData.filter(row => Number(row['Late Days'] || 0) > 0);
+      exportData = exportData.filter(row => Number(row['_rawLateDays'] || 0) > 0);
     } else if (payload.type === 'overtime') {
       reportTitle = `${bName}_Overtime_Summary_${payload.year}_${payload.month}`;
-      exportData = exportData.filter(row => Number(row['Overtime (Mins)'] || 0) > 0);
+      exportData = exportData.filter(row => Number(row['_rawOTMins'] || 0) > 0);
     }
+    
+    // Clean up internal keys
+    exportData.forEach(row => {
+      delete row['_rawLateDays'];
+      delete row['_rawOTMins'];
+    });
   } 
   // Option C: Company-Wide All Branches Summary Export (Admin Only)
   else {
@@ -113,7 +128,7 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
         'Total Check-ins': row.total_checkins,
         'Late Check-ins': row.total_late_checkins,
         'Attendance Rate (%)': row.attendance_rate_percent,
-        'Total Overtime (Hours)': row.total_overtime_hours,
+        'Total Overtime': formatMins(Math.round(Number(row.total_overtime_hours || 0) * 60)),
       }));
     } else {
       // Fallback across branches
@@ -197,7 +212,7 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
             p_year: payload.year,
           });
 
-          const branchSummaryCols = ['Employee ID', 'Name', 'Working Days', 'Present', 'Late', 'Missed', 'Duty Hrs', 'Overtime (Hrs)'];
+          const branchSummaryCols = ['Employee ID', 'Name', 'Working Days', 'Present', 'Late', 'Missed', 'Duty Hrs', 'Overtime'];
           let branchSummaryRows = [];
           if (bSummary && bSummary.length > 0) {
             branchSummaryRows = bSummary.map((r: any) => [
@@ -208,7 +223,7 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
               String(r.total_late || 0),
               String(r.total_absent || 0),
               String(r.total_duty_hours || 0),
-              String(((r.total_overtime_minutes || 0) / 60).toFixed(2))
+              formatMins(r.total_overtime_minutes || 0)
             ]);
           }
 
@@ -218,7 +233,7 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
             for (const emp of branchEmployees) {
               try {
                 const ds = await computeEmployeeDutySummary(supabase, emp.id, payload.month, payload.year);
-                const dailyCols = ['Date', 'Day', 'Status', 'Check In', 'Check Out', 'Duty Hrs', 'Late (M)', 'OT (M)', 'Biometrics'];
+                const dailyCols = ['Date', 'Day', 'Status', 'Check In', 'Check Out', 'Duty Hrs', 'Late', 'Overtime', 'Biometrics'];
                 const dailyRows = ds.daily_breakdown.map(d => [
                   d.date,
                   d.day_name.substring(0,3),
@@ -226,8 +241,8 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
                   d.check_in_time,
                   d.check_out_time,
                   String(d.duty_hours),
-                  String(d.late_minutes),
-                  String(d.overtime_minutes),
+                  formatMins(d.late_minutes),
+                  formatMins(d.overtime_minutes),
                   d.face_verified ? 'Yes' : (d.status === 'absent' || d.status === 'on_leave' ? '-' : 'No')
                 ]);
 
