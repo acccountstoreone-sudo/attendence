@@ -16,12 +16,16 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
   const [view, setView] = useState<'daily' | 'monthly'>('daily');
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [showFilter, setShowFilter] = useState(false);
 
   useEffect(() => {
     async function fetchAttendance() {
       setLoading(true);
       try {
-        const url = `/api/attendance/history?branch_id=${branch.id}&limit=100${view === 'daily' ? `&date=${new Date().toISOString().split('T')[0]}` : ''}`;
+        const url = `/api/attendance/history?branch_id=${branch.id}&limit=100${view === 'daily' ? `&date=${selectedDate}` : `&month=${selectedMonth}&year=${selectedYear}`}`;
         const res = await fetch(url);
         if (res.ok) {
           const json = await res.json();
@@ -34,11 +38,17 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
       }
     }
     fetchAttendance();
-  }, [branch.id, view]);
+  }, [branch.id, view, selectedDate, selectedMonth, selectedYear]);
 
   const formatTime = (timeStr?: string) => {
     if (!timeStr) return '--:--';
     return new Date(timeStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleExport = () => {
+    // The export API supports branch_id, month and year
+    const url = `/api/reports/export?branch_id=${branch.id}&format=pdf&month=${selectedMonth}&year=${selectedYear}`;
+    window.open(url, '_blank');
   };
 
   return (
@@ -60,21 +70,68 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
               Monthly
             </button>
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setShowFilter(!showFilter)}>
             <Filter className="w-4 h-4 mr-2" /> Filter
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" /> Export
           </Button>
         </div>
       </div>
 
+      {showFilter && (
+        <Card className="p-4 bg-white border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            {view === 'daily' ? (
+              <div className="flex flex-col space-y-1 w-full sm:w-auto">
+                <label className="text-xs font-semibold text-slate-500">Select Date</label>
+                <input 
+                  type="date" 
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full border border-slate-200 rounded-md px-3 py-1.5 text-sm outline-none focus:border-[#1dbf73]"
+                />
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col space-y-1 w-full sm:w-auto">
+                  <label className="text-xs font-semibold text-slate-500">Select Month</label>
+                  <select 
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                    className="w-full border border-slate-200 rounded-md px-3 py-1.5 text-sm outline-none focus:border-[#1dbf73]"
+                  >
+                    {Array.from({length: 12}).map((_, i) => (
+                      <option key={i+1} value={i+1}>{new Date(0, i).toLocaleString('default', { month: 'long' })}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col space-y-1 w-full sm:w-auto">
+                  <label className="text-xs font-semibold text-slate-500">Select Year</label>
+                  <select 
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="w-full border border-slate-200 rounded-md px-3 py-1.5 text-sm outline-none focus:border-[#1dbf73]"
+                  >
+                    {[2024, 2025, 2026, 2027, 2028, 2029].map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+          </div>
+        </Card>
+      )}
+
       <Card className="bg-white border-slate-200 overflow-hidden shadow-xl">
         <div className="p-4 border-b border-slate-200 bg-white flex items-center justify-between">
            <h5 className="text-sm font-semibold text-slate-900">
-             {view === 'daily' ? 'Today\'s Attendance' : 'This Month\'s Attendance'}
+             {view === 'daily' 
+               ? (selectedDate === new Date().toISOString().split('T')[0] ? 'Today\'s Attendance' : `Attendance for ${selectedDate}`)
+               : `Attendance for ${new Date(0, selectedMonth - 1).toLocaleString('default', { month: 'long' })} ${selectedYear}`}
            </h5>
-           <span className="text-xs text-slate-500 flex items-center"><Calendar className="w-3 h-3 mr-1"/> {new Date().toLocaleDateString()}</span>
+           <span className="text-xs text-slate-500 flex items-center"><Calendar className="w-3 h-3 mr-1"/> {view === 'daily' ? selectedDate : `${selectedMonth}/${selectedYear}`}</span>
         </div>
         {loading ? (
           <div className="p-12 flex justify-center">
