@@ -238,12 +238,20 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
     },
     didParseCell: (data: any) => {
       if (data.section === 'body') {
-        const colName = options.columns[data.column.index];
+        const colName = options.columns[data.column.index] || '';
         const isOvertime = colName.includes('OT') || colName.includes('Overtime');
         const isDuty = colName.includes('Duty');
+        const isLate = colName.includes('Late');
 
-        if (isOvertime) {
-          if (String(data.cell.raw) !== '0h' && String(data.cell.raw) !== '0') {
+        if (isLate) {
+          if (String(data.cell.raw) !== '0m' && String(data.cell.raw) !== '0' && String(data.cell.raw) !== '0h 0m' && String(data.cell.raw) !== '') {
+            data.cell.styles.textColor = [220, 38, 38]; // Red
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fontSize = 10;
+            data.cell.styles.fillColor = [254, 226, 226]; // Light Red background
+          }
+        } else if (isOvertime) {
+          if (String(data.cell.raw) !== '0m' && String(data.cell.raw) !== '0' && String(data.cell.raw) !== '0h 0m' && String(data.cell.raw) !== '') {
             data.cell.styles.textColor = [16, 185, 129]; // Green
             data.cell.styles.fontStyle = 'bold';
             data.cell.styles.fontSize = 10;
@@ -534,10 +542,20 @@ export function generateDetailedCompanyPDF(options: DetailedCompanyPDFOptions): 
         const colName = columns[data.column.index] || '';
         const isOvertime = colName.includes('OT') || colName.includes('Overtime');
         const isDuty = colName.includes('Duty');
+        const isLate = colName.includes('Late');
 
+        // Highlight Late column if Late is > 0
+        if (data.section === 'body' && isLate) {
+          if (String(data.cell.raw) !== '0m' && String(data.cell.raw) !== '0' && String(data.cell.raw) !== '0h 0m' && String(data.cell.raw) !== '') {
+            data.cell.styles.textColor = [220, 38, 38]; // Red
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fontSize = 10;
+            data.cell.styles.fillColor = [254, 226, 226]; // Light Red background
+          }
+        }
         // Highlight OT column if OT is > 0
         if (data.section === 'body' && isOvertime) {
-          if (Number(data.cell.raw) > 0 || (String(data.cell.raw) !== '0h' && String(data.cell.raw) !== '0')) {
+          if (String(data.cell.raw) !== '0m' && String(data.cell.raw) !== '0' && String(data.cell.raw) !== '0h 0m' && String(data.cell.raw) !== '') {
             data.cell.styles.textColor = [16, 185, 129]; // Green for OT
             data.cell.styles.fontStyle = 'bold';
             data.cell.styles.fontSize = 10;
