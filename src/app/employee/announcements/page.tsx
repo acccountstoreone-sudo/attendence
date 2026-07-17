@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
-import { Bell, Calendar, ChevronLeft, Clock } from 'lucide-react';
+import { Bell, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -88,7 +87,7 @@ export default function EmployeeAnnouncementsPage() {
               <Bell className="w-8 h-8 text-slate-300" />
             </div>
             <h3 className="text-lg font-bold text-slate-900">No Messages</h3>
-            <p className="text-slate-500 mt-2 text-sm">You're all caught up! No new announcements.</p>
+            <p className="text-slate-500 mt-2 text-sm">You&apos;re all caught up! No new announcements.</p>
           </div>
         ) : (
           (() => {
