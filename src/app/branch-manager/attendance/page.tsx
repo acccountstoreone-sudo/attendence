@@ -247,16 +247,7 @@ export default function BranchManagerAttendancePage() {
           >
             Refresh
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="border-slate-200 bg-white/50 text-slate-900 hover:bg-slate-100 hover:text-slate-900"
-            icon={<Download className="w-4 h-4" />}
-            onClick={handleExport}
-            disabled={filteredRecords.length === 0}
-          >
-            Export CSV
-          </Button>
+
           <Button
             size="sm"
             variant="primary"

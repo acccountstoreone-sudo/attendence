@@ -26,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
   const supabase = createClient();
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [notifFilter, setNotifFilter] = useState<'all' | 'read' | 'unread'>('all');
 
   const {
     notifications,
@@ -108,33 +109,56 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
           {/* Notifications Dropdown */}
           {showNotifMenu && (
             <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white backdrop-blur-sm border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-30 animate-in fade-in slide-in-from-top-4 duration-300">
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <div className="flex items-center space-x-2">
-                  <span className="font-bold text-sm text-slate-900 uppercase tracking-wider">Notifications</span>
+              <div className="p-4 border-b border-slate-100 flex flex-col gap-3 bg-slate-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-sm text-slate-900 uppercase tracking-wider">Notifications</span>
+                    {unreadCount > 0 && (
+                      <span className="px-2 py-0.5 bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/20 text-xs font-bold rounded-full shadow-sm">
+                        {unreadCount} new
+                      </span>
+                    )}
+                  </div>
                   {unreadCount > 0 && (
-                    <span className="px-2 py-0.5 bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/20 text-xs font-bold rounded-full shadow-sm">
-                      {unreadCount} new
-                    </span>
+                    <button
+                      onClick={() => markAllAsRead()}
+                      className="text-xs text-[#1dbf73] hover:text-[#18a864] flex items-center space-x-1 font-medium"
+                    >
+                      <CheckCheck className="w-3.5 h-3.5" />
+                      <span>Mark all read</span>
+                    </button>
                   )}
                 </div>
-                {unreadCount > 0 && (
+                {/* Filter Tabs */}
+                <div className="flex items-center space-x-2 bg-slate-200/50 p-1 rounded-lg w-fit">
                   <button
-                    onClick={() => markAllAsRead()}
-                    className="text-xs text-[#1dbf73] hover:text-[#18a864] flex items-center space-x-1 font-medium"
+                    onClick={() => setNotifFilter('all')}
+                    className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${notifFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                   >
-                    <CheckCheck className="w-3.5 h-3.5" />
-                    <span>Mark all read</span>
+                    All
                   </button>
-                )}
+                  <button
+                    onClick={() => setNotifFilter('unread')}
+                    className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${notifFilter === 'unread' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Unread
+                  </button>
+                  <button
+                    onClick={() => setNotifFilter('read')}
+                    className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${notifFilter === 'read' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Read
+                  </button>
+                </div>
               </div>
 
               <div className="max-h-[440px] overflow-y-auto divide-y divide-slate-100">
-                {notifications.length === 0 ? (
+                {notifications.filter(n => notifFilter === 'all' ? true : notifFilter === 'read' ? n.is_read : !n.is_read).length === 0 ? (
                   <div className="p-6 text-center text-slate-500 text-xs">
                     No notifications to display.
                   </div>
                 ) : (
-                  notifications.slice(0, 40).map((n) => {
+                  notifications.filter(n => notifFilter === 'all' ? true : notifFilter === 'read' ? n.is_read : !n.is_read).slice(0, 40).map((n) => {
                     const targetUrl = n.action_url || n.link_url;
                     return (
                       <div

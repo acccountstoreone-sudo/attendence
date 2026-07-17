@@ -111,14 +111,14 @@ export function useRealtimeNotifications(userId: string | undefined) {
     return () => clearInterval(syncInterval);
   }, [fetchNotifications]);
 
-  // Loop sound every 3 seconds if there are unread notifications
+  // Loop sound every 5 seconds if there are unread notifications
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (unreadCount > 0) {
       // Play immediately once when count becomes > 0 is handled by realtime or fetch
       interval = setInterval(() => {
         playPipSound();
-      }, 3000);
+      }, 5000);
     }
     return () => {
       if (interval) clearInterval(interval);
