@@ -108,7 +108,7 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
 
   // Header Section
   if (logoBase64) {
-    drawLogo(doc, logoBase64, 14, 8, 24);
+    drawLogo(doc, logoBase64, 14, 8, 35); // Increased logo size from 24 to 35
   } else {
     // Fallback if no logo image is found
     doc.setTextColor(...primaryColor);
@@ -239,15 +239,18 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
     didParseCell: (data: any) => {
       if (data.section === 'body') {
         const colName = options.columns[data.column.index];
-        if (colName === 'Approved OT' || colName === 'Logged OT') {
+        const isOvertime = colName.includes('OT') || colName.includes('Overtime');
+        const isDuty = colName.includes('Duty');
+
+        if (isOvertime) {
           if (String(data.cell.raw) !== '0h' && String(data.cell.raw) !== '0') {
-            data.cell.styles.textColor = [16, 185, 129];
+            data.cell.styles.textColor = [16, 185, 129]; // Green
             data.cell.styles.fontStyle = 'bold';
             data.cell.styles.fontSize = 10;
             data.cell.styles.fillColor = [236, 253, 245];
           }
-        } else if (colName === 'Duty Hrs' || colName === 'Duty') {
-          data.cell.styles.textColor = [16, 185, 129];
+        } else if (isDuty) {
+          data.cell.styles.textColor = [16, 185, 129]; // Green
           data.cell.styles.fontStyle = 'bold';
           data.cell.styles.fontSize = 10;
           data.cell.styles.fillColor = [236, 253, 245];
@@ -528,8 +531,12 @@ export function generateDetailedCompanyPDF(options: DetailedCompanyPDFOptions): 
       alternateRowStyles: { fillColor: [250, 250, 250] },
       willDrawPage: (data: any) => { if (data.pageNumber > 1) { drawWatermark(); } },
       didParseCell: (data: any) => {
+        const colName = columns[data.column.index] || '';
+        const isOvertime = colName.includes('OT') || colName.includes('Overtime');
+        const isDuty = colName.includes('Duty');
+
         // Highlight OT column if OT is > 0
-        if (data.section === 'body' && (columns[data.column.index] === 'OT (M)' || columns[data.column.index] === 'OT')) {
+        if (data.section === 'body' && isOvertime) {
           if (Number(data.cell.raw) > 0 || (String(data.cell.raw) !== '0h' && String(data.cell.raw) !== '0')) {
             data.cell.styles.textColor = [16, 185, 129]; // Green for OT
             data.cell.styles.fontStyle = 'bold';
@@ -538,7 +545,7 @@ export function generateDetailedCompanyPDF(options: DetailedCompanyPDFOptions): 
           }
         }
         // Highlight Duty/Normal Time
-        if (data.section === 'body' && (columns[data.column.index] === 'Duty (M)' || columns[data.column.index] === 'Duty')) {
+        if (data.section === 'body' && isDuty) {
           data.cell.styles.textColor = [16, 185, 129]; // Green instead of blue
           data.cell.styles.fontStyle = 'bold';
           data.cell.styles.fontSize = 10;
