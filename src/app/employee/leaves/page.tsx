@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -37,21 +37,24 @@ export default function EmployeeLeavePage() {
       if (!user) return;
 
       const currentYear = new Date().getFullYear();
+      
+      const { data: typesData } = await supabase.from('leave_types').select('*');
+      
       const { data: balData } = await supabase
         .from('leave_balances')
-        .select('allocated_days, used_days, leave_types(code, name)')
+        .select('*, leave_types(code, name)')
         .eq('user_id', user.id)
         .eq('year', currentYear);
 
-      if (balData && balData.length > 0) {
-        const mapped = balData.map((b, idx) => {
-          const typeObj = (b as unknown as { leave_types?: { code: string; name: string } }).leave_types;
+      if (typesData && typesData.length > 0) {
+        const mapped = typesData.map((t, idx) => {
+          const bal = balData?.find((b: any) => b.leave_type_id === t.id || b.leave_types?.code === t.code);
           return {
             id: String(idx),
-            code: typeObj?.code || 'GENERAL',
-            name: typeObj?.name || 'General Leave',
-            allocated: b.allocated_days || 0,
-            used: b.used_days || 0,
+            code: t.code,
+            name: t.name,
+            allocated: bal?.allocated_days ?? t.default_days ?? 0,
+            used: bal?.used_days ?? 0,
           };
         });
         setBalances(mapped);

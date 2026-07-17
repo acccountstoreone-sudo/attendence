@@ -89,7 +89,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Shift Roster', href: '/branch-manager/shifts', icon: <CalendarDays className="w-5 h-5" /> },
     { label: 'Store Reports', href: '/branch-manager/reports', icon: <FileBarChart className="w-5 h-5" /> },
     { label: 'Attendance Requests', href: '/branch-manager/corrections', icon: <UserCheck className="w-5 h-5" /> },
-    { label: 'Salary Settings', href: '/branch-manager/salary', icon: <DollarSign className="w-5 h-5" /> }, // MISS-N1 fix
     { label: 'Announcements', href: '/branch-manager/announcements', icon: <Megaphone className="w-5 h-5" /> },
     { label: 'My Profile', href: '/branch-manager/profile', icon: <User className="w-5 h-5" /> },
   ];

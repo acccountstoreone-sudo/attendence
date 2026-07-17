@@ -276,9 +276,6 @@ export async function dispatchToAdmins(options: {
   }
 }
 
-/**
- * Dispatches notification + email to Branch Managers (of a specific branch or all)
- */
 export async function dispatchToBranchManagers(options: {
   branchId?: string | null;
   title: string;
@@ -310,7 +307,7 @@ export async function dispatchToBranchManagers(options: {
         userId: mgr.id,
         title: options.title,
         message: options.message,
-        type: options.type || 'info',
+        type: options.type || 'system',
         actionUrl: options.actionUrl || '/branch-manager/attendance',
         sendEmail: options.sendEmail ?? true,
       });
@@ -361,7 +358,7 @@ export async function dispatchToBranchStaff(options: {
         userId: emp.id,
         title: options.title,
         message: options.message,
-        type: options.type || 'info',
+        type: options.type || 'system',
         actionUrl: options.actionUrl || '/employee/history',
         sendEmail: options.sendEmail ?? true,
       });

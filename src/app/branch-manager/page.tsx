@@ -42,6 +42,7 @@ export default function BranchManagerDashboardPage() {
   const [employees, setEmployees] = useState<StoreEmployee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [pendingCorrections, setPendingCorrections] = useState(0);
+  const [exporting, setExporting] = useState(false);
 
   const fetchStoreDashboard = useCallback(async () => {
     setLoading(true);
@@ -145,6 +146,77 @@ export default function BranchManagerDashboardPage() {
     );
   }
 
+  const handleExportTodayPDF = async () => {
+    setExporting(true);
+    try {
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase.from('profiles').select('branch_id').eq('id', user?.id).single();
+      const branchId = profile?.branch_id || '';
+
+      const params = new URLSearchParams({
+        month: String(month),
+        year: String(year),
+        format: 'pdf',
+        ...(branchId ? { branch_id: branchId } : {}),
+      });
+
+      const res = await fetch(`/api/reports/export?${params}`);
+      if (!res.ok) {
+        let errorMsg = 'Export request failed';
+        try {
+          const errData = await res.json();
+          if (errData.error?.message) errorMsg = errData.error.message;
+        } catch (_) {}
+        throw new Error(errorMsg);
+      }
+      
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const json = await res.json();
+        if (!json.success) throw new Error(json?.error?.message || 'Export failed');
+        if (json.data?.signed_url) {
+          window.open(json.data.signed_url, '_blank');
+          return;
+        } else if (json.data?.content_base64) {
+          const byteCharacters = atob(json.data.content_base64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray]);
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Store_Report_${month}_${year}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          return;
+        }
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Store_Report_${month}_${year}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      alert(`Export failed: ${err instanceof Error ? err.message : 'Please try again.'}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 pb-12">
       {/* Sleek Minimal Header */}
@@ -174,10 +246,11 @@ export default function BranchManagerDashboardPage() {
             size="sm"
             variant="primary"
             className="bg-blue-600 hover:bg-blue-700 text-slate-900 border-none"
-            icon={<FileBarChart className="w-4 h-4" />}
-            onClick={() => router.push('/branch-manager/reports')}
+            icon={exporting ? undefined : <FileBarChart className="w-4 h-4" />}
+            isLoading={exporting}
+            onClick={handleExportTodayPDF}
           >
-            Export Report
+            Download PDF
           </Button>
         </div>
       </div>

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
 import { revalidatePath } from 'next/cache';
@@ -80,12 +79,9 @@ export async function PUT(
     }
 
     const supabase = await createClient();
-    const dbClient = process.env.SUPABASE_SERVICE_ROLE_KEY
-      ? createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
-      : supabase;
 
     // Fetch existing branch state for safety checks and manager demotion
-    const { data: existingBranch } = await dbClient
+    const { data: existingBranch } = await supabase
       .from('branches')
       .select('manager_id, is_active')
       .eq('id', branchId)
@@ -93,7 +89,7 @@ export async function PUT(
 
     // Prevent deactivation if active staff exist
     if (payload.is_active === false && existingBranch?.is_active === true) {
-      const { count, error: countErr } = await dbClient
+      const { count, error: countErr } = await supabase
         .from('profiles')
         .select('id', { count: 'exact', head: true })
         .eq('branch_id', branchId)
@@ -117,7 +113,7 @@ export async function PUT(
       }
     }
 
-    const { data: updatedBranch, error } = await dbClient
+    const { data: updatedBranch, error } = await supabase
       .from('branches')
       .update(payload)
       .eq('id', branchId)
@@ -132,7 +128,7 @@ export async function PUT(
     if (payload.manager_id !== undefined && existingBranch) {
       // Demote old manager if it changed
       if (existingBranch.manager_id && existingBranch.manager_id !== payload.manager_id) {
-        await dbClient
+        await supabase
           .from('profiles')
           .update({ role: 'employee' })
           .eq('id', existingBranch.manager_id);
@@ -140,14 +136,14 @@ export async function PUT(
 
       // Promote new manager
       if (payload.manager_id) {
-        await dbClient
+        await supabase
           .from('profiles')
           .update({ role: 'branch_manager', branch_id: branchId })
           .eq('id', payload.manager_id);
       }
     }
 
-    await dbClient.from('audit_logs').insert({
+    await supabase.from('audit_logs').insert({
       actor_id: user.id,
       action: 'UPDATE',
       table_name: 'branches',

@@ -126,7 +126,7 @@ export async function PUT(
 
     const { password, ...profilePayload } = payload;
 
-    const { data: updatedProfile, error: updateErr } = await adminClient
+    const { data: updatedProfile, error: updateErr } = await supabase
       .from('profiles')
       .update(profilePayload)
       .eq('id', targetId)

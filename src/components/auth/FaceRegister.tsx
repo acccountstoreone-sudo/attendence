@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { ScanFace, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import { FaceCapture } from '@/components/attendance/FaceCapture';
@@ -9,9 +9,31 @@ import { createClient } from '@/lib/supabase/client';
 
 export function FaceRegister() {
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const [isEnrolled, setIsEnrolled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    async function checkEnrollment() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase.from('profiles').select('face_enrolled').eq('id', user.id).single();
+          if (data?.face_enrolled) {
+            setIsEnrolled(true);
+          }
+        }
+      } catch (err) {
+        console.error('Error checking face enrollment status', err);
+      } finally {
+        setChecking(false);
+      }
+    }
+    checkEnrollment();
+  }, []);
 
   const handleFaceCapture = async (image: string, descriptor: number[]) => {
     setLoading(true);
@@ -36,6 +58,7 @@ export function FaceRegister() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error?.message || data.error || 'Failed to enroll face.');
       setSuccess(true);
+      setIsEnrolled(true);
       setShowModal(false);
     } catch (err: unknown) {
       console.error(err);
@@ -67,21 +90,41 @@ export function FaceRegister() {
       )}
 
       {success ? (
-        <div className="flex items-center space-x-2 p-3 rounded bg-[#1dbf73]/10 border border-emerald-500/20 text-[#1dbf73] text-sm">
-          <CheckCircle2 className="w-5 h-5 shrink-0" />
-          <span>Face successfully enrolled!</span>
+        <div className="flex items-center justify-between p-3 rounded bg-[#1dbf73]/10 border border-emerald-500/20 text-sm">
+          <div className="flex items-center space-x-2 text-[#1dbf73]">
+            <CheckCircle2 className="w-5 h-5 shrink-0" />
+            <span>Face successfully enrolled!</span>
+          </div>
+          <Button
+            onClick={() => setShowModal(true)}
+            size="sm"
+            variant="outline"
+            className="border-indigo-500/50 hover:bg-indigo-500/10 text-indigo-500"
+          >
+            Update
+          </Button>
         </div>
+      ) : checking ? (
+        <div className="text-sm text-slate-400">Checking status...</div>
       ) : (
-        <Button
-          onClick={() => setShowModal(true)}
-          disabled={loading}
-          isLoading={loading}
-          variant="outline"
-          className="w-full sm:w-auto border-indigo-500/50 hover:bg-indigo-500/10 text-indigo-300"
-          icon={<ScanFace className="w-4 h-4" />}
-        >
-          Setup Face Scan
-        </Button>
+        <div className="flex items-center gap-3">
+          {isEnrolled && (
+            <div className="flex items-center space-x-2 text-[#1dbf73] text-sm font-semibold">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Enrolled</span>
+            </div>
+          )}
+          <Button
+            onClick={() => setShowModal(true)}
+            disabled={loading}
+            isLoading={loading}
+            variant="outline"
+            className="border-indigo-500/50 hover:bg-indigo-500/10 text-indigo-600"
+            icon={<ScanFace className="w-4 h-4" />}
+          >
+            {isEnrolled ? 'Update Face Scan' : 'Setup Face Scan'}
+          </Button>
+        </div>
       )}
 
       <AnimatePresence>
@@ -94,7 +137,7 @@ export function FaceRegister() {
               className="relative w-full max-w-md h-[80vh] flex flex-col bg-[#0A1628] rounded-3xl overflow-hidden shadow-2xl border border-slate-700"
             >
               <div className="flex justify-between items-center p-4 border-b border-slate-800 bg-[#0A1628]/95 z-10">
-                <h3 className="text-lg font-bold text-white">Enroll Face</h3>
+                <h3 className="text-lg font-bold text-white">{isEnrolled ? 'Update Face Scan' : 'Enroll Face'}</h3>
                 <button
                   onClick={() => setShowModal(false)}
                   className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors"

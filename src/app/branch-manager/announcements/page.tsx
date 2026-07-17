@@ -33,7 +33,7 @@ export default function BranchManagerAnnouncementsPage() {
     async function fetchAnnouncements() {
       if (!userId) return;
       try {
-        const res = await fetch('/api/notifications?type=alert&limit=50');
+        const res = await fetch('/api/notifications?type=system&limit=50');
         const json = await res.json();
         if (json.success) {
           setAnnouncements(json.data || []);
@@ -81,20 +81,19 @@ export default function BranchManagerAnnouncementsPage() {
         </p>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6 bg-slate-50 p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-inner min-h-[400px]">
         {announcements.length === 0 ? (
-          <Card className="p-12 text-center bg-slate-50 border-dashed">
-            <Bell className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-slate-900">No Announcements</h3>
-            <p className="text-slate-500 mt-2">You don't have any announcements at the moment.</p>
-          </Card>
+          <div className="flex flex-col items-center justify-center h-full text-center py-20">
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+              <Bell className="w-8 h-8 text-slate-300" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">No Messages</h3>
+            <p className="text-slate-500 mt-2 text-sm">You're all caught up! No new announcements.</p>
+          </div>
         ) : (
           (() => {
-            // Group announcements by date
             const grouped = announcements.reduce((acc: any, announcement: any) => {
               const dateObj = new Date(announcement.created_at);
-              
-              // Determine if Today or Yesterday
               const today = new Date();
               const yesterday = new Date(today);
               yesterday.setDate(yesterday.getDate() - 1);
@@ -113,45 +112,42 @@ export default function BranchManagerAnnouncementsPage() {
             }, {});
 
             return Object.keys(grouped).map((dateKey) => (
-              <div key={dateKey} className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
+              <div key={dateKey} className="space-y-6">
+                <div className="flex justify-center">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-200/50 px-3 py-1 rounded-full">
                     {dateKey}
-                  </h2>
-                  <div className="flex-1 h-px bg-slate-200"></div>
+                  </span>
                 </div>
                 
-                <div className="space-y-4">
-                  {grouped[dateKey].map((announcement: any) => {
+                <div className="space-y-4 flex flex-col">
+                  {grouped[dateKey].reverse().map((announcement: any) => {
                     const dateObj = new Date(announcement.created_at);
                     const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                     const isUnread = !announcement.is_read;
 
                     return (
-                      <Card key={announcement.id} className={`p-0 overflow-hidden transition-all shadow-sm border ${isUnread ? 'border-rose-200 shadow-rose-100/50' : 'border-slate-200 hover:border-slate-300'}`}>
-                        <div className="flex flex-col sm:flex-row">
-                          {/* Time Column */}
-                          <div className={`sm:w-32 flex flex-row sm:flex-col items-center sm:items-start justify-between sm:justify-center p-4 sm:p-6 border-b sm:border-b-0 sm:border-r ${isUnread ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-100'}`}>
-                            <div className="flex items-center space-x-2">
-                              {isUnread && <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>}
-                              <span className={`text-sm font-bold ${isUnread ? 'text-rose-700' : 'text-slate-500'}`}>
-                                {timeStr}
-                              </span>
+                      <div key={announcement.id} className="flex w-full items-end justify-start">
+                        <div className="flex flex-col max-w-[85%] sm:max-w-[70%]">
+                          <div className={`p-4 rounded-2xl rounded-bl-sm shadow-sm relative ${
+                            isUnread 
+                              ? 'bg-gradient-to-br from-[#1dbf73] to-[#16965a] text-white' 
+                              : 'bg-white border border-slate-200 text-slate-800'
+                          }`}>
+                            <div className="flex items-start justify-between gap-4 mb-1">
+                              <h3 className={`font-bold text-sm ${isUnread ? 'text-white' : 'text-slate-900'}`}>
+                                {announcement.title}
+                              </h3>
+                              {isUnread && <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0 mt-1 animate-pulse"></span>}
                             </div>
-                            <span className="text-xs font-semibold text-slate-400 sm:mt-1">
-                              {isUnread ? 'New' : 'Read'}
-                            </span>
-                          </div>
-                          
-                          {/* Content Column */}
-                          <div className="flex-1 p-4 sm:p-6 bg-white">
-                            <h3 className="text-lg font-bold text-slate-900 mb-2">{announcement.title}</h3>
-                            <p className="text-slate-900 leading-relaxed text-sm whitespace-pre-wrap">
+                            <p className={`text-sm whitespace-pre-wrap leading-relaxed ${isUnread ? 'text-emerald-50' : 'text-slate-600'}`}>
                               {announcement.message}
                             </p>
+                            <div className={`text-[10px] font-medium text-right mt-2 ${isUnread ? 'text-emerald-200' : 'text-slate-400'}`}>
+                              {timeStr}
+                            </div>
                           </div>
                         </div>
-                      </Card>
+                      </div>
                     );
                   })}
                 </div>

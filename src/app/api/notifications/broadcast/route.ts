@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       branchId: targetBranchId === 'all' ? null : targetBranchId,
       title: payload.title,
       message: payload.message,
-      type: 'alert',
+      type: 'system',
       actionUrl: '/employee/announcements',
       sendEmail: true,
       includeManagers: false,
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       branchId: targetBranchId === 'all' ? null : targetBranchId,
       title: payload.title,
       message: payload.message,
-      type: 'alert',
+      type: 'system',
       actionUrl: '/branch-manager/announcements',
       sendEmail: true,
     });

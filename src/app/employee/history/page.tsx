@@ -272,7 +272,7 @@ export default function EmployeeHistoryPage() {
             size="sm"
             className="flex-1 md:flex-none border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs py-2 px-3.5 rounded-xl gap-2 transition-all shadow-2xs"
           >
-            {exporting === 'csv' ? <Spinner size="sm" /> : <FileText className="w-4 h-4 text-sky-600" />}
+            {exporting === 'csv' ? <Spinner size="sm" label="" /> : <FileText className="w-4 h-4 text-sky-600" />}
             CSV
           </Button>
           <Button
@@ -282,7 +282,7 @@ export default function EmployeeHistoryPage() {
             size="sm"
             className="flex-1 md:flex-none border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs py-2 px-3.5 rounded-xl gap-2 transition-all shadow-2xs"
           >
-            {exporting === 'excel' ? <Spinner size="sm" /> : <FileSpreadsheet className="w-4 h-4 text-[#1dbf73]" />}
+            {exporting === 'excel' ? <Spinner size="sm" label="" /> : <FileSpreadsheet className="w-4 h-4 text-[#1dbf73]" />}
             Excel
           </Button>
           <Button
@@ -292,7 +292,7 @@ export default function EmployeeHistoryPage() {
             size="sm"
             className="flex-1 md:flex-none bg-gradient-to-r from-[#1dbf73] to-[#16965a] hover:from-[#16965a] hover:to-[#108a50] text-white font-bold text-xs py-2 px-4 rounded-xl gap-2 shadow-sm border-0"
           >
-            {exporting === 'pdf' ? <Spinner size="sm" /> : <Download className="w-4 h-4" />}
+            {exporting === 'pdf' ? <Spinner size="sm" label="" /> : <Download className="w-4 h-4" />}
             PDF
           </Button>
         </Card>
