@@ -3,7 +3,7 @@ import autoTable from 'jspdf-autotable';
 import fs from 'fs';
 import path from 'path';
 
-function drawLogo(doc: jsPDF, logoBase64: string, x: number, y: number, targetHeight: number = 18) {
+function drawLogo(doc: jsPDF, logoBase64: string, x: number, y: number, targetHeight: number = 24) {
   try {
     const props = doc.getImageProperties(logoBase64);
     let imgWidth = (props.width * targetHeight) / props.height;
@@ -106,7 +106,7 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
 
   // Header Section
   if (logoBase64) {
-    drawLogo(doc, logoBase64, 14, 10, 18);
+    drawLogo(doc, logoBase64, 14, 8, 24);
   } else {
     // Fallback if no logo image is found
     doc.setTextColor(...primaryColor);
@@ -241,11 +241,14 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
           if (String(data.cell.raw) !== '0h' && String(data.cell.raw) !== '0') {
             data.cell.styles.textColor = [16, 185, 129];
             data.cell.styles.fontStyle = 'bold';
-            data.cell.styles.fontSize = 9;
+            data.cell.styles.fontSize = 10;
+            data.cell.styles.fillColor = [236, 253, 245];
           }
         } else if (colName === 'Duty Hrs' || colName === 'Duty') {
-          data.cell.styles.textColor = [37, 99, 235];
+          data.cell.styles.textColor = [16, 185, 129];
           data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fontSize = 10;
+          data.cell.styles.fillColor = [236, 253, 245];
         } else if (colName === 'Status') {
           const val = String(data.cell.raw).toUpperCase();
           if (val.includes('APPROVED')) {
@@ -528,13 +531,16 @@ export function generateDetailedCompanyPDF(options: DetailedCompanyPDFOptions): 
           if (Number(data.cell.raw) > 0 || (String(data.cell.raw) !== '0h' && String(data.cell.raw) !== '0')) {
             data.cell.styles.textColor = [16, 185, 129]; // Green for OT
             data.cell.styles.fontStyle = 'bold';
-            data.cell.styles.fontSize = 9;
+            data.cell.styles.fontSize = 10;
+            data.cell.styles.fillColor = [236, 253, 245];
           }
         }
         // Highlight Duty/Normal Time
         if (data.section === 'body' && (columns[data.column.index] === 'Duty (M)' || columns[data.column.index] === 'Duty')) {
-          data.cell.styles.textColor = [37, 99, 235]; // Blue
+          data.cell.styles.textColor = [16, 185, 129]; // Green instead of blue
           data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fontSize = 10;
+          data.cell.styles.fillColor = [236, 253, 245];
         }
         // Highlight Mismatch status
         if (data.section === 'body' && columns[data.column.index] === 'Status') {
@@ -911,28 +917,28 @@ export function generateEmployeeFullDutyPDF(options: EmployeeFullDutyPDFOptions)
 
   // Box 5: Duty Hours
   const m5X = 18 + colW * 4;
-  doc.setFillColor(255, 255, 255);
+  doc.setFillColor(236, 253, 245);
   doc.rect(m5X, boxY, colW - 3, 17, 'F');
   doc.setFontSize(7);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(...labelColor);
   doc.text('TOTAL DUTY HOURS', m5X + 3, boxY + 5);
-  doc.setFontSize(10.5);
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(37, 99, 235);
+  doc.setTextColor(16, 185, 129);
   doc.text(`${options.summary.total_duty_hours} Hrs`, m5X + 3, boxY + 12.5);
 
   // Box 6: Overtime
   const m6X = 18 + colW * 5;
-  doc.setFillColor(255, 255, 255);
+  doc.setFillColor(236, 253, 245);
   doc.rect(m6X, boxY, colW - 3, 17, 'F');
   doc.setFontSize(7);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(...labelColor);
   doc.text('TOTAL OVERTIME', m6X + 3, boxY + 5);
-  doc.setFontSize(10.5);
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(147, 51, 234);
+  doc.setTextColor(16, 185, 129);
   doc.text(`${options.summary.total_overtime_hours}h (${options.summary.total_overtime_minutes}m)`, m6X + 3, boxY + 12.5);
 
   // 3. Table Section
@@ -970,11 +976,14 @@ export function generateEmployeeFullDutyPDF(options: EmployeeFullDutyPDFOptions)
           if (String(data.cell.raw) !== '0h' && !String(data.cell.raw).startsWith('0h (0m)')) {
             data.cell.styles.textColor = [16, 185, 129];
             data.cell.styles.fontStyle = 'bold';
-            data.cell.styles.fontSize = 8.5;
+            data.cell.styles.fontSize = 9.5;
+            data.cell.styles.fillColor = [236, 253, 245];
           }
         } else if (colName === 'Duty') {
-          data.cell.styles.textColor = [37, 99, 235];
+          data.cell.styles.textColor = [16, 185, 129];
           data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fontSize = 9.5;
+          data.cell.styles.fillColor = [236, 253, 245];
         } else if (colName === 'Status') {
           const val = String(data.cell.raw).toUpperCase();
           if (val === 'PRESENT') {
