@@ -283,9 +283,9 @@ export default function EmployeeOvertimePage() {
                     type="submit"
                     variant="primary"
                     className="flex-1"
-                    disabled={submitting}
+                    isLoading={submitting}
                   >
-                    {submitting ? <Spinner size="sm" color="white" /> : 'Submit Request'}
+                    Submit Request
                   </Button>
                 </div>
               </form>

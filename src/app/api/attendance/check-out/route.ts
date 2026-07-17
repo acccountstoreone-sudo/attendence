@@ -18,6 +18,7 @@ const checkOutSchema = z.object({
   liveness_passed: z.boolean().optional(),
   photo_url: z.string().optional(),
   webauthn_verified: z.boolean().optional(),
+  is_manual_override: z.boolean().optional(),
 });
 
 export const maxDuration = 60;

@@ -5,10 +5,10 @@ import { dispatchToAdmins, dispatchToBranchManagers } from '@/lib/notification-s
 import { z } from 'zod';
 
 const requestOvertimeSchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
-  check_in_time: z.string().regex(/^\d{2}:\d{2}$/, 'Must be HH:mm'),
-  check_out_time: z.string().regex(/^\d{2}:\d{2}$/, 'Must be HH:mm'),
-  reason: z.string().min(5, 'Reason must be at least 5 characters long.'),
+  date: z.string().min(10, 'Must be a valid date'),
+  check_in_time: z.string().min(4, 'Must be a valid time'),
+  check_out_time: z.string().min(4, 'Must be a valid time'),
+  reason: z.string().min(2, 'Reason is required.'),
 });
 
 export async function POST(request: NextRequest) {
@@ -38,8 +38,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Construct valid ISO strings for Bangladesh time
-    const checkInISO = `${payload.date}T${payload.check_in_time}:00+06:00`;
-    const checkOutISO = `${payload.date}T${payload.check_out_time}:00+06:00`;
+    const inTimeStr = payload.check_in_time.length === 5 ? `${payload.check_in_time}:00` : payload.check_in_time;
+    const outTimeStr = payload.check_out_time.length === 5 ? `${payload.check_out_time}:00` : payload.check_out_time;
+    const checkInISO = `${payload.date}T${inTimeStr}+06:00`;
+    const checkOutISO = `${payload.date}T${outTimeStr}+06:00`;
 
     // Calculate overtime minutes safely
     const inDate = new Date(checkInISO);
@@ -82,7 +84,7 @@ export async function POST(request: NextRequest) {
           branchId: user.branch_id,
           title: 'New Overtime Duty Request ⏱️',
           message: msg,
-          type: 'overtime',
+          type: 'attendance_approval',
           actionUrl: '/branch-manager/corrections',
           sendEmail: true,
         });
@@ -90,7 +92,7 @@ export async function POST(request: NextRequest) {
       await dispatchToAdmins({
         title: 'New Overtime Duty Request ⏱️',
         message: msg,
-        type: 'overtime',
+        type: 'attendance_approval',
         actionUrl: '/admin/corrections',
         sendEmail: true,
       });
