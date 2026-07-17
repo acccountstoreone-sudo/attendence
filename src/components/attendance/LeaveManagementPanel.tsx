@@ -162,16 +162,17 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
       </div>
 
       {/* Tabs & Search */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="flex bg-[#ffffff]/90 border border-slate-200 p-1 rounded-xl shadow-inner overflow-x-auto">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+        {/* Modern Tabs */}
+        <div className="flex flex-wrap items-center gap-2 bg-slate-100 p-1.5 rounded-xl self-start w-full sm:w-auto">
           {(['pending', 'approved', 'rejected', 'all'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setStatusTab(tab)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold capitalize transition-all whitespace-nowrap flex items-center gap-2 ${
+              className={`flex-1 sm:flex-none px-5 py-2.5 rounded-lg text-sm font-semibold capitalize transition-all flex justify-center items-center gap-2 ${
                 statusTab === tab
-                  ? 'bg-[#1dbf73] text-[#ffffff] shadow-md'
-                  : 'text-slate-900 hover:text-slate-900'
+                  ? 'bg-white text-[#1dbf73] shadow-sm ring-1 ring-slate-200'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
               }`}
             >
               {tab === 'pending' && <Clock className="w-4 h-4" />}
@@ -183,64 +184,73 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
           ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto flex-wrap">
+        {/* Filters Group */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
           {/* Branch filter (only for admin) */}
           {role === 'admin' && branches.length > 0 && (
-            <div className="flex items-center gap-2 bg-[#ffffff]/90 border border-slate-200 rounded-xl px-3 py-2">
-              <Building2 className="w-4 h-4 text-[#1dbf73] shrink-0" />
+            <div className="relative w-full sm:w-auto min-w-[200px]">
+              <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <select
                 value={branchFilter}
                 onChange={(e) => setBranchFilter(e.target.value)}
-                className="bg-transparent text-sm text-slate-700 focus:outline-none"
+                className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1dbf73]/20 focus:border-[#1dbf73] appearance-none transition-all shadow-sm cursor-pointer"
               >
-                <option value="all">All Stores / Branches</option>
+                <option value="all">All Stores & Branches</option>
                 {branches.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name}
                   </option>
                 ))}
               </select>
+              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
             </div>
           )}
 
           {/* Date range inputs */}
-          <div className="flex items-center gap-2 bg-[#ffffff]/90 border border-slate-200 rounded-xl px-3 py-1.5">
-            <input
-              type="date"
-              value={dateFrom}
-              max={dateTo || undefined}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="bg-transparent text-sm text-slate-700 focus:outline-none"
-              title="Start Date"
-            />
-            <span className="text-slate-400 font-bold">-</span>
-            <input
-              type="date"
-              value={dateTo}
-              min={dateFrom || undefined}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="bg-transparent text-sm text-slate-700 focus:outline-none"
-              title="End Date"
-            />
+          <div className="flex items-center bg-white border border-slate-200 rounded-xl px-2 py-1.5 shadow-sm w-full sm:w-auto">
+            <div className="flex items-center px-2">
+              <CalendarDays className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
+              <input
+                type="date"
+                value={dateFrom}
+                max={dateTo || undefined}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="bg-transparent text-sm text-slate-700 focus:outline-none w-[110px] cursor-pointer"
+                title="Start Date"
+              />
+            </div>
+            <div className="w-[1px] h-5 bg-slate-200 mx-1 shrink-0"></div>
+            <div className="flex items-center px-2">
+              <input
+                type="date"
+                value={dateTo}
+                min={dateFrom || undefined}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="bg-transparent text-sm text-slate-700 focus:outline-none w-[110px] cursor-pointer"
+                title="End Date"
+              />
+            </div>
             {(dateFrom || dateTo) && (
               <button
                 onClick={() => { setDateFrom(''); setDateTo(''); }}
-                className="text-xs text-slate-400 hover:text-rose-500 transition-colors font-bold px-1"
+                className="p-1 hover:bg-rose-50 rounded-md text-slate-400 hover:text-rose-500 transition-colors ml-1"
                 title="Clear Dates"
               >
-                ✕
+                <XCircle className="w-4 h-4" />
               </button>
             )}
           </div>
 
-          <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
+          <div className="relative w-full sm:w-[280px]">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search employee, ID, branch, reason..."
+              placeholder="Search employee, ID, reason..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#ffffff]/90 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73] transition-colors"
+              className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1dbf73]/20 focus:border-[#1dbf73] transition-all shadow-sm"
             />
           </div>
         </div>
