@@ -5,8 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Lock, Mail, Eye, EyeOff, AlertTriangle, Check, ShieldCheck, ScanFace, MapPin, Orbit, KeyRound, RefreshCw, X, Sparkles } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import Abstract3DBackground from '@/components/Abstract3DBackground';
+import dynamic from 'next/dynamic';
 
+const Abstract3DBackground = dynamic(() => import('@/components/Abstract3DBackground'), {
+  ssr: false,
+});
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -269,7 +272,7 @@ function LoginPageContent() {
               Precision Tracking with <br/>
               <span className="font-bold text-[#1dbf73]">AI Face ID & Geo-fencing</span>
             </h2>
-            <p className="text-slate-600 leading-relaxed text-[13px] md:text-sm font-light opacity-90">
+            <p className="text-slate-900 leading-relaxed text-[13px] md:text-sm font-light opacity-90">
               Anchor Fashion&apos;s advanced attendance grid exclusively verifies identities via 3D facial recognition, synchronized instantly with military-grade GPS positioning.
             </p>
           </motion.div>
@@ -596,7 +599,7 @@ function LoginPageContent() {
                     </div>
                     <div>
                       <h4 className="text-lg font-bold text-slate-900">Password Changed Successfully!</h4>
-                      <p className="text-xs text-slate-600 mt-1 max-w-xs mx-auto">
+                      <p className="text-xs text-slate-900 mt-1 max-w-xs mx-auto">
                         Your account password has been updated. We have pre-filled your new password into the login form so you can sign in right away.
                       </p>
                     </div>

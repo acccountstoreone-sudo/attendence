@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
@@ -42,12 +42,12 @@ export default function UnauthorizedPage() {
       <div className="relative z-10 w-full max-w-md">
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-16 h-16 bg-white border border-slate-200 rounded-2xl flex items-center justify-center mb-4 shadow-xl shadow-[#1dbf73]/10">
-            <ShieldAlert className="w-8 h-8 text-rose-500" />
+            <ShieldAlert className="w-8 h-8 text-rose-600" />
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
             Access <span className="text-[#1dbf73]">Restricted</span>
           </h1>
-          <p className="text-slate-600 text-sm">
+          <p className="text-slate-900 text-sm">
             403 - You don&apos;t have permission to view this resource.
           </p>
         </div>
@@ -56,15 +56,15 @@ export default function UnauthorizedPage() {
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#1dbf73_1px,transparent_1px)] [background-size:20px_20px] mix-blend-overlay z-0" />
           
           <div className="relative z-10 space-y-4">
-            <p className="text-slate-600 text-sm text-center font-medium">
+            <p className="text-slate-900 text-sm text-center font-medium">
               This area is restricted to authorized personnel. Attempting to access permalinks outside of your role clearance is logged.
             </p>
 
-            <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl text-center">
-              <span className="text-rose-400 text-xs font-bold uppercase tracking-widest block mb-1">
+            <div className="bg-rose-50 border border-rose-200 p-4 rounded-xl text-center">
+              <span className="text-rose-700 text-xs font-bold uppercase tracking-widest block mb-1">
                 Security Policy
               </span>
-              <span className="text-rose-300/80 text-xs">
+              <span className="text-rose-600 text-xs">
                 Anchor Fashion Management System strictly enforces role-based access control.
               </span>
             </div>

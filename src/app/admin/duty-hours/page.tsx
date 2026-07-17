@@ -25,6 +25,7 @@ interface BranchSettings {
   overtime_slot_minutes: number;
   holiday_overtime_multiplier: number;
   require_overtime_approval: boolean;
+  weekly_off_days: number[];
 }
 
 interface HistoryEntry {
@@ -37,7 +38,8 @@ interface HistoryEntry {
   overtime_slot_minutes?: number;
   holiday_overtime_multiplier?: number;
   require_overtime_approval?: boolean;
-  change_reason: string | null;
+  weekly_off_days?: number[];
+  change_reason?: string | null;
   effective_from: string;
   effective_to: string | null;
   profiles: { full_name: string; role: string } | null;
@@ -61,6 +63,7 @@ export default function AdminDutyHoursPage() {
     overtime_slot_minutes: 15,
     holiday_overtime_multiplier: 2.0,
     require_overtime_approval: false,
+    weekly_off_days: [5], // Default Friday
   });
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loadingBranches, setLoadingBranches] = useState(true);
@@ -108,12 +111,13 @@ export default function AdminDutyHoursPage() {
           overtime_slot_minutes: json.data.overtime_slot_minutes ?? 15,
           holiday_overtime_multiplier: json.data.holiday_overtime_multiplier ?? 2.0,
           require_overtime_approval: Boolean(json.data.require_overtime_approval),
+          weekly_off_days: Array.isArray(json.data.weekly_off_days) ? json.data.weekly_off_days : [5],
         });
       } else {
         // No settings yet — use defaults
         setSettings({ 
           work_start_time: '09:00', work_end_time: '17:00', late_grace_minutes: 15, overtime_after_minutes: 0, half_day_hours: 4,
-          overtime_slot_minutes: 15, holiday_overtime_multiplier: 2.0, require_overtime_approval: false
+          overtime_slot_minutes: 15, holiday_overtime_multiplier: 2.0, require_overtime_approval: false, weekly_off_days: [5]
         });
       }
 
@@ -175,6 +179,7 @@ export default function AdminDutyHoursPage() {
           overtime_slot_minutes: Number(settings.overtime_slot_minutes),
           holiday_overtime_multiplier: Number(settings.holiday_overtime_multiplier),
           require_overtime_approval: Boolean(settings.require_overtime_approval),
+          weekly_off_days: settings.weekly_off_days,
           change_reason: changeReason || undefined,
         }),
       });
@@ -204,7 +209,7 @@ export default function AdminDutyHoursPage() {
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
             Branch Duty Hours
           </h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-slate-900 mt-1">
             Set work start/end times per branch. Overtime is auto-calculated after the end time.
           </p>
         </div>
@@ -217,7 +222,7 @@ export default function AdminDutyHoursPage() {
         <Card className="bg-white border-slate-200">
           <div className="flex items-center gap-2 mb-3">
             <Building2 className="w-4 h-4 text-blue-400" />
-            <label className="text-xs font-bold uppercase text-slate-600 tracking-widest">Select Branch</label>
+            <label className="text-xs font-bold uppercase text-slate-900 tracking-widest">Select Branch</label>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {branches.map(b => (
@@ -226,11 +231,11 @@ export default function AdminDutyHoursPage() {
                 onClick={() => setSelectedBranchId(b.id)}
                 className={`px-3 py-2.5 rounded-xl border text-sm font-bold transition-all text-left ${
                   selectedBranchId === b.id
-                    ? 'bg-blue-600/20 border-blue-500/50 text-blue-300 shadow-lg shadow-blue-950/50'
-                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-600 hover:text-slate-700'
+                    ? 'bg-blue-50 border-blue-400 text-blue-700 shadow-sm shadow-blue-500/20'
+                    : 'bg-white border-slate-200 text-slate-900 hover:border-slate-400 hover:text-slate-700'
                 }`}
               >
-                <span className="block text-[10px] font-extrabold text-blue-400/70 uppercase tracking-wider mb-0.5">{b.code}</span>
+                <span className={`block text-[10px] font-extrabold uppercase tracking-wider mb-0.5 ${selectedBranchId === b.id ? 'text-blue-500/80' : 'text-slate-400'}`}>{b.code}</span>
                 {b.name}
               </button>
             ))}
@@ -273,7 +278,7 @@ export default function AdminDutyHoursPage() {
                     <h2 className="text-lg font-extrabold text-slate-900">{selectedBranch?.name}</h2>
                     <p className="text-xs text-slate-500 mt-0.5">Configure duty hours for this branch</p>
                   </div>
-                  <span className="text-xs font-bold text-blue-400 bg-blue-950/60 border border-blue-800/50 px-2.5 py-1 rounded-lg">
+                  <span className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">
                     {selectedBranch?.code}
                   </span>
                 </div>
@@ -281,7 +286,7 @@ export default function AdminDutyHoursPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Work Start Time */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                    <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-2">
                       Duty Start Time
                     </label>
                     <input
@@ -294,7 +299,7 @@ export default function AdminDutyHoursPage() {
 
                   {/* Work End Time */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                    <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-2">
                       Duty End Time (Overtime starts after this)
                     </label>
                     <input
@@ -307,7 +312,7 @@ export default function AdminDutyHoursPage() {
 
                   {/* Late Grace */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                    <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-2">
                       Late Grace Period (minutes)
                     </label>
                     <input
@@ -317,12 +322,12 @@ export default function AdminDutyHoursPage() {
                       onChange={e => setSettings(s => ({ ...s, late_grace_minutes: Number(e.target.value) }))}
                       className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                     />
-                    <p className="text-xs text-slate-600 mt-1">Check-in within this window is still counted as on-time</p>
+                    <p className="text-xs text-slate-900 mt-1">Check-in within this window is still counted as on-time</p>
                   </div>
 
                   {/* Overtime after */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                    <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-2">
                       Overtime Threshold (minutes after end time)
                     </label>
                     <input
@@ -332,12 +337,12 @@ export default function AdminDutyHoursPage() {
                       onChange={e => setSettings(s => ({ ...s, overtime_after_minutes: Number(e.target.value) }))}
                       className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                     />
-                    <p className="text-xs text-slate-600 mt-1">0 = overtime starts immediately after duty end time</p>
+                    <p className="text-xs text-slate-900 mt-1">0 = overtime starts immediately after duty end time</p>
                   </div>
 
                   {/* Half day hours */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                    <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-2">
                       Half-Day Hours Threshold
                     </label>
                     <input
@@ -347,12 +352,12 @@ export default function AdminDutyHoursPage() {
                       onChange={e => setSettings(s => ({ ...s, half_day_hours: Number(e.target.value) }))}
                       className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                     />
-                    <p className="text-xs text-slate-600 mt-1">If worked hours are below this, attendance is marked as Half Day</p>
+                    <p className="text-xs text-slate-900 mt-1">If worked hours are below this, attendance is marked as Half Day</p>
                   </div>
 
                   {/* Overtime Slot Rounding */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                    <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-2">
                       Overtime Slot Rounding (minutes)
                     </label>
                     <select
@@ -365,12 +370,12 @@ export default function AdminDutyHoursPage() {
                       <option value={30}>30-minute intervals (Half-hour)</option>
                       <option value={60}>60-minute intervals (Hourly)</option>
                     </select>
-                    <p className="text-xs text-slate-600 mt-1">Round overtime down to the nearest block</p>
+                    <p className="text-xs text-slate-900 mt-1">Round overtime down to the nearest block</p>
                   </div>
 
                   {/* Holiday Overtime Multiplier */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                    <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-2">
                       Holiday / Off-Day Overtime Multiplier
                     </label>
                     <select
@@ -384,18 +389,18 @@ export default function AdminDutyHoursPage() {
                       <option value={2.5}>2.5x (Double & Half)</option>
                       <option value={3.0}>3.0x (Triple Rate)</option>
                     </select>
-                    <p className="text-xs text-slate-600 mt-1">Pay rate multiplier for duties on Fridays and holidays</p>
+                    <p className="text-xs text-slate-900 mt-1">Pay rate multiplier for duties on Fridays and holidays</p>
                   </div>
 
                   {/* Require Overtime Approval Toggle */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                    <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-2">
                       Overtime Approval Workflow
                     </label>
                     <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
                       <div>
                         <span className="text-sm font-bold text-slate-900 block">Require Verification</span>
-                        <span className="text-xs text-slate-600">Overtime requires BM/Admin sign-off before payout</span>
+                        <span className="text-xs text-slate-900">Overtime requires BM/Admin sign-off before payout</span>
                       </div>
                       <input
                         type="checkbox"
@@ -406,9 +411,44 @@ export default function AdminDutyHoursPage() {
                     </div>
                   </div>
 
+                  {/* Weekly Off Days */}
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-2">
+                      Weekly Off Days
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: 0, label: 'Sunday' }, { id: 1, label: 'Monday' }, { id: 2, label: 'Tuesday' },
+                        { id: 3, label: 'Wednesday' }, { id: 4, label: 'Thursday' }, { id: 5, label: 'Friday' }, { id: 6, label: 'Saturday' }
+                      ].map(day => {
+                        const isSelected = settings.weekly_off_days.includes(day.id);
+                        return (
+                          <button
+                            key={day.id}
+                            onClick={() => {
+                              setSettings(s => {
+                                const newDays = isSelected 
+                                  ? s.weekly_off_days.filter(d => d !== day.id)
+                                  : [...s.weekly_off_days, day.id];
+                                return { ...s, weekly_off_days: newDays };
+                              });
+                            }}
+                            className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors ${
+                              isSelected 
+                                ? 'bg-[#1dbf73] border-[#16965a] text-white' 
+                                : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
+                            }`}
+                          >
+                            {day.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   {/* Change reason */}
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                    <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-2">
                       Change Reason (optional)
                     </label>
                     <input
@@ -428,21 +468,21 @@ export default function AdminDutyHoursPage() {
                     <span>Duty Hours:</span>
                     <span className="font-mono text-slate-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md">{settings.work_start_time} – {settings.work_end_time}</span>
                   </div>
-                  <div className="text-slate-600 flex items-center gap-1">
+                  <div className="text-slate-900 flex items-center gap-1">
                     <span>Late after:</span> <span className="text-slate-900 font-mono font-bold">{settings.work_start_time}</span>
                     {settings.late_grace_minutes > 0 && <span className="text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">+{settings.late_grace_minutes}min grace</span>}
                   </div>
-                  <div className="text-slate-600 flex items-center gap-1">
+                  <div className="text-slate-900 flex items-center gap-1">
                     <span>Overtime: after</span> <span className="text-amber-700 font-mono font-bold">{settings.work_end_time}</span>
                     {settings.overtime_after_minutes > 0 && <span className="text-amber-800 font-semibold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">+{settings.overtime_after_minutes}min threshold</span>}
                   </div>
-                  <div className="text-slate-600 flex items-center gap-1">
+                  <div className="text-slate-900 flex items-center gap-1">
                     <span>Slot: <strong className="text-slate-900">{settings.overtime_slot_minutes}m</strong></span>
                   </div>
-                  <div className="text-slate-600 flex items-center gap-1">
+                  <div className="text-slate-900 flex items-center gap-1">
                     <span>Holiday OT: <strong className="text-purple-800 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded">{settings.holiday_overtime_multiplier}x</strong></span>
                   </div>
-                  <div className="text-slate-600 flex items-center gap-1">
+                  <div className="text-slate-900 flex items-center gap-1">
                     <span>Status: <strong className={`px-1.5 py-0.5 rounded font-bold ${settings.require_overtime_approval ? 'text-rose-800 bg-rose-50 border border-rose-200' : 'text-emerald-800 bg-emerald-50 border border-emerald-200'}`}>{settings.require_overtime_approval ? 'Approval Required' : 'Auto-Approved'}</strong></span>
                   </div>
                 </div>
@@ -480,7 +520,7 @@ export default function AdminDutyHoursPage() {
                       <h3 className="font-bold text-slate-900 text-sm">Duty Hours Change History</h3>
                       <span className="text-xs text-slate-500 font-semibold">({history.length} records)</span>
                     </div>
-                    {showHistory ? <ChevronDown className="w-4 h-4 text-slate-600" /> : <ChevronRight className="w-4 h-4 text-slate-600" />}
+                    {showHistory ? <ChevronDown className="w-4 h-4 text-slate-900" /> : <ChevronRight className="w-4 h-4 text-slate-900" />}
                   </button>
 
                   <AnimatePresence>
@@ -522,13 +562,18 @@ export default function AdminDutyHoursPage() {
                                   )}
                                 </div>
                               </div>
-                              <div className="flex flex-wrap gap-3 text-slate-600 font-medium pt-1">
+                              <div className="flex flex-wrap gap-3 text-slate-900 font-medium pt-1">
                                 <span>Grace: <strong className="text-slate-900">{entry.late_grace_minutes}min</strong></span>
                                 <span>OT Threshold: <strong className="text-slate-900">{entry.overtime_after_minutes}min after end</strong></span>
                                 <span>Half-day: <strong className="text-slate-900">&lt;{entry.half_day_hours}h</strong></span>
                                 {entry.overtime_slot_minutes !== undefined && <span>Slot: <strong className="text-slate-900">{entry.overtime_slot_minutes}m</strong></span>}
                                 {entry.holiday_overtime_multiplier !== undefined && <span>Holiday: <strong className="text-purple-800 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded">{entry.holiday_overtime_multiplier}x</strong></span>}
                                 {entry.require_overtime_approval !== undefined && <span>OT Workflow: <strong className={`px-1.5 py-0.5 rounded font-bold ${entry.require_overtime_approval ? 'text-rose-800 bg-rose-50 border border-rose-200' : 'text-emerald-800 bg-emerald-50 border border-emerald-200'}`}>{entry.require_overtime_approval ? 'Required' : 'Auto'}</strong></span>}
+                                {entry.weekly_off_days !== undefined && (
+                                  <span>Weekly Off: <strong className="text-indigo-800 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded">
+                                    {entry.weekly_off_days.map(d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')}
+                                  </strong></span>
+                                )}
                                 {entry.change_reason && (
                                   <span>Reason: <strong className="text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">{entry.change_reason}</strong></span>
                                 )}

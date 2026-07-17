@@ -122,7 +122,7 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
             <Upload className="w-5 h-5 text-indigo-400" />
             <h2 className="text-lg font-semibold text-slate-900">Bulk Onboard Staff (CSV)</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-900 hover:text-slate-900 hover:bg-slate-50 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -133,7 +133,7 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
           <div className="bg-slate-50/40 border border-slate-200/60 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <h3 className="font-medium text-slate-900">Need a formatting template?</h3>
-              <p className="text-xs text-slate-600 mt-0.5">Download our pre-formatted CSV template with standard headers.</p>
+              <p className="text-xs text-slate-900 mt-0.5">Download our pre-formatted CSV template with standard headers.</p>
             </div>
             <Button variant="secondary" size="sm" icon={<Download className="w-4 h-4" />} onClick={handleDownloadTemplate}>
               CSV Template
@@ -158,12 +158,12 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
                 {file ? (
                   <div>
                     <p className="font-semibold text-slate-900">{file.name}</p>
-                    <p className="text-xs text-slate-600 mt-1">{parsedRows.length} employee row(s) ready for onboarding</p>
+                    <p className="text-xs text-slate-900 mt-1">{parsedRows.length} employee row(s) ready for onboarding</p>
                   </div>
                 ) : (
                   <div>
                     <p className="font-semibold text-slate-900">Click to select a CSV file</p>
-                    <p className="text-xs text-slate-600 mt-1">or drag and drop your staff roster (.csv) here</p>
+                    <p className="text-xs text-slate-900 mt-1">or drag and drop your staff roster (.csv) here</p>
                   </div>
                 )}
               </div>
@@ -194,18 +194,18 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-[#1dbf73]/10 border border-emerald-500/20 rounded-xl p-4 text-center">
                   <p className="text-2xl font-bold text-[#1dbf73]">{results.success_count}</p>
-                  <p className="text-xs text-slate-600 mt-0.5">Added Successfully</p>
+                  <p className="text-xs text-slate-900 mt-0.5">Added Successfully</p>
                 </div>
                 <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 text-center">
                   <p className="text-2xl font-bold text-rose-400">{results.error_count}</p>
-                  <p className="text-xs text-slate-600 mt-0.5">Failed to Add</p>
+                  <p className="text-xs text-slate-900 mt-0.5">Failed to Add</p>
                 </div>
               </div>
 
               <div className="border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-white text-slate-600 text-xs border-b border-slate-200">
+                    <tr className="bg-white text-slate-900 text-xs border-b border-slate-200">
                       <th className="p-3 font-medium">Name</th>
                       <th className="p-3 font-medium">Email</th>
                       <th className="p-3 font-medium">Status</th>
@@ -215,7 +215,7 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
                     {results.results.map((row, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/30">
                         <td className="p-3 font-medium text-slate-900">{row.full_name}</td>
-                        <td className="p-3 text-slate-600">{row.email}</td>
+                        <td className="p-3 text-slate-900">{row.email}</td>
                         <td className="p-3">
                           {row.status === 'success' ? (
                             <span className="flex items-center gap-1.5 text-[#1dbf73] font-medium">

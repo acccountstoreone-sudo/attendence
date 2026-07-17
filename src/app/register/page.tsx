@@ -5,9 +5,13 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Lock, Mail, User, IdCard, AlertTriangle, Check, ShieldCheck, ScanFace, MapPin, Orbit, Camera, ArrowRight, RefreshCw, Upload, X, Fingerprint, Sparkles, CheckCircle2, FileText, Smartphone } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import Abstract3DBackground from '@/components/Abstract3DBackground';
+import dynamic from 'next/dynamic';
 import Webcam from 'react-webcam';
 import { startRegistration } from '@simplewebauthn/browser';
+
+const Abstract3DBackground = dynamic(() => import('@/components/Abstract3DBackground'), {
+  ssr: false,
+});
 
 type Step = 'basic_info' | 'otp' | 'kyc' | 'biometrics' | 'pending';
 
@@ -680,12 +684,12 @@ export default function RegisterPage() {
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       />
                       <div className="flex items-center space-x-3">
-                        <div className={`p-2.5 rounded-lg ${nidFront ? 'bg-[#1dbf73]/20 text-[#1dbf73]' : 'bg-slate-100 text-slate-600'}`}>
+                        <div className={`p-2.5 rounded-lg ${nidFront ? 'bg-[#1dbf73]/20 text-[#1dbf73]' : 'bg-slate-100 text-slate-900'}`}>
                           {nidFront ? <CheckCircle2 className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-slate-900 truncate">{nidFront ? nidFrontName : 'Click or drag to upload NID Front'}</p>
-                          <p className="text-[11px] text-slate-600">{nidFront ? 'File uploaded and ready' : 'Image or PDF (Max 5MB)'}</p>
+                          <p className="text-[11px] text-slate-900">{nidFront ? 'File uploaded and ready' : 'Image or PDF (Max 5MB)'}</p>
                         </div>
                         {nidFront && (
                           <button type="button" onClick={(e) => { e.stopPropagation(); setNidFront(null); setNidFrontName(''); }} className="p-1.5 hover:bg-rose-100 text-rose-500 rounded-lg relative z-20">
@@ -708,12 +712,12 @@ export default function RegisterPage() {
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       />
                       <div className="flex items-center space-x-3">
-                        <div className={`p-2.5 rounded-lg ${nidBack ? 'bg-[#1dbf73]/20 text-[#1dbf73]' : 'bg-slate-100 text-slate-600'}`}>
+                        <div className={`p-2.5 rounded-lg ${nidBack ? 'bg-[#1dbf73]/20 text-[#1dbf73]' : 'bg-slate-100 text-slate-900'}`}>
                           {nidBack ? <CheckCircle2 className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-slate-900 truncate">{nidBack ? nidBackName : 'Click or drag to upload NID Back'}</p>
-                          <p className="text-[11px] text-slate-600">{nidBack ? 'File uploaded and ready' : 'Image or PDF (Max 5MB)'}</p>
+                          <p className="text-[11px] text-slate-900">{nidBack ? 'File uploaded and ready' : 'Image or PDF (Max 5MB)'}</p>
                         </div>
                         {nidBack && (
                           <button type="button" onClick={(e) => { e.stopPropagation(); setNidBack(null); setNidBackName(''); }} className="p-1.5 hover:bg-rose-100 text-rose-500 rounded-lg relative z-20">
@@ -741,7 +745,7 @@ export default function RegisterPage() {
                     <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 flex flex-col items-center">
                       <div className="flex justify-between items-center w-full mb-4">
                         <h3 className="font-bold text-slate-900 flex items-center gap-2"><ScanFace className="w-5 h-5 text-[#1dbf73]"/> 3D Facial AI Capture</h3>
-                        <button onClick={() => setShowCameraModal(false)} className="p-1 hover:bg-slate-100 rounded-lg text-slate-600"><X className="w-5 h-5"/></button>
+                        <button onClick={() => setShowCameraModal(false)} className="p-1 hover:bg-slate-100 rounded-lg text-slate-900"><X className="w-5 h-5"/></button>
                       </div>
 
                       <div className="relative w-full aspect-square rounded-2xl overflow-hidden border-2 border-slate-200 bg-black mb-4">
@@ -774,7 +778,7 @@ export default function RegisterPage() {
                       </div>
                       <div>
                         <h4 className="font-bold text-slate-900 text-sm">Facial Recognition AI</h4>
-                        <p className="text-xs text-slate-600">Fast, touchless camera verification on check-in</p>
+                        <p className="text-xs text-slate-900">Fast, touchless camera verification on check-in</p>
                       </div>
                     </div>
                     {faceImage && (
@@ -808,7 +812,7 @@ export default function RegisterPage() {
                       </div>
                       <div>
                         <h4 className="font-bold text-slate-900 text-sm">Fingerprint & Device Passkey</h4>
-                        <p className="text-xs text-slate-600">Hardware Touch ID, Face ID, or Windows Hello</p>
+                        <p className="text-xs text-slate-900">Hardware Touch ID, Face ID, or Windows Hello</p>
                       </div>
                     </div>
                     {fingerprintEnrolled && (
@@ -819,7 +823,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between">
-                    <span className="text-xs text-slate-600">{fingerprintEnrolled ? 'Device sensor linked securely' : 'Quick one-tap biometric enrollment'}</span>
+                    <span className="text-xs text-slate-900">{fingerprintEnrolled ? 'Device sensor linked securely' : 'Quick one-tap biometric enrollment'}</span>
                     <button type="button" onClick={handleFingerprintSetup} disabled={loading || fingerprintEnrolled} className={`text-xs font-bold py-2 px-4 rounded-xl transition-all ${fingerprintEnrolled ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-slate-900 hover:bg-slate-800 text-white shadow-md'}`}>
                       {loading ? 'Registering...' : fingerprintEnrolled ? 'Registered' : 'Register Sensor'}
                     </button>
@@ -853,7 +857,7 @@ export default function RegisterPage() {
                    <ShieldCheck className="w-10 h-10 text-[#1dbf73]" />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">Onboarding Package Submitted</h3>
-                <p className="text-sm text-slate-600 mb-8 leading-relaxed max-w-md">
+                <p className="text-sm text-slate-900 mb-8 leading-relaxed max-w-md">
                   Your identity document copies and biometric vectors have been securely transmitted to the Anchor Fashion secure vault. You will be granted login access immediately once your Branch Manager approves your profile.
                 </p>
                 <button onClick={() => router.push('/login')} className="w-full bg-[#1dbf73] hover:bg-[#16965a] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#1dbf73]/20">

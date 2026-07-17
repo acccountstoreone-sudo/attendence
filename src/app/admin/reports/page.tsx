@@ -178,7 +178,7 @@ export default function AdminReportsPage() {
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
             activeTab === 'attendance'
               ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-              : 'text-slate-600 hover:text-slate-800 hover:bg-white/60'
+              : 'text-slate-900 hover:text-slate-800 hover:bg-white/60'
           }`}
         >
           <BarChart3 className="w-4 h-4" />
@@ -189,7 +189,7 @@ export default function AdminReportsPage() {
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
             activeTab === 'overtime'
               ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-              : 'text-slate-600 hover:text-slate-800 hover:bg-white/60'
+              : 'text-slate-900 hover:text-slate-800 hover:bg-white/60'
           }`}
         >
           <Clock className="w-4 h-4" />
@@ -213,7 +213,7 @@ export default function AdminReportsPage() {
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
             Payroll & Attendance Reports
           </h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-slate-900 mt-1">
             Generate monthly branch-wise attendance summaries for payroll finalization.
           </p>
         </div>
@@ -261,7 +261,7 @@ export default function AdminReportsPage() {
           </div>
           <div>
             <h3 className="font-bold text-slate-900 text-base">Individual Employee Duty & Overtime Analytics</h3>
-            <p className="text-xs text-slate-600">View & export exact month-wise duty hours, late minutes, overtime, and missed days per staff</p>
+            <p className="text-xs text-slate-900">View & export exact month-wise duty hours, late minutes, overtime, and missed days per staff</p>
           </div>
         </div>
         <Button
@@ -278,7 +278,7 @@ export default function AdminReportsPage() {
       <Card className="bg-white border-slate-200 p-4">
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex flex-col space-y-1 min-w-[160px]">
-            <label className="text-[10px] uppercase font-bold text-slate-600 tracking-wider">
+            <label className="text-[10px] uppercase font-bold text-slate-900 tracking-wider">
               <Calendar className="w-3 h-3 inline mr-1" />Month
             </label>
             <div className="relative">
@@ -291,12 +291,12 @@ export default function AdminReportsPage() {
                   <option key={m} value={i + 1}>{m}</option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-slate-600 absolute right-2.5 top-2.5 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-slate-900 absolute right-2.5 top-2.5 pointer-events-none" />
             </div>
           </div>
 
           <div className="flex flex-col space-y-1 min-w-[120px]">
-            <label className="text-[10px] uppercase font-bold text-slate-600 tracking-wider">Year</label>
+            <label className="text-[10px] uppercase font-bold text-slate-900 tracking-wider">Year</label>
             <div className="relative">
               <select
                 value={filter.year}
@@ -307,12 +307,12 @@ export default function AdminReportsPage() {
                   <option key={y} value={y}>{y}</option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-slate-600 absolute right-2.5 top-2.5 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-slate-900 absolute right-2.5 top-2.5 pointer-events-none" />
             </div>
           </div>
 
           <div className="flex flex-col space-y-1 min-w-[200px]">
-            <label className="text-[10px] uppercase font-bold text-slate-600 tracking-wider">
+            <label className="text-[10px] uppercase font-bold text-slate-900 tracking-wider">
               <Building2 className="w-3 h-3 inline mr-1" />Branch Server Filter
             </label>
             <div className="relative">
@@ -326,12 +326,12 @@ export default function AdminReportsPage() {
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-slate-600 absolute right-2.5 top-2.5 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-slate-900 absolute right-2.5 top-2.5 pointer-events-none" />
             </div>
           </div>
 
           <div className="flex flex-col space-y-1 min-w-[200px]">
-            <label className="text-[10px] uppercase font-bold text-slate-600 tracking-wider">
+            <label className="text-[10px] uppercase font-bold text-slate-900 tracking-wider">
               <Search className="w-3 h-3 inline mr-1" />Local Search
             </label>
             <div className="relative">
@@ -373,11 +373,11 @@ export default function AdminReportsPage() {
       {hasLoaded && reportData.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-br from-white to-slate-50 border-slate-200">
-            <p className="text-xs font-bold uppercase text-slate-600">Branches Reported</p>
+            <p className="text-xs font-bold uppercase text-slate-900">Branches Reported</p>
             <p className="text-2xl font-extrabold text-slate-900 mt-1">{reportData.length}</p>
           </Card>
           <Card className="bg-gradient-to-br from-white to-slate-50 border-slate-200">
-            <p className="text-xs font-bold uppercase text-slate-600">Company Avg Attendance</p>
+            <p className="text-xs font-bold uppercase text-slate-900">Company Avg Attendance</p>
             <div className="flex items-center space-x-2 mt-1">
               <p className={`text-2xl font-extrabold ${avgAttendance >= 90 ? 'text-[#1dbf73]' : avgAttendance >= 75 ? 'text-amber-400' : 'text-rose-400'}`}>
                 {avgAttendance}%
@@ -390,13 +390,13 @@ export default function AdminReportsPage() {
             </div>
           </Card>
           <Card className="bg-gradient-to-br from-white to-slate-50 border-slate-200">
-            <p className="text-xs font-bold uppercase text-slate-600">Best Performing Store</p>
+            <p className="text-xs font-bold uppercase text-slate-900">Best Performing Store</p>
             <p className="text-sm font-extrabold text-[#1dbf73] mt-1 truncate">
               {reportData.reduce((best, r) => r.attendance_rate > best.attendance_rate ? r : best, reportData[0])?.branch_name || '—'}
             </p>
           </Card>
           <Card className="bg-gradient-to-br from-white to-slate-50 border-slate-200">
-            <p className="text-xs font-bold uppercase text-slate-600">Needs Attention</p>
+            <p className="text-xs font-bold uppercase text-slate-900">Needs Attention</p>
             <p className="text-sm font-extrabold text-rose-400 mt-1 truncate">
               {reportData.reduce((worst, r) => r.attendance_rate < worst.attendance_rate ? r : worst, reportData[0])?.branch_name || '—'}
             </p>
@@ -408,7 +408,7 @@ export default function AdminReportsPage() {
       {!hasLoaded ? (
         <Card className="p-16 text-center border-slate-200 border-dashed">
           <BarChart3 className="w-16 h-16 text-slate-700 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-slate-600">Select Period & Generate Report</h3>
+          <h3 className="text-lg font-bold text-slate-900">Select Period & Generate Report</h3>
           <p className="text-sm text-slate-500 mt-1">
             Choose a month and year above, then click <strong className="text-blue-400">Generate Report</strong> to pull live attendance data.
           </p>
@@ -419,14 +419,14 @@ export default function AdminReportsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <Card className="p-12 text-center border-slate-200">
-          <p className="text-slate-600 font-semibold">No report data found for selected period.</p>
+          <p className="text-slate-900 font-semibold">No report data found for selected period.</p>
         </Card>
       ) : (
         <Card className="p-0 overflow-hidden border-slate-200">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-white/80 text-slate-600 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200">
+                <tr className="bg-white/80 text-slate-900 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200">
                   <th className="py-4 px-5">Branch</th>
                   <th className="py-4 px-5 text-center">Working Days</th>
                   <th className="py-4 px-5 text-center">Present</th>
@@ -449,7 +449,7 @@ export default function AdminReportsPage() {
                         <span className="font-bold text-slate-900">{row.branch_name}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-5 text-center text-slate-600 font-semibold">{row.total_days}</td>
+                    <td className="py-4 px-5 text-center text-slate-900 font-semibold">{row.total_days}</td>
                     <td className="py-4 px-5 text-center font-bold text-[#1dbf73]">{row.present_days}</td>
                     <td className="py-4 px-5 text-center font-bold text-amber-400">{row.late_days}</td>
                     <td className="py-4 px-5 text-center font-bold text-rose-400">{row.absent_days}</td>

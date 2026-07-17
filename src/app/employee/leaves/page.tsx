@@ -131,7 +131,7 @@ export default function EmployeeLeavePage() {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => router.push('/employee')}
-            className="p-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-600 hover:text-[#1dbf73] transition-colors"
+            className="p-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 hover:text-[#1dbf73] transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -172,13 +172,13 @@ export default function EmployeeLeavePage() {
             const remaining = Math.max(0, b.allocated - b.used);
             return (
               <Card key={b.id} className="bg-white border-slate-200 hover:border-[#1dbf73]/30 transition-all">
-                <div className="flex items-center justify-between text-slate-600 mb-3">
+                <div className="flex items-center justify-between text-slate-900 mb-3">
                   <span className="text-xs font-bold uppercase tracking-wider text-[#1dbf73]">{b.name}</span>
                   <Calendar className="w-4 h-4 text-slate-500" />
                 </div>
                 <div className="flex items-baseline space-x-2">
                   <span className="text-3xl font-extrabold text-slate-900">{remaining}</span>
-                  <span className="text-xs text-slate-600">/ {b.allocated} Days Left</span>
+                  <span className="text-xs text-slate-900">/ {b.allocated} Days Left</span>
                 </div>
                 <div className="w-full bg-white h-1.5 rounded-full mt-3 overflow-hidden">
                   <div
@@ -198,13 +198,13 @@ export default function EmployeeLeavePage() {
           <FileText className="w-5 h-5 text-[#1dbf73]" />
           <div>
             <h3 className="text-lg font-bold text-slate-900">Submit New Request</h3>
-            <p className="text-xs text-slate-600">Fill out the required dates and justification for your supervisor&apos;s review.</p>
+            <p className="text-xs text-slate-900">Fill out the required dates and justification for your supervisor&apos;s review.</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Leave Type</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-900">Leave Type</label>
             <select
               value={leaveType}
               onChange={(e) => setLeaveType(e.target.value)}
@@ -226,7 +226,7 @@ export default function EmployeeLeavePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Start Date</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-900">Start Date</label>
               <input
                 type="date"
                 required
@@ -237,7 +237,7 @@ export default function EmployeeLeavePage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">End Date</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-900">End Date</label>
               <input
                 type="date"
                 required
@@ -250,7 +250,7 @@ export default function EmployeeLeavePage() {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">Reason / Justification</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-900">Reason / Justification</label>
             <textarea
               rows={4}
               required

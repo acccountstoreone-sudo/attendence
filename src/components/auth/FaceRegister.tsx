@@ -51,11 +51,11 @@ export function FaceRegister() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center space-x-3 text-sm text-slate-600">
+      <div className="flex items-center space-x-3 text-sm text-slate-900">
         <ScanFace className="w-5 h-5 text-indigo-400" />
         <div>
           <p className="font-medium text-slate-700">Face Verification</p>
-          <p className="text-xs text-slate-600">Enroll your face to check in without a fingerprint.</p>
+          <p className="text-xs text-slate-900">Enroll your face to check in without a fingerprint.</p>
         </div>
       </div>
 

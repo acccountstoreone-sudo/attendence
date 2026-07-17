@@ -95,7 +95,7 @@ function AdminAnalyticsContent() {
           <TrendingUp className="w-7 h-7 text-indigo-400" />
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Attendance Analytics</h1>
-            <p className="text-sm text-slate-600">{data?.month_label ?? 'Loading…'} — Powered by database analytics, no AI cost.</p>
+            <p className="text-sm text-slate-900">{data?.month_label ?? 'Loading…'} — Powered by database analytics, no AI cost.</p>
           </div>
         </div>
         <div className="flex gap-2 items-center">
@@ -118,7 +118,7 @@ function AdminAnalyticsContent() {
       {loading ? (
         <div className="flex justify-center py-20"><Spinner className="w-8 h-8" /></div>
       ) : !data ? (
-        <Card className="p-12 text-center"><p className="text-slate-600">Failed to load analytics.</p></Card>
+        <Card className="p-12 text-center"><p className="text-slate-900">Failed to load analytics.</p></Card>
       ) : (
         <>
           {/* KPI Row */}
@@ -136,7 +136,7 @@ function AdminAnalyticsContent() {
                   title={kpi.title}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">{kpi.label}</p>
+                    <p className="text-xs text-slate-900 group-hover:text-slate-900 font-medium transition-colors">{kpi.label}</p>
                     {kpi.icon}
                   </div>
                   <div className="flex items-end justify-between">
@@ -191,7 +191,7 @@ function AdminAnalyticsContent() {
                   <span className="text-[11px] font-bold text-[#1dbf73] opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-wider">Manage Branches &rarr;</span>
                 </div>
                 {data.branch_leaderboard.length === 0 ? (
-                  <p className="text-slate-600 text-sm text-center py-6">No branch data for this period.</p>
+                  <p className="text-slate-900 text-sm text-center py-6">No branch data for this period.</p>
                 ) : (
                   <div className="space-y-2">
                     {data.branch_leaderboard.map((b, idx) => (
@@ -201,7 +201,7 @@ function AdminAnalyticsContent() {
                         className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-100/60 border border-transparent hover:border-[#1dbf73]/40 hover:bg-[#1dbf73]/10 cursor-pointer transition-all duration-200 group/item"
                         title={`Click to open ${b.branch_name} details page`}
                       >
-                        <span className={`text-sm font-bold w-6 text-center ${idx === 0 ? 'text-amber-500 font-extrabold' : idx === 1 ? 'text-slate-600 font-extrabold' : idx === 2 ? 'text-orange-500 font-extrabold' : 'text-slate-500'}`}>
+                        <span className={`text-sm font-bold w-6 text-center ${idx === 0 ? 'text-amber-500 font-extrabold' : idx === 1 ? 'text-slate-900 font-extrabold' : idx === 2 ? 'text-orange-500 font-extrabold' : 'text-slate-500'}`}>
                           #{idx + 1}
                         </span>
                         <div className="flex-1 min-w-0">
@@ -245,7 +245,7 @@ function AdminAnalyticsContent() {
                       >
                         <div>
                           <p className="text-slate-900 text-sm font-bold group-hover/item:text-amber-700 transition-colors">{emp.name}</p>
-                          <p className="text-slate-600 text-xs mt-0.5">{emp.branch}</p>
+                          <p className="text-slate-900 text-xs mt-0.5">{emp.branch}</p>
                         </div>
                         <Badge variant="warning">{emp.count}× late</Badge>
                       </div>
@@ -283,7 +283,7 @@ function AdminAnalyticsContent() {
                       <div className="p-1.5 bg-red-500/10 rounded-lg group-hover/item:bg-red-500/20 transition-colors"><UserX className="w-4 h-4 text-red-500 flex-shrink-0" /></div>
                       <div className="min-w-0">
                         <p className="text-slate-900 text-sm font-bold truncate group-hover/item:text-red-700 transition-colors">{e.full_name}</p>
-                        <p className="text-slate-600 text-xs mt-0.5">{e.branch}{e.employee_id ? ` · ${e.employee_id}` : ''}</p>
+                        <p className="text-slate-900 text-xs mt-0.5">{e.branch}{e.employee_id ? ` · ${e.employee_id}` : ''}</p>
                       </div>
                     </div>
                   ))}

@@ -15,7 +15,7 @@ export default function NewBranchPage() {
         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
           Register New Branch
         </h1>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-900">
           Fill in the store details and configure GPS geofencing for biometric check-in.
         </p>
       </div>

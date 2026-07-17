@@ -95,27 +95,48 @@ export async function GET(request: NextRequest) {
 
     // ── 3. Month-over-Month Trend (last 6 months) ─────────────────
     const trend: { month: string; present: number; late: number; absent: number }[] = [];
+    
+    // Calculate the start year/month for the past 6 months
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    
+    let mvQuery = supabase
+      .from('mv_monthly_branch_summary')
+      .select('year_num, month_num, total_checkins, present_count, late_count, half_day_count');
+      
+    if (targetBranchId) mvQuery = mvQuery.eq('branch_id', targetBranchId);
+    
+    // We fetch a bit wider range just to be safe, filtering in memory
+    mvQuery = mvQuery.gte('year_num', sixMonthsAgo.getFullYear());
+
+    const { data: mvData } = await mvQuery;
+    const historicalMap = new Map<string, { present: number; late: number; absent: number }>();
+    
+    for (const row of mvData ?? []) {
+      const key = `${row.year_num}-${row.month_num}`;
+      const prev = historicalMap.get(key) || { present: 0, late: 0, absent: 0 };
+      
+      const present = row.present_count || 0;
+      const late = row.late_count || 0;
+      const total = row.total_checkins || 0;
+      const halfDay = row.half_day_count || 0;
+      const absent = Math.max(0, total - present - late - halfDay);
+      
+      historicalMap.set(key, {
+        present: prev.present + present,
+        late: prev.late + late,
+        absent: prev.absent + absent
+      });
+    }
+
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const mStart = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
-      const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10);
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
       const label = d.toLocaleString('en-US', { month: 'short', year: '2-digit' });
-
-      let q = supabase.from('attendance_records').select('status').gte('check_in_time', mStart).lte('check_in_time', mEnd);
-      if (targetBranchId) q = q.eq('branch_id', targetBranchId);
-      const { data: monthData } = await q;
-
-      const counts = (monthData ?? []).reduce<{ present: number; late: number; absent: number }>(
-        (acc, r) => {
-          if (r.status === 'present') acc.present += 1;
-          else if (r.status === 'late') acc.late += 1;
-          else if (r.status === 'absent') acc.absent += 1;
-          return acc;
-        },
-        { present: 0, late: 0, absent: 0 }
-      );
-
-      trend.push({ month: label, ...counts });
+      const key = `${y}-${m}`;
+      
+      const stats = historicalMap.get(key) || { present: 0, late: 0, absent: 0 };
+      trend.push({ month: label, ...stats });
     }
 
     // ── 4. Absent Today ───────────────────────────────────────────

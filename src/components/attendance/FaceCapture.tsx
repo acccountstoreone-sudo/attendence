@@ -8,6 +8,12 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ─────────────────────────────────────────────────────────
+// Global Cache for Face API
+// ─────────────────────────────────────────────────────────
+let globalFa: typeof import('@vladmandic/face-api') | null = null;
+let globalLoadPromise: Promise<typeof import('@vladmandic/face-api') | null> | null = null;
+
+// ─────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────
 
@@ -115,13 +121,40 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const loadModels = useCallback(async () => {
     setPhase('loading');
     setPr(5);
+    
+    if (globalFa) {
+      faRef.current = globalFa;
+      setPr(100);
+      return globalFa;
+    }
+    
+    if (!globalLoadPromise) {
+      globalLoadPromise = (async () => {
+        try {
+          const fa = await import('@vladmandic/face-api');
+          await Promise.all([
+            fa.nets.tinyFaceDetector.loadFromUri('/models'),
+            fa.nets.faceLandmark68Net.loadFromUri('/models'),
+            fa.nets.faceRecognitionNet.loadFromUri('/models'),
+          ]);
+          globalFa = fa;
+          return fa;
+        } catch {
+          return null;
+        }
+      })();
+    }
+    
     try {
-      const fa = await import('@vladmandic/face-api');
-      await Promise.all([
-        fa.nets.tinyFaceDetector.loadFromUri('/models').then(() => { if (mountedRef.current) setPr(p => p + 30); }),
-        fa.nets.faceLandmark68Net.loadFromUri('/models').then(() => { if (mountedRef.current) setPr(p => p + 30); }),
-        fa.nets.faceRecognitionNet.loadFromUri('/models').then(() => { if (mountedRef.current) setPr(p => p + 35); }),
-      ]);
+      const interval = setInterval(() => {
+        setPr(p => (p < 90 ? p + 10 : p));
+      }, 100);
+      
+      const fa = await globalLoadPromise;
+      clearInterval(interval);
+      
+      if (!fa) throw new Error();
+      
       faRef.current = fa;
       setPr(100);
       return fa;
@@ -153,8 +186,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
       try {
         const det = await fa
-          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.55 }))
-          .withFaceLandmarks();
+          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.55 }));
 
         if (!det) {
           if (mountedRef.current) {
@@ -163,7 +195,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           }
         } else {
           // Face must be large enough (at least 8% of frame) to ensure it's not too far
-          const { width: fw, height: fh } = det.detection.box;
+          const { width: fw, height: fh } = det.box;
           const frameArea = (v.videoWidth || 640) * (v.videoHeight || 640);
           if ((fw * fh) / frameArea < 0.08) {
             if (mountedRef.current) {
@@ -225,14 +257,14 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       if (!allFaces || allFaces.length === 0) {
         announce('Face not clear. Please try again.', 'error');
         isCapturingRef.current = false;
-        setTimeout(() => { if (mountedRef.current) startScan(); }, 1500);
+        setTimeout(() => { if (mountedRef.current) startScan(); }, 800);
         return;
       }
 
       if (allFaces.length > 1) {
         announce('Multiple faces detected. Please be alone in front of the camera.', 'error');
         isCapturingRef.current = false;
-        setTimeout(() => { if (mountedRef.current) startScan(); }, 2000);
+        setTimeout(() => { if (mountedRef.current) startScan(); }, 1200);
         return;
       }
 
@@ -248,7 +280,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       const errMsg = err instanceof Error ? err.message : 'Verification failed. Please try again.';
       announce(errMsg, 'error');
       isCapturingRef.current = false;
-      setTimeout(() => { if (mountedRef.current) startScan(); }, 3000);
+      setTimeout(() => { if (mountedRef.current) startScan(); }, 1500);
     }
   }, [announce, setPhase, onCapture, checkType, startScan]);
 
@@ -262,7 +294,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
     if (gpsVerified) {
       announce('Location verified! Starting face scan.', 'success');
-      setTimeout(() => { if (mountedRef.current) startScan(); }, 800);
+      setTimeout(() => { if (mountedRef.current) startScan(); }, 300);
     } else {
       if (gpsStatus === 'not_configured') {
         announce('Store GPS not configured. Ask Admin to set branch location.', 'warn');
@@ -297,7 +329,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
       if (gpsVerified) {
         announce('Camera ready. Look straight at the camera.', 'info');
-        setTimeout(() => { if (mountedRef.current) startScan(); }, 600);
+        setTimeout(() => { if (mountedRef.current) startScan(); }, 200);
       } else {
         setPhase('wait_gps');
         if (gpsStatus === 'not_configured') {

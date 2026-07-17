@@ -425,7 +425,7 @@ export function OvertimeHistoryReport({ role }: OvertimeHistoryReportProps) {
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-100/80 border-b border-slate-200 text-[10px] uppercase font-extrabold text-slate-600 tracking-wider">
+                  <tr className="bg-slate-100/80 border-b border-slate-200 text-[10px] uppercase font-extrabold text-slate-900 tracking-wider">
                     <th className="py-3 px-3 print:hidden"><button onClick={() => selectedIds.size > 0 ? clearSelection() : selectAllPending()} className="text-slate-400 hover:text-slate-700">{selectedIds.size > 0 ? <CheckSquare className="w-4 h-4 text-emerald-600" /> : <Square className="w-4 h-4" />}</button></th>
                     <th className="py-3 px-4">Employee</th>
                     <th className="py-3 px-4">Branch</th>
@@ -473,7 +473,7 @@ export function OvertimeHistoryReport({ role }: OvertimeHistoryReportProps) {
                           </div>
                           <div className="text-[11px] text-slate-400 mt-0.5">{row.duty_hours}h shift</div>
                         </td>
-                        <td className="py-3 px-4 text-center font-bold text-slate-600">{formatHrsMins(row.logged_overtime_minutes)}</td>
+                        <td className="py-3 px-4 text-center font-bold text-slate-900">{formatHrsMins(row.logged_overtime_minutes)}</td>
                         <td className="py-3 px-4 text-center font-extrabold text-[#1dbf73] text-base">{formatHrsMins(row.approved_overtime_minutes)}</td>
                         <td className="py-3 px-4 text-center">
                           <span className="font-bold text-rose-600 text-sm">৳{otPay.toLocaleString()}</span>
@@ -491,7 +491,7 @@ export function OvertimeHistoryReport({ role }: OvertimeHistoryReportProps) {
                         </td>
                         <td className="py-3 px-4 max-w-[180px]">
                           {row.overtime_approval_note
-                            ? <div className="flex items-start gap-1 bg-slate-50 p-1.5 rounded-lg border border-slate-200 text-xs text-slate-600 italic"><MessageSquare className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />{row.overtime_approval_note}</div>
+                            ? <div className="flex items-start gap-1 bg-slate-50 p-1.5 rounded-lg border border-slate-200 text-xs text-slate-900 italic"><MessageSquare className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />{row.overtime_approval_note}</div>
                             : <span className="text-slate-300 text-xs">—</span>}
                         </td>
                       </tr>

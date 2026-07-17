@@ -6,7 +6,12 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Branch } from './types';
-import { LocationMapViewer } from '@/components/admin/LocationMapViewer';
+import dynamic from 'next/dynamic';
+
+const LocationMapViewer = dynamic(
+  () => import('@/components/admin/LocationMapViewer').then(mod => mod.LocationMapViewer),
+  { ssr: false, loading: () => <div className="h-64 w-full bg-slate-100 animate-pulse rounded-xl" /> }
+);
 import { Globe, Settings, MapPin, Clock, DollarSign, CheckCircle, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -95,7 +100,7 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
               <div className="p-1.5 rounded-lg bg-[#1dbf73]/10 text-[#1dbf73]"><DollarSign className="w-5 h-5" /></div>
               Automated Payroll Calculation Rates
             </h4>
-            <p className="text-xs text-slate-600 font-medium mt-1">
+            <p className="text-xs text-slate-900 font-medium mt-1">
               Set branch-level hourly rates for overtime and daily snack/refreshment allowance. The system automatically multiplies exact work minutes & present days on payroll!
             </p>
           </div>
@@ -168,7 +173,7 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
                 radiusMeters={branch.geofence_radius_meters}
                 branchName={branch.name}
               />
-              <div className="mt-4 p-3 bg-white rounded-lg text-sm text-slate-600 flex justify-between">
+              <div className="mt-4 p-3 bg-white rounded-lg text-sm text-slate-900 flex justify-between">
                 <span>Radius:</span>
                 <span className="font-bold text-slate-900">{branch.geofence_radius_meters} meters</span>
               </div>
@@ -176,7 +181,7 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
           ) : (
             <div className="h-[300px] flex flex-col justify-center items-center text-center bg-white rounded-lg border border-dashed border-slate-200">
               <Globe className="w-10 h-10 text-slate-700 mb-2" />
-              <p className="text-sm font-medium text-slate-600">GPS Coordinates Not Set</p>
+              <p className="text-sm font-medium text-slate-900">GPS Coordinates Not Set</p>
               <p className="text-xs text-slate-500 mt-1">Biometric check-in requires a geofence.</p>
             </div>
           )}
@@ -191,27 +196,27 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
           <div className="space-y-4 pointer-events-none opacity-80">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-slate-600">Office Start Time</Label>
+                <Label className="text-slate-900">Office Start Time</Label>
                 <Input type="time" defaultValue={branch.office_start_time || "09:00"} className="bg-white border-slate-200" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-slate-600">Office End Time</Label>
+                <Label className="text-slate-900">Office End Time</Label>
                 <Input type="time" defaultValue={branch.office_end_time || "18:00"} className="bg-white border-slate-200" />
               </div>
             </div>
             
             <div className="space-y-1.5">
-              <Label className="text-slate-600">Grace Time (Minutes)</Label>
+              <Label className="text-slate-900">Grace Time (Minutes)</Label>
               <Input type="number" defaultValue={branch.grace_time_minutes?.toString() || "15"} className="bg-white border-slate-200" />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-slate-600">Late Rules</Label>
+              <Label className="text-slate-900">Late Rules</Label>
               <Input defaultValue={branch.late_rules || "Deduct half day after 3 late days"} className="bg-white border-slate-200" />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-slate-600">Overtime Rules</Label>
+              <Label className="text-slate-900">Overtime Rules</Label>
               <Input defaultValue={branch.overtime_rules || "Calculated after 18:30"} className="bg-white border-slate-200" />
             </div>
             

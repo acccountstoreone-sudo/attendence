@@ -70,7 +70,7 @@ export const BranchTile: React.FC<BranchTileProps> = ({
         </div>
 
         {address && (
-          <div className="flex items-center space-x-1.5 text-xs text-slate-600 mb-4 line-clamp-1">
+          <div className="flex items-center space-x-1.5 text-xs text-slate-900 mb-4 line-clamp-1">
             <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
             <span>{address}</span>
           </div>
@@ -84,7 +84,7 @@ export const BranchTile: React.FC<BranchTileProps> = ({
             <CheckCircle className="w-3.5 h-3.5" />
             <span className="text-sm font-extrabold">{onlineCount}</span>
           </div>
-          <p className="text-[10px] uppercase font-bold text-slate-600">Present</p>
+          <p className="text-[10px] uppercase font-bold text-slate-900">Present</p>
         </div>
 
         <div className="bg-white p-2 rounded-xl border border-slate-200">
@@ -92,7 +92,7 @@ export const BranchTile: React.FC<BranchTileProps> = ({
             <Clock className="w-3.5 h-3.5" />
             <span className="text-sm font-extrabold">{lateCount}</span>
           </div>
-          <p className="text-[10px] uppercase font-bold text-slate-600">Late</p>
+          <p className="text-[10px] uppercase font-bold text-slate-900">Late</p>
         </div>
 
         <div className="bg-white p-2 rounded-xl border border-slate-200">
@@ -100,14 +100,14 @@ export const BranchTile: React.FC<BranchTileProps> = ({
             <Users className="w-3.5 h-3.5" />
             <span className="text-sm font-extrabold">{attendanceRate}%</span>
           </div>
-          <p className="text-[10px] uppercase font-bold text-slate-600">Rate</p>
+          <p className="text-[10px] uppercase font-bold text-slate-900">Rate</p>
         </div>
       </div>
 
       {/* Footer Staff info */}
       <div className="mt-3 text-right">
         <span className="text-[11px] text-slate-500 font-medium">
-          Total Store Staff: <strong className="text-slate-600">{staffCount}</strong>
+          Total Store Staff: <strong className="text-slate-900">{staffCount}</strong>
         </span>
       </div>
     </Card>

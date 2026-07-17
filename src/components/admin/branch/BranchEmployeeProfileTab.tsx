@@ -75,7 +75,7 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
 
   if (!employee) {
     return (
-      <div className="text-center py-12 text-slate-600">
+      <div className="text-center py-12 text-slate-900">
         <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
         <p>Employee not found.</p>
         <Button variant="secondary" onClick={onBack} className="mt-4">Back to Employees</Button>
@@ -120,7 +120,7 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-4 mb-2">
-        <Button variant="ghost" size="sm" onClick={onBack} className="text-slate-600 hover:text-slate-900 p-0 h-auto">
+        <Button variant="ghost" size="sm" onClick={onBack} className="text-slate-900 hover:text-slate-900 p-0 h-auto">
           <ChevronLeft className="w-5 h-5 mr-1" /> Back
         </Button>
         <h3 className="text-xl font-bold text-slate-900">Employee Profile</h3>
@@ -140,7 +140,7 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
             <h2 className="text-xl font-bold text-slate-900">{employee.full_name}</h2>
             <p className="text-[#1dbf73] text-sm font-medium mt-1 uppercase tracking-wider">{employee.role.replace(/_/g, ' ')}</p>
             <div className="flex items-center justify-center space-x-2 mt-3">
-              <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate-600">
+              <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate-900">
                 ID: {employee.employee_id || employee.id.slice(0,8)}
               </span>
               <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
@@ -152,16 +152,16 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
           </div>
           
           <div className="pt-6 space-y-4">
-            <h4 className="text-sm font-semibold text-slate-600 uppercase tracking-wider">Contact & Assignment</h4>
+            <h4 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Contact & Assignment</h4>
             <div className="flex items-center space-x-3 text-sm font-bold text-[#1dbf73] bg-[#1dbf73]/10 px-3 py-2 rounded-lg">
               <MessageSquare className="w-4 h-4 text-[#1dbf73] fill-current shrink-0" />
               <span>WhatsApp: {employee.whatsapp_number || employee.phone || 'N/A'}</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-slate-600 px-1">
+            <div className="flex items-center space-x-3 text-sm text-slate-900 px-1">
               <Phone className="w-4 h-4 text-slate-500 shrink-0" />
               <span>Phone: {employee.phone || 'N/A'}</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-slate-600 px-1">
+            <div className="flex items-center space-x-3 text-sm text-slate-900 px-1">
               <User className="w-4 h-4 text-slate-500 shrink-0" />
               <span className="break-all">{employee.email}</span>
             </div>
@@ -231,19 +231,19 @@ export const BranchEmployeeProfileTab: React.FC<BranchEmployeeProfileTabProps> =
              ) : (
                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                  <div className="bg-white p-4 rounded-lg text-center border border-slate-100 shadow-xs">
-                   <p className="text-xs text-slate-600">Total Present</p>
+                   <p className="text-xs text-slate-900">Total Present</p>
                    <p className="text-xl font-bold text-[#1dbf73] mt-1">{totalPresent} days</p>
                  </div>
                  <div className="bg-white p-4 rounded-lg text-center border border-slate-100 shadow-xs">
-                   <p className="text-xs text-slate-600">Total Absent</p>
+                   <p className="text-xs text-slate-900">Total Absent</p>
                    <p className="text-xl font-bold text-red-500 mt-1">{totalAbsent} days</p>
                  </div>
                  <div className="bg-white p-4 rounded-lg text-center border border-slate-100 shadow-xs">
-                   <p className="text-xs text-slate-600">Working Hours</p>
+                   <p className="text-xs text-slate-900">Working Hours</p>
                    <p className="text-xl font-bold text-blue-500 mt-1">{Number(totalWorkingHours.toFixed(1))} hrs</p>
                  </div>
                  <div className="bg-white p-4 rounded-lg text-center border border-slate-100 shadow-xs">
-                   <p className="text-xs text-slate-600">Overtime</p>
+                   <p className="text-xs text-slate-900">Overtime</p>
                    <p className="text-xl font-bold text-purple-500 mt-1">{Number(totalOvertimeHours.toFixed(1))} hrs</p>
                  </div>
                </div>

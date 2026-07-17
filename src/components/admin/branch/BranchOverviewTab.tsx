@@ -50,7 +50,7 @@ export const BranchOverviewTab: React.FC<BranchOverviewTabProps> = ({ branch, em
         <h3 className="text-lg font-bold text-slate-900 mb-4">Branch Overview</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col space-y-1 p-3 rounded-xl bg-slate-50/60 border border-slate-100 justify-center">
-            <span className="text-sm text-slate-600 font-medium">Branch Name</span>
+            <span className="text-sm text-slate-900 font-medium">Branch Name</span>
             <span className="text-xl font-bold text-slate-900">{branch.name}</span>
           </div>
           <div 
@@ -58,7 +58,7 @@ export const BranchOverviewTab: React.FC<BranchOverviewTabProps> = ({ branch, em
             className={`flex flex-col p-3 rounded-xl bg-slate-50/60 border border-slate-100 transition-all duration-200 ${manager ? 'cursor-pointer hover:border-[#1dbf73]/40 hover:bg-[#1dbf73]/5 group' : 'justify-center'}`}
             title={manager ? `Click to view profile for ${manager.full_name}` : 'No manager assigned'}
           >
-            <span className="text-sm text-slate-600 font-medium flex items-center justify-between mb-1.5">
+            <span className="text-sm text-slate-900 font-medium flex items-center justify-between mb-1.5">
               <span>Branch Manager</span>
               {manager && <span className="text-[10px] font-bold text-[#1dbf73] opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-wider">View Profile &rarr;</span>}
             </span>
@@ -121,7 +121,7 @@ function StatCard({ icon, label, value, color = "text-[#1dbf73]", onClick, title
       <div className={`p-3 rounded-full bg-slate-50 mb-3 group-hover:scale-110 transition-transform ${color}`}>
         {icon}
       </div>
-      <p className="text-xs text-slate-600 mb-1 font-medium group-hover:text-slate-900 transition-colors">{label}</p>
+      <p className="text-xs text-slate-900 mb-1 font-medium group-hover:text-slate-900 transition-colors">{label}</p>
       <h4 className="text-2xl font-extrabold text-slate-900 group-hover:scale-105 transition-transform">{value}</h4>
       <span className="text-[10px] font-bold text-slate-400 group-hover:text-[#1dbf73] transition-colors mt-1">View &rarr;</span>
     </Card>

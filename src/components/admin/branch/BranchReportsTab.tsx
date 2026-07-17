@@ -65,7 +65,7 @@ export const BranchReportsTab: React.FC<BranchReportsTabProps> = ({ branch }) =>
       {reports.length === 0 ? (
         <Card className="bg-white border-slate-200 p-12 flex flex-col items-center justify-center shadow-xl text-center">
           <FileText className="w-12 h-12 text-slate-700 mb-4" />
-          <h5 className="text-md font-medium text-slate-600">No reports generated</h5>
+          <h5 className="text-md font-medium text-slate-900">No reports generated</h5>
           <p className="text-sm text-slate-500 mt-1">Reports will appear here once data is collected.</p>
         </Card>
       ) : (
@@ -86,7 +86,7 @@ export const BranchReportsTab: React.FC<BranchReportsTabProps> = ({ branch }) =>
                      {report.title}
                      <span className="text-[10px] text-slate-400 group-hover:text-[#1dbf73] font-bold uppercase transition-colors">View &rarr;</span>
                    </h5>
-                   <p className="text-xs text-slate-600 mt-1">{report.description}</p>
+                   <p className="text-xs text-slate-900 mt-1">{report.description}</p>
                  </div>
               </div>
               

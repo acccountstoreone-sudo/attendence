@@ -40,6 +40,7 @@ export default function AdminSalarySettingsPage() {
   const supabase = createClient();
   const [settings, setSettings] = useState<SalarySetting[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [branchSettingsMap, setBranchSettingsMap] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -50,13 +51,19 @@ export default function AdminSalarySettingsPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    const [settingsRes, empsRes] = await Promise.all([
+    const [settingsRes, empsRes, branchSetRes] = await Promise.all([
       fetch('/api/salary-settings'),
       supabase.from('profiles').select('id, full_name, employee_id, branch_id, branches!branch_id(name)').eq('role', 'employee').eq('is_active', true).order('full_name'),
+      supabase.from('branch_settings').select('*')
     ]);
     const settingsJson = await settingsRes.json();
     if (settingsJson.success) setSettings((settingsJson.data ?? []) as unknown as SalarySetting[]);
     if (!empsRes.error) setEmployees((empsRes.data ?? []) as unknown as Employee[]);
+    if (!branchSetRes.error) {
+      const bMap: Record<string, any> = {};
+      (branchSetRes.data || []).forEach(bs => { bMap[bs.branch_id] = bs; });
+      setBranchSettingsMap(bMap);
+    }
     setLoading(false);
   }, [supabase]);
 
@@ -130,6 +137,8 @@ export default function AdminSalarySettingsPage() {
   );
 
   const currentEditingProfile = editingId ? settings.find((s) => s.user_id === editingId)?.profiles : null;
+  const currentEditingEmployee = employees.find(e => e.id === (editingId || form.user_id));
+  const currentBranchSettings = currentEditingEmployee?.branch_id ? branchSettingsMap[currentEditingEmployee.branch_id] : null;
 
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto">
@@ -207,7 +216,7 @@ export default function AdminSalarySettingsPage() {
                     <h2 className="text-xl font-extrabold tracking-tight text-slate-900">
                       {editingId ? `Update Rates — ${currentEditingProfile?.full_name}` : 'Setup Employee Salary & Rates'}
                     </h2>
-                    <p className="text-xs text-slate-600 font-medium mt-0.5">
+                    <p className="text-xs text-slate-900 font-medium mt-0.5">
                       {editingId ? `Employee ID: ${currentEditingProfile?.employee_id || 'N/A'}` : 'Assign fixed base salary, allowances & optional rate overrides'}
                     </p>
                   </div>
@@ -320,7 +329,10 @@ export default function AdminSalarySettingsPage() {
                         <Clock className="w-4 h-4 text-[#1dbf73]" /> Overtime & Snack Rate Overrides (Optional)
                       </h3>
                       <p className="text-xs text-emerald-800/80 mt-0.5">
-                        If left blank, the system automatically uses the assigned store/branch default rates on payroll.
+                        If left blank, the system automatically uses the assigned store/branch default rates on payroll. <br/>
+                        {currentBranchSettings && (
+                          <span className="font-semibold text-emerald-900">Current Branch Defaults: ৳{currentBranchSettings.overtime_rate_per_hour || 0}/hr Overtime, ৳{currentBranchSettings.daily_snack_allowance || 0}/day Snack</span>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -334,9 +346,9 @@ export default function AdminSalarySettingsPage() {
                           id="salary-ot-input"
                           type="number" min={0} step={0.01}
                           value={form.overtime_rate_per_hour}
-                          placeholder="Leave blank for store default"
+                          placeholder={currentBranchSettings?.overtime_rate_per_hour ? `Default: ৳${currentBranchSettings.overtime_rate_per_hour}` : "Leave blank for store default"}
                           onChange={(e) => setForm({ ...form, overtime_rate_per_hour: e.target.value })}
-                          className="w-full pl-8 pr-3.5 py-2.5 bg-white text-slate-900 font-bold border border-emerald-300 rounded-xl text-sm focus:outline-none focus:border-[#1dbf73] focus:ring-4 focus:ring-[#1dbf73]/15 transition-all"
+                          className="w-full pl-8 pr-3.5 py-2.5 bg-white text-slate-900 font-bold border border-emerald-300 rounded-xl text-sm focus:outline-none focus:border-[#1dbf73] focus:ring-4 focus:ring-[#1dbf73]/15 transition-all placeholder:font-normal placeholder:text-slate-400"
                         />
                       </div>
                     </div>
@@ -349,9 +361,9 @@ export default function AdminSalarySettingsPage() {
                           id="salary-snack-input"
                           type="number" min={0} step={0.01}
                           value={form.daily_snack_allowance}
-                          placeholder="Leave blank for store default"
+                          placeholder={currentBranchSettings?.daily_snack_allowance ? `Default: ৳${currentBranchSettings.daily_snack_allowance}` : "Leave blank for store default"}
                           onChange={(e) => setForm({ ...form, daily_snack_allowance: e.target.value })}
-                          className="w-full pl-8 pr-3.5 py-2.5 bg-white text-slate-900 font-bold border border-emerald-300 rounded-xl text-sm focus:outline-none focus:border-[#1dbf73] focus:ring-4 focus:ring-[#1dbf73]/15 transition-all"
+                          className="w-full pl-8 pr-3.5 py-2.5 bg-white text-slate-900 font-bold border border-emerald-300 rounded-xl text-sm focus:outline-none focus:border-[#1dbf73] focus:ring-4 focus:ring-[#1dbf73]/15 transition-all placeholder:font-normal placeholder:text-slate-400"
                         />
                       </div>
                     </div>
@@ -488,7 +500,7 @@ export default function AdminSalarySettingsPage() {
                           {s.overtime_rate_per_hour !== null && s.overtime_rate_per_hour !== undefined ? (
                             <span className="text-emerald-950">৳{s.overtime_rate_per_hour}/Hr <span className="text-[10px] bg-emerald-200/80 text-emerald-900 px-1.5 py-0.5 rounded-md ml-0.5">Custom</span></span>
                           ) : (
-                            <span className="text-slate-600">Store Default</span>
+                            <span className="text-slate-900">Store Default</span>
                           )}
                         </span>
                       </div>
@@ -502,7 +514,7 @@ export default function AdminSalarySettingsPage() {
                           {s.daily_snack_allowance !== null && s.daily_snack_allowance !== undefined ? (
                             <span className="text-amber-950">৳{s.daily_snack_allowance}/Day <span className="text-[10px] bg-amber-200/80 text-amber-900 px-1.5 py-0.5 rounded-md ml-0.5">Custom</span></span>
                           ) : (
-                            <span className="text-slate-600">Store Default</span>
+                            <span className="text-slate-900">Store Default</span>
                           )}
                         </span>
                       </div>

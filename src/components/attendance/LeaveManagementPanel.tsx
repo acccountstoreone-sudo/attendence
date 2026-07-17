@@ -151,7 +151,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
             <CalendarDays className="w-7 h-7 text-[#1dbf73]" />
             {role === 'admin' ? 'HQ Leave Applications Management' : 'Store Leave Applications Management'}
           </h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-slate-900 mt-1">
             Review, approve, or decline employee leave applications with automatic balance deduction.
           </p>
         </div>
@@ -171,7 +171,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
               className={`px-4 py-2 rounded-lg text-sm font-semibold capitalize transition-all whitespace-nowrap flex items-center gap-2 ${
                 statusTab === tab
                   ? 'bg-[#1dbf73] text-[#ffffff] shadow-md'
-                  : 'text-slate-600 hover:text-slate-900'
+                  : 'text-slate-900 hover:text-slate-900'
               }`}
             >
               {tab === 'pending' && <Clock className="w-4 h-4" />}
@@ -273,13 +273,13 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Spinner size="lg" />
-          <p className="mt-3 text-sm text-slate-600">Loading leave requests...</p>
+          <p className="mt-3 text-sm text-slate-900">Loading leave requests...</p>
         </div>
       ) : filteredLeaves.length === 0 ? (
         <Card className="p-12 text-center border-dashed border-slate-200 bg-[#ffffff]/50">
           <CalendarDays className="w-12 h-12 text-slate-500 mx-auto mb-3 opacity-60" />
           <h3 className="text-lg font-semibold text-slate-900">No Leave Requests Found</h3>
-          <p className="text-sm text-slate-600 mt-1 max-w-md mx-auto">
+          <p className="text-sm text-slate-900 mt-1 max-w-md mx-auto">
             {statusTab === 'pending' 
               ? 'There are currently no pending leave applications awaiting verification.' 
               : `No ${statusTab} leave requests match your filter criteria.`}
@@ -319,7 +319,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                               {l.employee_name}
                             </h3>
                             {l.employee_code && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 font-mono">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-50 text-slate-900 font-mono">
                                 #{l.employee_code}
                               </span>
                             )}
@@ -331,7 +331,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                               {l.status}
                             </span>
                           </div>
-                          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
+                          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-900">
                             <span className="flex items-center gap-1.5">
                               <Building2 className="w-3.5 h-3.5 text-slate-500" />
                               {l.branch_name}
@@ -356,7 +356,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                             </div>
                           )}
                           {l.reviewer_note && (
-                            <div className="pt-1 flex items-center gap-1.5 text-xs text-slate-600">
+                            <div className="pt-1 flex items-center gap-1.5 text-xs text-slate-900">
                               <MessageSquare className="w-3.5 h-3.5 text-[#1dbf73] shrink-0" />
                               <span className="font-semibold text-slate-700">Reviewer Note:</span> {l.reviewer_note}
                             </div>
@@ -366,7 +366,7 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
 
                       {/* Middle: Duration Dates */}
                       <div className="bg-white/60 border border-slate-200/80 rounded-xl p-4 text-center shrink-0 min-w-[180px]">
-                        <p className="text-xs text-slate-600 uppercase tracking-wider font-semibold">Leave Duration</p>
+                        <p className="text-xs text-slate-900 uppercase tracking-wider font-semibold">Leave Duration</p>
                         <p className="text-lg font-bold text-slate-900 mt-1">
                           {l.total_days || 1} {Number(l.total_days) === 1 ? 'Day' : 'Days'}
                         </p>
@@ -440,15 +440,15 @@ export const LeaveManagementPanel: React.FC<LeaveManagementPanelProps> = ({ role
                 )}
                 {modalAction === 'approve' ? 'Approve with Note' : 'Reject Leave Request'}
               </h3>
-              <button onClick={() => setNoteModalLeave(null)} className="text-slate-600 hover:text-slate-900 text-sm">✕</button>
+              <button onClick={() => setNoteModalLeave(null)} className="text-slate-900 hover:text-slate-900 text-sm">✕</button>
             </div>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-900">
               {modalAction === 'approve' 
                 ? `You are about to approve ${noteModalLeave.employee_name}'s leave for ${noteModalLeave.total_days} days.`
                 : `Please provide a reason for rejecting ${noteModalLeave.employee_name}'s leave request.`}
             </p>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Reviewer Note / Reason</label>
+              <label className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Reviewer Note / Reason</label>
               <textarea
                 rows={3}
                 placeholder={modalAction === 'approve' ? 'e.g., Approved. Hand over pending work to Team Lead.' : 'e.g., Critical shift shortage during project delivery week.'}

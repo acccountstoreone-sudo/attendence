@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
@@ -23,7 +23,6 @@ import {
 
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { KYCReviewModal } from '@/components/admin/KYCReviewModal';
 
 interface StoreEmployee {
   id: string;
@@ -35,15 +34,6 @@ interface StoreEmployee {
   check_out_time?: string;
 }
 
-interface PendingApproval {
-  id: string;
-  full_name: string;
-  email: string;
-  nid?: string;
-  nid_front_url?: string;
-  nid_back_url?: string;
-}
-
 export default function BranchManagerDashboardPage() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -52,8 +42,6 @@ export default function BranchManagerDashboardPage() {
   const [employees, setEmployees] = useState<StoreEmployee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [pendingCorrections, setPendingCorrections] = useState(0);
-  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([]);
-  const [reviewingEmployee, setReviewingEmployee] = useState<PendingApproval | null>(null);
 
   const fetchStoreDashboard = useCallback(async () => {
     setLoading(true);
@@ -80,18 +68,7 @@ export default function BranchManagerDashboardPage() {
       }
       const { data: staffList } = await query;
 
-      // 2.5 Fetch pending approvals
-      let pendingQuery = supabase
-        .from('profiles')
-        .select('id, full_name, email, nid, nid_front_url, nid_back_url')
-        .eq('registration_step', 'pending_approval');
-      if (branchId) {
-        pendingQuery = pendingQuery.eq('branch_id', branchId);
-      }
-      const { data: pendingList } = await pendingQuery;
-      if (pendingList) setPendingApprovals(pendingList);
-
-      // 3. Fetch today's attendance records for this branch using Supabase directly
+      // 2. Fetch staff in this branch
       // (RLS automatically filters this to the manager's assigned branch)
       const now = new Date();
       const formatter = new Intl.DateTimeFormat('en-US', {
@@ -150,23 +127,6 @@ export default function BranchManagerDashboardPage() {
     fetchStoreDashboard();
   }, [fetchStoreDashboard]);
 
-  const handleApprove = async (userId: string, action: 'approve' | 'reject') => {
-    try {
-      const res = await fetch('/api/auth/approve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, action })
-      });
-      if (res.ok) {
-        setPendingApprovals(prev => prev.filter(p => p.id !== userId));
-        fetchStoreDashboard(); // refresh employee list
-      }
-    } catch (error) {
-      console.error(error);
-      alert('Failed to process approval.');
-    }
-  };
-
   const presentCount = employees.filter((e) => e.status === 'present').length;
   const lateCount = employees.filter((e) => e.status === 'late').length;
   const absentCount = employees.filter((e) => e.status === 'absent').length;
@@ -191,11 +151,11 @@ export default function BranchManagerDashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <Store className="w-4 h-4 text-slate-600" />
+            <Store className="w-4 h-4 text-slate-900" />
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{storeName}</span>
           </div>
           <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Store Console</h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-slate-900 mt-1">
             Supervise staff attendance, punctuality, and manual override requests.
           </p>
         </div>
@@ -204,7 +164,7 @@ export default function BranchManagerDashboardPage() {
           <Button
             size="sm"
             variant="outline"
-            className="text-slate-600 hover:text-slate-900 border-slate-200"
+            className="text-slate-900 hover:text-slate-900 border-slate-200"
             icon={<RefreshCw className="w-4 h-4" />}
             onClick={() => fetchStoreDashboard()}
           >
@@ -246,79 +206,12 @@ export default function BranchManagerDashboardPage() {
             </Button>
           </div>
         )}
-
-        {/* KYC Enrollments Alert */}
-        {pendingApprovals.length > 0 && (
-          <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center space-x-3">
-              <UserCheck className="w-5 h-5 text-blue-500 shrink-0" />
-              <div>
-                <h4 className="text-sm font-semibold text-blue-500">
-                  {pendingApprovals.length} Identity Enrollment{pendingApprovals.length > 1 ? 's' : ''}
-                </h4>
-                <p className="text-xs text-blue-500/70 mt-0.5">New staff awaiting KYC approval.</p>
-              </div>
-            </div>
-            <div className="flex -space-x-2">
-              {pendingApprovals.slice(0, 3).map((emp) => (
-                <div key={emp.id} className="w-8 h-8 rounded-full bg-slate-50 border-2 border-[#ffffff] flex items-center justify-center text-xs font-medium text-slate-600">
-                  {emp.full_name.charAt(0)}
-                </div>
-              ))}
-              {pendingApprovals.length > 3 && (
-                <div className="w-8 h-8 rounded-full bg-slate-50 border-2 border-[#ffffff] flex items-center justify-center text-xs font-medium text-slate-600">
-                  +{pendingApprovals.length - 3}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
-
-      {/* If there are pending approvals, show them in a flat list */}
-      {pendingApprovals.length > 0 && (
-        <div className="bg-[#ffffff] rounded-xl border border-slate-200 overflow-hidden">
-          <div className="bg-transparent border-b border-slate-200 px-5 py-3 flex items-center justify-between text-xs font-semibold text-slate-500 uppercase">
-            <span>Pending KYC Reviews</span>
-          </div>
-          <div className="divide-y divide-slate-200">
-             {pendingApprovals.map(emp => (
-               <div key={emp.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-slate-100/20 transition-colors gap-3">
-                 <div>
-                   <p className="text-slate-700 font-medium text-sm">{emp.full_name}</p>
-                   <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500">
-                     <span>{emp.email}</span>
-                     {emp.nid && !emp.nid.startsWith('doc_') && (
-                       <>
-                        <span>&bull;</span>
-                        <span>NID: ****{emp.nid.slice(-4)}</span>
-                       </>
-                     )}
-                   </div>
-                 </div>
-                 <Button size="sm" variant="outline" className="text-blue-400 border-blue-400/30 hover:bg-blue-900/30 shrink-0" onClick={() => setReviewingEmployee(emp)}>
-                   Review KYC
-                 </Button>
-               </div>
-             ))}
-          </div>
-        </div>
-      )}
-
-      <KYCReviewModal 
-        isOpen={!!reviewingEmployee}
-        onClose={() => setReviewingEmployee(null)}
-        employee={reviewingEmployee ? { ...reviewingEmployee, branch_name: storeName } : null}
-        onApprove={async (id, action) => {
-          await handleApprove(id, action);
-          setReviewingEmployee(null);
-        }}
-      />
 
       {/* Clean Metric Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-[#ffffff] border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
-          <p className="text-xs font-medium text-slate-600">Total Staff</p>
+          <p className="text-xs font-medium text-slate-900">Total Staff</p>
           <div className="mt-2 text-2xl font-bold text-slate-900">
             {employees.length}
           </div>
@@ -393,7 +286,7 @@ export default function BranchManagerDashboardPage() {
                   <tr key={emp.id} className="hover:bg-slate-100/20 transition-colors">
                     <td className="py-3 px-5">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 font-medium text-xs shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-900 font-medium text-xs shrink-0">
                           {emp.full_name.charAt(0)}
                         </div>
                         <div>
@@ -408,29 +301,29 @@ export default function BranchManagerDashboardPage() {
                         variant="subtle"
                       />
                     </td>
-                    <td className="py-3 px-5 font-mono text-xs text-slate-600">
+                    <td className="py-3 px-5 font-mono text-xs text-slate-900">
                       {emp.check_in_time ? (
                         <span className="text-[#1dbf73]/90">
                           {new Date(emp.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       ) : (
-                        <span className="text-slate-600 italic">Not Checked In</span>
+                        <span className="text-slate-900 italic">Not Checked In</span>
                       )}
                     </td>
-                    <td className="py-3 px-5 font-mono text-xs text-slate-600">
+                    <td className="py-3 px-5 font-mono text-xs text-slate-900">
                       {emp.check_out_time ? (
                         <span className="text-blue-400/90">
                           {new Date(emp.check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       ) : (
-                        <span className="text-slate-600 italic">On Shift</span>
+                        <span className="text-slate-900 italic">On Shift</span>
                       )}
                     </td>
                     <td className="py-3 px-5 text-right">
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-slate-600 hover:text-slate-700"
+                        className="text-slate-900 hover:text-slate-700"
                         onClick={() => router.push(`/branch-manager/corrections?user_id=${emp.id}`)}
                       >
                         Correction

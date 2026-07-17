@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -6,7 +6,12 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { MapPin, Phone, Globe, Lock, Unlock, CheckCircle2, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LocationMapPicker } from '@/components/admin/LocationMapPicker';
+import dynamic from 'next/dynamic';
+
+const LocationMapPicker = dynamic(
+  () => import('@/components/admin/LocationMapPicker').then(mod => mod.LocationMapPicker),
+  { ssr: false, loading: () => <div className="h-64 w-full bg-slate-100 animate-pulse rounded-xl" /> }
+);
 
 interface BranchFormProps {
   initialData?: {
@@ -120,19 +125,19 @@ export function BranchForm({ initialData }: BranchFormProps) {
       <form onSubmit={handleSave} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Store Name *</label>
+            <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Store Name *</label>
             <input required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="e.g., Anchor Fashion Mirpur" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Branch Code *</label>
+            <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Branch Code *</label>
             <input required value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
               placeholder="e.g., AF-MIR-01" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all" />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Full Address</label>
+          <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Full Address</label>
           <div className="relative">
             <MapPin className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
             <input value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
@@ -142,12 +147,12 @@ export function BranchForm({ initialData }: BranchFormProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">City</label>
+            <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">City</label>
             <input value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
               placeholder="e.g., Dhaka" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Store Phone</label>
+            <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Store Phone</label>
             <div className="relative">
               <Phone className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
               <input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
@@ -175,22 +180,22 @@ export function BranchForm({ initialData }: BranchFormProps) {
           />
 
           <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
-            <div className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+            <div className="text-xs font-bold text-slate-900 uppercase tracking-wider">
               Fine-Tune Coordinates or Radius Manually
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Latitude</label>
+                <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Latitude</label>
                 <input value={form.latitude} onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value }))}
                   type="number" step="any" placeholder="23.8103" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all font-mono" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Longitude</label>
+                <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Longitude</label>
                 <input value={form.longitude} onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value }))}
                   type="number" step="any" placeholder="90.4125" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all font-mono" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Radius (m)</label>
+                <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Radius (m)</label>
                 <input value={form.geofence_radius_meters} onChange={(e) => setForm((f) => ({ ...f, geofence_radius_meters: e.target.value }))}
                   type="number" min="10" max="2000" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all font-mono" />
               </div>

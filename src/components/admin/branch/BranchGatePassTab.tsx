@@ -34,7 +34,7 @@ interface Employee {
 export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) => {
   const [breaks, setBreaks] = useState<BreakRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'overstayed'>('active');
+  const [filter, setFilter] = useState<'pending' | 'active' | 'completed' | 'overstayed' | 'all'>('pending');
   
   // Modal states for issuing Gate Pass
   const [showIssueModal, setShowIssueModal] = useState(false);
@@ -131,6 +131,25 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
     }
   };
 
+  const handleApproveReject = async (breakId: string, action: 'approve' | 'reject') => {
+    if (!confirm(`Are you sure you want to ${action} this Gate Pass?`)) return;
+    try {
+      const res = await fetch('/api/attendance/breaks/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ break_id: breakId, action })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchBreaks();
+      } else {
+        alert(data.error || `Failed to ${action} gate pass.`);
+      }
+    } catch (err) {
+      alert(`Network error while trying to ${action} gate pass.`);
+    }
+  };
+
   const formatBreakType = (type: string) => {
     const map: Record<string, string> = {
       namaz_prayer: '🕌 Prayer / Namaz',
@@ -150,22 +169,22 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
   return (
     <div className="space-y-6">
       {/* Top action bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 text-white p-5 rounded-2xl shadow-xl border border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white text-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200">
         <div>
           <h3 className="text-lg font-bold flex items-center gap-2">
             <Clock className="w-5 h-5 text-[#1dbf73]" />
             Live Gate-Pass & Short Break Monitor
           </h3>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Track temporary store exits (Prayer, Lunch, Bank duty) with live countdowns & overstay detection.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             onClick={() => fetchBreaks()}
-            variant="secondary"
+            variant="outline"
             size="sm"
-            className="bg-slate-800 border-slate-700 text-slate-300 hover:text-white"
+            className="border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50"
           >
             <RefreshCw className="w-3.5 h-3.5 mr-1" /> Refresh
           </Button>
@@ -179,17 +198,18 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex space-x-2 border-b border-slate-200 pb-2">
-        {(['active', 'overstayed', 'completed', 'all'] as const).map((t) => (
+      <div className="flex space-x-2 border-b border-slate-200 pb-2 overflow-x-auto whitespace-nowrap">
+        {(['pending', 'active', 'overstayed', 'completed', 'all'] as const).map((t) => (
           <button
             key={t}
             onClick={() => setFilter(t)}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-all shrink-0 ${
               filter === t
                 ? 'bg-[#1dbf73] text-white shadow-md'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
             }`}
           >
+            {t === 'pending' && '⏳ Pending Approvals'}
             {t === 'active' && '🔴 Live Outside (Active)'}
             {t === 'overstayed' && '⚠️ Overstayed Alerts'}
             {t === 'completed' && '✅ Returned Today'}
@@ -204,15 +224,19 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
       ) : breaks.length === 0 ? (
         <Card className="p-12 text-center border-slate-200 shadow-sm bg-white">
           <LogOut className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-600 font-bold">No {filter !== 'all' ? filter : ''} gate passes found right now.</p>
+          <p className="text-slate-900 font-bold">No {filter !== 'all' ? filter : ''} gate passes found right now.</p>
           <p className="text-xs text-slate-400 mt-1">When staff go out for Namaz or Bank duties, active passes will appear here live.</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {breaks.map((item) => {
-            const runningMins = item.status === 'active' 
-              ? getRunningMinutes(item.out_time) 
-              : (item.actual_duration_minutes || (item.return_time ? Math.max(1, Math.round((new Date(item.return_time).getTime() - new Date(item.out_time).getTime()) / 60000)) : getRunningMinutes(item.out_time)));
+            const runningMins = (item.status === 'pending' || item.status === 'rejected') ? 0 : 
+              (item.status === 'active' 
+                ? getRunningMinutes(item.out_time) 
+                : (item.actual_duration_minutes || (item.return_time ? Math.max(1, Math.round((new Date(item.return_time).getTime() - new Date(item.out_time).getTime()) / 60000)) : getRunningMinutes(item.out_time))));
+            
+            const isPending = item.status === 'pending';
+            const isRejected = item.status === 'rejected';
             const isReturned = item.status === 'completed' || item.status === 'overstayed';
             const lateMins = Math.max(0, runningMins - item.expected_duration_minutes);
             const isLate = lateMins > 0;
@@ -221,6 +245,8 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
               <Card 
                 key={item.id} 
                 className={`p-5 bg-white border shadow-lg relative overflow-hidden transition-all duration-300 ${
+                  isPending ? 'border-blue-300 ring-2 ring-blue-500/20' :
+                  isRejected ? 'border-slate-300 opacity-70' :
                   !isReturned
                     ? isLate 
                       ? 'border-red-500/80 ring-2 ring-red-500/20' 
@@ -236,6 +262,8 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
                     {formatBreakType(item.break_type)}
                   </span>
                   <span className={`text-[11px] font-extrabold uppercase px-2 py-0.5 rounded ${
+                    isPending ? 'bg-blue-100 text-blue-700 animate-pulse' :
+                    isRejected ? 'bg-slate-100 text-slate-600' :
                     !isReturned
                       ? isLate 
                         ? 'bg-red-500 text-white animate-pulse' 
@@ -244,8 +272,10 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
                       ? 'bg-red-100 text-red-700 font-bold'
                       : 'bg-emerald-100 text-emerald-700'
                   }`}>
-                    {!isReturned && (isLate ? `Outside +${lateMins}m Over` : 'Active Outside')}
-                    {isReturned && (isLate ? `Returned (${lateMins}m Late)` : 'Returned On Time')}
+                    {isPending && 'Waiting Approval'}
+                    {isRejected && 'Rejected'}
+                    {!isPending && !isRejected && !isReturned && (isLate ? `Outside +${lateMins}m Over` : 'Active Outside')}
+                    {!isPending && !isRejected && isReturned && (isLate ? `Returned (${lateMins}m Late)` : 'Returned On Time')}
                   </span>
                 </div>
 
@@ -268,7 +298,16 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
                 </div>
 
                 {/* Return vs Outside Prominent Indicator Box */}
-                {!isReturned ? (
+                {isPending ? (
+                  <div className="bg-blue-50 border border-blue-200 p-2.5 rounded-xl text-blue-900 font-bold mb-3 flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-blue-600 shrink-0" /> REQUESTED</span>
+                    <span className="text-xs font-bold bg-blue-500 text-white px-2 py-0.5 rounded">{item.expected_duration_minutes}m limit</span>
+                  </div>
+                ) : isRejected ? (
+                  <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-700 font-bold mb-3 flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 text-slate-500 shrink-0" /> REQUEST REJECTED</span>
+                  </div>
+                ) : !isReturned ? (
                   isLate ? (
                     <div className="bg-red-500 text-white p-2.5 rounded-xl font-bold mb-3 flex items-center justify-between animate-pulse shadow-md text-xs">
                       <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 shrink-0" /> STILL OUTSIDE (LATE!)</span>
@@ -295,10 +334,14 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
                 )}
 
                 {/* Details box */}
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-1.5 text-xs text-slate-600 mb-4">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-1.5 text-xs text-slate-900 mb-4">
                   <div className="flex justify-between">
-                    <span className="font-medium text-slate-400">Out Time:</span>
-                    <span className="font-bold text-slate-800">{new Date(item.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="font-medium text-slate-400">{isPending ? 'Requested At:' : 'Out Time:'}</span>
+                    <span className="font-bold text-slate-800">
+                      {isPending 
+                        ? new Date((item as any).created_at || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                        : (item.out_time ? new Date(item.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A')}
+                    </span>
                   </div>
                   {item.return_time && (
                     <div className="flex justify-between">
@@ -309,7 +352,7 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
                   <div className="flex justify-between">
                     <span className="font-medium text-slate-400">Total Duration:</span>
                     <span className={`font-bold ${isLate ? 'text-red-600' : 'text-slate-800'}`}>
-                      {runningMins} mins <span className="text-slate-400 font-normal">(/ {item.expected_duration_minutes}m limit)</span>
+                      {isPending || isRejected ? '0' : runningMins} mins <span className="text-slate-400 font-normal">(/ {item.expected_duration_minutes}m limit)</span>
                     </span>
                   </div>
                   <div className="pt-1 border-t border-slate-200/60 mt-1">
@@ -318,11 +361,30 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
                   </div>
                 </div>
 
+                {/* Actions */}
+                {isPending && (
+                  <div className="flex space-x-2 pt-2">
+                    <Button
+                      onClick={() => handleApproveReject(item.id, 'reject')}
+                      variant="secondary"
+                      className="flex-1 text-xs py-2 text-rose-600 bg-rose-50 hover:bg-rose-100"
+                    >
+                      Reject
+                    </Button>
+                    <Button
+                      onClick={() => handleApproveReject(item.id, 'approve')}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2"
+                    >
+                      Approve & Start
+                    </Button>
+                  </div>
+                )}
+                
                 {/* Return button if active */}
                 {item.status === 'active' && (
                   <Button
                     onClick={() => handleVerifyReturn(item.id, item.profiles?.full_name || 'Employee')}
-                    className="w-full bg-[#1dbf73] hover:bg-[#19a563] text-white font-bold text-xs py-2"
+                    className="w-full bg-[#1dbf73] hover:bg-[#19a563] text-white font-bold text-xs py-2 mt-2"
                   >
                     <CheckCircle2 className="w-4 h-4 mr-1.5" /> Verify Return & Resume Duty
                   </Button>
@@ -341,7 +403,7 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
               <h4 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <Clock className="w-5 h-5 text-[#1dbf73]" /> Issue Short Gate-Pass
               </h4>
-              <button onClick={() => setShowIssueModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
+              <button onClick={() => setShowIssueModal(false)} className="text-slate-400 hover:text-slate-900 font-bold text-sm">✕</button>
             </div>
 
             <form onSubmit={handleIssueGatePass} className="space-y-4">

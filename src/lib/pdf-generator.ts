@@ -3,6 +3,20 @@ import autoTable from 'jspdf-autotable';
 import fs from 'fs';
 import path from 'path';
 
+function drawLogo(doc: jsPDF, logoBase64: string, x: number, y: number, targetHeight: number = 18) {
+  try {
+    const props = doc.getImageProperties(logoBase64);
+    let imgWidth = (props.width * targetHeight) / props.height;
+    if (imgWidth > 70) {
+      imgWidth = 70;
+      targetHeight = (props.height * imgWidth) / props.width;
+    }
+    doc.addImage(logoBase64, 'PNG', x, y, imgWidth, targetHeight);
+  } catch (e) {
+    doc.addImage(logoBase64, 'PNG', x, y, 50, 15);
+  }
+}
+
 export interface PDFExportOptions {
   reportTitle: string; // e.g., 'EXPENSE REPORT', 'MONTHLY ATTENDANCE'
   reportSubtitle?: string; // e.g., 'Statement'
@@ -92,7 +106,7 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
 
   // Header Section
   if (logoBase64) {
-    doc.addImage(logoBase64, 'PNG', 14, 12, 50, 15); // Adjust width/height as needed for aspect ratio
+    drawLogo(doc, logoBase64, 14, 10, 18);
   } else {
     // Fallback if no logo image is found
     doc.setTextColor(...primaryColor);
@@ -219,6 +233,30 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
     },
     alternateRowStyles: {
       fillColor: [250, 250, 250],
+    },
+    didParseCell: (data: any) => {
+      if (data.section === 'body') {
+        const colName = options.columns[data.column.index];
+        if (colName === 'Approved OT' || colName === 'Logged OT') {
+          if (String(data.cell.raw) !== '0h' && String(data.cell.raw) !== '0') {
+            data.cell.styles.textColor = [16, 185, 129];
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fontSize = 9;
+          }
+        } else if (colName === 'Duty Hrs' || colName === 'Duty') {
+          data.cell.styles.textColor = [37, 99, 235];
+          data.cell.styles.fontStyle = 'bold';
+        } else if (colName === 'Status') {
+          const val = String(data.cell.raw).toUpperCase();
+          if (val.includes('APPROVED')) {
+            data.cell.styles.textColor = [16, 185, 129];
+            data.cell.styles.fontStyle = 'bold';
+          } else if (val.includes('REJECTED')) {
+            data.cell.styles.textColor = [225, 29, 72];
+            data.cell.styles.fontStyle = 'bold';
+          }
+        }
+      }
     },
     willDrawPage: (data: any) => {
       // Draw watermark before autotable cells are drawn on new pages
@@ -377,7 +415,7 @@ export function generateDetailedCompanyPDF(options: DetailedCompanyPDFOptions): 
 
   // Header Section
   if (logoBase64) {
-    doc.addImage(logoBase64, 'PNG', 14, 12, 50, 15);
+    drawLogo(doc, logoBase64, 14, 10, 18);
   } else {
     doc.setTextColor(...primaryColor);
     doc.setFontSize(22);
@@ -486,11 +524,17 @@ export function generateDetailedCompanyPDF(options: DetailedCompanyPDFOptions): 
       willDrawPage: (data: any) => { if (data.pageNumber > 1) { drawWatermark(); } },
       didParseCell: (data: any) => {
         // Highlight OT column if OT is > 0
-        if (data.section === 'body' && columns[data.column.index] === 'OT (M)') {
-          if (Number(data.cell.raw) > 0) {
-            data.cell.styles.textColor = [217, 119, 6]; // Amber for OT
+        if (data.section === 'body' && (columns[data.column.index] === 'OT (M)' || columns[data.column.index] === 'OT')) {
+          if (Number(data.cell.raw) > 0 || (String(data.cell.raw) !== '0h' && String(data.cell.raw) !== '0')) {
+            data.cell.styles.textColor = [16, 185, 129]; // Green for OT
             data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fontSize = 9;
           }
+        }
+        // Highlight Duty/Normal Time
+        if (data.section === 'body' && (columns[data.column.index] === 'Duty (M)' || columns[data.column.index] === 'Duty')) {
+          data.cell.styles.textColor = [37, 99, 235]; // Blue
+          data.cell.styles.fontStyle = 'bold';
         }
         // Highlight Mismatch status
         if (data.section === 'body' && columns[data.column.index] === 'Status') {
@@ -670,6 +714,10 @@ export interface EmployeeFullDutyPDFOptions {
   };
   columns: string[];
   rows: any[][];
+  breaksData?: {
+    columns: string[];
+    rows: any[][];
+  };
 }
 
 export function generateEmployeeFullDutyPDF(options: EmployeeFullDutyPDFOptions): Buffer {
@@ -709,7 +757,7 @@ export function generateEmployeeFullDutyPDF(options: EmployeeFullDutyPDFOptions)
   }
 
   if (logoBase64) {
-    doc.addImage(logoBase64, 'PNG', 14, 12, 45, 14);
+    drawLogo(doc, logoBase64, 14, 10, 18);
   } else {
     doc.setTextColor(...primaryColor);
     doc.setFontSize(22);
@@ -915,6 +963,29 @@ export function generateEmployeeFullDutyPDF(options: EmployeeFullDutyPDFOptions)
     alternateRowStyles: {
       fillColor: [250, 250, 250],
     },
+    didParseCell: (data: any) => {
+      if (data.section === 'body') {
+        const colName = options.columns[data.column.index];
+        if (colName === 'Overtime') {
+          if (String(data.cell.raw) !== '0h' && !String(data.cell.raw).startsWith('0h (0m)')) {
+            data.cell.styles.textColor = [16, 185, 129];
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fontSize = 8.5;
+          }
+        } else if (colName === 'Duty') {
+          data.cell.styles.textColor = [37, 99, 235];
+          data.cell.styles.fontStyle = 'bold';
+        } else if (colName === 'Status') {
+          const val = String(data.cell.raw).toUpperCase();
+          if (val === 'PRESENT') {
+            data.cell.styles.textColor = [16, 185, 129];
+            data.cell.styles.fontStyle = 'bold';
+          } else if (val === 'ABSENT' || val === 'MISSED') {
+            data.cell.styles.textColor = [225, 29, 72];
+          }
+        }
+      }
+    },
     willDrawPage: (data: any) => {
       if (data.pageNumber > 1) {
         drawWatermark();
@@ -923,7 +994,53 @@ export function generateEmployeeFullDutyPDF(options: EmployeeFullDutyPDFOptions)
   });
 
   let finalY = (doc as any).lastAutoTable.finalY || tableY;
-  finalY += 15;
+
+  if (options.breaksData && options.breaksData.rows.length > 0) {
+    finalY += 15;
+    if (finalY > pageHeight - 40) {
+      doc.addPage();
+      drawWatermark();
+      finalY = 25;
+    }
+    
+    doc.setTextColor(...primaryColor);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('GATE PASS & SHORT BREAKS HISTORY', 14, finalY);
+    
+    finalY += 5;
+    
+    (doc as any).autoTable({
+      head: [options.breaksData.columns],
+      body: options.breaksData.rows,
+      startY: finalY,
+      theme: 'plain',
+      headStyles: { 
+        fillColor: [241, 245, 249], 
+        textColor: primaryColor,
+        fontStyle: 'bold',
+        fontSize: 8,
+        cellPadding: 3,
+      },
+      bodyStyles: {
+        fontSize: 7.5,
+        textColor: textColor,
+        cellPadding: 2.5,
+      },
+      alternateRowStyles: {
+        fillColor: [250, 250, 250],
+      },
+      willDrawPage: (data: any) => {
+        if (data.pageNumber > 1) {
+          drawWatermark();
+        }
+      },
+    });
+    
+    finalY = (doc as any).lastAutoTable.finalY || finalY;
+  }
+
+  finalY += 25;
 
   if (finalY > pageHeight - 55) {
     doc.addPage();

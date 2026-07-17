@@ -27,7 +27,7 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-white text-slate-600 border-b border-slate-200">
+              <thead className="bg-white text-slate-900 border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Employee</th>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Branch & ID</th>
@@ -80,14 +80,14 @@ export const BranchEmployeesTab: React.FC<BranchEmployeesTabProps> = ({ employee
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate-600">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate-900">
                         {emp.role.replace(/_/g, ' ')}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-1.5">
                         <Circle className={`w-2.5 h-2.5 fill-current ${emp.is_present_today ? 'text-[#1dbf73]' : 'text-slate-500'}`} />
-                        <span className="text-xs font-medium text-slate-600">{emp.is_present_today ? 'Active' : 'Offline'}</span>
+                        <span className="text-xs font-medium text-slate-900">{emp.is_present_today ? 'Active' : 'Offline'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">

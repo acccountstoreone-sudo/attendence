@@ -48,50 +48,24 @@ export default function BroadcastPage() {
     setFeedback(null);
 
     try {
-      // Fetch employee list (if specific branch selected, filter by branch)
-      const queryUrl = selectedBranch === 'all' 
-        ? '/api/employees?limit=300' 
-        : `/api/employees?limit=300&branch_id=${selectedBranch}`;
-      const empRes = await fetch(queryUrl);
-      const empJson = await empRes.json();
+      const res = await fetch('/api/notifications/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          branch_id: selectedBranch,
+          title: title.trim(),
+          message: message.trim(),
+        }),
+      });
 
-      if (!empJson.success) {
-        throw new Error('Failed to fetch employee list for broadcast.');
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error?.message || 'Failed to dispatch broadcast');
       }
-
-      const employees: Array<{ id: string; role: string }> = empJson.data || [];
-
-      if (employees.length === 0) {
-        setFeedback({ type: 'error', text: 'No active staff found in the selected target group.' });
-        return;
-      }
-
-      // Send notification to each employee/manager with direct navigation action_url and email
-      let successCount = 0;
-      let failCount = 0;
-
-      await Promise.all(
-        employees.map(async (emp) => {
-          const targetUrl = emp.role === 'branch_manager' ? '/branch-manager/announcements' : '/employee/announcements';
-          const res = await fetch('/api/notifications', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              user_id: emp.id,
-              title: title.trim(),
-              message: message.trim(),
-              type: 'alert',
-              action_url: targetUrl,
-            }),
-          });
-          if (res.ok) successCount++;
-          else failCount++;
-        })
-      );
 
       setFeedback({
         type: 'success',
-        text: `Broadcast dispatched to ${successCount} staff member${successCount !== 1 ? 's' : ''}${failCount > 0 ? ` (${failCount} failed)` : ''}.`,
+        text: `Broadcast dispatched successfully to ${json.data.total} staff members.`,
       });
       setTitle('');
       setMessage('');
@@ -107,7 +81,7 @@ export default function BroadcastPage() {
     <div className="space-y-8 pb-12 max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <Link href="/admin" className="flex items-center text-slate-600 hover:text-slate-900 transition-colors text-sm mb-2 w-fit">
+        <Link href="/admin" className="flex items-center text-slate-900 hover:text-slate-900 transition-colors text-sm mb-2 w-fit">
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back to Dashboard
         </Link>
@@ -118,7 +92,7 @@ export default function BroadcastPage() {
         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
           Dispatch System Broadcast
         </h1>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-900">
           Send an urgent alert to all active staff devices across the Anchor Fashion network.
         </p>
       </div>
@@ -149,7 +123,7 @@ export default function BroadcastPage() {
       <Card className="bg-white border-slate-200 p-6 shadow-2xl">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
               Target Audience / Store Branch
             </label>
             <div className="relative">
@@ -170,7 +144,7 @@ export default function BroadcastPage() {
           </div>
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">Message Title</label>
+              <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider">Message Title</label>
               <span className={`text-[10px] font-mono ${title.length > TITLE_MAX * 0.9 ? 'text-amber-400' : 'text-slate-500'}`}>
                 {title.length}/{TITLE_MAX}
               </span>
@@ -186,7 +160,7 @@ export default function BroadcastPage() {
           </div>
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">Message Body</label>
+              <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider">Message Body</label>
               <span className={`text-[10px] font-mono ${message.length > MESSAGE_MAX * 0.9 ? 'text-amber-400' : 'text-slate-500'}`}>
                 {message.length}/{MESSAGE_MAX}
               </span>
@@ -247,14 +221,14 @@ export default function BroadcastPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Confirm Broadcast</h3>
-                  <p className="text-xs text-slate-600">This action cannot be undone.</p>
+                  <p className="text-xs text-slate-900">This action cannot be undone.</p>
                 </div>
               </div>
               <div className="bg-white rounded-xl p-4 border border-slate-200 mb-5 space-y-2">
-                <p className="text-xs text-slate-600 uppercase tracking-wider font-bold">Title</p>
+                <p className="text-xs text-slate-900 uppercase tracking-wider font-bold">Title</p>
                 <p className="text-slate-900 font-semibold text-sm">{title}</p>
-                <p className="text-xs text-slate-600 uppercase tracking-wider font-bold mt-2">Message</p>
-                <p className="text-slate-600 text-sm leading-relaxed">{message}</p>
+                <p className="text-xs text-slate-900 uppercase tracking-wider font-bold mt-2">Message</p>
+                <p className="text-slate-900 text-sm leading-relaxed">{message}</p>
               </div>
               <p className="text-xs text-amber-400 text-center mb-5">
                 ⚠ This will notify every active staff member across all branches.

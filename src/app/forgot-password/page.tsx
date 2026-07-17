@@ -162,7 +162,7 @@ function ForgotPasswordContent() {
               Instant & Secure <br/>
               <span className="font-bold text-[#1dbf73]">Password Recovery</span>
             </h2>
-            <p className="text-slate-600 leading-relaxed text-[13px] md:text-sm font-light opacity-90">
+            <p className="text-slate-900 leading-relaxed text-[13px] md:text-sm font-light opacity-90">
               Recover access to your account using our encrypted verification protocol. A one-time verification code is dispatched instantly to your corporate email via Resend.
             </p>
           </motion.div>
@@ -362,7 +362,7 @@ function ForgotPasswordContent() {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Password Successfully Changed!</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-sm text-slate-900 leading-relaxed">
                   Your new password is now active. You can log into your dashboard immediately.
                 </p>
               </div>

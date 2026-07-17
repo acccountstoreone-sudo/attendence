@@ -215,6 +215,22 @@ export async function GET(
       dutyData = await computeEmployeeDutySummary(supabase, targetEmployeeId, month, year);
     }
 
+    // 2.5 Fetch Gate Passes
+    let breaksQuery = supabase
+      .from('attendance_breaks')
+      .select('*, profiles!attendance_breaks_approved_by_fkey(full_name)')
+      .eq('employee_id', targetEmployeeId)
+      .neq('status', 'rejected')
+      .order('created_at', { ascending: false });
+
+    if (!isAllTime) {
+      const startDate = new Date(year, month - 1, 1).toISOString();
+      const endDate = new Date(year, month, 0, 23, 59, 59, 999).toISOString();
+      breaksQuery = breaksQuery.gte('created_at', startDate).lte('created_at', endDate);
+    }
+    
+    const { data: gatePasses } = await breaksQuery;
+
     if (!dutyData) throw new Error('Failed to obtain duty summary data');
     const { employee, summary, daily_breakdown } = dutyData;
     const reportTitle = isAllTime
@@ -329,6 +345,40 @@ export async function GET(
       const periodText = isAllTime ? 'Full Employment History (All Time)' : `${month}/${year}`;
       const joinDateStr = targetProfile.created_at ? new Date(targetProfile.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
 
+      // Gate passes formatting
+      const breaksColumns = ['Date', 'Type', 'Status', 'Out Time', 'In Time', 'Duration', 'Overstay', 'Approved By', 'Reason'];
+      const breaksRows = (gatePasses || []).map((b: any) => {
+        const outTime = b.out_time ? new Date(b.out_time) : null;
+        const inTime = b.return_time ? new Date(b.return_time) : null;
+        const dateStr = outTime ? outTime.toLocaleDateString('en-GB') : new Date(b.created_at).toLocaleDateString('en-GB');
+        const outStr = outTime ? outTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
+        const inStr = inTime ? inTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (b.status === 'active' || b.status === 'overstayed' ? 'Live (Outside)' : '--:--');
+        
+        const typeMap: Record<string, string> = {
+          namaz_prayer: 'Prayer/Namaz',
+          tea_lunch: 'Tea/Lunch',
+          official_bank: 'Official/Bank',
+          short_emergency: 'Emergency',
+          personal: 'Personal'
+        };
+
+        const duration = b.actual_duration_minutes || (inTime && outTime ? Math.round((inTime.getTime() - outTime.getTime()) / 60000) : 0);
+        const overstay = duration > b.expected_duration_minutes ? `+${duration - b.expected_duration_minutes}m` : 'No';
+        const approverName = b.profiles ? b.profiles.full_name : (b.status === 'pending' ? 'Pending...' : 'Self/Auto');
+
+        return [
+          dateStr,
+          typeMap[b.break_type] || b.break_type,
+          String(b.status).toUpperCase(),
+          outStr,
+          inStr,
+          `${duration}m / ${b.expected_duration_minutes}m`,
+          overstay,
+          approverName,
+          String(b.reason || '').slice(0, 30)
+        ];
+      });
+
       fileBuffer = generateEmployeeFullDutyPDF({
         reportTitle: isAllTime ? 'EMPLOYEE FULL SUMMARY & TENURE REPORT' : 'EMPLOYEE DUTY SUMMARY REPORT',
         reportSubtitle: 'Official Statement & Profile Details',
@@ -358,6 +408,10 @@ export async function GET(
         },
         columns: head,
         rows: body,
+        breaksData: {
+          columns: breaksColumns,
+          rows: breaksRows
+        }
       });
 
       fileName = `${reportTitle}.pdf`;

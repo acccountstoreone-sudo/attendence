@@ -201,7 +201,7 @@ export default function BranchManagerProfilePage() {
     return (
       <div className="min-h-[600px] flex flex-col items-center justify-center text-center space-y-4">
         <div className="text-rose-500 font-semibold text-lg">Failed to load profile</div>
-        <p className="text-slate-600 text-sm max-w-md">{error || 'Could not retrieve branch manager profile records.'}</p>
+        <p className="text-slate-900 text-sm max-w-md">{error || 'Could not retrieve branch manager profile records.'}</p>
         <Button onClick={() => window.location.reload()} variant="outline">
           Retry
         </Button>
@@ -220,7 +220,7 @@ export default function BranchManagerProfilePage() {
             <Store className="w-6 h-6 text-blue-400" />
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Store Manager Profile</h1>
           </div>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-slate-900 mt-1">
             Manage your store management profile, contact numbers, and security credentials.
           </p>
         </div>
@@ -250,20 +250,20 @@ export default function BranchManagerProfilePage() {
           </p>
           <div className="w-full h-px bg-slate-100 my-6" />
           <div className="w-full space-y-3.5 text-left">
-            <div className="flex items-center space-x-3 text-sm text-slate-600">
+            <div className="flex items-center space-x-3 text-sm text-slate-900">
               <Building2 className="w-4 h-4 text-blue-400 shrink-0" />
               <span className="font-semibold">{profile.branch_name}</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-slate-600">
-              <Mail className="w-4 h-4 text-slate-600 shrink-0" />
-              <span className="truncate text-slate-600">{profile.email || 'No email registered'}</span>
+            <div className="flex items-center space-x-3 text-sm text-slate-900">
+              <Mail className="w-4 h-4 text-slate-900 shrink-0" />
+              <span className="truncate text-slate-900">{profile.email || 'No email registered'}</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-slate-600">
-              <Phone className="w-4 h-4 text-slate-600 shrink-0" />
+            <div className="flex items-center space-x-3 text-sm text-slate-900">
+              <Phone className="w-4 h-4 text-slate-900 shrink-0" />
               <span>{profile.phone || 'No phone set'}</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-slate-600">
-              <Calendar className="w-4 h-4 text-slate-600 shrink-0" />
+            <div className="flex items-center space-x-3 text-sm text-slate-900">
+              <Calendar className="w-4 h-4 text-slate-900 shrink-0" />
               <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
             </div>
           </div>
@@ -296,30 +296,30 @@ export default function BranchManagerProfilePage() {
             <form onSubmit={handleSaveProfile} className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
                     Manager ID / Employee Code
                   </label>
                   <Input
                     value={profile.employee_id || 'BM-STORE'}
                     disabled
-                    className="bg-slate-50 border-slate-200 text-slate-600 font-mono cursor-not-allowed"
+                    className="bg-slate-50 border-slate-200 text-slate-900 font-mono cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
                     Email Address
                   </label>
                   <Input
                     value={profile.email || ''}
                     disabled
-                    className="bg-slate-50 border-slate-200 text-slate-600 cursor-not-allowed"
+                    className="bg-slate-50 border-slate-200 text-slate-900 cursor-not-allowed"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
                     Full Name <span className="text-rose-500">*</span>
                   </label>
                   <Input
@@ -331,7 +331,7 @@ export default function BranchManagerProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
                     Phone Number
                   </label>
                   <Input
@@ -389,7 +389,7 @@ export default function BranchManagerProfilePage() {
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
                     New Password
                   </label>
                   <Input
@@ -401,7 +401,7 @@ export default function BranchManagerProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
                     Confirm New Password
                   </label>
                   <Input

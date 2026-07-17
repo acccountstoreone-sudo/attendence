@@ -103,17 +103,30 @@ export async function computeEmployeeDutySummary(
   supabase: SupabaseClient,
   targetEmployeeId: string,
   month: number,
-  year: number
+  year: number,
+  prefetchData?: {
+    profile?: any;
+    companyProfile?: any;
+    branch?: any;
+    branchSettings?: any;
+    salarySettings?: any;
+    holidays?: any[];
+    leaves?: any[];
+    attendanceRecords?: any[];
+  }
 ): Promise<DutySummaryResult> {
   // 1. Fetch Target Profile
-  const { data: targetProfile, error: profErr } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', targetEmployeeId)
-    .single();
-
-  if (profErr || !targetProfile) {
-    throw new Error(`Target employee profile (${targetEmployeeId}) not found.`);
+  let targetProfile = prefetchData?.profile;
+  if (!targetProfile) {
+    const { data, error: profErr } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', targetEmployeeId)
+      .single();
+    if (profErr || !data) {
+      throw new Error(`Target employee profile (${targetEmployeeId}) not found.`);
+    }
+    targetProfile = data;
   }
 
   const now = new Date();
@@ -129,7 +142,10 @@ export async function computeEmployeeDutySummary(
   let branchSnackAllowance = 50.0;
   let branchHolidayMultiplier = 2.0;
 
-  const { data: cp } = await supabase.from('company_profile').select('*').single();
+  const cp = prefetchData?.companyProfile !== undefined 
+    ? prefetchData.companyProfile 
+    : (await supabase.from('company_profile').select('*').single()).data;
+    
   if (cp) {
     if (cp.default_work_start_time) workStartTime = cp.default_work_start_time;
     if (cp.default_work_end_time) workEndTime = cp.default_work_end_time;
@@ -137,12 +153,18 @@ export async function computeEmployeeDutySummary(
 
   if (targetProfile.branch_id) {
     // Manually fetch branch details to avoid relationship ambiguity
-    const { data: branchData } = await supabase.from('branches').select('name, code').eq('id', targetProfile.branch_id).single();
+    const branchData = prefetchData?.branch !== undefined 
+      ? prefetchData.branch 
+      : (await supabase.from('branches').select('name, code').eq('id', targetProfile.branch_id).single()).data;
+      
     if (branchData) {
       targetProfile.branches = branchData;
     }
 
-    const { data: bs } = await supabase.from('branch_settings').select('*').eq('branch_id', targetProfile.branch_id).single();
+    const bs = prefetchData?.branchSettings !== undefined 
+      ? prefetchData.branchSettings 
+      : (await supabase.from('branch_settings').select('*').eq('branch_id', targetProfile.branch_id).single()).data;
+      
     if (bs) {
       if (bs.work_start_time) workStartTime = bs.work_start_time;
       if (bs.work_end_time) workEndTime = bs.work_end_time;
@@ -164,7 +186,9 @@ export async function computeEmployeeDutySummary(
   let finalOvertimeRate = branchOvertimeRate;
   let finalSnackAllowance = branchSnackAllowance;
   let finalHolidayMultiplier = branchHolidayMultiplier;
-  const { data: sal } = await supabase.from('salary_settings').select('*').eq('user_id', targetEmployeeId).maybeSingle();
+  const sal = prefetchData?.salarySettings !== undefined 
+    ? prefetchData.salarySettings 
+    : (await supabase.from('salary_settings').select('*').eq('user_id', targetEmployeeId).maybeSingle()).data;
   if (sal) {
     baseSalary = Number(sal.base_salary || 0);
     houseRentAllowance = Number(sal.house_rent_allowance || 0);
@@ -187,33 +211,41 @@ export async function computeEmployeeDutySummary(
   const daysInMonthCount = new Date(year, month, 0).getDate();
   const endOfMonthStr = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonthCount).padStart(2, '0')}`;
 
-  const { data: holidays } = await supabase
-    .from('public_holidays')
-    .select('*')
-    .or(`and(holiday_date.gte.${startOfMonthStr},holiday_date.lte.${endOfMonthStr}),is_recurring.eq.true`);
+  const holidays = prefetchData?.holidays !== undefined 
+    ? prefetchData.holidays 
+    : (await supabase
+        .from('public_holidays')
+        .select('*')
+        .or(`and(holiday_date.gte.${startOfMonthStr},holiday_date.lte.${endOfMonthStr}),is_recurring.eq.true`)).data;
 
   // 4. Fetch Approved Leave Requests
-  const { data: leaves } = await supabase
-    .from('leave_requests')
-    .select('*')
-    .or(`employee_id.eq.${targetEmployeeId},user_id.eq.${targetEmployeeId}`)
-    .eq('status', 'approved')
-    .lte('start_date', endOfMonthStr)
-    .gte('end_date', startOfMonthStr);
+  const leaves = prefetchData?.leaves !== undefined 
+    ? prefetchData.leaves 
+    : (await supabase
+        .from('leave_requests')
+        .select('*')
+        .or(`employee_id.eq.${targetEmployeeId},user_id.eq.${targetEmployeeId}`)
+        .eq('status', 'approved')
+        .lte('start_date', endOfMonthStr)
+        .gte('end_date', startOfMonthStr)).data;
 
   // 5. Fetch Attendance Records
   const startOfMonthISO = `${year}-${String(month).padStart(2, '0')}-01T00:00:00.000+06:00`;
   const endOfMonthISO = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonthCount).padStart(2, '0')}T23:59:59.999+06:00`;
 
-  const { data: records, error: recErr } = await supabase
-    .from('attendance_records')
-    .select('*')
-    .eq('employee_id', targetEmployeeId)
-    .gte('check_in_time', startOfMonthISO)
-    .lte('check_in_time', endOfMonthISO)
-    .order('check_in_time', { ascending: true });
+  let records = prefetchData?.attendanceRecords;
+  if (!records) {
+    const { data: dbRecords, error: recErr } = await supabase
+      .from('attendance_records')
+      .select('*')
+      .eq('employee_id', targetEmployeeId)
+      .gte('check_in_time', startOfMonthISO)
+      .lte('check_in_time', endOfMonthISO)
+      .order('check_in_time', { ascending: true });
 
-  if (recErr) throw new Error(`Database Query Failed: ${recErr.message}`);
+    if (recErr) throw new Error(`Database Query Failed: ${recErr.message}`);
+    records = dbRecords || [];
+  }
 
   const getDhakaDateStr = (isoString: string) => {
     const d = new Date(isoString);
@@ -334,11 +366,10 @@ export async function computeEmployeeDutySummary(
           dutyHours = Math.max(0, Number(((nowMs - checkInMs) / 3600000).toFixed(2)));
         }
       } else if (!checkOutMs) {
-        const stLower = String(firstLog.status || '').toLowerCase().replace('_', '-');
-        if (firstLog.working_minutes) dutyHours = Number((firstLog.working_minutes / 60).toFixed(2));
-        else if (firstLog.duty_hours) dutyHours = Number(firstLog.duty_hours);
-        else if (stLower === 'half-day') dutyHours = 4;
-        else dutyHours = 8; // fallback full shift
+        dutyHours = 0;
+        // The checkOutLog status might have been set to 'present' or 'late' on check-in.
+        // If it was never checked out, it's incomplete.
+        if (firstLog) firstLog.status = 'incomplete';
       }
 
       const checkInMinutes = getDhakaMinutesOfDay(firstLog.check_in_time);

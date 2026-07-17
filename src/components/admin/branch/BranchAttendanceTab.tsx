@@ -48,13 +48,13 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
         <div className="flex items-center space-x-2">
           <div className="bg-white rounded-lg p-1 border border-slate-200 flex">
             <button 
-              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${view === 'daily' ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}
+              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${view === 'daily' ? 'bg-slate-50 text-slate-900' : 'text-slate-900 hover:text-slate-900'}`}
               onClick={() => setView('daily')}
             >
               Daily
             </button>
             <button 
-              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${view === 'monthly' ? 'bg-slate-50 text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}
+              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${view === 'monthly' ? 'bg-slate-50 text-slate-900' : 'text-slate-900 hover:text-slate-900'}`}
               onClick={() => setView('monthly')}
             >
               Monthly
@@ -71,7 +71,7 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
 
       <Card className="bg-white border-slate-200 overflow-hidden shadow-xl">
         <div className="p-4 border-b border-slate-200 bg-white flex items-center justify-between">
-           <h5 className="text-sm font-semibold text-slate-600">
+           <h5 className="text-sm font-semibold text-slate-900">
              {view === 'daily' ? 'Today\'s Attendance' : 'This Month\'s Attendance'}
            </h5>
            <span className="text-xs text-slate-500 flex items-center"><Calendar className="w-3 h-3 mr-1"/> {new Date().toLocaleDateString()}</span>
@@ -89,7 +89,7 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-white text-slate-600 border-b border-slate-200">
+              <thead className="bg-white text-slate-900 border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Employee</th>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Date</th>
@@ -115,7 +115,7 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
                         <div className="font-bold text-slate-900 group-hover:text-[#1dbf73] transition-colors">{record.profiles?.full_name || 'Unknown'}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-600">
+                    <td className="px-6 py-4 text-slate-900">
                       {new Date(record.check_in_time).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -7,7 +7,12 @@ import { Input } from '@/components/ui/Input';
 import { Spinner } from '@/components/ui/Spinner';
 import { Settings, Clock, CalendarDays, CheckCircle2, AlertTriangle, Info, MapPin, Store, Navigation, Phone, Building2, ShieldCheck, Sparkles, Sliders } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LocationMapPicker } from '@/components/admin/LocationMapPicker';
+import dynamic from 'next/dynamic';
+
+const LocationMapPicker = dynamic(
+  () => import('@/components/admin/LocationMapPicker').then(mod => mod.LocationMapPicker),
+  { ssr: false, loading: () => <div className="h-64 w-full bg-slate-100 animate-pulse rounded-xl" /> }
+);
 
 interface BranchData {
   id: string;
@@ -207,10 +212,10 @@ export default function StoreSettingsPage() {
 
   if (!branchData) {
     return (
-      <Card className="bg-[#ffffff] border border-slate-200 p-8 text-center text-slate-600">
+      <Card className="bg-[#ffffff] border border-slate-200 p-8 text-center text-slate-900">
         <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-slate-900 mb-2">No Assigned Store Found</h2>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-900">
           You are currently not linked to a specific retail store branch. Please contact HR Headquarters or Admin to assign you to your branch.
         </p>
       </Card>
@@ -230,7 +235,7 @@ export default function StoreSettingsPage() {
               {branchData.code}
             </span>
           </div>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-slate-900 mt-1">
             Manage your store&apos;s geographical geofence coordinates, contact profile, operating duty hours, and grace allowances.
           </p>
         </div>
@@ -244,7 +249,7 @@ export default function StoreSettingsPage() {
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
             activeTab === 'location'
               ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-slate-900 shadow-lg shadow-amber-600/20'
-              : 'text-slate-600 hover:text-slate-700 hover:bg-slate-50/50'
+              : 'text-slate-900 hover:text-slate-700 hover:bg-slate-50/50'
           }`}
         >
           <MapPin className="w-4 h-4 shrink-0" />
@@ -256,7 +261,7 @@ export default function StoreSettingsPage() {
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
             activeTab === 'duty'
               ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-slate-900 shadow-lg shadow-amber-600/20'
-              : 'text-slate-600 hover:text-slate-700 hover:bg-slate-50/50'
+              : 'text-slate-900 hover:text-slate-700 hover:bg-slate-50/50'
           }`}
         >
           <Clock className="w-4 h-4 shrink-0" />
@@ -295,7 +300,7 @@ export default function StoreSettingsPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">Store Identity & Contact</h2>
-                  <p className="text-xs text-slate-600">Basic branch contact and display details</p>
+                  <p className="text-xs text-slate-900">Basic branch contact and display details</p>
                 </div>
               </div>
 
@@ -312,7 +317,7 @@ export default function StoreSettingsPage() {
                   label="Branch Code (Read Only)"
                   disabled
                   value={branchData.code}
-                  className="bg-white/80 border-slate-200 text-slate-600 font-mono cursor-not-allowed"
+                  className="bg-white/80 border-slate-200 text-slate-900 font-mono cursor-not-allowed"
                 />
                 <Input
                   label="Contact Phone"
@@ -350,7 +355,7 @@ export default function StoreSettingsPage() {
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold text-slate-900">GPS Coordinates & Radius</h2>
-                      <p className="text-xs text-slate-600">Controls biometric check-in boundary</p>
+                      <p className="text-xs text-slate-900">Controls biometric check-in boundary</p>
                     </div>
                   </div>
 
@@ -399,7 +404,7 @@ export default function StoreSettingsPage() {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between text-sm text-slate-600 mb-2">
+                  <div className="flex items-center justify-between text-sm text-slate-900 mb-2">
                     <span className="font-semibold flex items-center gap-2">
                       <Sliders className="w-4 h-4 text-amber-400" />
                       Geofence Radius (Meters)
@@ -427,7 +432,7 @@ export default function StoreSettingsPage() {
                 </div>
               </div>
 
-              <div className="bg-white/60 rounded-xl p-3.5 border border-slate-200 text-xs text-slate-600 flex items-start gap-2.5">
+              <div className="bg-white/60 rounded-xl p-3.5 border border-slate-200 text-xs text-slate-900 flex items-start gap-2.5">
                 <Info className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
                 <span>
                   Staff must physically be within <strong className="text-slate-700 font-semibold">{branchData.geofence_radius_meters} meters</strong> of these coordinates to successfully submit biometric check-ins.
@@ -443,7 +448,7 @@ export default function StoreSettingsPage() {
                 <MapPin className="w-4 h-4 text-amber-400" />
                 Interactive Map & Geofence Boundary Preview
               </h3>
-              <span className="text-xs text-slate-600">
+              <span className="text-xs text-slate-900">
                 Click or drag the gold pin on the map to pinpoint your exact storefront door
               </span>
             </div>
@@ -491,7 +496,7 @@ export default function StoreSettingsPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">Daily Shift Timings</h2>
-                  <p className="text-xs text-slate-600">Standard working schedule for store staff</p>
+                  <p className="text-xs text-slate-900">Standard working schedule for store staff</p>
                 </div>
               </div>
 
@@ -515,7 +520,7 @@ export default function StoreSettingsPage() {
               />
 
               <div className="pt-2">
-                <p className="text-xs text-slate-600 bg-white/60 p-3 rounded-lg border border-slate-200 flex items-start gap-2">
+                <p className="text-xs text-slate-900 bg-white/60 p-3 rounded-lg border border-slate-200 flex items-start gap-2">
                   <Info className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
                   <span>
                     Staff checking in after <strong className="text-slate-700 font-semibold">{settings.work_start_time}</strong> plus the Late Grace Period below will automatically be marked as <strong className="text-rose-400 font-semibold">Late</strong>.
@@ -532,7 +537,7 @@ export default function StoreSettingsPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">Policies & Allowances</h2>
-                  <p className="text-xs text-slate-600">Grace buffers and half-day thresholds</p>
+                  <p className="text-xs text-slate-900">Grace buffers and half-day thresholds</p>
                 </div>
               </div>
 
@@ -577,7 +582,7 @@ export default function StoreSettingsPage() {
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">Weekly Rest Days</h2>
-                <p className="text-xs text-slate-600">Standard non-working days for this store</p>
+                <p className="text-xs text-slate-900">Standard non-working days for this store</p>
               </div>
             </div>
 
@@ -592,7 +597,7 @@ export default function StoreSettingsPage() {
                     className={`flex items-center justify-center gap-2 p-3.5 rounded-xl border text-sm font-semibold transition-all ${
                       isSelected
                         ? 'bg-blue-500/15 border-blue-500 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]'
-                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-600 hover:text-slate-700'
+                        : 'bg-white border-slate-200 text-slate-900 hover:border-slate-600 hover:text-slate-700'
                     }`}
                   >
                     {isSelected && <CheckCircle2 className="w-4 h-4 shrink-0 text-blue-400" />}

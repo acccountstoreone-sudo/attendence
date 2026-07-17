@@ -29,7 +29,12 @@ const nextConfig: import('next').NextConfig = {
     serverActions: {
       bodySizeLimit: '25mb',
     },
+    optimizePackageImports: ['lucide-react', 'recharts', '@react-three/drei'],
   },
+  images: {
+    formats: ['image/avif', 'image/webp'],
+  },
+  compress: true,
   turbopack: {},
 };
 

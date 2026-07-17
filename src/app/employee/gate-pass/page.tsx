@@ -13,6 +13,7 @@ export default function EmployeeGatePassPage() {
   const supabase = useMemo(() => createClient(), []);
   const [loading, setLoading] = useState(true);
   const [activeBreak, setActiveBreak] = useState<any>(null);
+  const [pendingBreak, setPendingBreak] = useState<any>(null);
   const [todaysBreaks, setTodaysBreaks] = useState<any[]>([]);
   
   const [showForm, setShowForm] = useState(false);
@@ -35,14 +36,16 @@ export default function EmployeeGatePassPage() {
         .from('attendance_breaks')
         .select('*')
         .eq('employee_id', user.id)
-        .gte('out_time', todayStart)
-        .order('out_time', { ascending: false });
+        .gte('created_at', todayStart)
+        .order('created_at', { ascending: false });
 
       if (data) {
         setTodaysBreaks(data);
         const active = data.find(b => b.status === 'active' || b.status === 'overstayed');
+        const pending = data.find(b => b.status === 'pending');
         setActiveBreak(active || null);
-        if (!active) setShowForm(true);
+        setPendingBreak(pending || null);
+        if (!active && !pending) setShowForm(true);
         else setShowForm(false);
       }
     } catch (err) {
@@ -136,13 +139,28 @@ export default function EmployeeGatePassPage() {
             <Coffee className="w-6 h-6 text-[#1dbf73]" />
             Gate Pass & Short Breaks
           </h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-slate-900 mt-1">
             Request temporary exits for prayer, lunch, or official bank duties.
           </p>
         </div>
       </div>
 
-      {activeBreak ? (
+      {pendingBreak ? (
+        <div className="bg-blue-50 border border-blue-200 p-6 rounded-3xl">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center animate-pulse">
+              <Clock className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Waiting for Approval...</h2>
+              <p className="text-slate-900 mt-1">
+                You requested <span className="font-bold">{formatBreakType(pendingBreak.break_type)}</span>
+              </p>
+              <p className="text-sm text-slate-500 mt-1">Your store manager must approve this request before you can leave.</p>
+            </div>
+          </div>
+        </div>
+      ) : activeBreak ? (
         <div className="bg-[#1dbf73]/10 border border-[#1dbf73]/30 p-6 rounded-3xl">
           <div className="flex flex-col items-center text-center space-y-4">
             <div className="w-16 h-16 bg-[#1dbf73]/20 text-[#1dbf73] rounded-full flex items-center justify-center animate-pulse">
@@ -150,7 +168,7 @@ export default function EmployeeGatePassPage() {
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900">Active: {formatBreakType(activeBreak.break_type)}</h2>
-              <p className="text-slate-600 mt-1">
+              <p className="text-slate-900 mt-1">
                 You went out at <span className="font-bold">{new Date(activeBreak.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               </p>
               <p className="text-sm text-slate-500 mt-1">Allowed duration: {activeBreak.expected_duration_minutes} mins</p>
@@ -264,6 +282,8 @@ export default function EmployeeGatePassPage() {
                     <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                       brk.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
                       brk.status === 'active' ? 'bg-amber-100 text-amber-700' :
+                      brk.status === 'pending' ? 'bg-blue-100 text-blue-700' :
+                      brk.status === 'rejected' ? 'bg-slate-100 text-slate-700' :
                       'bg-red-100 text-red-700'
                     }`}>
                       {brk.status}
@@ -271,8 +291,10 @@ export default function EmployeeGatePassPage() {
                   </div>
                   <p className="text-xs text-slate-500 mt-1">Reason: {brk.reason}</p>
                 </div>
-                <div className="text-sm font-mono text-slate-600 sm:text-right">
-                  <div>Out: {new Date(brk.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                <div className="text-sm font-mono text-slate-900 sm:text-right">
+                  <div>
+                    {brk.out_time ? `Out: ${new Date(brk.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : `Requested: ${new Date(brk.created_at || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                  </div>
                   {brk.return_time && (
                     <div>In: {new Date(brk.return_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                   )}

@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: breaks, count, error } = await query
-      .order('out_time', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(limit);
 
     if (error) {

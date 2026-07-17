@@ -118,7 +118,7 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
               {status === 'error' && <Badge status="inactive">GPS Error</Badge>}
             </div>
 
-            <p className="text-xs text-slate-600 mt-0.5 flex items-center">
+            <p className="text-xs text-slate-900 mt-0.5 flex items-center">
               <MapPin className="w-3 h-3 mr-1 text-slate-500 shrink-0" />
               <span>{branchName} (Radius: {geofenceRadius}m)</span>
             </p>
@@ -128,7 +128,7 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
         <button
           onClick={checkPosition}
           title="Refresh GPS"
-          className="p-2 rounded-lg bg-white hover:bg-slate-100 text-slate-600 hover:text-[#1dbf73] transition-colors"
+          className="p-2 rounded-lg bg-white hover:bg-slate-100 text-slate-900 hover:text-[#1dbf73] transition-colors"
         >
           <RefreshCw className={`w-4 h-4 ${status === 'locating' ? 'animate-spin' : ''}`} />
         </button>
@@ -137,7 +137,7 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
       {/* Distance Status Metrics */}
       {distance !== null && status !== 'error' && (
         <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
-          <span className="text-slate-600 font-medium">Current Proximity:</span>
+          <span className="text-slate-900 font-medium">Current Proximity:</span>
           <span
             className={`font-extrabold ${
               status === 'inside' ? 'text-[#1dbf73]' : status === 'approaching' ? 'text-amber-400' : 'text-rose-400'

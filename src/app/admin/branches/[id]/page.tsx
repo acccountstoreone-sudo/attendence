@@ -90,7 +90,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
   if (!branch) {
     return (
       <div className="text-center py-12">
-        <Store className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+        <Store className="w-12 h-12 text-slate-900 mx-auto mb-4" />
         <h2 className="text-xl font-bold text-slate-900 mb-2">Branch Not Found</h2>
         <button onClick={() => router.push('/admin/branches')} className="text-[#1dbf73] hover:underline">Go Back</button>
       </div>
@@ -112,7 +112,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <Link href="/admin/branches" className="flex items-center text-slate-600 hover:text-slate-900 transition-colors text-sm mb-2 w-fit">
+          <Link href="/admin/branches" className="flex items-center text-slate-900 hover:text-slate-900 transition-colors text-sm mb-2 w-fit">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back to All Branches
           </Link>
           <div className="flex items-center space-x-2 text-[#1dbf73] text-xs font-bold uppercase tracking-widest mb-1">
@@ -132,7 +132,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
            className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#1dbf73]/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
            title="Click to view all branch staff"
          >
-            <span className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">Total Staff</span>
+            <span className="text-xs text-slate-900 group-hover:text-slate-900 font-medium transition-colors">Total Staff</span>
             <span className="text-lg font-bold text-slate-900 group-hover:scale-105 transition-transform">{employees.length}</span>
          </div>
          <div 
@@ -140,7 +140,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
            className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#1dbf73]/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
            title="Click to view present check-ins in Attendance tab"
          >
-            <span className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">Present</span>
+            <span className="text-xs text-slate-900 group-hover:text-slate-900 font-medium transition-colors">Present</span>
             <span className="text-lg font-bold text-[#1dbf73] group-hover:scale-105 transition-transform">{employees.filter(e => e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day').length}</span>
          </div>
          <div 
@@ -148,7 +148,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
            className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:border-red-500/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
            title="Click to check absent records in Attendance tab"
          >
-            <span className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">Absent</span>
+            <span className="text-xs text-slate-900 group-hover:text-slate-900 font-medium transition-colors">Absent</span>
             <span className="text-lg font-bold text-red-500 group-hover:scale-105 transition-transform">{employees.length - employees.filter(e => e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day').length}</span>
          </div>
          <div 
@@ -156,7 +156,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
            className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:border-blue-500/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
            title="Click to check active staff in Employees tab"
          >
-            <span className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">Active Now</span>
+            <span className="text-xs text-slate-900 group-hover:text-slate-900 font-medium transition-colors">Active Now</span>
             <span className="text-lg font-bold text-blue-500 group-hover:scale-105 transition-transform">{employees.filter(e => (e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day') && !e.check_out_time).length}</span>
          </div>
          <div 
@@ -164,7 +164,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
            className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:border-orange-500/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
            title="Click to check late check-ins in Attendance tab"
          >
-            <span className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">Late</span>
+            <span className="text-xs text-slate-900 group-hover:text-slate-900 font-medium transition-colors">Late</span>
             <span className="text-lg font-bold text-orange-500 group-hover:scale-105 transition-transform">{employees.filter(e => e.today_status === 'late').length}</span>
          </div>
          <div 
@@ -172,7 +172,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
            className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#1dbf73]/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
            title="Click to view branch overview stats"
          >
-            <span className="text-xs text-slate-600 group-hover:text-slate-900 font-medium transition-colors">Attendance %</span>
+            <span className="text-xs text-slate-900 group-hover:text-slate-900 font-medium transition-colors">Attendance %</span>
             <span className="text-lg font-bold text-[#1dbf73] group-hover:scale-105 transition-transform">
               {employees.length > 0 ? Math.round((employees.filter(e => e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day').length / employees.length) * 100) : 0}%
             </span>
@@ -189,7 +189,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
               className={`flex items-center px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
                 activeTab === tab.id || (tab.id === 'employees' && activeTab === 'profile')
                   ? 'bg-[#1dbf73]/10 text-[#1dbf73] shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50/50'
+                  : 'text-slate-900 hover:text-slate-900 hover:bg-slate-50/50'
               }`}
             >
               {tab.icon}

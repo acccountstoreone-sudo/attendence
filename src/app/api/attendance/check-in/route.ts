@@ -116,6 +116,33 @@ export async function POST(request: NextRequest) {
     const startOfDay = new Date(`${year}-${month}-${day}T00:00:00+06:00`);
     const endOfDay = new Date(`${year}-${month}-${day}T23:59:59+06:00`);
 
+    // 4. Check for unresolved incomplete past shifts
+    const { data: incompleteShift } = await supabase
+      .from('attendance_records')
+      .select('id, check_in_time')
+      .eq('employee_id', user.id)
+      .is('check_out_time', null)
+      .lt('check_in_time', startOfDay.toISOString())
+      .order('check_in_time', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (incompleteShift) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: 'INCOMPLETE_PAST_SHIFT',
+            message: 'You have an unresolved check-in from a previous day. Please submit a manual correction before checking in today.',
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 403 }
+      );
+    }
+
+    // 4b. Check if user already checked in today
     const { data: existingRecord } = await supabase
       .from('attendance_records')
       .select('id, check_in_time')
@@ -242,6 +269,44 @@ export async function POST(request: NextRequest) {
           error: {
             code: 'OUT_OF_GEOFENCE',
             message: `Check-in denied: You are ${geo.distance}m away from ${branch.name} (max allowed: ${branch.geofence_radius_meters}m).`,
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 403 }
+      );
+    }
+
+    // 6.5 Early Check-in Blocker
+    const { data: companyProfile } = await supabase.from('company_profile').select('default_work_start_time').single();
+    let workStartTime = companyProfile?.default_work_start_time || '09:00:00';
+    
+    if (targetBranchId) {
+      const { data: branchSettings } = await supabase
+        .from('branch_settings')
+        .select('work_start_time')
+        .eq('branch_id', targetBranchId)
+        .maybeSingle();
+      if (branchSettings && branchSettings.work_start_time) {
+        workStartTime = branchSettings.work_start_time;
+      }
+    }
+
+    const checkInDateObj = payload.is_offline_sync && payload.timestamp ? new Date(payload.timestamp) : new Date();
+    const [startHour, startMin, startSec] = workStartTime.split(':').map(Number);
+    const workStartTimestamp = new Date(checkInDateObj);
+    workStartTimestamp.setHours(startHour, startMin, startSec || 0, 0);
+
+    const diffMinutes = (workStartTimestamp.getTime() - checkInDateObj.getTime()) / 60000;
+    const MAX_EARLY_MINUTES = 120; // 2 hours limit
+
+    if (diffMinutes > MAX_EARLY_MINUTES) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: 'CHECK_IN_TOO_EARLY',
+            message: `Check-in denied: You cannot check in more than ${MAX_EARLY_MINUTES / 60} hours before your shift starts (${workStartTime}).`,
           },
           timestamp: new Date().toISOString(),
         },

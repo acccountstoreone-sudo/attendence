@@ -24,6 +24,7 @@ import {
   Fingerprint,
   Coffee,
   Megaphone,
+  BookOpen,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -65,16 +66,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Duty Hours', href: '/admin/duty-hours', icon: <Clock className="w-5 h-5" /> },
     { label: 'Employees', href: '/admin/employees', icon: <Users className="w-5 h-5" /> },
     { label: 'Attendance Live', href: '/admin/attendance', icon: <Clock className="w-5 h-5" /> },
-    { label: 'Gate Passes Live', href: '/admin/attendance?tab=breaks', icon: <Coffee className="w-5 h-5" /> },
     { label: 'Reports & Exports', href: '/admin/reports', icon: <FileBarChart className="w-5 h-5" /> },
     { label: 'Leave Requests', href: '/admin/leaves', icon: <CalendarDays className="w-5 h-5" /> },
-    { label: 'Manual Corrections', href: '/admin/corrections', icon: <UserCheck className="w-5 h-5" /> },
+    { label: 'Attendance Requests', href: '/admin/corrections', icon: <UserCheck className="w-5 h-5" /> },
     { label: 'Payroll', href: '/admin/payroll', icon: <FileBarChart className="w-5 h-5" /> },
     { label: 'Salary Settings', href: '/admin/salary-settings', icon: <DollarSign className="w-5 h-5" /> },
     { label: 'Analytics', href: '/admin/analytics', icon: <TrendingUp className="w-5 h-5" /> },
     { label: 'Public Holidays', href: '/admin/holidays', icon: <CalendarDays className="w-5 h-5" /> },
     { label: 'Company Policy', href: '/admin/settings', icon: <Settings className="w-5 h-5" /> },
     { label: 'Audit Logs', href: '/admin/audit', icon: <ShieldAlert className="w-5 h-5" /> },
+    { label: 'System Docs', href: '/admin/docs', icon: <BookOpen className="w-5 h-5 text-[#1dbf73]" /> },
     { label: 'My Profile', href: '/admin/profile', icon: <User className="w-5 h-5" /> },
   ];
 
@@ -87,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Gate Passes', href: '/branch-manager/gate-passes', icon: <Coffee className="w-5 h-5" /> },
     { label: 'Shift Roster', href: '/branch-manager/shifts', icon: <CalendarDays className="w-5 h-5" /> },
     { label: 'Store Reports', href: '/branch-manager/reports', icon: <FileBarChart className="w-5 h-5" /> },
-    { label: 'Manual Corrections', href: '/branch-manager/corrections', icon: <UserCheck className="w-5 h-5" /> },
+    { label: 'Attendance Requests', href: '/branch-manager/corrections', icon: <UserCheck className="w-5 h-5" /> },
     { label: 'Salary Settings', href: '/branch-manager/salary', icon: <DollarSign className="w-5 h-5" /> }, // MISS-N1 fix
     { label: 'Announcements', href: '/branch-manager/announcements', icon: <Megaphone className="w-5 h-5" /> },
     { label: 'My Profile', href: '/branch-manager/profile', icon: <User className="w-5 h-5" /> },
@@ -95,7 +96,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const empNav: NavItem[] = [
     { label: 'My Dashboard', href: '/employee', icon: <LayoutDashboard className="w-5 h-5" /> },
-    { label: 'Biometric Check-In', href: '/employee/check-in', icon: <Fingerprint className="w-5 h-5" /> },
+    { label: 'GPS Check-In', href: '/employee/check-in', icon: <Fingerprint className="w-5 h-5" /> },
     { label: 'My History', href: '/employee/history', icon: <History className="w-5 h-5" /> },
     { label: 'Leave Requests', href: '/employee/leaves', icon: <CalendarDays className="w-5 h-5" /> },
     { label: 'Gate Pass', href: '/employee/gate-pass', icon: <Coffee className="w-5 h-5" /> },
@@ -133,7 +134,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Collapse button for Desktop */}
         <button
           onClick={onToggleCollapse}
-          className="hidden md:flex p-1.5 rounded-lg text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+          className="hidden md:flex p-1.5 rounded-lg text-slate-900 hover:text-slate-800 hover:bg-slate-100 transition-colors"
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
@@ -156,7 +157,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 'relative flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-300 group outline-none',
                 isActive
                   ? 'text-[#1dbf73] font-bold'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  : 'text-slate-900 hover:text-slate-900 hover:bg-slate-100'
               )}
             >
               {isActive && (

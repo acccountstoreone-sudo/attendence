@@ -65,7 +65,7 @@ export function BiometricsManager({ employee, webauthnCredentials }: { employee:
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Face Verification</h3>
-                <p className="text-sm text-slate-600">Primary biometric check-in</p>
+                <p className="text-sm text-slate-900">Primary biometric check-in</p>
               </div>
             </div>
             {employee.face_enrolled ? (
@@ -108,10 +108,10 @@ export function BiometricsManager({ employee, webauthnCredentials }: { employee:
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Registered Devices</h3>
-                <p className="text-sm text-slate-600">Passkeys & Fingerprints</p>
+                <p className="text-sm text-slate-900">Passkeys & Fingerprints</p>
               </div>
             </div>
-            <span className="text-slate-600 text-sm font-medium">{webauthnCredentials.length} Saved</span>
+            <span className="text-slate-900 text-sm font-medium">{webauthnCredentials.length} Saved</span>
           </div>
 
           <div className="space-y-3">
@@ -130,7 +130,7 @@ export function BiometricsManager({ employee, webauthnCredentials }: { employee:
                      <div className="min-w-0">
                        <p className="text-sm font-medium text-slate-700 truncate">{cred.device_type === 'singleDevice' ? 'Single Device (Phone/Mac)' : 'Security Key'}</p>
                        <p className="text-xs text-slate-500 truncate">ID: {cred.credential_id.substring(0, 16)}...</p>
-                       <p className="text-[10px] text-slate-600 mt-0.5">Added: {new Date(cred.created_at).toLocaleString()}</p>
+                       <p className="text-[10px] text-slate-900 mt-0.5">Added: {new Date(cred.created_at).toLocaleString()}</p>
                      </div>
                    </div>
                    <button 

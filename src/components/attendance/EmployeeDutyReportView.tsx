@@ -315,7 +315,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               variant="ghost"
               size="sm"
               onClick={() => router.push(backUrl)}
-              className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl px-3 py-2 font-medium"
+              className="text-slate-900 hover:text-slate-900 hover:bg-slate-100 rounded-xl px-3 py-2 font-medium"
             >
               <ArrowLeft className="w-4 h-4 mr-1.5" /> Back
             </Button>
@@ -334,7 +334,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                 </span>
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-600 mt-1.5">
+            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-slate-900 mt-1.5">
               <span className="flex items-center gap-1.5 text-slate-700 font-semibold">
                 <Building2 className="w-3.5 h-3.5 text-[#1dbf73]" />
                 {data?.employee?.branch_name || 'Assigned Branch'}
@@ -399,7 +399,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
           </div>
           <div>
             <h3 className="font-bold text-slate-900 text-base tracking-tight">Detailed Export & Official Reports</h3>
-            <p className="text-xs text-slate-600 mt-0.5">Download complete month-wise duty, overtime, and attendance logs</p>
+            <p className="text-xs text-slate-900 mt-0.5">Download complete month-wise duty, overtime, and attendance logs</p>
           </div>
         </div>
 
@@ -440,7 +440,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-28 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
           <Spinner size="lg" />
-          <p className="text-sm font-semibold text-slate-600 mt-4 animate-pulse">Calculating duty analytics, overtime, and punctuality logs...</p>
+          <p className="text-sm font-semibold text-slate-900 mt-4 animate-pulse">Calculating duty analytics, overtime, and punctuality logs...</p>
         </div>
       ) : data ? (
         <>
@@ -474,7 +474,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                       <h3 className="font-bold text-slate-900 text-base tracking-tight">Today&apos;s Live Attendance Spotlight</h3>
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#1dbf73] text-white shadow-2xs">LIVE</span>
                     </div>
-                    <p className="text-xs text-slate-600 font-medium mt-0.5">Real-time attendance & check-in metrics for today ({new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Dhaka', month: 'short', day: 'numeric', year: 'numeric' })})</p>
+                    <p className="text-xs text-slate-900 font-medium mt-0.5">Real-time attendance & check-in metrics for today ({new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Dhaka', month: 'short', day: 'numeric', year: 'numeric' })})</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -482,7 +482,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                     data.summary.today_status === 'present' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                     data.summary.today_status === 'late' ? 'bg-amber-50 text-amber-800 border-amber-200' :
                     data.summary.today_status === 'half_day' ? 'bg-sky-50 text-sky-700 border-sky-200' :
-                    'bg-slate-100 text-slate-600 border-slate-200'
+                    'bg-slate-100 text-slate-900 border-slate-200'
                   }`}>
                     Status Today: {data.summary.today_status || 'Upcoming'}
                   </span>
@@ -669,7 +669,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                   variant="outline"
                   className="w-full text-xs font-bold flex items-center justify-center gap-2 py-2.5 rounded-xl border-slate-200 hover:bg-slate-100 text-slate-700 shadow-2xs"
                 >
-                  <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
+                  <RefreshCw className="w-3.5 h-3.5 text-slate-900" />
                   Refresh Location Status
                 </Button>
               </div>
@@ -681,7 +681,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             {/* 1. Duty Hours */}
             <Card className="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs hover:shadow-md hover:border-[#1dbf73]/50 transition-all duration-200 flex flex-col justify-between group">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-slate-600 tracking-tight">Total Duty Hours</span>
+                <span className="text-xs font-bold text-slate-900 tracking-tight">Total Duty Hours</span>
                 <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
                   <Clock className="w-4 h-4" />
                 </div>
@@ -695,7 +695,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             {/* 2. Overtime */}
             <Card className="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs hover:shadow-md hover:border-[#1dbf73]/50 transition-all duration-200 flex flex-col justify-between group">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-slate-600 tracking-tight">Total Overtime</span>
+                <span className="text-xs font-bold text-slate-900 tracking-tight">Total Overtime</span>
                 <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
                   <TrendingUp className="w-4 h-4" />
                 </div>
@@ -737,7 +737,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             {/* 5. Present Days */}
             <Card className="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs hover:shadow-md hover:border-sky-300 transition-all duration-200 flex flex-col justify-between group">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-slate-600 tracking-tight">Present Days</span>
+                <span className="text-xs font-bold text-slate-900 tracking-tight">Present Days</span>
                 <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 group-hover:scale-110 transition-transform">
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
@@ -751,7 +751,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             {/* 6. Leave & Off Days */}
             <Card className="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs hover:shadow-md hover:border-purple-300 transition-all duration-200 flex flex-col justify-between group">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-slate-600 tracking-tight">Leave & Off Days</span>
+                <span className="text-xs font-bold text-slate-900 tracking-tight">Leave & Off Days</span>
                 <div className="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
                   <Calendar className="w-4 h-4" />
                 </div>
@@ -769,7 +769,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             <div className="p-6 border-b border-slate-200/80 bg-slate-50/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h3 className="font-bold text-slate-900 text-base tracking-tight">Day-by-Day Duty & Overtime Roster ({months[month - 1]} {year})</h3>
-                <p className="text-xs text-slate-600 font-medium mt-0.5">Exact daily check-in, check-out, duty hours, overtime, GPS, and punctuality logs</p>
+                <p className="text-xs text-slate-900 font-medium mt-0.5">Exact daily check-in, check-out, duty hours, overtime, GPS, and punctuality logs</p>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -790,7 +790,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                   <button
                     onClick={() => setFilterTab('all')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                      filterTab === 'all' ? 'bg-white text-slate-900 shadow-sm border border-slate-300/80' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                      filterTab === 'all' ? 'bg-white text-slate-900 shadow-sm border border-slate-300/80' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
                     }`}
                   >
                     All ({data.daily_breakdown.length})
@@ -798,7 +798,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                   <button
                     onClick={() => setFilterTab('present')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                      filterTab === 'present' ? 'bg-[#1dbf73] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                      filterTab === 'present' ? 'bg-[#1dbf73] text-white shadow-sm' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
                     }`}
                   >
                     Present
@@ -806,7 +806,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                   <button
                     onClick={() => setFilterTab('late')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                      filterTab === 'late' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                      filterTab === 'late' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
                     }`}
                   >
                     Late ({data.summary.total_late_days})
@@ -814,7 +814,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                   <button
                     onClick={() => setFilterTab('missed')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                      filterTab === 'missed' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                      filterTab === 'missed' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
                     }`}
                   >
                     Missed ({data.summary.total_missed_days})
@@ -822,7 +822,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                   <button
                     onClick={() => setFilterTab('overtime')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                      filterTab === 'overtime' ? 'bg-sky-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                      filterTab === 'overtime' ? 'bg-sky-600 text-white shadow-sm' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
                     }`}
                   >
                     Overtime
@@ -924,7 +924,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                             <span className="text-slate-400 font-normal text-[11px]">-</span>
                           )}
                         </td>
-                        <td className="py-3.5 px-4 text-slate-600 font-medium">{log.notes}</td>
+                        <td className="py-3.5 px-4 text-slate-900 font-medium">{log.notes}</td>
                       </tr>
                     ))
                   )}
@@ -946,12 +946,12 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 text-base tracking-tight">{showMapModal.title}</h3>
-                  {showMapModal.subtitle && <p className="text-xs text-slate-600 font-medium mt-0.5">{showMapModal.subtitle}</p>}
+                  {showMapModal.subtitle && <p className="text-xs text-slate-900 font-medium mt-0.5">{showMapModal.subtitle}</p>}
                 </div>
               </div>
               <button
                 onClick={() => setShowMapModal(null)}
-                className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center justify-center transition-colors shadow-2xs font-bold"
+                className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-900 hover:text-slate-900 hover:bg-slate-100 flex items-center justify-center transition-colors shadow-2xs font-bold"
               >
                 ✕
               </button>

@@ -140,7 +140,7 @@ export default function EmployeeProfilePage() {
     return (
       <div className="min-h-[600px] flex flex-col items-center justify-center text-center space-y-4">
         <div className="text-rose-500 font-semibold text-lg">Failed to load profile</div>
-        <p className="text-slate-600 text-sm max-w-md">{error || 'Could not retrieve employee profile records.'}</p>
+        <p className="text-slate-900 text-sm max-w-md">{error || 'Could not retrieve employee profile records.'}</p>
         <Button onClick={() => window.location.reload()} variant="outline">
           Retry
         </Button>
@@ -154,7 +154,7 @@ export default function EmployeeProfilePage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">My Profile</h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-slate-900 mt-1">
             View your personal information and account settings.
           </p>
         </div>
@@ -180,7 +180,7 @@ export default function EmployeeProfilePage() {
             {profile.photo_url ? (
               <img src={profile.photo_url} alt="Profile" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-3xl font-bold text-slate-600">
+              <span className="text-3xl font-bold text-slate-900">
                 {(profile.full_name || '?').charAt(0).toUpperCase()}
               </span>
             )}
@@ -191,7 +191,7 @@ export default function EmployeeProfilePage() {
           </p>
           <div className="w-full h-px bg-slate-100 my-6" />
           <div className="w-full space-y-3 text-left">
-            <div className="flex items-center space-x-3 text-sm text-slate-600">
+            <div className="flex items-center space-x-3 text-sm text-slate-900">
               <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
               <span className="truncate">{profile.branch_name}</span>
             </div>
@@ -199,7 +199,7 @@ export default function EmployeeProfilePage() {
               <MessageSquare className="w-4 h-4 text-[#1dbf73] fill-current shrink-0" />
               <span className="truncate">WA: {profile.whatsapp_number || profile.phone || 'N/A'}</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-slate-600">
+            <div className="flex items-center space-x-3 text-sm text-slate-900">
               <Calendar className="w-4 h-4 text-slate-500 shrink-0" />
               <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
             </div>
@@ -210,7 +210,7 @@ export default function EmployeeProfilePage() {
         <div className="col-span-1 md:col-span-2 space-y-6">
           <Card className="bg-[#ffffff] border-slate-200 p-6 shadow-lg">
             <div className="flex items-center space-x-2 text-slate-900 mb-6 pb-4 border-b border-slate-200">
-              <User className="w-5 h-5 text-slate-600" />
+              <User className="w-5 h-5 text-slate-900" />
               <h3 className="font-semibold text-base">Personal Information</h3>
             </div>
             <div className="space-y-5">
@@ -225,28 +225,28 @@ export default function EmployeeProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
                 <span className="text-sm font-medium text-slate-500">Email Address</span>
                 <div className="sm:col-span-2 flex items-center space-x-2">
-                  <Mail className="w-4 h-4 text-slate-600" />
+                  <Mail className="w-4 h-4 text-slate-900" />
                   <span className="text-sm text-slate-700">{profile.email || 'Not available'}</span>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
                 <span className="text-sm font-medium text-slate-500">Phone Number</span>
                 <div className="sm:col-span-2 flex items-center space-x-2">
-                  <Phone className="w-4 h-4 text-slate-600" />
+                  <Phone className="w-4 h-4 text-slate-900" />
                   <span className="text-sm text-slate-700">{profile.phone || 'Not provided'}</span>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
                 <span className="text-sm font-medium text-slate-500">WhatsApp Number</span>
                 <div className="sm:col-span-2 flex items-center space-x-2">
-                  <MessageSquare className="w-4 h-4 text-slate-600" />
+                  <MessageSquare className="w-4 h-4 text-slate-900" />
                   <span className="text-sm text-slate-700">{profile.whatsapp_number || 'Not provided'}</span>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
                 <span className="text-sm font-medium text-slate-500">Address</span>
                 <div className="sm:col-span-2 flex items-start space-x-2">
-                  <MapPin className="w-4 h-4 text-slate-600 shrink-0 mt-0.5" />
+                  <MapPin className="w-4 h-4 text-slate-900 shrink-0 mt-0.5" />
                   <span className="text-sm text-slate-700">{profile.address || 'Not provided'}</span>
                 </div>
               </div>
@@ -255,11 +255,11 @@ export default function EmployeeProfilePage() {
 
           <Card className="bg-[#ffffff] border-slate-200 p-6 shadow-lg">
             <div className="flex items-center space-x-2 text-slate-900 mb-6 pb-4 border-b border-slate-200">
-              <ShieldCheck className="w-5 h-5 text-slate-600" />
+              <ShieldCheck className="w-5 h-5 text-slate-900" />
               <h3 className="font-semibold text-base">Account Security</h3>
             </div>
               <div className="space-y-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-900">
                 You can request a password reset link to be sent to your email address below.
               </p>
               <div className="pt-2 flex flex-col gap-2">

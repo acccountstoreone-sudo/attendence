@@ -15,7 +15,7 @@ export default function NewEmployeePage() {
         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
           Register New Employee
         </h1>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-900">
           Create an account for a new staff member and assign them to a branch.
         </p>
       </div>

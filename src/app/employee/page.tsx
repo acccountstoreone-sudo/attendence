@@ -15,8 +15,8 @@ export default function EmployeeDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<{ full_name: string; branch_name: string; photo_url?: string; whatsapp_number?: string; phone?: string } | null>(null);
   const [todayRecord, setTodayRecord] = useState<{ check_in_time?: string; check_out_time?: string; status?: string; approval_status?: string; overtime_minutes?: number } | null>(null);
-  // B6 fix: Store real leave balance
-  const [leaveBalance, setLeaveBalance] = useState<{ available: number; total: number } | null>(null);
+  // B6 fix: Store categorized leave balances
+  const [leaveBalances, setLeaveBalances] = useState<{ type: string; available: number; total: number }[]>([]);
 
   useEffect(() => {
     async function init() {
@@ -52,20 +52,23 @@ export default function EmployeeDashboardPage() {
         // Non-critical: dashboard still renders without today's status
       }
 
-      // B6 fix: Fetch real leave balance for current year
+      // B6 fix: Fetch real leave balance for current year grouped by type
       const currentYear = new Date().getFullYear();
       const { data: balances } = await supabase
         .from('leave_balances')
-        .select('allocated_days, used_days')
+        .select('allocated_days, used_days, leave_types(name)')
         .eq('user_id', user.id)
         .eq('year', currentYear);
 
       if (balances && balances.length > 0) {
-        const totalAllocated = balances.reduce((acc, b) => acc + (b.allocated_days || 0), 0);
-        const totalUsed = balances.reduce((acc, b) => acc + (b.used_days || 0), 0);
-        setLeaveBalance({ available: Math.max(0, totalAllocated - totalUsed), total: totalAllocated });
+        const mappedBalances = balances.map((b: any) => ({
+          type: b.leave_types?.name || 'Leave',
+          available: Math.max(0, (b.allocated_days || 0) - (b.used_days || 0)),
+          total: b.allocated_days || 0
+        }));
+        setLeaveBalances(mappedBalances);
       } else {
-        setLeaveBalance({ available: 0, total: 0 });
+        setLeaveBalances([]);
       }
 
       setLoading(false);
@@ -108,7 +111,7 @@ export default function EmployeeDashboardPage() {
             <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
               Welcome, {profile?.full_name || 'Staff Member'}!
             </h1>
-            <p className="text-sm text-slate-600 mt-0.5">
+            <p className="text-sm text-slate-900 mt-0.5">
               Biometric facial verification and GPS geofenced attendance tracking portal.
             </p>
           </div>
@@ -126,7 +129,7 @@ export default function EmployeeDashboardPage() {
             ? 'Shift Complete ✓'
             : todayRecord?.check_in_time && !todayRecord.check_out_time
             ? 'Check Out Now'
-            : 'Biometric Check-In'}
+            : 'GPS Check-In'}
         </Button>
       </div>
 
@@ -162,7 +165,7 @@ export default function EmployeeDashboardPage() {
 
             <div className="grid grid-cols-2 gap-6 text-center">
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <p className="text-xs font-bold uppercase text-slate-600 mb-1">Check-In Timestamp</p>
+                <p className="text-xs font-bold uppercase text-slate-900 mb-1">Check-In Timestamp</p>
                 <p className="text-xl font-extrabold text-[#1dbf73]">
                   {todayRecord?.check_in_time
                     ? new Date(todayRecord.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -171,7 +174,7 @@ export default function EmployeeDashboardPage() {
               </div>
 
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <p className="text-xs font-bold uppercase text-slate-600 mb-1">Check-Out Timestamp</p>
+                <p className="text-xs font-bold uppercase text-slate-900 mb-1">Check-Out Timestamp</p>
                 <p className="text-xl font-extrabold text-[#1dbf73]/70">
                   {todayRecord?.check_out_time
                     ? new Date(todayRecord.check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -199,15 +202,22 @@ export default function EmployeeDashboardPage() {
               <Calendar className="w-5 h-5" />
               <h3 className="text-lg font-bold text-slate-900">Leave Balance</h3>
             </div>
-            <p className="text-xs text-slate-600">Annual Paid Leave Allocation</p>
-            {leaveBalance?.total === 0 ? (
+            <p className="text-xs text-slate-900">Yearly Allocations</p>
+            {leaveBalances.length === 0 ? (
               <div className="mt-4 p-3 border border-dashed border-slate-200 rounded-xl text-xs text-slate-500 text-center">
                 No leave allocations active.
               </div>
             ) : (
-              <div className="mt-4 flex items-baseline space-x-2">
-                <span className="text-4xl font-extrabold text-[#1dbf73]">{leaveBalance?.available || 0}</span>
-                <span className="text-sm font-bold text-slate-500">/ {leaveBalance?.total || 0} Days Available</span>
+              <div className="mt-4 space-y-3">
+                {leaveBalances.map((bal, idx) => (
+                  <div key={idx} className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                    <span className="text-sm font-bold text-slate-700">{bal.type}</span>
+                    <div className="flex items-baseline space-x-1">
+                      <span className="text-lg font-extrabold text-[#1dbf73]">{bal.available}</span>
+                      <span className="text-xs font-medium text-slate-500">/ {bal.total}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

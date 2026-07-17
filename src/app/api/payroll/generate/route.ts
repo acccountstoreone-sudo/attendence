@@ -47,22 +47,68 @@ export async function POST(request: NextRequest) {
     const month = parseInt(monthStr, 10);
     const daysInMonth = new Date(year, month, 0).getDate();
 
+    // --- Bulk Prefetching for N+1 Optimization ---
+    const employeeIds = employees.map((e: any) => e.id);
+    const branchIds = Array.from(new Set(employees.map((e: any) => e.branch_id).filter(Boolean))) as string[];
+
+    const [{ data: companyProfile }, { data: branches }, { data: branchSettings }, { data: salarySettings }] = await Promise.all([
+      supabase.from('company_profile').select('*').single(),
+      supabase.from('branches').select('id, name, code').in('id', branchIds),
+      supabase.from('branch_settings').select('*').in('branch_id', branchIds),
+      supabase.from('salary_settings').select('*').in('user_id', employeeIds)
+    ]);
+
+    const startOfMonthStr = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endOfMonthStr = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+    const startOfMonthISO = `${year}-${String(month).padStart(2, '0')}-01T00:00:00.000+06:00`;
+    const endOfMonthISO = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}T23:59:59.999+06:00`;
+
+    const [{ data: holidays }, { data: leaves }, { data: attendanceRecords }] = await Promise.all([
+      supabase.from('public_holidays').select('*').or(`and(holiday_date.gte.${startOfMonthStr},holiday_date.lte.${endOfMonthStr}),is_recurring.eq.true`),
+      supabase.from('leave_requests').select('*').in('employee_id', employeeIds).eq('status', 'approved').lte('start_date', endOfMonthStr).gte('end_date', startOfMonthStr),
+      supabase.from('attendance_records').select('*').in('employee_id', employeeIds).gte('check_in_time', startOfMonthISO).lte('check_in_time', endOfMonthISO).order('check_in_time', { ascending: true })
+    ]);
+
+    const branchMap = new Map<string, any>((branches || []).map((b: any) => [b.id, b]));
+    const branchSettingsMap = new Map<string, any>((branchSettings || []).map((bs: any) => [bs.branch_id, bs]));
+    const salarySettingsMap = new Map<string, any>((salarySettings || []).map((ss: any) => [ss.user_id, ss]));
+    const leavesMap = new Map<string, any[]>();
+    (leaves || []).forEach((l: any) => {
+      const arr = leavesMap.get(l.employee_id) || [];
+      arr.push(l);
+      leavesMap.set(l.employee_id, arr);
+    });
+    const recordsMap = new Map<string, any[]>();
+    (attendanceRecords || []).forEach((r: any) => {
+      const arr = recordsMap.get(r.employee_id) || [];
+      arr.push(r);
+      recordsMap.set(r.employee_id, arr);
+    });
+    // ---------------------------------------------
+
     for (const employee of employees) {
       try {
         // 1. Fetch Salary Settings
-        const { data: settings } = await supabase
-          .from('salary_settings')
-          .select('*')
-          .eq('user_id', employee.id)
-          .single();
+        const settings = salarySettingsMap.get(employee.id);
 
         if (!settings) {
           results.push({ user_id: employee.id, full_name: employee.full_name, status: 'error', reason: 'No salary settings configured' });
           continue;
         }
 
-        // 2. Compute exact duty report using dutyEngine
-        const dutySummary = await computeEmployeeDutySummary(supabase, employee.id, month, year);
+        // 2. Compute exact duty report using dutyEngine with prefetchData
+        const prefetchData = {
+          profile: employee,
+          companyProfile: companyProfile || undefined,
+          branch: employee.branch_id ? branchMap.get(employee.branch_id) : undefined,
+          branchSettings: employee.branch_id ? branchSettingsMap.get(employee.branch_id) : undefined,
+          salarySettings: settings,
+          holidays: holidays || [],
+          leaves: leavesMap.get(employee.id) || [],
+          attendanceRecords: recordsMap.get(employee.id) || []
+        };
+        
+        const dutySummary = await computeEmployeeDutySummary(supabase, employee.id, month, year, prefetchData);
         const { summary } = dutySummary;
 
         // 3. Calculate Deductions & Overtime

@@ -52,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
         {user.role === 'admin' && (
           <button
             onClick={onOpenMobileSidebar}
-            className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="md:hidden p-2 rounded-xl text-slate-900 hover:text-slate-900 hover:bg-slate-100 transition-colors"
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -95,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
               setShowNotifMenu(!showNotifMenu);
               setShowUserMenu(false);
             }}
-            className="p-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 hover:text-[#1dbf73] hover:bg-slate-200 transition-all relative"
+            className="p-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-900 hover:text-[#1dbf73] hover:bg-slate-200 transition-all relative"
           >
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
@@ -161,7 +161,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <p className="text-xs font-bold text-slate-900 truncate">{n.title}</p>
-                            <span className="text-[10px] text-slate-600 shrink-0">
+                            <span className="text-[10px] text-slate-900 shrink-0">
                               {(() => {
                                 const d = new Date(n.created_at);
                                 const isToday = d.toDateString() === new Date().toDateString();
@@ -170,7 +170,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
                               })()}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">{n.message}</p>
+                          <p className="text-xs text-slate-900 mt-0.5 line-clamp-2">{n.message}</p>
                           {targetUrl && (
                             <span
                               className="inline-flex items-center space-x-1 text-[10px] text-[#1dbf73] hover:underline mt-1 font-semibold"

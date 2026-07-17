@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { FaceCapture } from '@/components/attendance/FaceCapture';
+import dynamic from 'next/dynamic';
+
+const FaceCapture = dynamic(() => import('@/components/attendance/FaceCapture').then(mod => mod.FaceCapture), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full max-w-sm h-64 bg-slate-900/50 rounded-[2rem] border border-white/10 flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-[#1dbf73] border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+});
 import { Spinner } from '@/components/ui/Spinner';
 import { createClient } from '@/lib/supabase/client';
 import { calculateDistance } from '@/lib/geo';
@@ -591,7 +600,7 @@ export default function EmployeeCheckInPage() {
                 <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-0.5">Today&apos;s Record</p>
                 <p className="text-white text-sm sm:text-base font-medium">
                   In: <span className="text-emerald-400">{todayRecord.check_in_time ? new Date(todayRecord.check_in_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—'}</span>
-                  {todayRecord.check_out_time && <> <span className="text-slate-600 mx-1">·</span> Out: <span className="text-slate-300">{new Date(todayRecord.check_out_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></>}
+                  {todayRecord.check_out_time && <> <span className="text-slate-900 mx-1">·</span> Out: <span className="text-slate-300">{new Date(todayRecord.check_out_time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></>}
                 </p>
               </div>
             </div>

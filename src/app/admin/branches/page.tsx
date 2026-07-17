@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -123,14 +123,14 @@ export default function AdminBranchesPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-white via-blue-950/20 to-slate-50 p-6 rounded-3xl border border-slate-200 shadow-2xl">
         <div>
-          <div className="flex items-center space-x-2 text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">
+          <div className="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-widest mb-1">
             <Store className="w-4 h-4" />
             <span>Retail Network Management</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
             Anchor Fashion Branch Directory
           </h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-slate-900 mt-1">
             Manage store branches, GPS geofence settings, and staff allocations.
           </p>
         </div>
@@ -153,7 +153,7 @@ export default function AdminBranchesPage() {
             className={`flex items-center gap-3 p-4 rounded-xl border text-sm font-medium ${
               feedback.type === 'success'
                 ? 'bg-[#1dbf73]/10 border-emerald-500/20 text-[#1dbf73]'
-                : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                : 'bg-rose-50 border-rose-200 text-rose-700'
             }`}
           >
             {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <XCircle className="w-5 h-5 shrink-0" />}
@@ -165,7 +165,7 @@ export default function AdminBranchesPage() {
       {/* Search */}
       <Card className="bg-white border-slate-200 p-4">
         <div className="relative max-w-md">
-          <Search className="w-4 h-4 text-slate-600 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-slate-900 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Search branches by name or code..."
@@ -190,7 +190,7 @@ export default function AdminBranchesPage() {
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-xs font-extrabold text-blue-400 bg-blue-950/80 border border-blue-800/60 px-2 py-0.5 rounded-md tracking-wider">
+                      <span className="text-xs font-extrabold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md tracking-wider">
                         {branch.code}
                       </span>
                       <Badge status={branch.is_active ? 'active' : 'inactive'} />
@@ -201,14 +201,14 @@ export default function AdminBranchesPage() {
                   <div className="flex items-center space-x-1 shrink-0">
                     <button
                       onClick={() => openDetailsModal(branch)}
-                      className="p-2 rounded-lg bg-slate-50 hover:bg-indigo-900/50 hover:text-indigo-400 text-slate-600 transition-colors"
+                      className="p-2 rounded-lg bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 transition-colors"
                       title="View Details"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => openEditModal(branch)}
-                      className="p-2 rounded-lg bg-slate-50 hover:bg-blue-900/50 hover:text-blue-400 text-slate-600 transition-colors"
+                      className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-blue-600 text-slate-700 transition-colors"
                       title="Edit Branch"
                     >
                       <Pencil className="w-4 h-4" />
@@ -216,7 +216,7 @@ export default function AdminBranchesPage() {
                     <button
                       onClick={() => toggleActive(branch)}
                       disabled={togglingId === branch.id}
-                      className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${branch.is_active ? 'bg-slate-100 hover:bg-rose-900/50 hover:text-rose-400 text-slate-600' : 'bg-slate-100 hover:bg-emerald-900/50 hover:text-[#1dbf73] text-slate-600'}`}
+                      className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${branch.is_active ? 'bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700' : 'bg-slate-100 hover:bg-emerald-50 hover:text-[#1dbf73] text-slate-700'}`}
                       title={branch.is_active ? 'Deactivate' : 'Activate'}
                     >
                       {togglingId === branch.id
@@ -226,7 +226,7 @@ export default function AdminBranchesPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2 text-xs text-slate-600">
+                <div className="space-y-2 text-xs text-slate-900">
                   {branch.address && (
                     <div className="flex items-start space-x-2">
                       <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
@@ -244,7 +244,7 @@ export default function AdminBranchesPage() {
                       <Globe className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                       <span>
                         GPS: {Number(branch.latitude).toFixed(4)}, {Number(branch.longitude).toFixed(4)}
-                        <span className="ml-2 text-blue-400 font-semibold">({branch.geofence_radius_meters}m radius)</span>
+                        <span className="ml-2 text-blue-600 font-semibold">({branch.geofence_radius_meters}m radius)</span>
                       </span>
                     </div>
                   )}
@@ -253,8 +253,8 @@ export default function AdminBranchesPage() {
 
               {/* Footer Stats */}
               <div className="mt-4 pt-4 border-t border-slate-200/80 flex items-center justify-between text-xs">
-                <div className="flex items-center space-x-1.5 text-slate-600">
-                  <Users className="w-3.5 h-3.5 text-blue-400" />
+                <div className="flex items-center space-x-1.5 text-slate-900">
+                  <Users className="w-3.5 h-3.5 text-blue-600" />
                   <span><strong className="text-slate-700">{branch._staff_count || 0}</strong> Staff Assigned</span>
                 </div>
                 <div className="flex items-center space-x-1 text-slate-500">
@@ -267,7 +267,7 @@ export default function AdminBranchesPage() {
 
           {filtered.length === 0 && (
             <div className="col-span-3 py-16 text-center text-slate-500">
-              <Building2 className="w-16 h-16 text-slate-700 mx-auto mb-3" />
+              <Building2 className="w-16 h-16 text-slate-400 mx-auto mb-3" />
               <p className="font-semibold">No branches found. Add your first store to get started.</p>
             </div>
           )}

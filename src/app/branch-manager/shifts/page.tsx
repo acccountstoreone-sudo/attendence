@@ -160,7 +160,7 @@ export default function BranchManagerShiftsPage() {
           <Clock className="w-7 h-7 text-indigo-400" />
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Shift Management</h1>
-            <p className="text-sm text-slate-600">Define shift schedules and assign employees to shifts.</p>
+            <p className="text-sm text-slate-900">Define shift schedules and assign employees to shifts.</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -199,28 +199,28 @@ export default function BranchManagerShiftsPage() {
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Create New Shift</h2>
               <form onSubmit={handleAddShift} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="col-span-2 sm:col-span-1">
-                  <label className="text-xs text-slate-600 mb-1 block">Shift Name *</label>
+                  <label className="text-xs text-slate-900 mb-1 block">Shift Name *</label>
                   <input id="shift-name-input" type="text" required value={shiftForm.name}
                     onChange={(e) => setShiftForm({ ...shiftForm, name: e.target.value })}
                     placeholder="e.g., Morning" className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-600 mb-1 block">Start Time *</label>
+                  <label className="text-xs text-slate-900 mb-1 block">Start Time *</label>
                   <input id="shift-start-input" type="time" required value={shiftForm.start_time}
                     onChange={(e) => setShiftForm({ ...shiftForm, start_time: e.target.value })}
                     className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-600 mb-1 block">End Time *</label>
+                  <label className="text-xs text-slate-900 mb-1 block">End Time *</label>
                   <input id="shift-end-input" type="time" required value={shiftForm.end_time}
                     onChange={(e) => setShiftForm({ ...shiftForm, end_time: e.target.value })}
                     className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-600 mb-1 block">Grace (mins)</label>
+                  <label className="text-xs text-slate-900 mb-1 block">Grace (mins)</label>
                   <input id="shift-grace-input" type="number" min={0} max={120} value={shiftForm.grace_period_minutes}
                     onChange={(e) => setShiftForm({ ...shiftForm, grace_period_minutes: Number(e.target.value) })}
                     className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
@@ -246,7 +246,7 @@ export default function BranchManagerShiftsPage() {
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Assign Employee to Shift</h2>
               <form onSubmit={handleAssign} className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
-                  <label className="text-xs text-slate-600 mb-1 block">Employee *</label>
+                  <label className="text-xs text-slate-900 mb-1 block">Employee *</label>
                   <select id="assign-employee-select" required value={assignForm.user_id}
                     onChange={(e) => setAssignForm({ ...assignForm, user_id: e.target.value })}
                     className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
@@ -258,7 +258,7 @@ export default function BranchManagerShiftsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-slate-600 mb-1 block">Shift *</label>
+                  <label className="text-xs text-slate-900 mb-1 block">Shift *</label>
                   <select id="assign-shift-select" required value={assignForm.shift_id}
                     onChange={(e) => setAssignForm({ ...assignForm, shift_id: e.target.value })}
                     className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
@@ -270,7 +270,7 @@ export default function BranchManagerShiftsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-slate-600 mb-1 block">Effective From *</label>
+                  <label className="text-xs text-slate-900 mb-1 block">Effective From *</label>
                   <input id="assign-from-input" type="date" required value={assignForm.effective_from}
                     onChange={(e) => setAssignForm({ ...assignForm, effective_from: e.target.value })}
                     className="w-full bg-slate-100 text-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
@@ -295,11 +295,11 @@ export default function BranchManagerShiftsPage() {
 
           {/* Shift Definitions */}
           <div className="space-y-3">
-            <h2 className="text-base font-semibold text-slate-600">Shift Definitions</h2>
+            <h2 className="text-base font-semibold text-slate-900">Shift Definitions</h2>
             {shifts.length === 0 ? (
               <Card className="p-8 text-center">
-                <Clock className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-                <p className="text-slate-600 text-sm">No shifts created yet.</p>
+                <Clock className="w-10 h-10 text-slate-900 mx-auto mb-2" />
+                <p className="text-slate-900 text-sm">No shifts created yet.</p>
               </Card>
             ) : (
               shifts.map((s) => (
@@ -311,7 +311,7 @@ export default function BranchManagerShiftsPage() {
                       </div>
                       <div>
                         <p className="text-slate-900 font-semibold">{s.name}</p>
-                        <p className="text-slate-600 text-sm">{fmt12(s.start_time)} – {fmt12(s.end_time)}</p>
+                        <p className="text-slate-900 text-sm">{fmt12(s.start_time)} – {fmt12(s.end_time)}</p>
                         <p className="text-slate-500 text-xs">{s.grace_period_minutes} min grace period</p>
                       </div>
                     </div>
@@ -332,13 +332,13 @@ export default function BranchManagerShiftsPage() {
 
           {/* Active Assignments */}
           <div className="space-y-3">
-            <h2 className="text-base font-semibold text-slate-600 flex items-center gap-2">
+            <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
               <Users className="w-4 h-4" /> Active Assignments
             </h2>
             {activeAssignments.length === 0 ? (
               <Card className="p-8 text-center">
-                <Users className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-                <p className="text-slate-600 text-sm">No shift assignments yet. Assign employees to shifts above.</p>
+                <Users className="w-10 h-10 text-slate-900 mx-auto mb-2" />
+                <p className="text-slate-900 text-sm">No shift assignments yet. Assign employees to shifts above.</p>
               </Card>
             ) : (
               activeAssignments.map((a) => (

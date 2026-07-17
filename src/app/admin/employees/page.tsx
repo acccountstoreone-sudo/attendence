@@ -154,7 +154,9 @@ export default function AdminEmployeesPage() {
   const filteredEmployees = employees.filter((e) => {
     const matchesSearch =
       (e.full_name ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (e.email ?? '').toLowerCase().includes(searchTerm.toLowerCase());
+      (e.email ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (e.employee_id ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (e.phone ?? '').includes(searchTerm);
     const matchesRole = roleFilter === 'all' || e.role === roleFilter;
     // Bug 17 fix: Filter by active/inactive based on toggle
     const matchesActive = showInactive ? !e.is_active : e.is_active;
@@ -170,10 +172,10 @@ export default function AdminEmployeesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Staff Registry</h1>
-          <p className="text-sm text-slate-600 mt-1">Manage employee accounts, roles, and branch assignments.</p>
+          <p className="text-sm text-slate-900 mt-1">Manage employee accounts, roles, and branch assignments.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3 text-sm text-slate-600 mr-2">
+          <div className="flex items-center gap-3 text-sm text-slate-900 mr-2">
             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#1dbf73]"></div>{activeCount} Active</span>
             <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-500"></div>{inactiveCount} Suspended</span>
           </div>
@@ -209,7 +211,7 @@ export default function AdminEmployeesPage() {
              {pendingApprovals.map(emp => (
                <div key={emp.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 gap-4 hover:bg-slate-100/30 transition-colors">
                  <div className="flex gap-4 items-center">
-                    <div className="relative w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 font-medium text-sm shrink-0 overflow-hidden border border-slate-200">
+                    <div className="relative w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-900 font-medium text-sm shrink-0 overflow-hidden border border-slate-200">
                       {emp.photo_url ? (
                         <img src={emp.photo_url} alt={emp.full_name} className="w-full h-full object-cover" />
                       ) : (
@@ -232,7 +234,7 @@ export default function AdminEmployeesPage() {
                    </div>
                  </div>
                  <div className="shrink-0">
-                   <Button size="sm" variant="outline" className="text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900" onClick={() => setReviewingEmployee(emp)}>
+                   <Button size="sm" variant="outline" className="text-slate-900 border-slate-200 hover:bg-slate-50 hover:text-slate-900" onClick={() => setReviewingEmployee(emp)}>
                      Review Application
                    </Button>
                  </div>
@@ -289,7 +291,7 @@ export default function AdminEmployeesPage() {
               <button
                 key={r}
                 onClick={() => setRoleFilter(r)}
-                className={`px-3 py-1.5 rounded-lg transition-colors text-xs font-medium capitalize ${roleFilter === r ? 'bg-slate-100 text-slate-700' : 'text-slate-500 hover:text-slate-600'}`}
+                className={`px-3 py-1.5 rounded-lg transition-colors text-xs font-medium capitalize ${roleFilter === r ? 'bg-slate-100 text-slate-700' : 'text-slate-500 hover:text-slate-900'}`}
               >
                 {r === 'all' ? 'All' : r === 'branch_manager' ? 'Managers' : 'Staff'}
               </button>
@@ -302,7 +304,7 @@ export default function AdminEmployeesPage() {
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             showInactive
               ? 'bg-rose-500/10 text-rose-400'
-              : 'text-slate-500 hover:text-slate-600 hover:bg-slate-100/50'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/50'
           }`}
         >
           {showInactive ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
@@ -361,7 +363,7 @@ export default function AdminEmployeesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-1.5 text-sm text-slate-600">
+                          <div className="flex items-center gap-1.5 text-sm text-slate-900">
                             <Building2 className="w-4 h-4 text-slate-400" />
                             {emp.branch_name || 'Global'}
                           </div>
@@ -413,7 +415,7 @@ export default function AdminEmployeesPage() {
                             <Fingerprint className="w-3.5 h-3.5" />
                             Biometrics
                           </Button>
-                          <Button size="sm" variant="ghost" className="text-slate-600 hover:text-slate-700 px-2" onClick={() => openEditModal(emp)}>
+                          <Button size="sm" variant="ghost" className="text-slate-900 hover:text-slate-700 px-2" onClick={() => openEditModal(emp)}>
                             Edit
                           </Button>
                           <Button

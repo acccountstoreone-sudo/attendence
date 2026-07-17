@@ -96,11 +96,11 @@ export function WebAuthnRegister() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center space-x-3 text-sm text-slate-600">
+      <div className="flex items-center space-x-3 text-sm text-slate-900">
         <Fingerprint className="w-5 h-5 text-indigo-400" />
         <div>
           <p className="font-medium text-slate-700">Device Fingerprint / Passkey</p>
-          <p className="text-xs text-slate-600">Register this device to check in without face verification.</p>
+          <p className="text-xs text-slate-900">Register this device to check in without face verification.</p>
         </div>
       </div>
 

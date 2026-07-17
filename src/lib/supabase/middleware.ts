@@ -77,13 +77,14 @@ export async function updateSession(request: NextRequest) {
 
     // Allow public routes
     if (
+      pathname === '/' ||
       pathname.startsWith('/login') ||
       pathname.startsWith('/register') ||
       pathname.startsWith('/api/auth') ||
       pathname.startsWith('/api/branches')
     ) {
-      // If authenticated user tries to access /login, redirect to their role dashboard
-      if (user && pathname === '/login') {
+      // If authenticated user tries to access /login or /, redirect to their role dashboard
+      if (user && (pathname === '/login' || pathname === '/')) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('role, is_active')

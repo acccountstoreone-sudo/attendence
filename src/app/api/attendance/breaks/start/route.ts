@@ -49,16 +49,22 @@ export async function POST(request: NextRequest) {
       throw new Error('No branch assigned to this employee. Cannot issue Gate Pass without store assignment.');
     }
 
-    // 1. Check if employee already has an active break right now
+    // 1. Check if employee already has an active or pending break right now
     const { data: activeBreak } = await supabase
       .from('attendance_breaks')
-      .select('id, break_type, out_time')
+      .select('id, break_type, out_time, status')
       .eq('employee_id', targetEmployeeId)
-      .eq('status', 'active')
+      .in('status', ['active', 'pending'])
       .limit(1)
       .maybeSingle();
 
     if (activeBreak) {
+      if (activeBreak.status === 'pending') {
+        return NextResponse.json({
+          success: false,
+          error: `You already have a pending Gate-Pass request (${activeBreak.break_type.replace('_', ' ')}). Please wait for approval or cancel it.`
+        }, { status: 409 });
+      }
       return NextResponse.json({
         success: false,
         error: `You already have an active Gate-Pass (${activeBreak.break_type.replace('_', ' ')}) running since ${new Date(activeBreak.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. Please verify return first.`
@@ -89,7 +95,7 @@ export async function POST(request: NextRequest) {
         break_type: input.break_type,
         expected_duration_minutes: input.expected_duration_minutes,
         reason: input.reason,
-        status: 'active',
+        status: user.role === 'employee' ? 'pending' : 'active',
         approved_by: user.role !== 'employee' ? user.id : null,
       })
       .select('*')
@@ -109,16 +115,18 @@ export async function POST(request: NextRequest) {
     };
     const breakTitle = breakLabelMap[input.break_type] || 'Gate Pass';
 
+    const isEmployeeRequest = user.role === 'employee';
+    
     await dispatchToBranchManagers({
       branchId: targetBranchId,
-      title: `${targetEmployeeName} started ${breakTitle}`,
-      message: `Out time: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} | Expected: ${input.expected_duration_minutes} mins | Reason: "${input.reason}"`,
+      title: `${targetEmployeeName} ${isEmployeeRequest ? 'requested' : 'started'} ${breakTitle}`,
+      message: `${isEmployeeRequest ? 'Requested at' : 'Out time'}: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} | Expected: ${input.expected_duration_minutes} mins | Reason: "${input.reason}"`,
       type: 'warning',
       actionUrl: `/admin/attendance?branch=${targetBranchId}&tab=breaks`,
     });
 
     await dispatchToAdmins({
-      title: `${targetEmployeeName} (Gate-Pass Issued)`,
+      title: `${targetEmployeeName} (Gate-Pass ${isEmployeeRequest ? 'Requested' : 'Issued'})`,
       message: `${breakTitle} at store (${input.expected_duration_minutes}m limit). Reason: ${input.reason}`,
       type: 'info',
       actionUrl: `/admin/attendance?branch=${targetBranchId}&tab=breaks`,
@@ -127,7 +135,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: breakRecord,
-      message: `Gate-Pass issued successfully for ${input.expected_duration_minutes} minutes.`
+      message: user.role === 'employee' 
+        ? `Gate-Pass requested. Waiting for manager approval.`
+        : `Gate-Pass issued successfully for ${input.expected_duration_minutes} minutes.`
     }, { status: 201 });
 
   } catch (error) {

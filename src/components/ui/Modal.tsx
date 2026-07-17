@@ -74,11 +74,11 @@ export const Modal: React.FC<ModalProps> = ({
           <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200">
             <div>
               {title && <h3 className="text-lg font-bold text-slate-900 tracking-tight">{title}</h3>}
-              {description && <p className="text-xs font-medium text-slate-600 mt-0.5">{description}</p>}
+              {description && <p className="text-xs font-medium text-slate-900 mt-0.5">{description}</p>}
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="p-1.5 rounded-lg text-slate-900 hover:text-slate-700 hover:bg-slate-100 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>

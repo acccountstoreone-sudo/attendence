@@ -58,7 +58,7 @@ export default function BranchManagerGatePassesPage() {
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Gate Passes & Breaks</h1>
-        <p className="text-sm text-slate-600 mt-1">
+        <p className="text-sm text-slate-900 mt-1">
           Monitor temporary store exits and issue new gate passes for {branch.name}.
         </p>
       </div>

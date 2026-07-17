@@ -102,15 +102,15 @@ export const LocationMapViewer: React.FC<LocationMapViewerProps> = ({
         <button
           onClick={openInGoogleMaps}
           title="Open in Google Maps"
-          className="absolute top-2.5 right-2.5 z-20 bg-white hover:bg-[#1dbf73] text-slate-600 hover:text-[#ffffff] backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-200 hover:border-[#1dbf73] shadow-lg text-xs font-bold transition-all flex items-center gap-1.5"
+          className="absolute top-2.5 right-2.5 z-20 bg-white hover:bg-[#1dbf73] text-slate-900 hover:text-[#ffffff] backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-200 hover:border-[#1dbf73] shadow-lg text-xs font-bold transition-all flex items-center gap-1.5"
         >
           <span>Open Google Maps</span>
           <ExternalLink className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-slate-600 bg-white px-3 py-2 rounded-lg border border-slate-200">
-        <span className="flex items-center gap-1.5 font-mono text-slate-600">
+      <div className="flex items-center justify-between text-xs text-slate-900 bg-white px-3 py-2 rounded-lg border border-slate-200">
+        <span className="flex items-center gap-1.5 font-mono text-slate-900">
           <MapPin className="w-3.5 h-3.5 text-[#1dbf73]" />
           {latitude.toFixed(6)}, {longitude.toFixed(6)}
         </span>

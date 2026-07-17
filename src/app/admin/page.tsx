@@ -16,7 +16,6 @@ import {
   X
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useActivePresence } from '@/hooks/useActivePresence';
 import { 
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
@@ -101,8 +100,6 @@ export default function AdminDashboardPage() {
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [weeklyTrendData, setWeeklyTrendData] = useState<any[]>([]);
   
-  const { onlineUsers } = useActivePresence();
-  const [showActiveUsersModal, setShowActiveUsersModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState(''); // APP-03 fix: search state
 
   const totalCheckins = React.useMemo(() => {
@@ -209,17 +206,9 @@ export default function AdminDashboardPage() {
                   router.push(`/admin/employees?search=${encodeURIComponent(searchQuery.trim())}`);
                 }
               }}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-slate-700 placeholder:text-slate-600 focus:outline-none focus:border-[#1dbf73] transition-colors shadow-inner"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm text-slate-700 placeholder:text-slate-900 focus:outline-none focus:border-[#1dbf73] transition-colors shadow-inner"
             />
           </div>
-          <Button
-            size="sm"
-            className="bg-transparent border border-[#1dbf73]/50 hover:bg-[#1dbf73]/10 text-[#1dbf73] rounded-full px-5 shadow-sm transition-all"
-            onClick={() => setShowActiveUsersModal(true)}
-          >
-            <div className="w-2 h-2 bg-[#1dbf73] rounded-full animate-pulse mr-2" />
-            {onlineUsers.length} Active Now
-          </Button>
           <Button
             size="sm"
             className="bg-[#1dbf73] hover:bg-[#16965a] text-slate-900 border-none rounded-full px-5 shadow-sm"
@@ -240,10 +229,10 @@ export default function AdminDashboardPage() {
           title="Click to manage all staff and present records"
         >
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#1dbf73]/10 rounded-full blur-3xl group-hover:bg-[#1dbf73]/20 transition-all duration-500"></div>
-          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" /></div>
+          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-900" /></div>
           <div className="flex items-center gap-3 mb-6 relative z-10">
             <div className="p-2 bg-[#1dbf73]/10 rounded-xl ring-1 ring-[#1dbf73]/20 shadow-[0_0_15px_rgba(0,170,68,0.2)]"><Users className="w-4 h-4 text-[#1dbf73]" /></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 group-hover:text-slate-900 transition-colors">Total Staff</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-900 group-hover:text-slate-900 transition-colors">Total Staff</span>
           </div>
           <div className="flex items-end justify-between relative z-10">
             <div>
@@ -261,10 +250,10 @@ export default function AdminDashboardPage() {
           title="Click to review late arrival records"
         >
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl group-hover:bg-amber-500/25 transition-all duration-500"></div>
-          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" /></div>
+          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-900" /></div>
           <div className="flex items-center gap-3 mb-6 relative z-10">
             <div className="p-2 bg-amber-500/10 rounded-xl ring-1 ring-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.2)]"><AlertTriangle className="w-4 h-4 text-amber-500" /></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 group-hover:text-slate-900 transition-colors">Late Arrivals</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-900 group-hover:text-slate-900 transition-colors">Late Arrivals</span>
           </div>
           <div className="flex items-end justify-between relative z-10">
             <div>
@@ -282,10 +271,10 @@ export default function AdminDashboardPage() {
           title="Click to view staff on leave"
         >
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/25 transition-all duration-500"></div>
-          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" /></div>
+          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-900" /></div>
           <div className="flex items-center gap-3 mb-6 relative z-10">
             <div className="p-2 bg-blue-500/10 rounded-xl ring-1 ring-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]"><Users className="w-4 h-4 text-blue-500" /></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 group-hover:text-slate-900 transition-colors">On Leave</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-900 group-hover:text-slate-900 transition-colors">On Leave</span>
           </div>
           <div className="flex items-end justify-between relative z-10">
             <div>
@@ -303,10 +292,10 @@ export default function AdminDashboardPage() {
           title="Click to resolve branch alerts and corrections"
         >
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl group-hover:bg-rose-500/25 transition-all duration-500"></div>
-          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" /></div>
+          <div className="absolute top-0 right-0 p-4"><MoreVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-900" /></div>
           <div className="flex items-center gap-3 mb-6 relative z-10">
             <div className="p-2 bg-rose-500/10 rounded-xl ring-1 ring-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]"><Activity className="w-4 h-4 text-rose-500" /></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 group-hover:text-slate-900 transition-colors">Branch Alerts</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-900 group-hover:text-slate-900 transition-colors">Branch Alerts</span>
           </div>
           <div className="flex items-end justify-between relative z-10">
             <div>
@@ -332,12 +321,12 @@ export default function AdminDashboardPage() {
               <h2 className="text-lg font-extrabold text-slate-900 tracking-tight group-hover:text-[#1dbf73] transition-colors">Attendance in time</h2>
               <span className="text-[10px] text-[#1dbf73] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">View Full Analytics &rarr;</span>
             </div>
-            <p className="text-[11px] font-medium text-slate-600 mt-0.5">Historical trend across all branches</p>
+            <p className="text-[11px] font-medium text-slate-900 mt-0.5">Historical trend across all branches</p>
           </div>
-          <div className="px-4 py-1.5 bg-white backdrop-blur-md border border-[#1dbf73]/20 rounded-full text-[10px] font-bold text-[#1dbf73] shadow-[0_0_15px_rgba(0,170,68,0.15)] uppercase tracking-wider">
-            Current Year
+            <div className="px-4 py-1.5 bg-white backdrop-blur-md border border-[#1dbf73]/20 rounded-full text-[10px] font-bold text-[#1dbf73] shadow-[0_0_15px_rgba(0,170,68,0.15)] uppercase tracking-wider">
+              Last 30 Days
+            </div>
           </div>
-        </div>
         
         <div className="h-[250px] w-full relative z-10">
           {monthlyData.every(m => !m.attendance || m.attendance === 0) ? (
@@ -451,7 +440,7 @@ export default function AdminDashboardPage() {
           </div>
           
           <div className="flex items-center justify-between mt-4 relative z-10">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Total Check-ins</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-900">Total Check-ins</div>
             <div className="text-2xl font-extrabold text-slate-900 tracking-tight group-hover:text-[#1dbf73] transition-colors">{totalCheckins > 0 ? totalCheckins.toLocaleString() : '00'}</div>
           </div>
         </div>
@@ -473,10 +462,10 @@ export default function AdminDashboardPage() {
                 className="p-4 bg-slate-50 rounded-2xl border border-slate-200 hover:border-[#1dbf73]/40 hover:bg-[#1dbf73]/5 cursor-pointer transition-all duration-300 flex items-start gap-3 group/item"
                 title={`Click to view check-in details for ${feed.full_name || 'employee'}`}
               >
-                <div className="mt-0.5 p-1.5 bg-slate-100 rounded-lg group-hover/item:bg-[#1dbf73]/10 transition-colors"><Bell className="w-3.5 h-3.5 text-slate-600 group-hover/item:text-[#1dbf73]" /></div>
+                <div className="mt-0.5 p-1.5 bg-slate-100 rounded-lg group-hover/item:bg-[#1dbf73]/10 transition-colors"><Bell className="w-3.5 h-3.5 text-slate-900 group-hover/item:text-[#1dbf73]" /></div>
                 <div className="flex-1">
                   <h3 className="text-sm font-bold text-slate-900 tracking-tight group-hover/item:text-[#1dbf73] transition-colors">{feed.full_name || 'Unknown Employee'}</h3>
-                  <p className="text-[10px] text-slate-600 mt-1 font-medium leading-relaxed">
+                  <p className="text-[10px] text-slate-900 mt-1 font-medium leading-relaxed">
                     {feed.type} recorded at {feed.branch_name}. Status: <span className={feed.status === 'late' ? 'text-amber-500 font-bold' : feed.status === 'absent' ? 'text-rose-500 font-bold' : 'text-[#1dbf73] font-bold'}>{feed.status}</span>.
                   </p>
                   <button 
@@ -502,50 +491,6 @@ export default function AdminDashboardPage() {
         </div>
 
       </div>
-
-      {/* Active Users Modal */}
-      {showActiveUsersModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/40 backdrop-blur-sm">
-          <div className="bg-white border border-slate-200 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-white">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#1dbf73]/10 rounded-full flex items-center justify-center relative">
-                  <Wifi className="w-5 h-5 text-[#1dbf73]" />
-                  <div className="absolute top-2 right-2 w-2 h-2 bg-[#1dbf73] rounded-full animate-ping" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">Online Now</h3>
-                  <p className="text-xs text-slate-600">{onlineUsers.length} users active</p>
-                </div>
-              </div>
-              <button onClick={() => setShowActiveUsersModal(false)} className="p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {onlineUsers.length === 0 ? (
-                <div className="py-12 text-center text-slate-500 text-sm">No users currently active.</div>
-              ) : (
-                onlineUsers.map(u => (
-                  <div key={u.id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-[#1dbf73]/10 text-[#1dbf73] font-bold text-xs rounded-full flex items-center justify-center shrink-0">
-                        {u.full_name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-800">{u.full_name}</p>
-                        <p className="text-[10px] text-slate-500 capitalize">{u.role.replace('_', ' ')}</p>
-                      </div>
-                    </div>
-                    <div className="w-2 h-2 bg-[#1dbf73] rounded-full" title="Online" />
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

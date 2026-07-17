@@ -47,6 +47,7 @@ export default function BranchManagerAttendancePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>('all');
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const fetchAttendance = useCallback(async () => {
@@ -148,6 +149,50 @@ export default function BranchManagerAttendancePage() {
     URL.revokeObjectURL(url);
   };
 
+  const handleExportPDF = async () => {
+    setExportingPdf(true);
+    try {
+      const headers = ['Employee', 'Location', 'Check-In', 'Check-Out', 'Status', 'Approval', 'Overtime'];
+      const rows = filteredRecords.map(r => [
+        r.full_name,
+        r.branch_name,
+        r.check_in_time ? new Date(r.check_in_time).toLocaleString() : '',
+        r.check_out_time ? new Date(r.check_out_time).toLocaleString() : 'Not checked out',
+        r.status ? r.status.toUpperCase() : 'PRESENT',
+        r.approval_status ? r.approval_status.toUpperCase() : 'PENDING',
+        formatOvertime(r.overtime_minutes) || '0m'
+      ]);
+
+      const res = await fetch('/api/attendance/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          activeTab,
+          selectedDate,
+          columns: headers,
+          rows: rows,
+          reportTitle: 'STORE ATTENDANCE REPORT'
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to generate PDF');
+      
+      const blob = await res.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `Store_Attendance_${activeTab}_${selectedDate}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      setFeedback({ type: 'error', text: 'Error downloading PDF' });
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   const isToday = (() => {
     const d = new Date();
     return selectedDate === `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -173,7 +218,7 @@ export default function BranchManagerAttendancePage() {
               Store Log
             </span>
             {isToday && (
-              <span className="text-xs text-slate-600 flex items-center">
+              <span className="text-xs text-slate-900 flex items-center">
                 <Clock className="w-3 h-3 text-[#1dbf73] mr-1" />
                 Today — Live
               </span>
@@ -187,7 +232,7 @@ export default function BranchManagerAttendancePage() {
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">
             Store Attendance & Approvals
           </h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-slate-900 mt-1">
             {filteredRecords.length} record{filteredRecords.length !== 1 ? 's' : ''} for {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
           </p>
         </div>
@@ -196,7 +241,7 @@ export default function BranchManagerAttendancePage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-slate-200 bg-white/50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            className="border-slate-200 bg-white/50 text-slate-900 hover:bg-slate-100 hover:text-slate-900"
             icon={<RefreshCw className="w-4 h-4" />}
             onClick={fetchAttendance}
           >
@@ -205,12 +250,23 @@ export default function BranchManagerAttendancePage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-slate-200 bg-white/50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            className="border-slate-200 bg-white/50 text-slate-900 hover:bg-slate-100 hover:text-slate-900"
             icon={<Download className="w-4 h-4" />}
             onClick={handleExport}
             disabled={filteredRecords.length === 0}
           >
             Export CSV
+          </Button>
+          <Button
+            size="sm"
+            variant="primary"
+            className="bg-[#1dbf73] hover:bg-[#16965a] text-white border-none"
+            icon={<Download className="w-4 h-4" />}
+            onClick={handleExportPDF}
+            disabled={filteredRecords.length === 0}
+            isLoading={exportingPdf}
+          >
+            Export PDF
           </Button>
         </div>
       </motion.div>
@@ -250,7 +306,7 @@ export default function BranchManagerAttendancePage() {
               className={`flex items-center gap-2 px-5 py-3.5 text-xs font-extrabold uppercase tracking-widest transition-all border-b-2 ${
                 activeTab === tab.key
                   ? 'border-[#1dbf73] text-[#1dbf73] bg-[#1dbf73]/5'
-                  : 'border-transparent text-slate-500 hover:text-slate-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-900'
               }`}
             >
               {tab.icon}
@@ -284,7 +340,7 @@ export default function BranchManagerAttendancePage() {
               value={selectedDate}
               max={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`}
               onChange={e => setSelectedDate(e.target.value)}
-              className="bg-transparent text-sm text-slate-600 focus:outline-none"
+              className="bg-transparent text-sm text-slate-900 focus:outline-none"
             />
           </div>
         </div>
@@ -298,7 +354,7 @@ export default function BranchManagerAttendancePage() {
           ) : (
             <table className="w-full text-left border-collapse whitespace-nowrap">
               <thead>
-                <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-600 font-bold">
+                <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-900 font-bold">
                   <th className="py-4 px-6">Employee</th>
                   <th className="py-4 px-6">Location</th>
                   <th className="py-4 px-6">Check-In</th>
@@ -317,7 +373,7 @@ export default function BranchManagerAttendancePage() {
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-16 text-center text-slate-500 text-sm">
                           {activeTab === 'pending'
                             ? <><CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-emerald-600/40" /><p className="font-semibold text-[#1dbf73]/60">All caught up! No pending approvals.</p></>
-                            : <><Clock className="w-8 h-8 mx-auto mb-3 text-slate-600 opacity-50" /><p>No attendance records found for {new Date(selectedDate + 'T12:00:00').toLocaleDateString()}.</p></>
+                            : <><Clock className="w-8 h-8 mx-auto mb-3 text-slate-900 opacity-50" /><p>No attendance records found for {new Date(selectedDate + 'T12:00:00').toLocaleDateString()}.</p></>
                           }
                         </motion.div>
                       </td>
@@ -346,19 +402,19 @@ export default function BranchManagerAttendancePage() {
 
                         {/* Location */}
                         <td className="py-4 px-6">
-                          <div className="flex items-center text-slate-600 text-sm">
+                          <div className="flex items-center text-slate-900 text-sm">
                             <MapPin className="w-4 h-4 text-[#1dbf73]/60 mr-2 shrink-0" />
                             {rec.branch_name}
                           </div>
                         </td>
 
                         {/* Check-In */}
-                        <td className="py-4 px-6 text-slate-600 font-mono text-xs">
+                        <td className="py-4 px-6 text-slate-900 font-mono text-xs">
                           {formatTime(rec.check_in_time)}
                         </td>
 
                         {/* Check-Out */}
-                        <td className="py-4 px-6 text-slate-600 font-mono text-xs">
+                        <td className="py-4 px-6 text-slate-900 font-mono text-xs">
                           {rec.check_out_time
                             ? formatTime(rec.check_out_time)
                             : <span className="text-slate-500 italic">Not checked out</span>}
@@ -372,7 +428,7 @@ export default function BranchManagerAttendancePage() {
                               {formatOvertime(rec.overtime_minutes)}
                             </span>
                           ) : (
-                            <span className="text-slate-600 text-xs">—</span>
+                            <span className="text-slate-900 text-xs">—</span>
                           )}
                         </td>
 

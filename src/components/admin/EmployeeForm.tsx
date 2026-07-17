@@ -129,7 +129,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
           </div>
           <div className="flex-1 space-y-2">
             <h3 className="text-lg font-bold text-slate-800">{initialData.full_name || 'Unnamed Employee'}</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-600">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-900">
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-slate-400" />
                 <span>{initialData.whatsapp_number ? `WA: ${initialData.whatsapp_number}` : 'No WhatsApp'}</span>
@@ -146,7 +146,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
       <form onSubmit={handleSave} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Full Name *</label>
+            <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Full Name *</label>
             <div className="relative">
               <User className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
               <input required value={form.full_name} onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
@@ -154,7 +154,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Employee ID</label>
+            <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Employee ID</label>
             <input value={form.employee_id} onChange={(e) => setForm((f) => ({ ...f, employee_id: e.target.value }))}
               placeholder="e.g., EMP-001" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all" />
           </div>
@@ -162,7 +162,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Email Address *</label>
+            <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Email Address *</label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
               <input required type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
@@ -171,7 +171,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Phone Number</label>
+            <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Phone Number</label>
             <div className="relative">
               <Phone className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
               <input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
@@ -181,7 +181,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+          <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
             {initialData ? 'Reset Password (Optional)' : 'Temporary Password (Optional)'}
           </label>
           <div className="relative">
@@ -196,7 +196,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t border-slate-200">
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 flex items-center">
+            <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 flex items-center">
               <Shield className="w-3.5 h-3.5 mr-1" /> System Role
             </label>
             <select
@@ -210,7 +210,7 @@ export function EmployeeForm({ initialData }: EmployeeFormProps) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 flex items-center">
+            <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 flex items-center">
               <Building2 className="w-3.5 h-3.5 mr-1" /> Assigned Branch
             </label>
             <select

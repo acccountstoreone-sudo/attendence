@@ -16,6 +16,9 @@ import {
   AlertCircle,
   Edit3,
   X,
+  Download,
+  FileText,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -41,6 +44,9 @@ export default function EmployeeHistoryPage() {
   const [totalPages, setTotalPages] = useState(1);
   const PER_PAGE = 10;
 
+  const [userId, setUserId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState<'csv' | 'excel' | 'pdf' | null>(null);
+
   // Correction Modal State
   const [isCorrectionModalOpen, setIsCorrectionModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
@@ -60,6 +66,7 @@ export default function EmployeeHistoryPage() {
           setError('You must be logged in to view attendance history.');
           return;
         }
+        setUserId(user.id);
 
         // BUG FIX #6: searchDate is now passed to the API so filtering is
         // server-side and covers all records — not just the current page.
@@ -119,6 +126,48 @@ export default function EmployeeHistoryPage() {
     setSearchDate('');
     setPage(1);
   }
+
+  const handleExport = async (format: 'csv' | 'excel' | 'pdf') => {
+    if (!userId) return;
+    setExporting(format);
+    setError(null);
+    try {
+      const targetDate = searchDate ? new Date(searchDate) : new Date();
+      const month = targetDate.getMonth() + 1;
+      const year = targetDate.getFullYear();
+      
+      const res = await fetch(`/api/reports/employee/${userId}/export?month=${month}&year=${year}&format=${format}`);
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.error?.message || 'Export generation failed.');
+      }
+
+      if (json.data?.content_base64) {
+        const byteCharacters = atob(json.data.content_base64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: json.data.content_type || 'application/octet-stream' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = json.data.file_name || `Duty_Report_${month}_${year}.${format === 'excel' ? 'xlsx' : format}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } else {
+        throw new Error('No downloadable file returned.');
+      }
+    } catch (err: unknown) {
+      setError(`Export error: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setExporting(null);
+    }
+  };
 
   const openCorrectionModal = (record: AttendanceRecord) => {
     setSelectedRecord(record);
@@ -189,29 +238,65 @@ export default function EmployeeHistoryPage() {
             <span>Personal Attendance Ledger</span>
           </div>
           <h1 className="text-2xl font-extrabold text-slate-900">My Attendance History</h1>
-          <p className="text-sm text-slate-600 mt-1">Full record of your check-in/out timestamps and daily status.</p>
+          <p className="text-sm text-slate-900 mt-1">Full record of your check-in/out timestamps and daily status.</p>
         </div>
       </div>
 
-      {/* Date Filter */}
-      <Card className="bg-white border-slate-200 p-4">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Calendar className="w-4 h-4 text-slate-600 absolute left-3 top-2.5" />
-            <input
-              type="date"
-              value={searchDate}
-              onChange={(e) => handleDateChange(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-blue-500 transition-colors"
-            />
+      {/* Filters and Export */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <Card className="bg-white border-slate-200 p-4 flex-1">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Calendar className="w-4 h-4 text-slate-900 absolute left-3 top-2.5" />
+              <input
+                type="date"
+                value={searchDate}
+                onChange={(e) => handleDateChange(e.target.value)}
+                className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-blue-500 transition-colors"
+              />
+            </div>
+            {searchDate && (
+              <Button size="sm" variant="ghost" onClick={handleClearFilter}>
+                Clear Filter
+              </Button>
+            )}
           </div>
-          {searchDate && (
-            <Button size="sm" variant="ghost" onClick={handleClearFilter}>
-              Clear Filter
-            </Button>
-          )}
-        </div>
-      </Card>
+        </Card>
+
+        {/* Export Options */}
+        <Card className="bg-white border-slate-200 p-4 flex items-center gap-3 w-full sm:w-auto overflow-x-auto">
+          <Button
+            onClick={() => handleExport('csv')}
+            disabled={exporting !== null || loading || records.length === 0}
+            variant="outline"
+            size="sm"
+            className="flex-1 md:flex-none border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs py-2 px-3.5 rounded-xl gap-2 transition-all shadow-2xs"
+          >
+            {exporting === 'csv' ? <Spinner size="sm" /> : <FileText className="w-4 h-4 text-sky-600" />}
+            CSV
+          </Button>
+          <Button
+            onClick={() => handleExport('excel')}
+            disabled={exporting !== null || loading || records.length === 0}
+            variant="outline"
+            size="sm"
+            className="flex-1 md:flex-none border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs py-2 px-3.5 rounded-xl gap-2 transition-all shadow-2xs"
+          >
+            {exporting === 'excel' ? <Spinner size="sm" /> : <FileSpreadsheet className="w-4 h-4 text-[#1dbf73]" />}
+            Excel
+          </Button>
+          <Button
+            onClick={() => handleExport('pdf')}
+            disabled={exporting !== null || loading || records.length === 0}
+            variant="primary"
+            size="sm"
+            className="flex-1 md:flex-none bg-gradient-to-r from-[#1dbf73] to-[#16965a] hover:from-[#16965a] hover:to-[#108a50] text-white font-bold text-xs py-2 px-4 rounded-xl gap-2 shadow-sm border-0"
+          >
+            {exporting === 'pdf' ? <Spinner size="sm" /> : <Download className="w-4 h-4" />}
+            PDF
+          </Button>
+        </Card>
+      </div>
 
       {/* BUG FIX #4: Error banner shown to user when API fails */}
       {error && (
@@ -231,7 +316,7 @@ export default function EmployeeHistoryPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-white/80 text-slate-600 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200">
+                <tr className="bg-white/80 text-slate-900 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200">
                   <th className="py-4 px-5">Date</th>
                   <th className="py-4 px-5 text-center">Status</th>
                   <th className="py-4 px-5">Check-In</th>
@@ -315,9 +400,9 @@ export default function EmployeeHistoryPage() {
                             </div>
                           ) : <span className="text-slate-500 text-xs italic">Still On Shift</span>}
                         </td>
-                        <td className="py-4 px-5 text-slate-600 font-semibold text-sm">{hoursWorked}</td>
+                        <td className="py-4 px-5 text-slate-900 font-semibold text-sm">{hoursWorked}</td>
                         <td className="py-4 px-5">
-                          <div className="flex items-center space-x-1.5 text-xs text-slate-600">
+                          <div className="flex items-center space-x-1.5 text-xs text-slate-900">
                             {rec.check_in_method === 'biometric' ? (
                               <Camera className="w-3.5 h-3.5 text-purple-400" />
                             ) : (
@@ -354,7 +439,7 @@ export default function EmployeeHistoryPage() {
                               variant="ghost"
                               onClick={() => openCorrectionModal(rec)}
                               title="Request Correction"
-                              className="text-slate-600 hover:text-blue-400"
+                              className="text-slate-900 hover:text-blue-400"
                             >
                               <Edit3 className="w-4 h-4" />
                             </Button>
@@ -370,7 +455,7 @@ export default function EmployeeHistoryPage() {
 
           {/* Pagination */}
           <div className="p-4 border-t border-slate-200/80 flex items-center justify-between">
-            <span className="text-xs text-slate-600">Showing page <strong className="text-slate-900">{page}</strong> of <strong className="text-slate-900">{totalPages}</strong></span>
+            <span className="text-xs text-slate-900">Showing page <strong className="text-slate-900">{page}</strong> of <strong className="text-slate-900">{totalPages}</strong></span>
             <div className="flex items-center space-x-2">
               <Button
                 size="sm"
@@ -402,11 +487,11 @@ export default function EmployeeHistoryPage() {
             <div className="flex items-center justify-between p-6 border-b border-slate-200/60 bg-white/50">
               <div>
                 <h3 className="text-lg font-extrabold text-slate-900">Request Correction</h3>
-                <p className="text-sm text-slate-600">For {selectedRecord.date || 'this record'}</p>
+                <p className="text-sm text-slate-900">For {selectedRecord.date || 'this record'}</p>
               </div>
               <button
                 onClick={() => setIsCorrectionModalOpen(false)}
-                className="p-2 text-slate-600 hover:text-slate-900 bg-slate-50/50 hover:bg-slate-100 rounded-full transition-colors"
+                className="p-2 text-slate-900 hover:text-slate-900 bg-slate-50/50 hover:bg-slate-100 rounded-full transition-colors"
                 disabled={isSubmitting}
               >
                 <X className="w-5 h-5" />
@@ -428,7 +513,7 @@ export default function EmployeeHistoryPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Correction Type</label>
+                  <label className="block text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">Correction Type</label>
                   <div className="flex gap-4">
                     <label className="flex items-center gap-2 text-sm text-slate-900 cursor-pointer">
                       <input 
@@ -458,7 +543,7 @@ export default function EmployeeHistoryPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Requested Time</label>
+                  <label className="block text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">Requested Time</label>
                   <input
                     type="time"
                     value={requestedTime}
@@ -470,7 +555,7 @@ export default function EmployeeHistoryPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Reason</label>
+                  <label className="block text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">Reason</label>
                   <textarea
                     value={correctionReason}
                     onChange={(e) => setCorrectionReason(e.target.value)}
@@ -479,7 +564,7 @@ export default function EmployeeHistoryPage() {
                     minLength={5}
                     rows={3}
                     disabled={isSubmitting}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none placeholder:text-slate-600"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none placeholder:text-slate-900"
                   />
                 </div>
               </div>

@@ -97,7 +97,7 @@ export default function AdminSettingsPage() {
 
   if (fetching) {
     return (
-      <div className="min-h-[400px] flex items-center justify-center text-slate-600 text-sm">
+      <div className="min-h-[400px] flex items-center justify-center text-slate-900 text-sm">
         Loading configuration...
       </div>
     );
@@ -124,7 +124,7 @@ export default function AdminSettingsPage() {
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">
             Platform Settings
           </h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-slate-900 mt-1">
             Manage global operational parameters, security thresholds, and company preferences.
           </p>
         </div>
@@ -164,7 +164,7 @@ export default function AdminSettingsPage() {
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${
                 activeTab === tab.key
                   ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/30'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent'
+                  : 'text-slate-900 hover:bg-slate-100 hover:text-slate-900 border border-transparent'
               }`}
             >
               {tab.icon}
@@ -182,11 +182,11 @@ export default function AdminSettingsPage() {
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 mb-1">Company Profile</h3>
-                    <p className="text-xs text-slate-600">Basic information about the organization.</p>
+                    <p className="text-xs text-slate-900">Basic information about the organization.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Company Name</label>
+                      <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Company Name</label>
                       <input
                         type="text"
                         required
@@ -196,7 +196,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Headquarters Address</label>
+                      <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Headquarters Address</label>
                       <textarea
                         rows={2}
                         value={profile.hq_address}
@@ -212,11 +212,11 @@ export default function AdminSettingsPage() {
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 mb-1">Attendance Parameters</h3>
-                    <p className="text-xs text-slate-600">Configure global shift timings and grace periods.</p>
+                    <p className="text-xs text-slate-900">Configure global shift timings and grace periods.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Default Shift Start</label>
+                      <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Default Shift Start</label>
                       <input
                         type="time"
                         required
@@ -226,7 +226,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Default Shift End</label>
+                      <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Default Shift End</label>
                       <input
                         type="time"
                         required
@@ -236,7 +236,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Late Grace Period (Mins)</label>
+                      <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Late Grace Period (Mins)</label>
                       <input
                         type="number"
                         required
@@ -248,7 +248,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Overtime Multiplier (×)</label>
+                      <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Overtime Multiplier (×)</label>
                       <input
                         type="number"
                         required
@@ -268,13 +268,13 @@ export default function AdminSettingsPage() {
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 mb-1">Security & Access</h3>
-                    <p className="text-xs text-slate-600">Biometric and session policies — managed at infrastructure level.</p>
+                    <p className="text-xs text-slate-900">Biometric and session policies — managed at infrastructure level.</p>
                   </div>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl">
                       <div>
                         <p className="text-sm font-bold text-slate-900">Strict Face Matching</p>
-                        <p className="text-xs text-slate-600 mt-0.5">Require higher confidence score (distance &lt; 0.4) for check-in.</p>
+                        <p className="text-xs text-slate-900 mt-0.5">Require higher confidence score (distance &lt; 0.4) for check-in.</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -290,7 +290,7 @@ export default function AdminSettingsPage() {
                     <div className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl">
                       <div>
                         <p className="text-sm font-bold text-slate-900">Device Spoof Protection</p>
-                        <p className="text-xs text-slate-600 mt-0.5">Block fake GPS mock locations and rooted devices.</p>
+                        <p className="text-xs text-slate-900 mt-0.5">Block fake GPS mock locations and rooted devices.</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input

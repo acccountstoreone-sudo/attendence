@@ -133,7 +133,7 @@ export default function AdminPayrollDashboard() {
             </span>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Payroll Generation</h1>
-          <p className="text-sm text-slate-600 mt-1">Compute monthly salary sheets based on attendance records.</p>
+          <p className="text-sm text-slate-900 mt-1">Compute monthly salary sheets based on attendance records.</p>
         </div>
       </motion.div>
 
@@ -144,11 +144,11 @@ export default function AdminPayrollDashboard() {
             <Calendar className="w-5 h-5 text-[#1dbf73]" />
             Run Payroll Calculation
           </h2>
-          <p className="text-sm text-slate-600 mt-1">Select the target month. This will process all employees in your scope.</p>
+          <p className="text-sm text-slate-900 mt-1">Select the target month. This will process all employees in your scope.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 items-end">
           <div className="flex-1 max-w-sm space-y-2">
-            <label htmlFor="month" className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+            <label htmlFor="month" className="block text-xs font-bold text-slate-900 uppercase tracking-wider">
               Month & Year
             </label>
             <input
@@ -216,14 +216,14 @@ export default function AdminPayrollDashboard() {
               <div className="flex items-center justify-between p-4 border-b border-slate-200">
                 <div>
                   <h2 className="font-bold text-slate-900">Generation Results</h2>
-                  <p className="text-xs text-slate-600">{results.length} records for {monthYear}</p>
+                  <p className="text-xs text-slate-900">{results.length} records for {monthYear}</p>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
                   icon={<Download className="w-4 h-4" />}
                   onClick={handleExport}
-                  className="border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  className="border-slate-200 text-slate-900 hover:bg-slate-100 hover:text-slate-900"
                 >
                   Export CSV
                 </Button>
@@ -231,7 +231,7 @@ export default function AdminPayrollDashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-600 font-bold">
+                    <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-900 font-bold">
                       <th className="py-3 px-4">Employee</th>
                       <th className="py-3 px-4">Status</th>
                       <th className="py-3 px-4 text-right">Payable Days</th>
@@ -266,8 +266,8 @@ export default function AdminPayrollDashboard() {
                         </td>
                         {res.status === 'success' && res.data ? (
                           <>
-                            <td className="py-3 px-4 text-right text-slate-600 font-semibold">{res.data.total_payable_days}</td>
-                            <td className="py-3 px-4 text-right text-slate-600">৳{res.data.gross_salary.toLocaleString()}</td>
+                            <td className="py-3 px-4 text-right text-slate-900 font-semibold">{res.data.total_payable_days}</td>
+                            <td className="py-3 px-4 text-right text-slate-900">৳{res.data.gross_salary.toLocaleString()}</td>
                             <td className="py-3 px-4 text-right text-emerald-600 font-bold">
                               +৳{(res.data.duty_summary_snapshot?.overtime_pay ?? res.data.overtime_pay ?? 0).toLocaleString()}
                               <span className="block text-[10px] text-slate-400 font-normal">{(res.data.duty_summary_snapshot?.overtime_hours ?? res.data.overtime_hours ?? 0)} hrs</span>

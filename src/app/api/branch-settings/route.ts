@@ -72,7 +72,7 @@ export async function PUT(request: NextRequest) {
     // 1. Fetch current settings before updating (to log history)
     const { data: currentSettings } = await supabase
       .from('branch_settings')
-      .select('work_start_time, work_end_time, late_grace_minutes, overtime_after_minutes, half_day_hours, overtime_slot_minutes, holiday_overtime_multiplier, require_overtime_approval')
+      .select('work_start_time, work_end_time, late_grace_minutes, overtime_after_minutes, half_day_hours, overtime_slot_minutes, holiday_overtime_multiplier, require_overtime_approval, weekly_off_days')
       .eq('branch_id', branchId)
       .maybeSingle();
 
@@ -99,6 +99,7 @@ export async function PUT(request: NextRequest) {
           overtime_slot_minutes: payload.overtime_slot_minutes ?? currentSettings.overtime_slot_minutes ?? 15,
           holiday_overtime_multiplier: payload.holiday_overtime_multiplier ?? currentSettings.holiday_overtime_multiplier ?? 2.0,
           require_overtime_approval: payload.require_overtime_approval ?? currentSettings.require_overtime_approval ?? false,
+          weekly_off_days: payload.weekly_off_days ?? currentSettings.weekly_off_days ?? [5],
           changed_by: user.id,
           change_reason: body.change_reason || null,
           effective_from: now,
@@ -120,6 +121,7 @@ export async function PUT(request: NextRequest) {
           overtime_slot_minutes: payload.overtime_slot_minutes ?? 15,
           holiday_overtime_multiplier: payload.holiday_overtime_multiplier ?? 2.0,
           require_overtime_approval: payload.require_overtime_approval ?? false,
+          weekly_off_days: payload.weekly_off_days ?? [5],
           changed_by: user.id,
           change_reason: body.change_reason || 'Initial configuration',
           effective_from: now,

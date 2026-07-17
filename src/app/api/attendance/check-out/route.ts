@@ -122,23 +122,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Dhaka',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
-    const [month, day, year] = formatter.format(targetDate).split('/');
-    
-    const startOfDay = new Date(`${year}-${month}-${day}T00:00:00+06:00`);
-    const endOfDay = new Date(`${year}-${month}-${day}T23:59:59+06:00`);
+    // Find the most recent check-in within 24 hours of targetDate
+    const lookbackDate = new Date(targetDate.getTime() - 24 * 60 * 60 * 1000);
 
     const { data: record, error: recErr } = await supabase
       .from('attendance_records')
       .select('*')
       .eq('employee_id', user.id)
-      .gte('check_in_time', startOfDay.toISOString())
-      .lte('check_in_time', endOfDay.toISOString())
+      .gte('check_in_time', lookbackDate.toISOString())
+      .lte('check_in_time', targetDate.toISOString())
+      .order('check_in_time', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (recErr || !record) {
@@ -148,7 +142,7 @@ export async function POST(request: NextRequest) {
           data: null,
           error: {
             code: 'NO_CHECKIN_FOUND',
-            message: 'No open check-in record found for the given date. Please check in first.',
+            message: 'No recent open check-in record found. Please check in first.',
           },
           timestamp: new Date().toISOString(),
         },

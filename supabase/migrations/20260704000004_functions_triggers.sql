@@ -1,4 +1,4 @@
-﻿-- ==============================================================================
+-- ==============================================================================
 -- ANCHOR FASHION — DATABASE FUNCTIONS & TRIGGERS (MIGRATION 0004)
 -- Specification Reference: Spec P12 (Category 02: Database & Schema)
 -- ==============================================================================
@@ -71,6 +71,12 @@ BEGIN
         
         IF (v_checkout_time > v_overtime_start) THEN
             NEW.overtime_minutes := FLOOR(EXTRACT(EPOCH FROM (v_checkout_time - v_work_end)) / 60.0)::integer;
+            
+            -- Cap overtime to 4 hours (240 minutes) and require manual approval if it exceeds
+            IF (NEW.overtime_minutes > 240) THEN
+                NEW.overtime_minutes := 240;
+                NEW.overtime_approval_status := 'pending';
+            END IF;
         ELSE
             NEW.overtime_minutes := 0;
         END IF;

@@ -1,6 +1,6 @@
-import { redirect } from 'next/navigation';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import LandingPageContent from '@/components/LandingPageContent';
 
 export default async function Home() {
   const cookieStore = await cookies();
@@ -19,8 +19,6 @@ export default async function Home() {
             );
           } catch {
             // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
           }
         },
       },
@@ -29,22 +27,18 @@ export default async function Home() {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect('/login');
+  let role: string | null = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    
+    if (profile) {
+      role = profile.role;
+    }
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role === 'admin') {
-    redirect('/admin');
-  } else if (profile?.role === 'branch_manager') {
-    redirect('/branch-manager');
-  } else {
-    redirect('/employee');
-  }
+  return <LandingPageContent isAuthenticated={!!user} role={role} />;
 }
-

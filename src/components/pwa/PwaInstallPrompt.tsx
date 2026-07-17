@@ -101,7 +101,7 @@ export function PwaInstallPrompt() {
           {/* Close button */}
           <button
             onClick={handleDismiss}
-            className="absolute top-4 right-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-slate-600 hover:text-slate-900 transition-all active:scale-95"
+            className="absolute top-4 right-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-slate-900 hover:text-slate-900 transition-all active:scale-95"
             aria-label="Close install banner"
           >
             <X className="w-4 h-4" />
@@ -124,7 +124,7 @@ export function PwaInstallPrompt() {
               <h3 className="text-base font-bold text-slate-900 mt-0.5">
                 Install Attendance Portal
               </h3>
-              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+              <p className="text-xs text-slate-900 mt-1 leading-relaxed">
                 Add to your phone Home Screen for instant 1-tap biometric face check-in & offline geofence sync!
               </p>
             </div>
@@ -145,7 +145,7 @@ export function PwaInstallPrompt() {
               <>
                 <button
                   onClick={handleDismiss}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors"
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-900 hover:text-slate-900 transition-colors"
                 >
                   Not Now
                 </button>
