@@ -9,8 +9,8 @@ function drawLogo(doc: jsPDF, logoBase64: string, x: number, y: number, targetHe
   try {
     const props = doc.getImageProperties(logoBase64);
     let imgWidth = (props.width * targetHeight) / props.height;
-    if (imgWidth > 70) {
-      imgWidth = 70;
+    if (imgWidth > 110) {
+      imgWidth = 110;
       targetHeight = (props.height * imgWidth) / props.width;
     }
     doc.addImage(logoBase64, 'PNG', x, y, imgWidth, targetHeight);
@@ -108,7 +108,7 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
 
   // Header Section
   if (logoBase64) {
-    drawLogo(doc, logoBase64, 14, 8, 35); // Increased logo size from 24 to 35
+    drawLogo(doc, logoBase64, 14, 8, 42); // Increased logo size from 35 to 42
   } else {
     // Fallback if no logo image is found
     doc.setTextColor(...primaryColor);
@@ -135,7 +135,7 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
   doc.setTextColor(...textColor);
 
   // Left Meta Info (Company Address)
-  let currentY = 42;
+  let currentY = 52;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.text('ANCHOR FASHION', 14, currentY);
@@ -149,7 +149,7 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
   doc.text('erp@anchorfashion.com', 14, currentY);
 
   // Middle Meta Info
-  currentY = 42;
+  currentY = 52;
   doc.setFontSize(7);
   doc.setTextColor(...labelColor);
   doc.text('STATEMENT REF.', 115, currentY);
@@ -177,7 +177,7 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
   doc.text(options.metaPreparedBy, 115, currentY);
 
   // Right Meta Info
-  currentY = 42;
+  currentY = 52;
   doc.setFontSize(7);
   doc.setTextColor(...labelColor);
   doc.text('BRANCH / SCOPE', 180, currentY);
@@ -205,7 +205,7 @@ export function generateAnchorFashionPDF(options: PDFExportOptions): Buffer {
   doc.text(`${options.metaRecordsCount} entries`, 180, currentY);
 
   // Table Title
-  let tableY = 74;
+  let tableY = 86;
   if (options.tableTitle) {
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
@@ -423,7 +423,7 @@ export function generateDetailedCompanyPDF(options: DetailedCompanyPDFOptions): 
 
   // Header Section
   if (logoBase64) {
-    drawLogo(doc, logoBase64, 14, 10, 18);
+    drawLogo(doc, logoBase64, 14, 8, 42);
   } else {
     doc.setTextColor(...primaryColor);
     doc.setFontSize(22);
@@ -448,7 +448,7 @@ export function generateDetailedCompanyPDF(options: DetailedCompanyPDFOptions): 
   // Reset text color for metadata
   doc.setTextColor(...textColor);
 
-  let currentY = 42;
+  let currentY = 52;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.text('ANCHOR FASHION', 14, currentY);
@@ -461,7 +461,7 @@ export function generateDetailedCompanyPDF(options: DetailedCompanyPDFOptions): 
   currentY += 5;
   doc.text('erp@anchorfashion.com', 14, currentY);
 
-  currentY = 42;
+  currentY = 52;
   doc.setFontSize(7);
   doc.setTextColor(...labelColor);
   doc.text('STATEMENT REF.', 115, currentY);
@@ -488,7 +488,7 @@ export function generateDetailedCompanyPDF(options: DetailedCompanyPDFOptions): 
   doc.setTextColor(...textColor);
   doc.text(options.metaPreparedBy, 115, currentY);
 
-  currentY = 42;
+  currentY = 52;
   doc.setFontSize(7);
   doc.setTextColor(...labelColor);
   doc.text('PRINT DATE', 180, currentY);
@@ -506,7 +506,7 @@ export function generateDetailedCompanyPDF(options: DetailedCompanyPDFOptions): 
   doc.setTextColor(...textColor);
   doc.text(`${options.metaRecordsCount} entries`, 180, currentY);
 
-  let tableY = 74;
+  let tableY = 86;
 
   const renderTable = (title: string, columns: string[], rows: any[][], titleColor: [number, number, number] = primaryColor) => {
     if (tableY > pageHeight - 30) {
@@ -772,7 +772,7 @@ export function generateEmployeeFullDutyPDF(options: EmployeeFullDutyPDFOptions)
   }
 
   if (logoBase64) {
-    drawLogo(doc, logoBase64, 14, 10, 18);
+    drawLogo(doc, logoBase64, 14, 10, 26);
   } else {
     doc.setTextColor(...primaryColor);
     doc.setFontSize(22);
