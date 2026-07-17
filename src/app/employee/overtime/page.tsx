@@ -32,6 +32,7 @@ export default function EmployeeOvertimePage() {
   const [reqOutTime, setReqOutTime] = useState('');
   const [reqReason, setReqReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOvertimeRecords();
@@ -64,8 +65,18 @@ export default function EmployeeOvertimePage() {
 
   const handleRequestOvertime = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     if (!reqDate || !reqInTime || !reqOutTime || !reqReason) {
-      alert('Please fill out all fields.');
+      setFormError('Please fill out all fields.');
+      return;
+    }
+
+    const selectedDate = new Date(reqDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      setFormError('Request for previous day is not allowed.');
       return;
     }
 
@@ -95,7 +106,7 @@ export default function EmployeeOvertimePage() {
       setReqReason('');
       fetchOvertimeRecords();
     } catch (err: any) {
-      alert(err.message);
+      setFormError(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -218,6 +229,12 @@ export default function EmployeeOvertimePage() {
               </button>
             </div>
             <div className="p-4 md:p-6 overflow-y-auto">
+              {formError && (
+                <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-start text-rose-700">
+                  <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm font-medium">{formError}</span>
+                </div>
+              )}
               <form onSubmit={handleRequestOvertime} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Duty Date</label>

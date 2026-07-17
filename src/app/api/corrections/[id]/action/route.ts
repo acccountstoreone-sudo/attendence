@@ -71,7 +71,7 @@ export async function POST(
             is_manual_entry: true,
             is_manual_override: true,
             approval_status: 'approved',
-            manual_reason: `Approved Correction: ${correction.reason}`,
+            override_reason: `Approved Correction: ${correction.reason}`,
           })
           .eq('id', recordId);
 
@@ -121,7 +121,7 @@ export async function POST(
             approval_status: 'approved',
             is_manual_override: true,
             is_manual_entry: true,
-            manual_reason: `Approved Correction: ${correction.reason}`,
+            override_reason: `Approved Correction: ${correction.reason}`,
           });
         }
       }

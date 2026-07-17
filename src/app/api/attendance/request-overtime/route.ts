@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     if (existingRec && existingRec.length > 0) {
       return NextResponse.json(
-        { success: false, error: { message: 'An attendance record already exists for this date. Use Corrections to edit it instead.' } },
+        { success: false, error: { message: 'You have already sent a request for today.' } },
         { status: 400 }
       );
     }
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
         approval_status: 'pending',
         overtime_approval_status: 'pending',
         overtime_minutes: diffMins, // the entire duration is overtime on an off-day
-        manual_reason: `[Off-Day Overtime Request] ${payload.reason}`,
+        override_reason: `[Off-Day Overtime Request] ${payload.reason}`,
       })
       .select()
       .single();
