@@ -97,6 +97,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'My Dashboard', href: '/employee', icon: <LayoutDashboard className="w-5 h-5" /> },
     { label: 'GPS Check-In', href: '/employee/check-in', icon: <Fingerprint className="w-5 h-5" /> },
     { label: 'My History', href: '/employee/history', icon: <History className="w-5 h-5" /> },
+    { label: 'Overtime', href: '/employee/overtime', icon: <Clock className="w-5 h-5" /> },
     { label: 'Leave Requests', href: '/employee/leaves', icon: <CalendarDays className="w-5 h-5" /> },
     { label: 'Gate Pass', href: '/employee/gate-pass', icon: <Coffee className="w-5 h-5" /> },
     { label: 'Announcements', href: '/employee/announcements', icon: <Megaphone className="w-5 h-5" /> },
