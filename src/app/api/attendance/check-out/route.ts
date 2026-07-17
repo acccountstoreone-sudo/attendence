@@ -221,6 +221,62 @@ export async function POST(request: NextRequest) {
     }
 
     const checkOutTime = payload.timestamp || new Date().toISOString();
+    const checkOutDateObj = new Date(checkOutTime);
+    const checkInDateObj = new Date(record.check_in_time);
+
+    // 1. Minimum Duration Constraint (e.g., 15 minutes)
+    const diffMinutes = (checkOutDateObj.getTime() - checkInDateObj.getTime()) / 60000;
+    if (diffMinutes < 15 && !payload.is_manual_override) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: 'CHECK_OUT_TOO_EARLY',
+            message: 'You cannot check out within 15 minutes of checking in.',
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 403 }
+      );
+    }
+
+    // 2. Fetch shift end time to block abnormally late checkouts (e.g., > 4 hours after shift)
+    const { data: companyProfile } = await supabase.from('company_profile').select('default_work_end_time').single();
+    let workEndTime = companyProfile?.default_work_end_time || '18:00:00';
+
+    if (targetBranchId) {
+      const { data: branchSettings } = await supabase
+        .from('branch_settings')
+        .select('work_end_time')
+        .eq('branch_id', targetBranchId)
+        .maybeSingle();
+      if (branchSettings && branchSettings.work_end_time) {
+        workEndTime = branchSettings.work_end_time;
+      }
+    }
+
+    const [endHour, endMin, endSec] = workEndTime.split(':').map(Number);
+    const workEndTimestamp = new Date(checkOutDateObj);
+    workEndTimestamp.setHours(endHour, endMin, endSec || 0, 0);
+
+    const diffLateHours = (checkOutDateObj.getTime() - workEndTimestamp.getTime()) / (1000 * 3600);
+    const MAX_LATE_HOURS = 4;
+
+    if (diffLateHours > MAX_LATE_HOURS && !payload.is_manual_override) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: 'CHECK_OUT_TOO_LATE',
+            message: `Check-out denied: You cannot check out more than ${MAX_LATE_HOURS} hours after your shift ended (${workEndTime}). Please submit a Manual Correction request instead.`,
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 403 }
+      );
+    }
 
     // Update check_out_time (Trigger trg_calculate_attendance_status computes overtime_minutes & half_day)
     const { data: updatedRecord, error: updateErr } = await supabase

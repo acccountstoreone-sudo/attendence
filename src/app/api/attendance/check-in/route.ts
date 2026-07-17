@@ -276,30 +276,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6.5 Early Check-in Blocker
-    const { data: companyProfile } = await supabase.from('company_profile').select('default_work_start_time').single();
+    // 6.5 Shift Timing Check (Early Block & Post-Shift Block)
+    const { data: companyProfile } = await supabase.from('company_profile').select('default_work_start_time, default_work_end_time').single();
     let workStartTime = companyProfile?.default_work_start_time || '09:00:00';
+    let workEndTime = companyProfile?.default_work_end_time || '18:00:00';
     
     if (targetBranchId) {
       const { data: branchSettings } = await supabase
         .from('branch_settings')
-        .select('work_start_time')
+        .select('work_start_time, work_end_time')
         .eq('branch_id', targetBranchId)
         .maybeSingle();
       if (branchSettings && branchSettings.work_start_time) {
         workStartTime = branchSettings.work_start_time;
       }
+      if (branchSettings && branchSettings.work_end_time) {
+        workEndTime = branchSettings.work_end_time;
+      }
     }
 
     const checkInDateObj = payload.is_offline_sync && payload.timestamp ? new Date(payload.timestamp) : new Date();
+    
+    // Parse start time
     const [startHour, startMin, startSec] = workStartTime.split(':').map(Number);
     const workStartTimestamp = new Date(checkInDateObj);
     workStartTimestamp.setHours(startHour, startMin, startSec || 0, 0);
 
-    const diffMinutes = (workStartTimestamp.getTime() - checkInDateObj.getTime()) / 60000;
+    // Parse end time
+    const [endHour, endMin, endSec] = workEndTime.split(':').map(Number);
+    const workEndTimestamp = new Date(checkInDateObj);
+    workEndTimestamp.setHours(endHour, endMin, endSec || 0, 0);
+
+    const diffEarlyMinutes = (workStartTimestamp.getTime() - checkInDateObj.getTime()) / 60000;
     const MAX_EARLY_MINUTES = 120; // 2 hours limit
 
-    if (diffMinutes > MAX_EARLY_MINUTES) {
+    if (diffEarlyMinutes > MAX_EARLY_MINUTES) {
       return NextResponse.json(
         {
           success: false,
@@ -307,6 +318,22 @@ export async function POST(request: NextRequest) {
           error: {
             code: 'CHECK_IN_TOO_EARLY',
             message: `Check-in denied: You cannot check in more than ${MAX_EARLY_MINUTES / 60} hours before your shift starts (${workStartTime}).`,
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 403 }
+      );
+    }
+
+    // Post-Shift Block: If checking in after the shift has ended
+    if (checkInDateObj.getTime() > workEndTimestamp.getTime() && !payload.is_manual_override) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            code: 'CHECK_IN_TOO_LATE',
+            message: `Check-in denied: Your shift for today has already ended at ${workEndTime}.`,
           },
           timestamp: new Date().toISOString(),
         },
