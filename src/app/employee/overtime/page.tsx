@@ -10,7 +10,6 @@ import { createClient } from '@/lib/supabase/client';
 
 interface OvertimeRecord {
   id: string;
-  date: string;
   check_in_time?: string;
   check_out_time?: string;
   overtime_minutes?: number;
@@ -48,10 +47,10 @@ export default function EmployeeOvertimePage() {
 
       const { data, error: fetchErr } = await supabase
         .from('attendance_records')
-        .select('id, date, check_in_time, check_out_time, overtime_minutes, approved_overtime_minutes, overtime_approval_status, is_holiday_duty')
+        .select('id, check_in_time, check_out_time, overtime_minutes, approved_overtime_minutes, overtime_approval_status, is_holiday_duty')
         .eq('employee_id', userData.user.id)
         .or('overtime_minutes.gt.0,approved_overtime_minutes.gt.0,is_holiday_duty.eq.true')
-        .order('date', { ascending: false });
+        .order('check_in_time', { ascending: false });
 
       if (fetchErr) throw new Error(fetchErr.message);
 
@@ -180,7 +179,7 @@ export default function EmployeeOvertimePage() {
 
                 return (
                   <tr key={r.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4 font-medium text-slate-900">{r.date}</td>
+                    <td className="py-4 font-medium text-slate-900">{r.check_in_time ? new Date(r.check_in_time).toLocaleDateString() : 'N/A'}</td>
                     <td className="py-4 text-slate-600">{formatTime(r.check_in_time)}</td>
                     <td className="py-4 text-slate-600">{formatTime(r.check_out_time)}</td>
                     <td className="py-4 font-medium text-indigo-600">{formatMinutes(logged)}</td>

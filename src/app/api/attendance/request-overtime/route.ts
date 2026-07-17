@@ -57,7 +57,6 @@ export async function POST(request: NextRequest) {
       .insert({
         employee_id: user.id,
         branch_id: user.branch_id,
-        date: payload.date,
         check_in_time: checkInISO,
         check_out_time: checkOutISO,
         status: 'present', // or pending
