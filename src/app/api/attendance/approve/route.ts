@@ -84,12 +84,16 @@ export async function GET(request: NextRequest) {
     // Status / Overtime filter
     if (searchParams.get('type') === 'overtime') {
       query = query.or('overtime_minutes.gt.0,is_holiday_duty.eq.true');
-      if (statusFilter !== 'all') {
-        if (statusFilter === 'pending') {
-          query = query.or('overtime_approval_status.eq.pending,overtime_approval_status.is.null,and(is_holiday_duty.eq.true,overtime_approval_status.eq.auto)');
-        } else {
-          query = query.eq('overtime_approval_status', statusFilter);
-        }
+      
+      if (statusFilter === 'pending') {
+        // Pending if not manually verified AND (is holiday duty OR explicitly pending)
+        query = query.or('and(is_holiday_duty.eq.true,approved_overtime_minutes.is.null),and(overtime_approval_status.eq.pending,approved_overtime_minutes.is.null),and(overtime_approval_status.is.null,approved_overtime_minutes.is.null)');
+      } else if (statusFilter === 'approved') {
+        // Approved if manually verified with >0 mins OR (auto-approved by branch settings and not holiday duty)
+        query = query.or('approved_overtime_minutes.gt.0,and(overtime_approval_status.eq.approved,approved_overtime_minutes.is.null,is_holiday_duty.eq.false)');
+      } else if (statusFilter === 'rejected') {
+        // Rejected if manually verified with 0 mins OR (explicitly rejected and not holiday duty)
+        query = query.or('approved_overtime_minutes.eq.0,and(overtime_approval_status.eq.rejected,approved_overtime_minutes.is.null,is_holiday_duty.eq.false)');
       }
     } else if (statusFilter !== 'all') {
       query = query.eq('approval_status', statusFilter);
