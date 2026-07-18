@@ -33,7 +33,6 @@ const nextConfig: import('next').NextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   compress: true,
-  turbopack: {},
 };
 
 export default withPWA(nextConfig);
