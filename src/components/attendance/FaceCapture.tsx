@@ -133,8 +133,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         try {
           const fa = await import('@vladmandic/face-api');
           // Force WebGL backend for 10x-100x performance on mobile devices.
-          try { await fa.tf.setBackend('webgl'); } catch (e) {
-             try { await fa.tf.setBackend('cpu'); } catch (err) {}
+          try { await (fa.tf as any).setBackend('webgl'); } catch (e) {
+             try { await (fa.tf as any).setBackend('cpu'); } catch (err) {}
           }
           await Promise.all([
             fa.nets.tinyFaceDetector.loadFromUri('/models'),
