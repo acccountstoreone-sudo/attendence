@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Fingerprint, Activity, 
   ChevronRight, Lock, Sparkles, Globe,
   WifiOff, Calculator, ClipboardCheck, Building2, BarChart3, Users,
-  MonitorSmartphone
+  MonitorSmartphone, Download
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -55,6 +55,36 @@ export default function LandingPageContent({ isAuthenticated, role }: LandingPag
     if (role === 'admin') router.push('/admin');
     else if (role === 'branch_manager') router.push('/branch-manager');
     else router.push('/employee');
+  };
+
+  const handleAppDownload = async () => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+
+    if (isStandalone) {
+      alert("You are already using the installed App!");
+      return;
+    }
+
+    if (isIOS) {
+      alert("To install on iOS: Tap the Share button at the bottom of Safari and select 'Add to Home Screen'.");
+      return;
+    }
+
+    const promptEvent = (window as any).pwaInstallPrompt;
+    if (promptEvent) {
+      try {
+        await promptEvent.prompt();
+        const { outcome } = await promptEvent.userChoice;
+        if (outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+        }
+      } catch (err) {
+        console.error("Install prompt failed", err);
+      }
+    } else {
+      alert("App installation is not available right now. It might already be installed, or your browser may not support it.");
+    }
   };
 
   return (
@@ -485,6 +515,35 @@ export default function LandingPageContent({ isAuthenticated, role }: LandingPag
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* --- APP DOWNLOAD --- */}
+      <section className="relative z-10 py-32 px-6 border-t border-slate-200 bg-gradient-to-br from-[#1dbf73]/5 to-indigo-500/5">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 0.8, ease: customEase }}
+            className="flex flex-col items-center"
+          >
+            <div className="w-20 h-20 rounded-3xl bg-white shadow-xl shadow-slate-200/50 flex items-center justify-center mb-8 border border-slate-200">
+              <Download className="w-10 h-10 text-[#1dbf73]" />
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 mb-6">Take Anchor Fashion Everywhere.</h2>
+            <p className="text-lg text-slate-600 font-medium max-w-2xl mx-auto mb-10">
+              Install the Progressive Web App directly to your device for instant offline access, facial biometrics, and background geo-fencing.
+            </p>
+            <button 
+              onClick={handleAppDownload}
+              className="group relative px-8 py-4 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg shadow-lg shadow-slate-900/20 transition-all flex items-center gap-3 overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              <Download className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
+              <span>Download App Now</span>
+            </button>
+          </motion.div>
         </div>
       </section>
 
