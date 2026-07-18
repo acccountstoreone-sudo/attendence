@@ -55,7 +55,7 @@ export function PwaInstallPrompt() {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
       setDeferredPrompt(promptEvent);
-      (window as any).pwaInstallPrompt = promptEvent;
+      (window as Window & { pwaInstallPrompt?: BeforeInstallPromptEvent }).pwaInstallPrompt = promptEvent;
       setShowPrompt(true);
     };
 

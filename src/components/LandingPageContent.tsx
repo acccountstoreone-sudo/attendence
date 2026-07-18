@@ -58,8 +58,8 @@ export default function LandingPageContent({ isAuthenticated, role }: LandingPag
   };
 
   const handleAppDownload = async () => {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as Window & { MSStream?: unknown }).MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as Navigator & { standalone?: boolean }).standalone;
 
     if (isStandalone) {
       alert("You are already using the installed App!");
@@ -71,7 +71,7 @@ export default function LandingPageContent({ isAuthenticated, role }: LandingPag
       return;
     }
 
-    const promptEvent = (window as any).pwaInstallPrompt;
+    const promptEvent = (window as Window & { pwaInstallPrompt?: { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> } }).pwaInstallPrompt;
     if (promptEvent) {
       try {
         await promptEvent.prompt();
