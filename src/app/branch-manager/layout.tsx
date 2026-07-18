@@ -71,8 +71,8 @@ export default function BranchManagerLayout({ children }: { children: React.Reac
 
   return (
     <div className="min-h-screen bg-white flex" suppressHydrationWarning>
-      {/* Sidebar hidden on mobile for branch manager */}
-      <div className="hidden md:block">
+      {/* Sidebar hidden logic is now handled internally by Sidebar component */}
+      <div>
         <Sidebar
           role="branch_manager"
           isCollapsed={isCollapsed}

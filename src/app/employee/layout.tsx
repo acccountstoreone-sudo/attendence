@@ -76,8 +76,8 @@ export default function EmployeeLayout({ children }: { children: React.ReactNode
 
   return (
     <div className="min-h-screen bg-white flex" suppressHydrationWarning>
-      {/* Sidebar hidden on mobile for employees */}
-      <div className="hidden md:block">
+      {/* Sidebar hidden logic is now handled internally by Sidebar component */}
+      <div>
         <Sidebar
           role="employee"
           isCollapsed={isCollapsed}

@@ -106,6 +106,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const navItems = role === 'admin' ? adminNav : role === 'branch_manager' ? bmNav : empNav;
 
+  const bottomNavHrefs = role === 'branch_manager' 
+    ? ['/branch-manager', '/branch-manager/employees', '/branch-manager/attendance', '/branch-manager/shifts', '/branch-manager/gate-passes', '/branch-manager/corrections']
+    : role === 'employee' 
+      ? ['/employee', '/employee/check-in', '/employee/history', '/employee/gate-pass', '/employee/profile']
+      : [];
+
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white/95 backdrop-blur-sm border-r border-slate-200 text-slate-800 select-none shadow-sm">
       {/* Brand Header */}
@@ -147,6 +153,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           const isActive = isRoot 
             ? pathname === item.href 
             : (pathname === item.href || pathname.startsWith(`${item.href}/`));
+          
+          const inBottomNav = bottomNavHrefs.includes(item.href);
 
           return (
             <Link
@@ -154,10 +162,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               href={item.href}
               onClick={() => onCloseMobile()}
               className={cn(
-                'relative flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-300 group outline-none',
+                'relative items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-300 group outline-none',
                 isActive
                   ? 'text-[#1dbf73] font-bold'
-                  : 'text-slate-900 hover:text-slate-900 hover:bg-slate-100'
+                  : 'text-slate-900 hover:text-slate-900 hover:bg-slate-100',
+                inBottomNav ? 'hidden md:flex' : 'flex'
               )}
             >
               {isActive && (

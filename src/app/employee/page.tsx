@@ -14,9 +14,9 @@ export default function EmployeeDashboardPage() {
   const supabase = useMemo(() => createClient(), []);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<{ full_name: string; branch_name: string; photo_url?: string; whatsapp_number?: string; phone?: string } | null>(null);
-  const [todayRecord, setTodayRecord] = useState<{ check_in_time?: string; check_out_time?: string; status?: string; approval_status?: string; overtime_minutes?: number } | null>(null);
-  // B6 fix: Store categorized leave balances
+  const [todayRecord, setTodayRecord] = useState<{ check_in_time?: string; check_out_time?: string; status?: string; approval_status?: string; overtime_minutes?: number; is_holiday_duty?: boolean } | null>(null);
   const [leaveBalances, setLeaveBalances] = useState<{ type: string; available: number; total: number }[]>([]);
+  const [liveOvertimeMinutes, setLiveOvertimeMinutes] = useState(0);
 
   useEffect(() => {
     async function init() {
@@ -39,7 +39,6 @@ export default function EmployeeDashboardPage() {
         });
       }
 
-      // B5 fix: /api/attendance/today returns an object, not an array
       try {
         const res = await fetch('/api/attendance/today');
         if (res.ok) {
@@ -52,7 +51,6 @@ export default function EmployeeDashboardPage() {
         // Non-critical: dashboard still renders without today's status
       }
 
-      // B6 fix: Fetch real leave balance for current year grouped by type
       const currentYear = new Date().getFullYear();
       const { data: balances } = await supabase
         .from('leave_balances')
@@ -75,6 +73,50 @@ export default function EmployeeDashboardPage() {
     }
     init();
   }, [supabase]);
+
+  // Live Overtime Counter Effect
+  useEffect(() => {
+    if (!todayRecord || !todayRecord.check_in_time || todayRecord.check_out_time) {
+      setLiveOvertimeMinutes(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      let otMinutes = 0;
+
+      if (todayRecord.is_holiday_duty) {
+        // Entire shift is overtime
+        const checkInTime = new Date(todayRecord.check_in_time!);
+        otMinutes = Math.floor((now.getTime() - checkInTime.getTime()) / 60000);
+      } else {
+        // Calculate based on default 18:00:00 end time (can be fetched dynamically if needed)
+        const checkInDate = new Date(todayRecord.check_in_time!);
+        const shiftEnd = new Date(checkInDate);
+        shiftEnd.setHours(18, 0, 0, 0); // 6:00 PM Default end time
+
+        if (now > shiftEnd) {
+          otMinutes = Math.floor((now.getTime() - shiftEnd.getTime()) / 60000);
+        }
+      }
+
+      setLiveOvertimeMinutes(otMinutes > 0 ? otMinutes : 0);
+    }, 60000); // update every minute
+
+    // Initial calculation
+    const now = new Date();
+    let initialOt = 0;
+    if (todayRecord.is_holiday_duty) {
+      initialOt = Math.floor((now.getTime() - new Date(todayRecord.check_in_time!).getTime()) / 60000);
+    } else {
+      const shiftEnd = new Date(todayRecord.check_in_time!);
+      shiftEnd.setHours(18, 0, 0, 0);
+      if (now > shiftEnd) initialOt = Math.floor((now.getTime() - shiftEnd.getTime()) / 60000);
+    }
+    setLiveOvertimeMinutes(initialOt > 0 ? initialOt : 0);
+
+    return () => clearInterval(interval);
+  }, [todayRecord]);
 
   if (loading) {
     return (
@@ -182,13 +224,25 @@ export default function EmployeeDashboardPage() {
                 </p>
               </div>
 
-              {todayRecord?.overtime_minutes && todayRecord.overtime_minutes > 0 ? (
+              {(todayRecord?.overtime_minutes && todayRecord.overtime_minutes > 0) || liveOvertimeMinutes > 0 ? (
                 <div className="col-span-2 bg-amber-50 p-3 rounded-2xl border border-amber-200 shadow-sm">
-                  <p className="text-xs font-bold uppercase text-amber-800 tracking-wider mb-0.5">Overtime</p>
+                  <div className="flex items-center justify-center gap-2 mb-0.5">
+                    <p className="text-xs font-bold uppercase text-amber-800 tracking-wider">Overtime</p>
+                    {(!todayRecord?.check_out_time && liveOvertimeMinutes > 0) && (
+                      <span className="flex h-2 w-2 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-600"></span>
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xl font-extrabold text-amber-700">
-                    {Math.floor(todayRecord.overtime_minutes / 60) > 0
-                      ? `${Math.floor(todayRecord.overtime_minutes / 60)}h ${todayRecord.overtime_minutes % 60}m`
-                      : `${todayRecord.overtime_minutes}m`}
+                    {todayRecord?.check_out_time && todayRecord.overtime_minutes 
+                      ? (Math.floor(todayRecord.overtime_minutes / 60) > 0
+                        ? `${Math.floor(todayRecord.overtime_minutes / 60)}h ${todayRecord.overtime_minutes % 60}m`
+                        : `${todayRecord.overtime_minutes}m`)
+                      : (Math.floor(liveOvertimeMinutes / 60) > 0
+                        ? `${Math.floor(liveOvertimeMinutes / 60)}h ${liveOvertimeMinutes % 60}m (Live)`
+                        : `${liveOvertimeMinutes}m (Live)`)}
                   </p>
                 </div>
               ) : null}

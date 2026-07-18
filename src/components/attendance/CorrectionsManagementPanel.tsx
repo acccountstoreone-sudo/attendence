@@ -58,7 +58,7 @@ interface CorrectionsManagementPanelProps {
 }
 
 export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProps> = ({ role }) => {
-  const [categoryTab, setCategoryTab] = useState<'checkins' | 'corrections' | 'overtime'>('checkins');
+  const [categoryTab, setCategoryTab] = useState<'checkins' | 'corrections' | 'overtime' | 'offday'>('checkins');
   const [statusTab, setStatusTab] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -79,22 +79,26 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
   const [modalAction, setModalAction] = useState<'approve' | 'reject'>('approve');
   const [reviewerNote, setReviewerNote] = useState('');
 
+  const [offDayRequests, setOffDayRequests] = useState<any[]>([]);
+  const [offDayModalReq, setOffDayModalReq] = useState<any | null>(null);
+
   const fetchAllData = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const statusParam = statusTab === 'all' ? 'all' : statusTab;
       
-      // Fetch check-in approvals, correction requests, and overtime verification list simultaneously
-      const [corrRes, checkinRes, overtimeRes] = await Promise.all([
+      const [corrRes, checkinRes, overtimeRes, offDayRes] = await Promise.all([
         fetch(`/api/corrections/list?status=${statusParam}`),
         fetch(`/api/attendance/approve?status=${statusParam}&date=all`),
-        fetch(`/api/attendance/approve?status=${statusParam}&date=all&type=overtime`)
+        fetch(`/api/attendance/approve?status=${statusParam}&date=all&type=overtime`),
+        fetch(`/api/attendance/off-day-requests?status=${statusParam}`)
       ]);
 
       const corrData = await corrRes.json();
       const checkinData = await checkinRes.json();
       const overtimeData = await overtimeRes.json();
+      const offDayData = await offDayRes.json();
 
       if (!corrRes.ok || !corrData.success) {
         throw new Error(corrData.error?.message || corrData.error || 'Failed to fetch correction requests');
@@ -106,6 +110,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
       setCorrections(corrData.data || []);
       setCheckins(checkinData.data || []);
       setOvertimes(overtimeData.data || []);
+      setOffDayRequests(offDayData.data || []);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred fetching records.');
     } finally {
@@ -144,6 +149,28 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
   };
 
   // Action for live attendance check-in approval
+  const handleOffDayAction = async (id: string, action: 'approve' | 'reject', note?: string) => {
+    setActingId(id);
+    try {
+      const res = await fetch('/api/attendance/off-day-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId: id, status: action, reviewer_note: note }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || data.error || `Failed to ${action} off-day request`);
+      }
+      setFeedback({ type: 'success', text: `Off-day request successfully ${action}d.` });
+      setOffDayModalReq(null);
+      fetchAllData();
+    } catch (err: unknown) {
+      setFeedback({ type: 'error', text: err instanceof Error ? err.message : `Error acting on request` });
+    } finally {
+      setActingId(null);
+    }
+  };
+
   const handleCheckinAction = async (id: string, action: 'approve' | 'reject', note?: string) => {
     setActingId(id);
     try {
@@ -243,6 +270,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
   const checkinsPendingCount = checkins.filter(c => c.approval_status === 'pending').length;
   const correctionsPendingCount = corrections.filter(c => c.status === 'pending').length;
   const overtimesPendingCount = overtimes.filter(c => !c.overtime_approval_status || c.overtime_approval_status === 'pending').length;
+  const offDayPendingCount = offDayRequests.filter(c => c.status === 'pending').length;
 
   return (
     <div className="space-y-6">
@@ -263,8 +291,8 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
         </Button>
       </div>
 
-      {/* Category Tabs (Check-ins vs Corrections vs Overtime) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Category Tabs (Check-ins vs Corrections vs Overtime vs Off-Day) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <button
           onClick={() => setCategoryTab('checkins')}
           className={`p-5 rounded-2xl border transition-all text-left flex items-center justify-between ${
@@ -345,6 +373,34 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
           {overtimesPendingCount > 0 && (
             <span className="px-3 py-1 bg-amber-500 text-amber-950 text-xs font-extrabold rounded-full shrink-0 animate-pulse">
               {overtimesPendingCount} Pending
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setCategoryTab('offday')}
+          className={`p-5 rounded-2xl border transition-all text-left flex items-center justify-between ${
+            categoryTab === 'offday'
+              ? 'bg-[#1dbf73]/10 border-[#1dbf73] shadow-lg shadow-emerald-500/10 ring-2 ring-[#1dbf73]/20'
+              : 'bg-white border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <div className="flex items-center gap-3.5">
+            <div className={`p-3 rounded-xl ${categoryTab === 'offday' ? 'bg-[#1dbf73] text-white' : 'bg-slate-100 text-slate-900'}`}>
+              <Calendar className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                Off-Day Requests
+              </h3>
+              <p className="text-xs text-slate-900 mt-0.5">
+                Advance overtime requests
+              </p>
+            </div>
+          </div>
+          {offDayPendingCount > 0 && (
+            <span className="px-3 py-1 bg-amber-500 text-amber-950 text-xs font-extrabold rounded-full shrink-0 animate-pulse">
+              {offDayPendingCount} Pending
             </span>
           )}
         </button>

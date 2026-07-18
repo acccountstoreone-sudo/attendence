@@ -341,6 +341,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 6.6 Off-Day Block Check
+    // Friday (5) is the weekly off day. 
+    // Check if there is an approved off-day request for today.
+    let isHolidayDuty = false;
+    if (checkInDateObj.getDay() === 5) {
+      const requestDateStr = `${year}-${month}-${day}`;
+      const { data: offDayReq, error: offDayErr } = await supabase
+        .from('off_day_overtime_requests')
+        .select('status')
+        .eq('employee_id', user.id)
+        .eq('requested_date', requestDateStr)
+        .eq('status', 'approved')
+        .maybeSingle();
+
+      if (offDayErr || !offDayReq) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: 'OFF_DAY_CHECKIN_DENIED',
+              message: 'Check-in denied: Today is an off-day (Friday). You must request off-day overtime and have it approved by a manager before checking in.',
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
+      isHolidayDuty = true;
+    }
+
     // 7. Insert Attendance Record (Database Trigger calculate_attendance_status computes punctuality)
     // Bug 6 fix: For offline sync, validate that the provided timestamp falls within today (Asia/Dhaka)
     // to prevent backdated cross-day check-ins from bypassing the duplicate-guard above.
@@ -384,6 +415,7 @@ export async function POST(request: NextRequest) {
         face_verified: payload.face_verified,
         status: 'present', // Will be evaluated/overridden by trigger trg_calculate_attendance_status
         is_manual_override: !geo.within || Boolean(payload.is_manual_override),
+        is_holiday_duty: isHolidayDuty,
         approval_status: 'pending', // Requires Branch Manager approval before counting
       })
       .select()
