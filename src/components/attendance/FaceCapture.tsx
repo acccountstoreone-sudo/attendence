@@ -132,6 +132,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       globalLoadPromise = (async () => {
         try {
           const fa = await import('@vladmandic/face-api');
+          // Force WebGL backend for 10x-100x performance on mobile devices.
+          try { await fa.tf.setBackend('webgl'); } catch (e) {
+             try { await fa.tf.setBackend('cpu'); } catch (err) {}
+          }
           await Promise.all([
             fa.nets.tinyFaceDetector.loadFromUri('/models'),
             fa.nets.faceLandmark68TinyNet.loadFromUri('/models'),
@@ -186,7 +190,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
       try {
         const det = await fa
-          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.55 }));
+          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.55 }));
 
         if (!det) {
           if (mountedRef.current) {
@@ -250,7 +254,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       await new Promise<void>(r => { img.onload = () => r(); });
 
       const allFaces = await fa
-        .detectAllFaces(img, new fa.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.4 }))
+        .detectAllFaces(img, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.4 }))
         .withFaceLandmarks(true)
         .withFaceDescriptors();
 
