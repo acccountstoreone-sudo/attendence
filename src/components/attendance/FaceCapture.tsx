@@ -134,7 +134,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           const fa = await import('@vladmandic/face-api');
           await Promise.all([
             fa.nets.tinyFaceDetector.loadFromUri('/models'),
-            fa.nets.faceLandmark68Net.loadFromUri('/models'),
+            fa.nets.faceLandmark68TinyNet.loadFromUri('/models'),
             fa.nets.faceRecognitionNet.loadFromUri('/models'),
           ]);
           globalFa = fa;
@@ -250,8 +250,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       await new Promise<void>(r => { img.onload = () => r(); });
 
       const allFaces = await fa
-        .detectAllFaces(img, new fa.TinyFaceDetectorOptions({ scoreThreshold: 0.4 }))
-        .withFaceLandmarks()
+        .detectAllFaces(img, new fa.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.4 }))
+        .withFaceLandmarks(true)
         .withFaceDescriptors();
 
       if (!allFaces || allFaces.length === 0) {

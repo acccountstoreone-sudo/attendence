@@ -59,7 +59,7 @@ export function FaceRegister() {
       if (!res.ok) throw new Error(data.error?.message || data.error || 'Failed to enroll face.');
       setSuccess(true);
       setIsEnrolled(true);
-      setShowModal(false);
+      setTimeout(() => setShowModal(false), 2500);
     } catch (err: unknown) {
       console.error(err);
       if (err instanceof Error) {
