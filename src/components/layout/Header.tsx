@@ -50,14 +50,13 @@ export const Header: React.FC<HeaderProps> = ({ user, onOpenMobileSidebar }) => 
     <header className="h-20 bg-white/90 backdrop-blur-sm border-b border-slate-200 px-4 md:px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm">
       {/* Left side: Mobile menu & Branch badge */}
       <div className="flex items-center space-x-3">
-        {user.role === 'admin' && (
-          <button
-            onClick={onOpenMobileSidebar}
-            className="md:hidden p-2 rounded-xl text-slate-900 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-        )}
+        {/* Mobile menu button available for all roles */}
+        <button
+          onClick={onOpenMobileSidebar}
+          className="md:hidden p-2 rounded-xl text-slate-900 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
 
         <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm">
           <Store className="w-4 h-4 text-[#1dbf73] shrink-0" />

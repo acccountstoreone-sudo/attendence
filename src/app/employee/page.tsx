@@ -183,9 +183,9 @@ export default function EmployeeDashboardPage() {
               </div>
 
               {todayRecord?.overtime_minutes && todayRecord.overtime_minutes > 0 ? (
-                <div className="col-span-2 bg-amber-950/30 p-3 rounded-2xl border border-amber-800/30">
-                  <p className="text-xs font-bold uppercase text-amber-400/70 mb-0.5">Overtime</p>
-                  <p className="text-lg font-extrabold text-amber-400">
+                <div className="col-span-2 bg-amber-50 p-3 rounded-2xl border border-amber-200 shadow-sm">
+                  <p className="text-xs font-bold uppercase text-amber-800 tracking-wider mb-0.5">Overtime</p>
+                  <p className="text-xl font-extrabold text-amber-700">
                     {Math.floor(todayRecord.overtime_minutes / 60) > 0
                       ? `${Math.floor(todayRecord.overtime_minutes / 60)}h ${todayRecord.overtime_minutes % 60}m`
                       : `${todayRecord.overtime_minutes}m`}
