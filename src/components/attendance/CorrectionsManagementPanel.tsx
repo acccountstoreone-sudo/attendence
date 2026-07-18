@@ -744,7 +744,16 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
           <div className="grid grid-cols-1 gap-4">
             <AnimatePresence>
               {filteredOvertimes.map((c) => {
-                const otStatus = c.overtime_approval_status || 'pending';
+                let otStatus = c.overtime_approval_status || 'pending';
+                
+                // Determine true approval status to bypass DB trigger overwrites
+                if (c.approved_overtime_minutes !== null && c.approved_overtime_minutes !== undefined) {
+                  const requestedMins = c.overtime_minutes || 0;
+                  otStatus = (c.approved_overtime_minutes === 0 && requestedMins > 0) ? 'rejected' : 'approved';
+                } else if (c.is_holiday_duty) {
+                  otStatus = 'pending';
+                }
+
                 const isPending = otStatus === 'pending';
                 const isApproved = otStatus === 'approved';
                 const checkInDate = c.check_in_time ? new Date(c.check_in_time).toLocaleDateString('en-US', { timeZone: 'Asia/Dhaka', month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';

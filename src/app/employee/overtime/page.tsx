@@ -184,9 +184,25 @@ export default function EmployeeOvertimePage() {
             <tbody>
               {records.map((r) => {
                 const logged = r.overtime_minutes || 0;
+                
+                // Determine true approval status
+                // The database trigger incorrectly overwrites overtime_approval_status on every update.
+                let trueStatus = r.overtime_approval_status || 'auto';
+                if (r.approved_overtime_minutes !== null && r.approved_overtime_minutes !== undefined) {
+                  // A manager has taken action
+                  if (r.approved_overtime_minutes === 0 && logged > 0) {
+                    trueStatus = 'rejected';
+                  } else {
+                    trueStatus = 'approved';
+                  }
+                } else if (r.is_holiday_duty) {
+                  // Unactioned holiday duty
+                  trueStatus = 'pending';
+                }
+                
                 const approved = r.approved_overtime_minutes !== null && r.approved_overtime_minutes !== undefined 
                   ? r.approved_overtime_minutes 
-                  : (r.overtime_approval_status === 'rejected' ? 0 : logged);
+                  : (trueStatus === 'rejected' ? 0 : (trueStatus === 'pending' ? 0 : logged));
 
                 return (
                   <tr key={r.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
@@ -196,8 +212,8 @@ export default function EmployeeOvertimePage() {
                     <td className="py-4 font-medium text-indigo-600">{formatMinutes(logged)}</td>
                     <td className="py-4 font-medium text-emerald-600">{formatMinutes(approved)}</td>
                     <td className="py-4">
-                      <Badge className={getStatusColor(r.overtime_approval_status || 'auto')}>
-                        {(r.overtime_approval_status || 'auto').toUpperCase()}
+                      <Badge className={getStatusColor(trueStatus)}>
+                        {trueStatus.toUpperCase()}
                       </Badge>
                     </td>
                     <td className="py-4">
