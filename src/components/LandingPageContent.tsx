@@ -1,16 +1,17 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { 
-  ScanFace, MapPin, ShieldCheck, ArrowRight, LogIn, 
-  LayoutDashboard, Fingerprint, Activity, Smartphone, 
+  ScanFace, MapPin, ShieldCheck, ArrowRight, 
+  LayoutDashboard, Fingerprint, Activity, 
   ChevronRight, Lock, Sparkles, Globe,
   WifiOff, Calculator, ClipboardCheck, Building2, BarChart3, Users,
-  MonitorSmartphone, ChevronLeft, MessageCircleQuestion
+  MonitorSmartphone
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface LandingPageContentProps {
   isAuthenticated: boolean;
@@ -57,7 +58,7 @@ export default function LandingPageContent({ isAuthenticated, role }: LandingPag
   };
 
   return (
-    <main ref={containerRef} className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden selection:bg-[#1dbf73]/30 selection:text-[#1dbf73]">
+    <main ref={containerRef} className="min-h-screen bg-slate-50 text-slate-900 overflow-x-hidden selection:bg-[#1dbf73]/30 selection:text-[#1dbf73]">
       
       {/* --- AMBIENT BACKGROUND GLOWS --- */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center bg-white/40">
@@ -82,10 +83,7 @@ export default function LandingPageContent({ isAuthenticated, role }: LandingPag
             transition={{ duration: 0.8, ease: customEase }}
             className="flex items-center gap-2 select-none cursor-pointer"
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1dbf73] to-emerald-600 flex items-center justify-center shadow-lg shadow-[#1dbf73]/30">
-              <ShieldCheck className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900">Anchor<span className="text-slate-500 font-medium">Fashion</span></span>
+            <Image src="/logo.png" alt="Anchor Fashion Logo" width={140} height={40} className="object-contain" priority />
           </motion.div>
 
           <motion.div
@@ -121,10 +119,25 @@ export default function LandingPageContent({ isAuthenticated, role }: LandingPag
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.2, ease: customEase }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-slate-600 text-xs font-semibold uppercase tracking-widest mb-8 backdrop-blur-md"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-slate-600 text-xs font-semibold uppercase tracking-widest mb-0 backdrop-blur-md relative z-20"
         >
           <Sparkles className="w-4 h-4 text-[#1dbf73]" />
           <span>Next-Gen Workforce Security</span>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.2, ease: customEase }}
+          className="mt-[-5px] mb-[-15px] md:mt-[-10px] md:mb-[-25px] relative w-[320px] h-[80px] md:w-[600px] md:h-[150px] z-10"
+        >
+          <Image 
+            src="/logo.png" 
+            alt="Anchor Fashion Logo" 
+            fill
+            className="object-contain drop-shadow-2xl"
+            priority 
+          />
         </motion.div>
 
         <motion.h1 

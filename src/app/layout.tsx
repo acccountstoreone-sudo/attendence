@@ -1,19 +1,14 @@
 import type { Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 import type { Metadata } from "next";
 import { PwaInstallPrompt } from "@/components/pwa/PwaInstallPrompt";
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-outfit",
+});
 
 export const viewport: Viewport = {
   themeColor: "#1dbf73",
@@ -46,10 +41,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${outfit.variable} h-full antialiased`}
       suppressHydrationWarning={true}
     >
-      <body className="min-h-full flex flex-col" suppressHydrationWarning={true}>
+      <body className={`min-h-full flex flex-col ${outfit.className}`} suppressHydrationWarning={true}>
         {children}
         <PwaInstallPrompt />
       </body>

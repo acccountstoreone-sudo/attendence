@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Lock, Mail, Eye, EyeOff, AlertTriangle, Check, ShieldCheck, ScanFace, MapPin, Orbit, KeyRound, RefreshCw, X, Sparkles } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 
 const Abstract3DBackground = dynamic(() => import('@/components/Abstract3DBackground'), {
   ssr: false,
@@ -231,13 +232,14 @@ function LoginPageContent() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="relative z-10 flex flex-col items-start select-none w-full"
         >
-           <div className="text-4xl md:text-5xl font-serif tracking-widest flex items-baseline">
-             <span className="text-[#1dbf73] font-bold text-5xl md:text-6xl mr-1">A</span>
-              <span className="text-slate-700 font-semibold">NCHOR</span>
-           </div>
-           <div className="text-slate-500 tracking-[0.6em] text-[10px] md:text-xs font-light uppercase flex items-center gap-3 opacity-70 mt-1 ml-1">
-              FASHION
-           </div>
+           <Image 
+             src="/logo.png" 
+             alt="Anchor Fashion Logo" 
+             width={320} 
+             height={80} 
+             className="object-contain"
+             priority 
+           />
         </motion.div>
 
         {/* CENTER: CORE TECHNOLOGY (Face & GPS) */}
