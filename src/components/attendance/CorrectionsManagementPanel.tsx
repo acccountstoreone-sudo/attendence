@@ -825,65 +825,74 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                         </div>
 
                         {/* Middle: Overtime minutes badge */}
-                        <div className="bg-white/90 border border-slate-200/80 rounded-xl p-4 flex items-center justify-between gap-6 shrink-0 min-w-[220px]">
-                          <div className="text-center">
-                            <p className="text-[10px] text-slate-900 uppercase tracking-wider font-semibold">Logged OT</p>
-                            <p className="text-lg font-bold text-amber-600 mt-1 font-mono">
-                              {c.overtime_minutes || 0} <span className="text-xs font-normal text-slate-500">mins</span>
-                            </p>
-                          </div>
-                          <ArrowRight className="w-5 h-5 text-[#1dbf73] shrink-0" />
-                          <div className="text-center">
-                            <p className="text-[10px] text-[#1dbf73] uppercase tracking-wider font-bold">Approved OT</p>
-                            <p className="text-lg font-bold text-emerald-700 mt-1 font-mono bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-500/30">
-                              {c.approved_overtime_minutes !== null && c.approved_overtime_minutes !== undefined ? c.approved_overtime_minutes : (c.overtime_minutes || 0)} <span className="text-xs font-normal text-slate-500">mins</span>
-                            </p>
-                          </div>
-                        </div>
+                        {(() => {
+                          const requestedOvertime = c.is_holiday_duty && c.check_in_time && c.check_out_time
+                            ? Math.floor((new Date(c.check_out_time).getTime() - new Date(c.check_in_time).getTime()) / 60000)
+                            : (c.overtime_minutes || 0);
+                          return (
+                            <React.Fragment>
+                              <div className="bg-white/90 border border-slate-200/80 rounded-xl p-4 flex items-center justify-between gap-6 shrink-0 min-w-[220px]">
+                                <div className="text-center">
+                                  <p className="text-[10px] text-slate-900 uppercase tracking-wider font-semibold">Logged OT</p>
+                                  <p className="text-lg font-bold text-amber-600 mt-1 font-mono">
+                                    {requestedOvertime} <span className="text-xs font-normal text-slate-500">mins</span>
+                                  </p>
+                                </div>
+                                <ArrowRight className="w-5 h-5 text-[#1dbf73] shrink-0" />
+                                <div className="text-center">
+                                  <p className="text-[10px] text-[#1dbf73] uppercase tracking-wider font-bold">Approved OT</p>
+                                  <p className="text-lg font-bold text-emerald-700 mt-1 font-mono bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-500/30">
+                                    {c.approved_overtime_minutes !== null && c.approved_overtime_minutes !== undefined ? c.approved_overtime_minutes : requestedOvertime} <span className="text-xs font-normal text-slate-500">mins</span>
+                                  </p>
+                                </div>
+                              </div>
 
-                        {/* Right: Actions */}
-                        {isPending && (
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => handleOvertimeAction(c.id, 'approved', c.overtime_minutes || 0)}
-                              disabled={actingId === c.id}
-                              className="bg-[#16965a] hover:bg-[#1dbf73] text-white shadow-lg shadow-emerald-950/20 font-bold px-4 py-2.5"
-                            >
-                              <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                              {actingId === c.id ? 'Approving...' : 'Approve Full'}
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => {
-                                setOvertimeModalReq(c);
-                                setApprovedMinutesInput(c.approved_overtime_minutes !== null && c.approved_overtime_minutes !== undefined ? c.approved_overtime_minutes : (c.overtime_minutes || 0));
-                                setModalAction('approve');
-                                setReviewerNote('');
-                              }}
-                              disabled={actingId === c.id}
-                              className="font-bold px-3 py-2.5 text-blue-700 hover:bg-blue-50 border-blue-200"
-                            >
-                              Adjust Mins & Note
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => {
-                                setOvertimeModalReq(c);
-                                setModalAction('reject');
-                                setReviewerNote('');
-                              }}
-                              disabled={actingId === c.id}
-                              className="border-red-500/40 text-red-600 hover:bg-red-500/10 font-bold px-3 py-2.5"
-                            >
-                              <XCircle className="w-4 h-4 mr-1.5" />
-                              Reject
-                            </Button>
-                          </div>
-                        )}
+                              {/* Right: Actions */}
+                              {isPending && (
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <Button
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={() => handleOvertimeAction(c.id, 'approved', requestedOvertime)}
+                                    disabled={actingId === c.id}
+                                    className="bg-[#16965a] hover:bg-[#1dbf73] text-white shadow-lg shadow-emerald-950/20 font-bold px-4 py-2.5"
+                                  >
+                                    <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                                    {actingId === c.id ? 'Approving...' : 'Approve Full'}
+                                  </Button>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => {
+                                      setOvertimeModalReq(c);
+                                      setApprovedMinutesInput(c.approved_overtime_minutes !== null && c.approved_overtime_minutes !== undefined ? c.approved_overtime_minutes : requestedOvertime);
+                                      setModalAction('approve');
+                                      setReviewerNote('');
+                                    }}
+                                    disabled={actingId === c.id}
+                                    className="font-bold px-3 py-2.5 text-blue-700 hover:bg-blue-50 border-blue-200"
+                                  >
+                                    Adjust Mins & Note
+                                  </Button>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => {
+                                      setOvertimeModalReq(c);
+                                      setModalAction('reject');
+                                      setReviewerNote('');
+                                    }}
+                                    disabled={actingId === c.id}
+                                    className="border-red-500/40 text-red-600 hover:bg-red-500/10 font-bold px-3 py-2.5"
+                                  >
+                                    <XCircle className="w-4 h-4 mr-1.5" />
+                                    Reject
+                                  </Button>
+                                </div>
+                              )}
+                            </React.Fragment>
+                          );
+                        })()}
                       </div>
                     </Card>
                   </motion.div>

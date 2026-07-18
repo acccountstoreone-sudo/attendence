@@ -83,10 +83,10 @@ export async function GET(request: NextRequest) {
 
     // Status / Overtime filter
     if (searchParams.get('type') === 'overtime') {
-      query = query.gt('overtime_minutes', 0);
+      query = query.or('overtime_minutes.gt.0,is_holiday_duty.eq.true');
       if (statusFilter !== 'all') {
         if (statusFilter === 'pending') {
-          query = query.or('overtime_approval_status.eq.pending,overtime_approval_status.is.null');
+          query = query.or('overtime_approval_status.eq.pending,overtime_approval_status.is.null,and(is_holiday_duty.eq.true,overtime_approval_status.eq.auto)');
         } else {
           query = query.eq('overtime_approval_status', statusFilter);
         }

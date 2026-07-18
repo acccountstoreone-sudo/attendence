@@ -61,6 +61,10 @@ export async function POST(request: NextRequest) {
         branch_id: user.branch_id,
         check_in_time: checkInISO,
         check_out_time: checkOutISO,
+        check_in_lat: 0,
+        check_in_lng: 0,
+        check_out_lat: 0,
+        check_out_lng: 0,
         status: 'present', // or pending
         is_manual_entry: true,
         is_holiday_duty: true, // Marked explicitly as holiday/off-day duty
