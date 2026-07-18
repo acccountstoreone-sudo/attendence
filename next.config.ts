@@ -16,8 +16,6 @@ const withPWA = (withPWAInit as unknown as (opts: Record<string, unknown>) => (c
       /^\/login/,
       /^\/register/,
       /^\/admin/,
-      /^\/branch-manager/,
-      /^\/employee/,
       /\?.*redirectTo=/,
     ],
   },
