@@ -22,7 +22,6 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Attendance System",
   description: "Secure and modern attendance management platform.",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

@@ -22,7 +22,7 @@ export function PwaInstallPrompt() {
   useEffect(() => {
     // Register Service Worker
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/serviceworker.js').catch((err) => {
+      navigator.serviceWorker.register('/sw.js').catch((err) => {
         console.error('Service Worker registration failed:', err);
       });
     }
