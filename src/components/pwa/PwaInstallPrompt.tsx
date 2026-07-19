@@ -33,13 +33,9 @@ export function PwaInstallPrompt() {
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
-    // Register Service Worker via next-pwa (configured in next.config.ts).
-    // We keep a manual fallback registration here for safety.
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch((err) => {
-        console.error('Service Worker registration failed:', err);
-      });
-    }
+    // Service Worker is registered automatically by next-pwa (configured in next.config.ts).
+    // In development mode (npm run dev), next-pwa disables the service worker, so PWA installation won't work.
+    // Test in production (npm run build && npm run start) or on Vercel.
 
     // --- Bug 4 fix: detect standalone synchronously (no setTimeout), so that
     // the early return path is clean and the cleanup function always runs. ---
@@ -55,10 +51,11 @@ export function PwaInstallPrompt() {
     }
 
     // Check if user dismissed recently (within 3 days)
-    const dismissed = localStorage.getItem('pwa_prompt_dismissed');
-    if (dismissed && Date.now() - Number(dismissed) < 3 * 24 * 60 * 60 * 1000) {
-      return () => {};
-    }
+    // TEMPORARILY DISABLED for testing so the prompt always shows if requirements are met
+    // const dismissed = localStorage.getItem('pwa_prompt_dismissed');
+    // if (dismissed && Date.now() - Number(dismissed) < 3 * 24 * 60 * 60 * 1000) {
+    //   return () => {};
+    // }
 
     // Detect iOS Safari
     const iosDevice =

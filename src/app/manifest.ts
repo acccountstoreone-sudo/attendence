@@ -18,9 +18,9 @@ export default function manifest(): MetadataRoute.Manifest {
     // by using the existing icon-192x192.svg for the 'any' purpose variants.
     icons: [
       {
-        src: '/icon-192x192.svg',
+        src: '/icon512_maskable.png',
         sizes: '192x192',
-        type: 'image/svg+xml',
+        type: 'image/png',
         purpose: 'any',
       },
       {
