@@ -29,8 +29,24 @@ const DB_NAME = 'attendify_offline';
 const STORE_NAME = 'attendance_queue';
 const DB_VERSION = 1;
 
+// ---------------------------------------------------------------------------
+// Bug 6 fix: IDB singleton — reuse one connection instead of opening a new
+// one per operation, which caused connection floods and sporadic
+// "DOMException: The database connection is closing" errors in Chrome.
+// ---------------------------------------------------------------------------
+let _dbInstance: IDBDatabase | null = null;
+let _dbOpenPromise: Promise<IDBDatabase> | null = null;
+
 function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
+  // Bug 8 fix: SSR guard — IndexedDB is not available on the server.
+  if (typeof indexedDB === 'undefined') {
+    return Promise.reject(new Error('IndexedDB is not available in this environment'));
+  }
+
+  if (_dbInstance) return Promise.resolve(_dbInstance);
+  if (_dbOpenPromise) return _dbOpenPromise;
+
+  _dbOpenPromise = new Promise<IDBDatabase>((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = (e) => {
       const db = (e.target as IDBOpenDBRequest).result;
@@ -39,9 +55,23 @@ function openDb(): Promise<IDBDatabase> {
         store.createIndex('synced', 'synced', { unique: false });
       }
     };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onsuccess = () => {
+      _dbInstance = req.result;
+      // If the connection is closed externally (e.g. version change), reset the
+      // singleton so the next call re-opens cleanly.
+      _dbInstance.addEventListener('close', () => {
+        _dbInstance = null;
+        _dbOpenPromise = null;
+      });
+      resolve(_dbInstance);
+    };
+    req.onerror = () => {
+      _dbOpenPromise = null;
+      reject(req.error);
+    };
   });
+
+  return _dbOpenPromise;
 }
 
 async function getAllRecords(): Promise<OfflineRecord[]> {
@@ -78,31 +108,44 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+// ---------------------------------------------------------------------------
+// Bug 7 fix: module-level sync lock prevents concurrent syncs from multiple
+// component instances or rapid re-mounts. Previously each hook instance had
+// its own useRef, so two mounts would both enter syncNow simultaneously and
+// could double-POST the same records.
+// ---------------------------------------------------------------------------
+let _syncInProgress = false;
+
 export function useOfflineQueue() {
   const [isOnline, setIsOnline] = useState<boolean>(
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
   const [pendingCount, setPendingCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
-  const syncRef = useRef(false); // prevent concurrent syncs
+  // Keep a local ref for UI state only (not used for the global lock anymore)
+  const isMounted = useRef(true);
 
   // Track pending unsynced records count
   const refreshCount = useCallback(async () => {
     try {
       const all = await getAllRecords();
-      setPendingCount(all.filter((r) => !r.synced).length);
+      if (isMounted.current) {
+        setPendingCount(all.filter((r) => !r.synced).length);
+      }
     } catch {
       // IndexedDB not available (e.g., server render) — ignore
     }
   }, []);
 
   useEffect(() => {
+    isMounted.current = true;
     const onOnline = () => setIsOnline(true);
     const onOffline = () => setIsOnline(false);
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
     setTimeout(() => refreshCount(), 0);
     return () => {
+      isMounted.current = false;
       window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);
     };
@@ -110,9 +153,10 @@ export function useOfflineQueue() {
 
   // Auto-sync when we come back online
   const syncNow = useCallback(async () => {
-    if (syncRef.current) return;
-    syncRef.current = true;
-    setSyncing(true);
+    // Bug 7 fix: use module-level lock instead of per-instance useRef
+    if (_syncInProgress) return;
+    _syncInProgress = true;
+    if (isMounted.current) setSyncing(true);
 
     try {
       const all = await getAllRecords();
@@ -136,8 +180,8 @@ export function useOfflineQueue() {
         }
       }
     } finally {
-      syncRef.current = false;
-      setSyncing(false);
+      _syncInProgress = false;
+      if (isMounted.current) setSyncing(false);
       refreshCount();
     }
   }, [refreshCount]);
@@ -182,4 +226,3 @@ export function useOfflineQueue() {
     refreshCount,
   };
 }
-

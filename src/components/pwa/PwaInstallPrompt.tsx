@@ -13,6 +13,19 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
+// Extend the Window type once at module level
+type PWAWindow = Window & { pwaInstallPrompt?: BeforeInstallPromptEvent };
+
+/** Clears the cached deferred prompt from window so a stale event is never re-used. */
+function clearWindowPrompt() {
+  delete (window as PWAWindow).pwaInstallPrompt;
+}
+
+/** Suppress the prompt for 3 days. */
+function saveDismissed() {
+  localStorage.setItem('pwa_prompt_dismissed', Date.now().toString());
+}
+
 export function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -20,28 +33,31 @@ export function PwaInstallPrompt() {
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
-    // Register Service Worker
+    // Register Service Worker via next-pwa (configured in next.config.ts).
+    // We keep a manual fallback registration here for safety.
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch((err) => {
         console.error('Service Worker registration failed:', err);
       });
     }
 
-    // Check if already running as an installed PWA
+    // --- Bug 4 fix: detect standalone synchronously (no setTimeout), so that
+    // the early return path is clean and the cleanup function always runs. ---
     const standalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
       document.referrer.includes('android-app://');
 
     if (standalone) {
-      setTimeout(() => setIsStandalone(true), 0);
-      return;
+      setIsStandalone(true);
+      // Still return a no-op cleanup so the effect shape is consistent.
+      return () => {};
     }
 
     // Check if user dismissed recently (within 3 days)
     const dismissed = localStorage.getItem('pwa_prompt_dismissed');
     if (dismissed && Date.now() - Number(dismissed) < 3 * 24 * 60 * 60 * 1000) {
-      return;
+      return () => {};
     }
 
     // Detect iOS Safari
@@ -51,21 +67,23 @@ export function PwaInstallPrompt() {
       !standalone;
 
     if (iosDevice) {
-      setTimeout(() => setIsIOS(true), 0);
-      // Show iOS prompt after a short delay
+      setIsIOS(true);
       const timer = setTimeout(() => setShowPrompt(true), 3000);
       return () => clearTimeout(timer);
     }
 
+    // --- Bug 5 fix: `checkAndSetPrompt` validates the prompt is still usable
+    // before reading from window. A spent prompt (already called .prompt())
+    // is cleared from window so it cannot be re-read on the next mount. ---
     const checkAndSetPrompt = () => {
-      const existingPrompt = (window as Window & { pwaInstallPrompt?: BeforeInstallPromptEvent }).pwaInstallPrompt;
+      const existingPrompt = (window as PWAWindow).pwaInstallPrompt;
       if (existingPrompt) {
         setDeferredPrompt(existingPrompt);
         setShowPrompt(true);
       }
     };
 
-    // Check if it was caught before React mounted
+    // Check if the event was captured before React mounted
     checkAndSetPrompt();
 
     // Listen for the custom event dispatched by our inline script
@@ -75,8 +93,9 @@ export function PwaInstallPrompt() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
+      // Store on window for cross-mount access
+      (window as PWAWindow).pwaInstallPrompt = promptEvent;
       setDeferredPrompt(promptEvent);
-      (window as Window & { pwaInstallPrompt?: BeforeInstallPromptEvent }).pwaInstallPrompt = promptEvent;
       setShowPrompt(true);
     };
 
@@ -95,14 +114,26 @@ export function PwaInstallPrompt() {
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
 
+    // Bug 5 fix: always clear the stale prompt from window so it cannot be
+    // re-read on the next component mount.
+    clearWindowPrompt();
+    setDeferredPrompt(null);
+
     if (outcome === 'accepted') {
       setShowPrompt(false);
+    } else {
+      // Bug 5 fix: if user dismissed the native prompt, treat it the same as
+      // clicking "Not Now" — suppress for 3 days so we don't call .prompt()
+      // on the spent event object again.
+      saveDismissed();
+      setShowPrompt(false);
     }
-    setDeferredPrompt(null);
   };
 
   const handleDismiss = () => {
-    localStorage.setItem('pwa_prompt_dismissed', Date.now().toString());
+    // Bug 5 fix: also clear window prompt on user dismiss.
+    clearWindowPrompt();
+    saveDismissed();
     setShowPrompt(false);
   };
 
@@ -148,7 +179,7 @@ export function PwaInstallPrompt() {
                 Install Attendance Portal
               </h3>
               <p className="text-xs text-slate-900 mt-1 leading-relaxed">
-                Add to your phone Home Screen for instant 1-tap biometric face check-in & offline geofence sync!
+                Add to your phone Home Screen for instant 1-tap biometric face check-in &amp; offline geofence sync!
               </p>
             </div>
           </div>
@@ -159,7 +190,7 @@ export function PwaInstallPrompt() {
               <div className="w-full bg-blue-950/60 border border-blue-500/30 rounded-xl py-2 px-3 flex items-center justify-center space-x-2 text-xs font-semibold text-blue-200">
                 <span>To install: Tap</span>
                 <Share className="w-4 h-4 text-blue-400 shrink-0 inline" />
-                <span>below & select</span>
+                <span>below &amp; select</span>
                 <span className="font-bold text-slate-900 bg-white/15 px-1.5 py-0.5 rounded">
                   Add to Home Screen ➕
                 </span>
@@ -187,4 +218,3 @@ export function PwaInstallPrompt() {
     </AnimatePresence>
   );
 }
-
