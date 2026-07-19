@@ -34,6 +34,9 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       .select('*, branches!profiles_branch_id_fkey(name, code)', { count: 'exact' });
 
+    // Hide 'admin' from employee lists to prevent mixing them with regular staff/managers
+    query = query.neq('role', 'admin');
+
     // Only filter to active by default; admin can request inactive employees too
     if (!includeInactive) {
       query = query.eq('is_active', true);
