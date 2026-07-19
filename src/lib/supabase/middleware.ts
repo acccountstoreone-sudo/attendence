@@ -14,7 +14,12 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/_next') ||
     pathname.startsWith('/models') ||
     pathname.startsWith('/favicon.ico') ||
-    pathname.startsWith('/~offline')
+    pathname.startsWith('/~offline') ||
+    pathname === '/sw.js' ||
+    pathname === '/manifest.json' ||
+    pathname === '/manifest.webmanifest' ||
+    pathname.startsWith('/workbox-') ||
+    pathname.startsWith('/fallback-')
   ) {
     return supabaseResponse;
   }
