@@ -44,6 +44,20 @@ export default function RootLayout({
       className={`${outfit.variable} h-full antialiased`}
       suppressHydrationWarning={true}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.addEventListener('beforeinstallprompt', function(e) {
+                e.preventDefault();
+                window.pwaInstallPrompt = e;
+                // Dispatch a custom event so React can catch it immediately if it mounts later
+                window.dispatchEvent(new Event('pwa-ready'));
+              });
+            `,
+          }}
+        />
+      </head>
       <body className={`min-h-full flex flex-col ${outfit.className}`} suppressHydrationWarning={true}>
         {children}
         <PwaInstallPrompt />

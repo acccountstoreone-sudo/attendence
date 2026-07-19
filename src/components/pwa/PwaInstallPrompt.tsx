@@ -57,7 +57,21 @@ export function PwaInstallPrompt() {
       return () => clearTimeout(timer);
     }
 
-    // Listen for standard Android/Desktop beforeinstallprompt
+    const checkAndSetPrompt = () => {
+      const existingPrompt = (window as Window & { pwaInstallPrompt?: BeforeInstallPromptEvent }).pwaInstallPrompt;
+      if (existingPrompt) {
+        setDeferredPrompt(existingPrompt);
+        setShowPrompt(true);
+      }
+    };
+
+    // Check if it was caught before React mounted
+    checkAndSetPrompt();
+
+    // Listen for the custom event dispatched by our inline script
+    window.addEventListener('pwa-ready', checkAndSetPrompt);
+
+    // Listen for standard Android/Desktop beforeinstallprompt just in case
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
@@ -69,6 +83,7 @@ export function PwaInstallPrompt() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     return () => {
+      window.removeEventListener('pwa-ready', checkAndSetPrompt);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
