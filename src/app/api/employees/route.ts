@@ -59,7 +59,23 @@ export async function GET(request: NextRequest) {
 
     if (error) throw new Error(`Failed to fetch employees: ${error.message}`);
 
-    const employeeList = employees || [];
+    type EmployeeData = {
+      id: string;
+      branches?: { name?: string; code?: string; address?: string };
+      branch_name?: string;
+      is_present_today?: boolean;
+      today_status?: string;
+      check_in_time?: string | null;
+      check_out_time?: string | null;
+      today_working_minutes?: number;
+      today_overtime_minutes?: number;
+      [key: string]: unknown;
+    };
+
+    const employeeList = (employees as EmployeeData[] | null)?.map((e) => ({
+      ...e,
+      branch_name: e.branches?.name || e.branch_name,
+    })) || [];
     
     // Fetch today's attendance for these employees (APP-09 fix: use Dhaka UTC+6 timezone)
     if (employeeList.length > 0) {
@@ -74,27 +90,27 @@ export async function GET(request: NextRequest) {
       const { data: attendanceData } = await supabase
         .from('attendance_records')
         .select('employee_id, status, check_in_time, check_out_time, overtime_minutes')
-        .in('employee_id', employeeList.map(e => e.id))
+        .in('employee_id', employeeList.map((e) => e.id))
         .gte('check_in_time', todayStart.toISOString())
         .lte('check_in_time', todayEnd.toISOString());
         
-      const attMap = new Map();
-      attendanceData?.forEach(a => attMap.set(a.employee_id, a));
+      const attMap = new Map<string, Record<string, unknown>>();
+      attendanceData?.forEach((a) => attMap.set(a.employee_id as string, a as Record<string, unknown>));
       
-      employeeList.forEach((e: Record<string, unknown>) => {
-        const att = attMap.get(e.id as string);
+      employeeList.forEach((e) => {
+        const att = attMap.get(e.id);
         e.is_present_today = !!att;
-        e.today_status = att?.status || 'none';
-        e.check_in_time = att?.check_in_time || null;
-        e.check_out_time = att?.check_out_time || null;
+        e.today_status = (att?.status as string) || 'none';
+        e.check_in_time = (att?.check_in_time as string) || null;
+        e.check_out_time = (att?.check_out_time as string) || null;
         
         let workedMins = 0;
         if (att?.check_in_time) {
-          const endTime = att?.check_out_time ? new Date(att.check_out_time).getTime() : new Date().getTime();
-          workedMins = Math.round((endTime - new Date(att.check_in_time).getTime()) / 60000);
+          const endTime = att?.check_out_time ? new Date(att.check_out_time as string).getTime() : new Date().getTime();
+          workedMins = Math.round((endTime - new Date(att.check_in_time as string).getTime()) / 60000);
         }
         e.today_working_minutes = workedMins > 0 ? workedMins : 0;
-        e.today_overtime_minutes = att?.overtime_minutes || 0;
+        e.today_overtime_minutes = (att?.overtime_minutes as number) || 0;
       });
     }
 

@@ -46,6 +46,10 @@ export async function GET(
       throw new Error('FORBIDDEN: You can only view staff profiles within your assigned store.');
     }
 
+    if (employee && (employee as any).branches) {
+      (employee as any).branch_name = (employee as any).branches.name;
+    }
+
     return NextResponse.json({
       success: true,
       data: employee,
