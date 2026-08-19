@@ -183,14 +183,14 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       if (ph === 'cam_err' || !mountedRef.current) { stopScan(); return; }
       if (ph !== 'scanning') return;
       if (!fa || !v || v.readyState < 3) {
-        scanTimerRef.current = setTimeout(loop, 150) as unknown as ReturnType<typeof setInterval>;
+        scanTimerRef.current = setTimeout(loop, 100) as unknown as ReturnType<typeof setInterval>;
         return;
       }
       if (isCapturingRef.current) return;
 
       try {
         const det = await fa
-          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.55 }));
+          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.2 }));
 
         if (!det) {
           if (mountedRef.current) {
@@ -218,7 +218,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       } catch { /* silently continue */ }
 
       // Schedule next frame only after current processing finishes
-      scanTimerRef.current = setTimeout(loop, 150) as unknown as ReturnType<typeof setInterval>;
+      scanTimerRef.current = setTimeout(loop, 100) as unknown as ReturnType<typeof setInterval>;
     };
 
     loop();
@@ -234,9 +234,21 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
     try {
       setPhase('extract');
-      announce('Analyzing biometric signature...', 'info');
+      
+      // 1. Run detection directly on video for instant extraction
+      const face = await fa
+        .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.2 }))
+        .withFaceLandmarks(true)
+        .withFaceDescriptor();
 
-      // Capture frame preserving exact aspect ratio to prevent facial squashing
+      if (!face) {
+        announce('Face not clear. Please try again.', 'error');
+        isCapturingRef.current = false;
+        setTimeout(() => { if (mountedRef.current) startScan(); }, 500);
+        return;
+      }
+
+      // 2. Grab frame for photo_url
       const videoAspectRatio = v.videoWidth / v.videoHeight || 1;
       const targetW = Math.min(v.videoWidth || 640, 640);
       const targetH = Math.round(targetW / videoAspectRatio);
@@ -244,40 +256,12 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       c.width  = targetW;
       c.height = targetH;
       const ctx = c.getContext('2d');
-      if (!ctx) { isCapturingRef.current = false; return; }
-      ctx.drawImage(v, 0, 0, targetW, targetH);
-      // Reduce JPEG quality significantly to prevent offline storage bloat and payload limits
-      const dataUrl = c.toDataURL('image/jpeg', 0.6);
+      if (ctx) ctx.drawImage(v, 0, 0, targetW, targetH);
+      const dataUrl = c.toDataURL('image/jpeg', 0.8);
 
-      // Extract descriptor from captured frame
-      const img = new Image(); img.src = dataUrl;
-      await new Promise<void>(r => { img.onload = () => r(); });
-
-      const allFaces = await fa
-        .detectAllFaces(img, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.4 }))
-        .withFaceLandmarks(true)
-        .withFaceDescriptors();
-
-      if (!allFaces || allFaces.length === 0) {
-        announce('Face not clear. Please try again.', 'error');
-        isCapturingRef.current = false;
-        setTimeout(() => { if (mountedRef.current) startScan(); }, 800);
-        return;
-      }
-
-      if (allFaces.length > 1) {
-        announce('Multiple faces detected. Please be alone in front of the camera.', 'error');
-        isCapturingRef.current = false;
-        setTimeout(() => { if (mountedRef.current) startScan(); }, 1200);
-        return;
-      }
-
-      // Submit to parent (server will do the actual face match comparison)
       setPhase('submit');
-      announce('Matching your identity. Please wait.', 'info');
-      await onCapture(dataUrl, Array.from(allFaces[0].descriptor));
+      await onCapture(dataUrl, Array.from(face.descriptor));
 
-      // Success
       setPhase('success');
       announce(`Identity confirmed. Check-${checkType} recorded!`, 'success');
     } catch (err: unknown) {

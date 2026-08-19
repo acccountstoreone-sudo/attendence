@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
           );
         }
         const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
-        if (distance > 0.75) {
+        if (distance > 0.90) {
           return NextResponse.json(
             {
               success: false,
