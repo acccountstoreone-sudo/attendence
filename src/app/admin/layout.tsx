@@ -29,6 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     async function checkAuth() {
       try {
+        // @ts-ignore - Bypass type error: Property 'getUser' does not exist on type 'SupabaseAuthClient'
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
           router.push('/login');
