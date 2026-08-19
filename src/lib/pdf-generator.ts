@@ -8,7 +8,7 @@ import path from 'path';
 
 function drawLogo(doc: jsPDF, logoBase64: string, x: number, y: number, targetHeight: number = 24) {
   try {
-    const props = doc.getImageProperties(logoBase64);
+    const props = (doc as any).getImageProperties(logoBase64);
     let imgWidth = (props.width * targetHeight) / props.height;
     if (imgWidth > 110) {
       imgWidth = 110;

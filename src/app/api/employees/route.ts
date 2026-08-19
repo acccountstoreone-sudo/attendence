@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       serviceRoleKey,
       { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+    ) as any;
 
     const generatedPassword = payload.password || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '!';
     const { data: authData, error: authErr } = await adminClient.auth.admin.createUser({

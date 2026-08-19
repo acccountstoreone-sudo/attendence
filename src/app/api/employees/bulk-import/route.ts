@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       serviceRoleKey,
       { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+    ) as any;
 
     const supabase = await createClient();
 

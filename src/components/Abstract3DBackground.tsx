@@ -4,6 +4,13 @@ import { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Points, PointMaterial } from '@react-three/drei';
 import * as THREE from 'three';
+import { ThreeElements } from '@react-three/fiber';
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements extends ThreeElements {}
+  }
+}
 
 // Generate random particles in a sphere shape
 const generateParticles = (count: number) => {
@@ -24,7 +31,7 @@ const generateParticles = (count: number) => {
 const particlesArray = generateParticles(1500);
 
 function ParticleSwarm() {
-  const ref = useRef<THREE.Points>(null);
+  const ref = useRef<any>(null);
 
   useFrame((state, delta) => {
     if (ref.current) {
@@ -51,7 +58,7 @@ function ParticleSwarm() {
 }
 
 function WireframeGlobe() {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<any>(null);
 
   useFrame((state, delta) => {
     if (meshRef.current) {

@@ -113,7 +113,7 @@ export async function PUT(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       serviceRoleKey,
       { auth: { autoRefreshToken: false, persistSession: false } }
-    );
+    ) as any;
 
     if (payload.password) {
       const { error: authErr } = await adminClient.auth.admin.updateUserById(targetId, {

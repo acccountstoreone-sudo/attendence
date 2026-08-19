@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { jsPDF } from "jspdf";
+import jsPDF from "jspdf";
 import { Download, FileText, FileSignature } from "lucide-react";
 import { motion } from "framer-motion";
 import { NotoSansBengaliBase64 } from "@/lib/fonts/NotoSansBengali";

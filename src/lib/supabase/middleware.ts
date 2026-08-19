@@ -70,7 +70,7 @@ export async function updateSession(request: NextRequest) {
         },
       },
     }
-  );
+  ) as any;
 
   try {
     // IMPORTANT: Do not run code between createServerClient and
