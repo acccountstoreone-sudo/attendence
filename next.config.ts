@@ -36,6 +36,14 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   compress: true,
+  webpack: (config) => {
+    // Suppress Webpack warnings for third-party libraries we can't control
+    config.ignoreWarnings = [
+      { module: /node_modules\/@vladmandic\/face-api/ },
+      { module: /node_modules\/@supabase\/supabase-js/ }
+    ];
+    return config;
+  },
 };
 
 export default withPWA(nextConfig);
