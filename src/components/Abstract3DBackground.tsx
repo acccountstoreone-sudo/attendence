@@ -8,9 +8,12 @@ import { ThreeElements } from '@react-three/fiber';
 
 declare global {
   namespace JSX {
-    interface IntrinsicElements extends ThreeElements {}
+    interface IntrinsicElements {
+      [elemName: string]: any;
+    }
   }
 }
+
 
 // Generate random particles in a sphere shape
 const generateParticles = (count: number) => {
