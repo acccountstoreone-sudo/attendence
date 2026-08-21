@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { generateAnchorFashionPDF, generateEmployeeFullDutyPDF } from '@/lib/pdf-generator';
 import { computeEmployeeDutySummary } from '@/lib/dutyEngine';
 
@@ -300,7 +300,7 @@ export async function GET(
       contentType = 'text/csv; charset=utf-8';
 
     } else if (format === 'excel') {
-      const workbook = XLSX.utils.book_new();
+      const workbook = new ExcelJS.Workbook();
 
       // Sheet 1: Monthly Summary
       const summaryData = [
@@ -319,8 +319,12 @@ export async function GET(
         { Metric: 'Total Leave Days', Value: summary.total_on_leave_days || 0 },
         { Metric: 'Total Off Days / Holidays', Value: (summary.total_off_days || 0) + (summary.total_holiday_days || 0) },
       ];
-      const summarySheet = XLSX.utils.json_to_sheet(summaryData);
-      XLSX.utils.book_append_sheet(workbook, summarySheet, 'Monthly Summary');
+      const summarySheet = workbook.addWorksheet('Monthly Summary');
+      summarySheet.columns = [
+        { header: 'Metric', key: 'Metric', width: 30 },
+        { header: 'Value', key: 'Value', width: 25 },
+      ];
+      summaryData.forEach(row => summarySheet.addRow(row));
 
       // Sheet 2: Daily Breakdown
       const dailySheetData = (daily_breakdown || []).map((d: Record<string, unknown>) => ({
@@ -339,10 +343,14 @@ export async function GET(
         'Location (Lat, Lng)': d.check_in_lat && d.check_in_lng ? `${d.check_in_lat}, ${d.check_in_lng}` : 'N/A',
         Notes: d.notes,
       }));
-      const dailySheet = XLSX.utils.json_to_sheet(dailySheetData);
-      XLSX.utils.book_append_sheet(workbook, dailySheet, 'Daily Roster');
+      const dailySheet = workbook.addWorksheet('Daily Roster');
+      if (dailySheetData.length > 0) {
+        const keys = Object.keys(dailySheetData[0]);
+        dailySheet.columns = keys.map(key => ({ header: key, key, width: 18 }));
+        dailySheetData.forEach(row => dailySheet.addRow(row));
+      }
 
-      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+      const excelBuffer = await workbook.xlsx.writeBuffer();
       fileBuffer = Buffer.from(excelBuffer);
       fileName = `${reportTitle}.xlsx`;
       contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';

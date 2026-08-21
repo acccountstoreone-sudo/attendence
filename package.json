@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ducanh2912/next-pwa": "^10.2.9",
+    "@ducanh2912/next-pwa": "10.2.6",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@simplewebauthn/browser": "^13.3.0",
@@ -22,12 +22,13 @@
     "clsx": "^2.1.1",
     "core-js": "^3.50.0",
     "dotenv-cli": "^11.0.0",
+    "exceljs": "^4.4.0",
     "framer-motion": "^12.43.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.31.0",
-    "next": "15.1.7",
+    "next": "15.5.23",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-webcam": "^7.2.0",
@@ -35,7 +36,6 @@
     "resend": "^6.17.1",
     "tailwind-merge": "^3.6.0",
     "three": "^0.185.1",
-    "xlsx": "^0.18.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -46,11 +46,17 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.3",
     "eslint": "^9",
-    "eslint-config-next": "15.1.7",
+    "eslint-config-next": "15.5.23",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "postcss": "^8.5.23",
+    "sharp": "^0.35.0",
+    "serialize-javascript": "^7.0.5",
+    "uuid": "^11.1.1"
   },
   "allowScripts": {
     "core-js": true,

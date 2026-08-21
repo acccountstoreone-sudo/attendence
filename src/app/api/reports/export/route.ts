@@ -3,7 +3,7 @@ import { requireRole, handleApiError, AuthUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { computeEmployeeDutySummary } from '@/lib/dutyEngine';
 import { z } from 'zod';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { generateAnchorFashionPDF, generateDetailedCompanyPDF } from '@/lib/pdf-generator';
 
 const exportSchema = z.object({
@@ -188,10 +188,14 @@ async function processExport(payload: z.infer<typeof exportSchema>, user: AuthUs
     fileName = `${reportTitle}.csv`;
     contentType = 'text/csv; charset=utf-8';
   } else if (payload.format === 'excel') {
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendance Report');
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Attendance Report');
+    if (exportData.length > 0) {
+      const keys = Object.keys(exportData[0]);
+      worksheet.columns = keys.map(key => ({ header: key, key, width: 18 }));
+      exportData.forEach(row => worksheet.addRow(row));
+    }
+    const excelBuffer = await workbook.xlsx.writeBuffer();
     fileBuffer = Buffer.from(excelBuffer);
     fileName = `${reportTitle}.xlsx`;
     contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';

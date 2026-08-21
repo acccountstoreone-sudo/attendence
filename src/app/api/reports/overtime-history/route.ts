@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError, AuthUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { generateAnchorFashionPDF } from '@/lib/pdf-generator';
 
 export interface OvertimeHistoryRow {
@@ -206,10 +206,14 @@ export async function GET(request: NextRequest) {
         fileName = `${reportTitle}.csv`;
         contentType = 'text/csv; charset=utf-8';
       } else if (exportFormat === 'excel') {
-        const worksheet = XLSX.utils.json_to_sheet(exportRows);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Overtime History');
-        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Overtime History');
+        if (exportRows.length > 0) {
+          const keys = Object.keys(exportRows[0]);
+          worksheet.columns = keys.map(key => ({ header: key, key, width: 18 }));
+          exportRows.forEach(row => worksheet.addRow(row));
+        }
+        const excelBuffer = await workbook.xlsx.writeBuffer();
         fileBuffer = Buffer.from(excelBuffer);
         fileName = `${reportTitle}.xlsx`;
         contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
