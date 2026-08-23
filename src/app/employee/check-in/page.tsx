@@ -147,7 +147,7 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
     coords,
     errorMsg,
     refresh: check,
-    verified: status === 'inside' || isAdminOrManager,
+    verified: status === 'inside' || status === 'approaching' || isAdminOrManager,
   };
 }
 
@@ -192,16 +192,13 @@ export default function EmployeeCheckInPage() {
   const gps = useGPS(profile, loading);
   const offline = useOfflineQueue();
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.search.includes('reverify=true')) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsReverifyMode(true);
-    }
-  }, []);
-
   // ── Load profile + today's record ──────────────────────
   useEffect(() => {
     async function loadData() {
+      // Detect reverify mode from URL so we don't need it as a dep of this effect
+      const reverify = typeof window !== 'undefined' && window.location.search.includes('reverify=true');
+      if (reverify) setIsReverifyMode(true);
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
 
@@ -212,7 +209,7 @@ export default function EmployeeCheckInPage() {
         .single();
 
       if (prof) {
-        if (isReverifyMode) {
+        if (reverify) {
           setSelectedMethod('face');
         } else if (prof.face_enrolled && prof.fingerprint_enrolled) {
           setSelectedMethod('selector');
@@ -322,7 +319,10 @@ export default function EmployeeCheckInPage() {
   const handleBiometricSubmit = useCallback(async (base64Image: string, faceDescriptor: number[]) => {
     const isAdminOrManager = profile?.role === 'admin' || profile?.role === 'branch_manager';
     if (!gps.coords && !isAdminOrManager) throw new Error('GPS coordinates unavailable. Please retry.');
-    if (!gps.verified && !isAdminOrManager) {
+    // Let the server be the final arbiter of the geofence. Only hard-block the
+    // client if GPS completely failed to detect a position (status 'outside' means
+    // a position was obtained but is beyond the radius).
+    if (gps.status === 'outside' && !isAdminOrManager) {
       throw new Error(`Check-in denied: You are ${gps.distance ?? 'too far'}m away from ${profile?.branch_name ?? 'the store'} geofence.`);
     }
     setSubmitting(true);
@@ -385,12 +385,13 @@ export default function EmployeeCheckInPage() {
 
     const endpoint = checkType === 'in' ? '/api/attendance/check-in' : '/api/attendance/check-out';
     const payload  = checkType === 'in'
-      ? {
+        ? {
           latitude: gps.coords?.lat ?? 0,
           longitude: gps.coords?.lng ?? 0,
           branch_id: profile?.branch_id,
           is_manual_override: isAdminOrManager || !gps.verified,
-          photo_url: base64Image,
+          // photo_url intentionally omitted — sending raw base64 in the JSON
+          // body risks 413 payload errors. Upload to storage separately if needed.
           face_verified: true,
           faceDescriptor,
           liveness_passed: true,
@@ -421,8 +422,12 @@ export default function EmployeeCheckInPage() {
       throw new Error((result.error as { message?: string })?.message ?? `Check-${checkType === 'in' ? 'In' : 'Out'} failed`);
     }
 
-    setTimeout(() => router.push('/employee'), 2200);
-  }, [gps.coords, gps.verified, gps.distance, profile, checkType, router, offline, isReverifyMode]);
+    // Keep submitting=true during redirect delay for consistent UX
+    setTimeout(() => {
+      setSubmitting(false);
+      router.push('/employee');
+    }, 2200);
+  }, [gps.coords, gps.verified, gps.distance, gps.status, profile, checkType, router, offline, isReverifyMode]);
 
   const isSubmittingRef = useRef(false);
 

@@ -33,7 +33,8 @@ interface Assignment {
   profiles: { id: string; full_name: string; employee_id?: string };
 }
 
-function fmt12(time: string): string {
+function fmt12(time: string | undefined | null): string {
+  if (!time) return '—';
   const [h, m] = time.split(':').map(Number);
   const period = h >= 12 ? 'PM' : 'AM';
   return `${((h % 12) || 12).toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${period}`;
@@ -101,7 +102,7 @@ export default function BranchManagerShiftsPage() {
       setFeedback({ type: 'success', text: `"${shiftForm.name}" shift created.` });
       setShiftForm({ name: '', start_time: '09:00', end_time: '18:00', grace_period_minutes: 15 });
       setShowShiftForm(false);
-      loadData();
+      await loadData();
     } else {
       setFeedback({ type: 'error', text: json.error?.message || (typeof json.error === 'string' ? json.error : 'Failed to create shift.') });
     }
@@ -114,7 +115,7 @@ export default function BranchManagerShiftsPage() {
     const json = await res.json();
     if (json.success) {
       setFeedback({ type: 'success', text: `"${name}" deleted.` });
-      loadData();
+      await loadData();
     } else {
       setFeedback({ type: 'error', text: json.error?.message || (typeof json.error === 'string' ? json.error : 'Failed to delete.') });
     }
@@ -133,7 +134,7 @@ export default function BranchManagerShiftsPage() {
       setFeedback({ type: 'success', text: 'Shift assigned successfully.' });
       setAssignForm({ user_id: '', shift_id: '', effective_from: new Date().toISOString().slice(0, 10) });
       setShowAssignForm(false);
-      loadData();
+      await loadData();
     } else {
       setFeedback({ type: 'error', text: json.error?.message || (typeof json.error === 'string' ? json.error : 'Failed to assign shift.') });
     }

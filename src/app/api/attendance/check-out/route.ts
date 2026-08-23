@@ -204,7 +204,8 @@ export async function POST(request: NextRequest) {
           branch.geofence_radius_meters || 100
         );
 
-        if (!geo.within && !payload.is_offline_sync) {
+        const isAdminOrMgr = user.role === 'admin' || user.role === 'branch_manager';
+        if (!geo.within && !payload.is_offline_sync && !isAdminOrMgr && !payload.is_manual_override) {
           return NextResponse.json(
             {
               success: false,

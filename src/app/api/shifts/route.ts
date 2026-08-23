@@ -9,7 +9,13 @@ const shiftSchema = z.object({
   start_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Format: HH:MM'),
   end_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Format: HH:MM'),
   grace_period_minutes: z.number().int().min(0).max(120).default(15),
-});
+}).refine(
+  (data) => data.end_time > data.start_time,
+  {
+    message: 'Shift end time must be after start time. Overnight (cross-midnight) shifts are not supported.',
+    path: ['end_time'],
+  }
+);
 
 /** GET /api/shifts?branch_id=xxx  — List shifts for a branch */
 export async function GET(request: NextRequest) {

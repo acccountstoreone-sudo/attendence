@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const [month, day, year] = formatter.format(now).split('/');
     
     const startOfDay = new Date(`${year}-${month}-${day}T00:00:00+06:00`);
-    const endOfDay = new Date(`${year}-${month}-${day}T23:59:59+06:00`);
+    const endOfDay = new Date(`${year}-${month}-${day}T23:59:59.999+06:00`);
 
     const { data: record, error } = await supabase
       .from('attendance_records')

@@ -114,9 +114,9 @@ export async function POST(request: NextRequest) {
     const [month, day, year] = formatter.format(now).split('/');
     
     const startOfDay = new Date(`${year}-${month}-${day}T00:00:00+06:00`);
-    const endOfDay = new Date(`${year}-${month}-${day}T23:59:59+06:00`);
+    const endOfDay = new Date(`${year}-${month}-${day}T23:59:59.999+06:00`);
 
-    // 4. Check for unresolved incomplete past shifts
+    // 4a. Check for unresolved incomplete past shifts
     const { data: incompleteShift } = await supabase
       .from('attendance_records')
       .select('id, check_in_time')
@@ -374,7 +374,7 @@ export async function POST(request: NextRequest) {
         .eq('status', 'approved')
         .maybeSingle();
 
-      if (offDayErr || !offDayReq) {
+      if (!isAdminOrManager && !payload.is_manual_override && (offDayErr || !offDayReq)) {
         return NextResponse.json(
           {
             success: false,
