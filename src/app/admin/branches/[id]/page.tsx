@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { ChevronLeft, Store, LayoutDashboard, Users, Calendar, FileText, Settings, Bell, Clock } from 'lucide-react';
+import { ChevronLeft, Store, LayoutDashboard, Users, Calendar, FileText, Settings, Bell, Clock, AlertTriangle } from 'lucide-react';
 import { Branch, BranchEmployee } from '@/components/admin/branch/types';
 
 import { BranchOverviewTab } from '@/components/admin/branch/BranchOverviewTab';
@@ -21,10 +21,11 @@ type TabType = 'overview' | 'employees' | 'profile' | 'attendance' | 'reports' |
 
 export default function BranchWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [branch, setBranch] = useState<Branch | null>(null);
   const [employees, setEmployees] = useState<BranchEmployee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
         setBranch(data);
       } else if (error) {
         console.error(error);
+        setFetchError(error.message);
       }
 
       try {
@@ -69,9 +71,11 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
       setLoading(false);
     }
 
+    let cancelled = false;
     params.then((p) => {
-      loadData(p.id);
+      if (!cancelled) loadData(p.id);
     });
+    return () => { cancelled = true; };
   }, [params, supabase]);
 
   const handleViewProfile = (empId: string) => {
@@ -83,6 +87,17 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1dbf73]"></div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="text-center py-12">
+        <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-slate-900 mb-2">Error Loading Branch</h2>
+        <p className="text-slate-500 mb-4">{fetchError}</p>
+        <button onClick={() => router.push('/admin/branches')} className="text-[#1dbf73] hover:underline">Go Back</button>
       </div>
     );
   }
@@ -157,7 +172,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
            title="Click to check active staff in Employees tab"
          >
             <span className="text-xs text-slate-900 group-hover:text-slate-900 font-medium transition-colors">Active Now</span>
-            <span className="text-lg font-bold text-blue-500 group-hover:scale-105 transition-transform">{employees.filter(e => (e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day') && !e.check_out_time).length}</span>
+            <span className="text-lg font-bold text-blue-500 group-hover:scale-105 transition-transform">{employees.filter(e => e.check_in_time && (e.is_present_today || e.today_status === 'present' || e.today_status === 'late' || e.today_status === 'half-day') && !e.check_out_time).length}</span>
          </div>
          <div 
            onClick={() => setActiveTab('attendance')}

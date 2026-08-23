@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -22,7 +22,7 @@ interface BranchSettingsTabProps {
 
 export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) => {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   const [overtimeRate, setOvertimeRate] = useState<number>(100);
   const [snackAllowance, setSnackAllowance] = useState<number>(50);
@@ -188,12 +188,18 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
         </Card>
 
         {/* Office Timings & Rules */}
-        <Card className="bg-white border-slate-200 p-6 shadow-xl">
+        <Card className="bg-white border-slate-200 p-6 shadow-xl relative">
            <h4 className="text-sm font-semibold text-[#1dbf73] uppercase tracking-wider mb-4 flex items-center">
             <Clock className="w-4 h-4 mr-2" /> Office Timings & Rules
           </h4>
           
-          <div className="space-y-4 pointer-events-none opacity-80">
+          <div className="absolute top-4 right-4 z-10 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[1px] rounded-xl border border-slate-200">
+            <span className="text-sm font-bold text-slate-900 bg-white px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5">
+              <span className="text-[#1dbf73]">🔒</span> Managed via Duty Hours settings
+            </span>
+          </div>
+
+          <div className="space-y-4 pointer-events-none opacity-50 bg-slate-50 p-4 rounded-xl border border-slate-100">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-slate-900">Office Start Time</Label>

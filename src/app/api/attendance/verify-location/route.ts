@@ -92,7 +92,10 @@ export async function POST(request: NextRequest) {
       branch.latitude, branch.longitude
     ));
 
-    const isWithinGeofence = distanceMeters <= branch.geofence_radius_meters;
+    // Bug 4 fix: null-coalesce radius so branches without a configured radius
+    // default to 100m instead of making `distanceMeters <= null` always false.
+    const geofenceRadius = branch.geofence_radius_meters ?? 100;
+    const isWithinGeofence = distanceMeters <= geofenceRadius;
 
     // GPS Spoofing Heuristics (Spec P41)
     const spoofingFlags: string[] = [];
@@ -108,20 +111,43 @@ export async function POST(request: NextRequest) {
     }
 
     const isSuspectedSpoofed = spoofingFlags.length > 0;
+    const verificationResult = !isSuspectedSpoofed && isWithinGeofence
+      ? 'PASS'
+      : isSuspectedSpoofed
+      ? 'SPOOFING_SUSPECTED'
+      : 'OUTSIDE_GEOFENCE';
 
-    // Log the verification attempt for audit
-    await supabase.from('attendance_logs').upsert({}, { onConflict: 'id' }); // no-op, just structure demo
+    // Bug 3 fix: persist a real audit record instead of the no-op upsert placeholder.
+    // Uses a try/catch so a logging failure never blocks the verification response.
+    try {
+      await supabase.from('gps_verification_logs').insert({
+        user_id: user.id,
+        branch_id: targetBranchId,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        distance_meters: distanceMeters,
+        geofence_radius_meters: geofenceRadius,
+        is_within_geofence: isWithinGeofence,
+        is_suspected_spoofed: isSuspectedSpoofed,
+        spoofing_flags: spoofingFlags.length > 0 ? spoofingFlags : null,
+        verification_result: verificationResult,
+        accuracy_meters: input.accuracy_meters ?? null,
+        created_at: new Date().toISOString(),
+      });
+    } catch {
+      // Non-fatal: audit log failure must not block verification response
+    }
 
     return NextResponse.json({
       success: true,
       data: {
         is_within_geofence: isWithinGeofence && !isSuspectedSpoofed,
         distance_meters: distanceMeters,
-        geofence_radius_meters: branch.geofence_radius_meters,
+        geofence_radius_meters: geofenceRadius,
         branch_name: branch.name,
         is_suspected_spoofed: isSuspectedSpoofed,
         spoofing_flags: spoofingFlags,
-        verification_result: !isSuspectedSpoofed && isWithinGeofence ? 'PASS' : isSuspectedSpoofed ? 'SPOOFING_SUSPECTED' : 'OUTSIDE_GEOFENCE',
+        verification_result: verificationResult,
       },
       timestamp: new Date().toISOString(),
     });

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
@@ -21,12 +21,24 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
   geofenceRadius = 100,
   onLocationVerified,
 }) => {
-  const [, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  // Bug 2 fix: read side was previously discarded with [, setCoords].
+  // Named properly so the component can access current coords if needed in future.
+  const [_coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [status, setStatus] = useState<'locating' | 'inside' | 'approaching' | 'outside' | 'error'>('locating');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   const checkPosition = () => {
+    // Bug 1 fix: Guard against undefined branch coords at the top of checkPosition,
+    // not just in the useEffect. Without this, the Refresh button could trigger
+    // a geofence check against the hardcoded Dhaka fallback before the profile loads.
+    if (branchLatitude === undefined || branchLongitude === undefined) {
+      setStatus('error');
+      setErrorMessage('Branch GPS coordinates not loaded yet. Please wait a moment and retry.');
+      onLocationVerified(null);
+      return;
+    }
+
     setStatus('locating');
     setErrorMessage('');
 
@@ -37,14 +49,15 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
       return;
     }
 
+    const targetLat = branchLatitude;
+    const targetLon = branchLongitude;
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         setCoords({ latitude, longitude });
 
         // Calculate Haversine distance in meters
-        const targetLat = branchLatitude ?? 23.8103;
-        const targetLon = branchLongitude ?? 90.4125;
         const distMeters = Math.round(calculateDistance(latitude, longitude, targetLat, targetLon));
         setDistance(distMeters);
 
@@ -143,7 +156,9 @@ export const GpsIndicator: React.FC<GpsIndicatorProps> = ({
               status === 'inside' ? 'text-[#1dbf73]' : status === 'approaching' ? 'text-amber-400' : 'text-rose-400'
             }`}
           >
-            {distance} meters away {status === 'inside' ? `(✓ Inside ${geofenceRadius}m zone)` : `(✖ Requires within ${geofenceRadius}m)`}
+            {/* Bug 7 fix: human-friendly label at 0m and exact boundary edge cases */}
+            {distance === 0 ? 'At exact location' : `${distance}m away`}
+            {' '}{status === 'inside' ? `(✓ Inside ${geofenceRadius}m zone)` : `(✖ Requires within ${geofenceRadius}m)`}
           </span>
         </div>
       )}

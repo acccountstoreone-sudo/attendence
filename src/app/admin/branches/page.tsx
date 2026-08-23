@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -41,7 +41,7 @@ interface Branch {
 }
 
 export default function AdminBranchesPage() {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -259,7 +259,7 @@ export default function AdminBranchesPage() {
                 </div>
                 <div className="flex items-center space-x-1 text-slate-500">
                   <CheckCircle2 className="w-3 h-3 text-[#1dbf73]" />
-                  <span>Geofence {branch.latitude ? 'Configured' : 'Not Set'}</span>
+                  <span>Geofence {(branch.latitude != null && branch.longitude != null) ? 'Configured' : 'Not Set'}</span>
                 </div>
               </div>
             </Card>

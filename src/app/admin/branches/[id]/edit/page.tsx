@@ -11,7 +11,7 @@ export default async function EditBranchPage({ params }: { params: Promise<{ id:
   
   const { data: branch, error } = await supabase
     .from('branches')
-    .select('*')
+    .select('id, name, code, address, city, phone, latitude, longitude, geofence_radius_meters, is_active')
     .eq('id', id)
     .single();
 

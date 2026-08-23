@@ -119,8 +119,8 @@ export async function POST(request: NextRequest) {
         .eq('id', payload.manager_id);
     }
 
-    // Audit log
-    const auditRes = await supabase.from('audit_logs').insert({
+    // Admin Bug A6 fix: check and surface audit log errors (non-fatal).
+    const { error: auditErr } = await supabase.from('audit_logs').insert({
       actor_id: user.id,
       action: 'CREATE',
       table_name: 'branches',
@@ -128,6 +128,10 @@ export async function POST(request: NextRequest) {
       new_value: payload,
       ip_address: request.headers.get('x-forwarded-for') || '127.0.0.1',
     });
+    if (auditErr) {
+      // Non-fatal — log to server console so ops team can investigate
+      console.error('[audit_logs] Failed to write CREATE audit entry for branch', newBranch.id, auditErr.message);
+    }
 
     return NextResponse.json(
       {

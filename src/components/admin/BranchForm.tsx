@@ -170,9 +170,12 @@ export function BranchForm({ initialData }: BranchFormProps) {
           </div>
 
           {/* Interactive Map Picker Component */}
+          {/* Admin Bug A5 fix: use explicit null/empty check instead of falsy check.
+              Previously `form.latitude ? Number(form.latitude) : null` would coerce
+              a valid equator latitude of 0 to null, silently dropping the coordinate. */}
           <LocationMapPicker
-            latitude={form.latitude ? Number(form.latitude) : null}
-            longitude={form.longitude ? Number(form.longitude) : null}
+            latitude={form.latitude !== '' && form.latitude !== null ? Number(form.latitude) : null}
+            longitude={form.longitude !== '' && form.longitude !== null ? Number(form.longitude) : null}
             radiusMeters={Number(form.geofence_radius_meters) || 100}
             onLocationChange={(lat, lng) => {
               setForm((f) => ({ ...f, latitude: String(lat), longitude: String(lng) }));

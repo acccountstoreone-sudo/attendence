@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
@@ -49,7 +49,11 @@ export const LocationMapViewer: React.FC<LocationMapViewerProps> = ({
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
-    if (mapInstanceRef.current) return;
+    
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+    }
 
     const map = L.map(mapContainerRef.current, {
       center: [latitude, longitude],

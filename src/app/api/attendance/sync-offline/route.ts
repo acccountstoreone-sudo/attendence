@@ -78,18 +78,22 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Geofence verification (still required for offline records)
+    // Geofence verification (required for check_in; skipped for check_out because the
+    // employee may have left the building before connectivity resumed — blocking their
+    // check_out would leave the shift permanently open and cause INCOMPLETE_PAST_SHIFT
+    // errors the following day).
     const geo = isWithinGeofence(
       payload.latitude, payload.longitude,
       Number(branch.latitude), Number(branch.longitude),
       branch.geofence_radius_meters || 100
     );
 
-    if (!geo.within) {
+    // Bug 6 fix: only hard-block geofence for check_in records.
+    if (payload.type === 'check_in' && !geo.within) {
       return NextResponse.json({
         success: false,
         data: null,
-        error: { code: 'OUT_OF_GEOFENCE', message: `Offline record rejected: GPS coordinates were ${geo.distance}m from ${branch.name} (max: ${branch.geofence_radius_meters}m).` },
+        error: { code: 'OUT_OF_GEOFENCE', message: `Offline check-in rejected: GPS coordinates were ${geo.distance}m from ${branch.name} (max: ${branch.geofence_radius_meters}m). You must have been inside the store when you checked in.` },
         timestamp: new Date().toISOString(),
       }, { status: 403 });
     }

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
@@ -41,9 +41,13 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
   const debouncedSearchQuery = useDebounce(searchQuery, 750);
 
-  // Default coordinate (Dhaka, Bangladesh) if not provided
-  const initialLat = latitude && !isNaN(latitude) ? latitude : 23.8103;
-  const initialLng = longitude && !isNaN(longitude) ? longitude : 90.4125;
+  // Admin Bug A3 fix: Only use saved coordinates as the initial map centre.
+  // If no coords exist yet (new branch), start at a wide world view so the admin
+  // clearly understands they must pick a location — not assume Dhaka is correct.
+  const hasCoords = latitude != null && !isNaN(latitude) && longitude != null && !isNaN(longitude);
+  const initialLat = hasCoords ? latitude! : 23.8103;
+  const initialLng = hasCoords ? longitude! : 90.4125;
+  const initialZoom = hasCoords ? 17 : 6; // 6 = country-level zoom when no coords set
   const safeRadius = radiusMeters && !isNaN(radiusMeters) && radiusMeters > 0 ? radiusMeters : 100;
 
   // Custom high-contrast marker icon
@@ -81,7 +85,7 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
 
     const map = L.map(mapContainerRef.current, {
       center: [initialLat, initialLng],
-      zoom: latitude ? 17 : 13,
+      zoom: initialZoom,
       zoomControl: true,
       attributionControl: false,
     });
@@ -165,6 +169,26 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
     }
   }, [latitude, longitude, safeRadius]);
 
+  // Admin Bug A1 fix: wrap in useCallback so the reference is stable and
+  // the useEffect search handler always calls the latest version of onLocationChange
+  // instead of the stale closure captured at mount time.
+  // IMPORTANT: this must be declared BEFORE the useEffect that calls it.
+  const selectSearchResult = useCallback((result: SearchResult) => {
+    const lat = Number(parseFloat(result.lat).toFixed(6));
+    const lng = Number(parseFloat(result.lon).toFixed(6));
+
+    if (mapInstanceRef.current && markerRef.current && circleRef.current) {
+      markerRef.current.setLatLng([lat, lng]);
+      circleRef.current.setLatLng([lat, lng]);
+      mapInstanceRef.current.flyTo([lat, lng], 17, { duration: 1.2 });
+    }
+
+    onLocationChange(lat, lng);
+    setSearchResults([]);
+    setSearchQuery(result.display_name);
+    setLocationStatus(`Selected: ${result.display_name.split(',')[0]}`);
+  }, [onLocationChange]);
+
   // Auto-search Address using OpenStreetMap Nominatim when debounced query changes
   useEffect(() => {
     const searchAddress = async () => {
@@ -209,23 +233,8 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
     };
 
     searchAddress();
-  }, [debouncedSearchQuery]);
-
-  function selectSearchResult(result: SearchResult) {
-    const lat = Number(parseFloat(result.lat).toFixed(6));
-    const lng = Number(parseFloat(result.lon).toFixed(6));
-
-    if (mapInstanceRef.current && markerRef.current && circleRef.current) {
-      markerRef.current.setLatLng([lat, lng]);
-      circleRef.current.setLatLng([lat, lng]);
-      mapInstanceRef.current.flyTo([lat, lng], 17, { duration: 1.2 });
-    }
-
-    onLocationChange(lat, lng);
-    setSearchResults([]);
-    setSearchQuery(result.display_name);
-    setLocationStatus(`Selected: ${result.display_name.split(',')[0]}`);
-  };
+  // selectSearchResult is a stable useCallback — safe to include in dep array.
+  }, [debouncedSearchQuery, selectSearchResult]);
 
   // Get Current Device GPS Location
   const handleUseCurrentLocation = () => {
@@ -322,8 +331,33 @@ export const LocationMapPicker: React.FC<LocationMapPickerProps> = ({
               </button>
             )}
           </div>
+          {/* Admin Bug A2 fix: Search button now has an explicit onClick that
+              triggers the Nominatim fetch immediately instead of relying solely
+              on the debounce. Previously pressing Search did nothing. */}
           <Button
             type="button"
+            onClick={() => {
+              if (searchQuery.trim()) {
+                setIsSearching(true);
+                setErrorMessage(null);
+                setSearchResults([]);
+                fetch(
+                  `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery.trim())}&addressdetails=1&limit=5`,
+                  { headers: { 'Accept-Language': 'en-US,en;q=0.9', 'User-Agent': 'AttendanceApp/1.0' } }
+                )
+                  .then(r => r.json())
+                  .then((data: SearchResult[]) => {
+                    if (data && data.length > 0) {
+                      setSearchResults(data);
+                      if (data.length === 1) selectSearchResult(data[0]);
+                    } else {
+                      setErrorMessage(`No locations found for "${searchQuery}". Try adding city or country name.`);
+                    }
+                  })
+                  .catch(() => setErrorMessage('Search service unavailable. Please drag the pin directly.'))
+                  .finally(() => setIsSearching(false));
+              }
+            }}
             disabled={isSearching || !searchQuery.trim()}
             className="bg-slate-100 hover:bg-[#1dbf73] text-slate-900 px-6 font-medium rounded-xl"
           >

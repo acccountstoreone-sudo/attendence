@@ -113,7 +113,7 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
                     onChange={(e) => setSelectedYear(Number(e.target.value))}
                     className="w-full border border-slate-200 rounded-md px-3 py-1.5 text-sm outline-none focus:border-[#1dbf73]"
                   >
-                    {[2024, 2025, 2026, 2027, 2028, 2029].map(y => (
+                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 2 + i).map(y => (
                       <option key={y} value={y}>{y}</option>
                     ))}
                   </select>
@@ -190,7 +190,7 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
                       </span>
                     </td>
                     <td className="px-6 py-4 text-xs text-slate-500 flex items-center mt-2">
-                       {record.location ? <><MapPin className="w-3 h-3 mr-1"/> {record.location.split(',').slice(0,2).join(',')}</> : '-'}
+                       {record.check_in_lat && record.check_in_lng ? <><MapPin className="w-3 h-3 mr-1"/> {Number(record.check_in_lat).toFixed(4)}, {Number(record.check_in_lng).toFixed(4)}</> : '-'}
                     </td>
                     <td className="px-6 py-4">
                        <div className="text-slate-900 font-medium">

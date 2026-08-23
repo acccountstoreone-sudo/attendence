@@ -141,13 +141,17 @@ function useGPS(branch: BranchProfile | null, loadingProfile: boolean) {
 
   const isAdminOrManager = branch?.role === 'admin' || branch?.role === 'branch_manager';
 
+  // Bug 5 fix: 'approaching' (100-150m) must NOT be treated as verified.
+  // Setting verified=true here would cause is_manual_override=false in the
+  // payload for someone who is outside the geofence, producing bad audit data.
+  // Only 'inside' counts as verified for regular employees.
   return {
     status,
     distance,
     coords,
     errorMsg,
     refresh: check,
-    verified: status === 'inside' || status === 'approaching' || isAdminOrManager,
+    verified: status === 'inside' || isAdminOrManager,
   };
 }
 
@@ -246,15 +250,12 @@ export default function EmployeeCheckInPage() {
           branch_name: detectedBranchName,
         };
 
+        // Bug 8 fix: reuse data already in bList — no second DB round-trip needed.
         if (prof.branch_id) {
-          const { data: branch } = await supabase
-            .from('branches')
-            .select('*')
-            .eq('id', prof.branch_id)
-            .single();
+          const branch = bList.find(b => b.id === prof.branch_id);
           if (branch) {
-            p.branch_lat    = branch.latitude    ? Number(branch.latitude)    : undefined;
-            p.branch_lng    = branch.longitude   ? Number(branch.longitude)   : undefined;
+            p.branch_lat    = branch.latitude    != null ? Number(branch.latitude)    : undefined;
+            p.branch_lng    = branch.longitude   != null ? Number(branch.longitude)   : undefined;
             p.branch_radius = branch.geofence_radius_meters ?? 100;
           }
         } else if (bList && bList.length > 0) {
