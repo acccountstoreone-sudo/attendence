@@ -25,14 +25,16 @@ export default function EmployeeDashboardPage() {
 
       const { data: prof } = await supabase
         .from('profiles')
-        .select('id, full_name, role, branch_id, photo_url, phone, whatsapp_number, branches!profiles_branch_id_fkey(name)')
+        .select('id, full_name, role, branch_id, photo_url, phone, whatsapp_number, branch:branches!profiles_branch_id_fkey(name)')
         .eq('id', user.id)
         .single();
 
       if (prof) {
+        const branchData = (prof as any).branch || (prof as any).branches;
+        const bName = Array.isArray(branchData) ? branchData[0]?.name : branchData?.name;
         setProfile({
           full_name: prof.full_name,
-          branch_name: (prof as unknown as { branches?: { name?: string } }).branches?.name || 'Anchor Store',
+          branch_name: bName || 'Anchor Store',
           photo_url: prof.photo_url || undefined,
           whatsapp_number: prof.whatsapp_number || undefined,
           phone: prof.phone || undefined,

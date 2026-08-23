@@ -203,7 +203,7 @@ export async function GET(
     // 1. Fetch Profile and check permissions
     const { data: targetProfile, error: profErr } = await supabase
       .from('profiles')
-      .select('id, full_name, email, phone, role, branch_id, employee_id, created_at, is_active, branches!profiles_branch_id_fkey(name, code)')
+      .select('id, full_name, email, phone, role, branch_id, employee_id, created_at, is_active, branch:branches!profiles_branch_id_fkey(name, code)')
       .eq('id', targetEmployeeId)
       .single();
 

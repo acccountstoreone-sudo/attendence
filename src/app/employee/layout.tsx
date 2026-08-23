@@ -35,7 +35,7 @@ export default function EmployeeLayout({ children }: { children: React.ReactNode
 
         const { data: profile } = await supabase
           .from('profiles')
-          .select('id, full_name, role, branch_id, branches!profiles_branch_id_fkey(name)')
+          .select('id, full_name, role, branch_id, branch:branches!profiles_branch_id_fkey(name)')
           .eq('id', user.id)
           .single();
 
@@ -49,12 +49,14 @@ export default function EmployeeLayout({ children }: { children: React.ReactNode
           return;
         }
 
+        const branchData = (profile as any).branch || (profile as any).branches;
+        const bName = Array.isArray(branchData) ? branchData[0]?.name : branchData?.name;
         setUserProfile({
           id: profile.id,
           full_name: profile.full_name,
           role: profile.role,
           branch_id: profile.branch_id,
-          branch_name: (profile as unknown as { branches?: { name?: string } }).branches?.name || 'Anchor Fashion Store',
+          branch_name: bName || 'Anchor Fashion Store',
         });
         setLoading(false);
       } catch (err) {

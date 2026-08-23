@@ -45,13 +45,17 @@ export default function BranchManagerDashboardPage() {
       // 1. Get branch info
       const { data: profile } = await supabase
         .from('profiles')
-        .select('branch_id, branches!profiles_branch_id_fkey(name)')
+        .select('branch_id, branch:branches!profiles_branch_id_fkey(name)')
         .eq('id', user.id)
         .single();
 
       const branchId = profile?.branch_id;
-      if (profile && profile.branches) {
-        setStoreName((profile as unknown as { branches: { name: string } }).branches.name);
+      if (profile) {
+        const branchData = (profile as any).branch || (profile as any).branches;
+        const bName = Array.isArray(branchData) ? branchData[0]?.name : branchData?.name;
+        if (bName) {
+          setStoreName(bName);
+        }
       }
 
       // 2. Fetch staff in this branch

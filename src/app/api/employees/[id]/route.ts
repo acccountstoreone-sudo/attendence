@@ -28,7 +28,7 @@ export async function GET(
 
     const { data: employee, error } = await supabase
       .from('profiles')
-      .select('*, branches!profiles_branch_id_fkey(name, code, address)')
+      .select('*, branch:branches!profiles_branch_id_fkey(name, code, address)')
       .eq('id', targetId)
       .single();
 
@@ -46,8 +46,12 @@ export async function GET(
       throw new Error('FORBIDDEN: You can only view staff profiles within your assigned store.');
     }
 
-    if (employee && (employee as any).branches) {
-      (employee as any).branch_name = (employee as any).branches.name;
+    if (employee) {
+      const branchData = (employee as any).branch || (employee as any).branches;
+      const bName = Array.isArray(branchData) ? branchData[0]?.name : branchData?.name;
+      if (bName) {
+        (employee as any).branch_name = bName;
+      }
     }
 
     return NextResponse.json({
