@@ -295,17 +295,34 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Override with Dynamic Shift Roster if assigned
+    const { data: activeShiftAssgn } = await supabase
+      .from('employee_shifts')
+      .select('shifts(start_time, end_time)')
+      .eq('user_id', user.id)
+      .lte('effective_from', `${year}-${month}-${day}`)
+      .or(`effective_to.gte.${year}-${month}-${day},effective_to.is.null`)
+      .order('effective_from', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (activeShiftAssgn?.shifts) {
+      const shiftData = Array.isArray(activeShiftAssgn.shifts) ? activeShiftAssgn.shifts[0] : activeShiftAssgn.shifts;
+      if (shiftData) {
+        workStartTime = shiftData.start_time || workStartTime;
+        workEndTime = shiftData.end_time || workEndTime;
+      }
+    }
+
     const checkInDateObj = payload.is_offline_sync && payload.timestamp ? new Date(payload.timestamp) : new Date();
     
-    // Parse start time
-    const [startHour, startMin, startSec] = workStartTime.split(':').map(Number);
-    const workStartTimestamp = new Date(checkInDateObj);
-    workStartTimestamp.setHours(startHour, startMin, startSec || 0, 0);
-
-    // Parse end time
-    const [endHour, endMin, endSec] = workEndTime.split(':').map(Number);
-    const workEndTimestamp = new Date(checkInDateObj);
-    workEndTimestamp.setHours(endHour, endMin, endSec || 0, 0);
+    // Parse start and end times explicitly in Asia/Dhaka timezone
+    // to avoid server timezone (UTC) issues when deployed.
+    const safeStartTime = workStartTime.split(':').length === 2 ? `${workStartTime}:00` : workStartTime;
+    const safeEndTime = workEndTime.split(':').length === 2 ? `${workEndTime}:00` : workEndTime;
+    
+    const workStartTimestamp = new Date(`${year}-${month}-${day}T${safeStartTime}+06:00`);
+    const workEndTimestamp = new Date(`${year}-${month}-${day}T${safeEndTime}+06:00`);
 
     const diffEarlyMinutes = (workStartTimestamp.getTime() - checkInDateObj.getTime()) / 60000;
     const MAX_EARLY_MINUTES = 120; // 2 hours limit
@@ -345,7 +362,9 @@ export async function POST(request: NextRequest) {
     // Friday (5) is the weekly off day. 
     // Check if there is an approved off-day request for today.
     let isHolidayDuty = false;
-    if (checkInDateObj.getDay() === 5) {
+    const isFriday = new Date(`${year}-${month}-${day}T12:00:00Z`).getUTCDay() === 5;
+    
+    if (isFriday) {
       const requestDateStr = `${year}-${month}-${day}`;
       const { data: offDayReq, error: offDayErr } = await supabase
         .from('off_day_overtime_requests')
@@ -393,6 +412,22 @@ export async function POST(request: NextRequest) {
             error: {
               code: 'OFFLINE_SYNC_DATE_MISMATCH',
               message: 'Offline check-in timestamp must be for today. Backdated sync is not permitted.',
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 400 }
+        );
+      }
+      const todayDate = new Date();
+      const diffHours = (todayDate.getTime() - offlineDate.getTime()) / (1000 * 3600);
+      if (diffHours < -0.2) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: {
+              code: 'OFFLINE_SYNC_FUTURE_TIME',
+              message: 'Offline check-in timestamp cannot be significantly in the future.',
             },
             timestamp: new Date().toISOString(),
           },

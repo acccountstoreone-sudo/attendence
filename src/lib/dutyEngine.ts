@@ -203,9 +203,6 @@ export async function computeEmployeeDutySummary(
     const parts = timeStr.split(':').map(Number);
     return (parts[0] || 0) * 60 + (parts[1] || 0);
   };
-  const startMinutesOfDay = parseTimeToMinutes(workStartTime);
-  const endMinutesOfDay = parseTimeToMinutes(workEndTime);
-
   // 3. Fetch Public Holidays
   const startOfMonthStr = `${year}-${String(month).padStart(2, '0')}-01`;
   const daysInMonthCount = new Date(year, month, 0).getDate();
@@ -228,6 +225,13 @@ export async function computeEmployeeDutySummary(
         .eq('status', 'approved')
         .lte('start_date', endOfMonthStr)
         .gte('end_date', startOfMonthStr)).data;
+
+  // 4b. Fetch Employee Shifts
+  const { data: employeeShifts } = await supabase
+    .from('employee_shifts')
+    .select('effective_from, effective_to, shifts(start_time, end_time, grace_period_minutes)')
+    .eq('user_id', targetEmployeeId)
+    .order('effective_from', { ascending: false });
 
   // 5. Fetch Attendance Records
   const startOfMonthISO = `${year}-${String(month).padStart(2, '0')}-01T00:00:00.000+06:00`;
@@ -324,6 +328,31 @@ export async function computeEmployeeDutySummary(
     const dayOfWeekNum = dateObj.getDay();
     const dayName = dayNames[dayOfWeekNum];
 
+    let dailyStartTime = workStartTime;
+    let dailyEndTime = workEndTime;
+    let dailyGraceMinutes = lateGraceMinutes;
+
+    if (employeeShifts) {
+      const activeShift = employeeShifts.find((s: any) => 
+        s.effective_from <= dateStr && (!s.effective_to || s.effective_to >= dateStr)
+      );
+      if (activeShift?.shifts) {
+        // Some nested selects might return arrays, but since shifts is one-to-one here, we treat it as an object
+        // Supabase might return it as an array if the relation is incorrectly mapped, but usually it's an object for belongsTo
+        const shiftData = Array.isArray(activeShift.shifts) ? activeShift.shifts[0] : activeShift.shifts;
+        if (shiftData) {
+          dailyStartTime = shiftData.start_time || dailyStartTime;
+          dailyEndTime = shiftData.end_time || dailyEndTime;
+          if (shiftData.grace_period_minutes !== undefined && shiftData.grace_period_minutes !== null) {
+            dailyGraceMinutes = shiftData.grace_period_minutes;
+          }
+        }
+      }
+    }
+
+    const startMinutesOfDay = parseTimeToMinutes(dailyStartTime);
+    const endMinutesOfDay = parseTimeToMinutes(dailyEndTime);
+
     const isFutureDay = dateStr > currentDhakaDateStr;
     const dayRecords = recordsByDate[dateStr] || [];
 
@@ -381,11 +410,22 @@ export async function computeEmployeeDutySummary(
       }
 
       let evaluatedStatus = firstLog.status || 'present';
-      if (lateMins > lateGraceMinutes) {
+      if (lateMins > dailyGraceMinutes) {
         evaluatedStatus = 'late';
       } else if (dutyHours > 0 && dutyHours < halfDayHours && checkOutMs) {
         evaluatedStatus = 'half_day';
       }
+
+      if (evaluatedStatus === 'present' || evaluatedStatus === 'incomplete') {
+        totalPresentDays++;
+      }
+      if (evaluatedStatus === 'late') {
+        totalLateDays++;
+        totalLateMinutes += lateMins;
+      } else if (lateMins > 0) {
+        totalLateMinutes += lateMins;
+      }
+      if (evaluatedStatus === 'half_day') totalHalfDays++;
 
       let otMins = 0;
       const approvalStatus = checkOutLog.overtime_approval_status || firstLog.overtime_approval_status || 'auto';

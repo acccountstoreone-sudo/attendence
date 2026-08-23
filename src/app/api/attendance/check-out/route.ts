@@ -257,9 +257,34 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const [endHour, endMin, endSec] = workEndTime.split(':').map(Number);
-    const workEndTimestamp = new Date(checkOutDateObj);
-    workEndTimestamp.setHours(endHour, endMin, endSec || 0, 0);
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Dhaka',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const [month, day, year] = formatter.format(checkInDateObj).split('/');
+
+    // Override with Dynamic Shift Roster if assigned
+    const { data: activeShiftAssgn } = await supabase
+      .from('employee_shifts')
+      .select('shifts(end_time)')
+      .eq('user_id', user.id)
+      .lte('effective_from', `${year}-${month}-${day}`)
+      .or(`effective_to.gte.${year}-${month}-${day},effective_to.is.null`)
+      .order('effective_from', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (activeShiftAssgn?.shifts) {
+      const shiftData = Array.isArray(activeShiftAssgn.shifts) ? activeShiftAssgn.shifts[0] : activeShiftAssgn.shifts;
+      if (shiftData) {
+        workEndTime = shiftData.end_time || workEndTime;
+      }
+    }
+
+    const safeEndTime = workEndTime.split(':').length === 2 ? `${workEndTime}:00` : workEndTime;
+    const workEndTimestamp = new Date(`${year}-${month}-${day}T${safeEndTime}+06:00`);
 
     const diffLateHours = (checkOutDateObj.getTime() - workEndTimestamp.getTime()) / (1000 * 3600);
     const MAX_LATE_HOURS = 4;

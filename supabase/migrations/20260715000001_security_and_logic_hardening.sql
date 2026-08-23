@@ -29,8 +29,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-DROP TRIGGER IF EXISTS trg_protect_attendance_immutable_fields ON public.attendance_records;
-CREATE TRIGGER trg_protect_attendance_immutable_fields
+DROP TRIGGER IF EXISTS trg_a_protect_attendance_immutable_fields ON public.attendance_records;
+CREATE TRIGGER trg_a_protect_attendance_immutable_fields
     BEFORE UPDATE ON public.attendance_records
     FOR EACH ROW EXECUTE FUNCTION public.protect_attendance_immutable_fields();
 

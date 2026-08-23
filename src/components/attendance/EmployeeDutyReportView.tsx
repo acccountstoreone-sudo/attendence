@@ -253,6 +253,13 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             <span>Half Day</span>
           </span>
         );
+      case 'incomplete':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-50 text-orange-700 border border-orange-200/80 text-xs font-semibold shadow-2xs">
+            <AlertCircle className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+            <span>Missed Check-out</span>
+          </span>
+        );
       case 'missed':
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-200/80 text-xs font-semibold shadow-2xs">
@@ -289,7 +296,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
   };
 
   const filteredLogs = (data?.daily_breakdown || []).filter((log) => {
-    if (filterTab === 'present' && log.status !== 'present') return false;
+    if (filterTab === 'present' && log.status !== 'present' && log.status !== 'incomplete') return false;
     if (filterTab === 'late' && log.status !== 'late') return false;
     if (filterTab === 'missed' && log.status !== 'missed') return false;
     if (filterTab === 'overtime' && log.overtime_minutes <= 0) return false;
@@ -859,7 +866,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                     filteredLogs.map((log) => (
                       <tr
                         key={log.date}
-                        className={`hover:bg-slate-50/80 transition-colors ${log.status === 'missed' ? 'bg-rose-50/30' : log.status === 'late' ? 'bg-amber-50/30' : ''}`}
+                        className={`hover:bg-slate-50/80 transition-colors ${log.status === 'missed' ? 'bg-rose-50/30' : log.status === 'late' ? 'bg-amber-50/30' : log.status === 'incomplete' ? 'bg-orange-50/30' : ''}`}
                       >
                         <td className="py-3.5 px-4 font-mono font-bold text-slate-800">{log.date}</td>
                         <td className="py-3.5 px-4 text-slate-700 font-semibold">{log.day_name}</td>

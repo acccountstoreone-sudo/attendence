@@ -64,7 +64,23 @@ export async function GET(request: NextRequest) {
        }
 
        const totalStaff = staffCount || 0;
-       const totalWorkingDays = totalStaff * daysInMonth; // Or approximate based on actual working days
+
+       // Calculate elapsed days for the month so we don't count future days as absent
+       let elapsedDays = daysInMonth;
+       const nowLocal = new Date();
+       const dhakaFmtLocal = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' });
+       const [moD, daD, yrD] = dhakaFmtLocal.format(nowLocal).split('/');
+       if (targetYear === parseInt(yrD, 10)) {
+         if (targetMonth === parseInt(moD, 10)) {
+           elapsedDays = parseInt(daD, 10);
+         } else if (targetMonth > parseInt(moD, 10)) {
+           elapsedDays = 0;
+         }
+       } else if (targetYear > parseInt(yrD, 10)) {
+         elapsedDays = 0;
+       }
+
+       const totalWorkingDays = totalStaff * elapsedDays;
 
        // If 'absent' wasn't explicitly logged for some days, we can deduce it 
        // but typically we'll just sum what is explicitly recorded, plus inferred unlogged days.
