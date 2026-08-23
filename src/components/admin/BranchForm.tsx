@@ -61,6 +61,12 @@ export function BranchForm({ initialData }: BranchFormProps) {
         is_active: form.is_active,
       };
 
+      if (payload.latitude === null || payload.longitude === null) {
+        setFeedback({ type: 'error', text: 'Please set the branch GPS location on the map before saving.' });
+        setSaving(false);
+        return;
+      }
+
       if (initialData) {
         const res = await fetch(`/api/branches/${initialData.id}`, {
           method: 'PUT',
