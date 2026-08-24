@@ -274,7 +274,7 @@ export async function POST(request: NextRequest) {
       ? (branch.geofence_radius_meters || 100) * 1.5 
       : (branch.geofence_radius_meters || 100);
 
-    if (!payload.is_offline_sync && !isAdminOrManager && geo.distance > maxAllowedDistance) {
+    if (!payload.is_offline_sync && !isAdminOrManager && !payload.is_manual_override && geo.distance > maxAllowedDistance) {
       return NextResponse.json(
         {
           success: false,
