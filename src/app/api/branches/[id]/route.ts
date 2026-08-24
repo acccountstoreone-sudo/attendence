@@ -208,29 +208,28 @@ export async function DELETE(
 
     const { data: deletedBranch, error: delErr } = await supabase
       .from('branches')
-      .update({ is_active: false })
+      .delete()
       .eq('id', branchId)
       .select()
       .single();
 
     if (delErr || !deletedBranch) {
-      throw new Error(`Failed to soft-delete branch: ${delErr?.message}`);
+      throw new Error(`Failed to delete branch: ${delErr?.message}`);
     }
 
     await supabase.from('audit_logs').insert({
       actor_id: user.id,
-      action: 'DEACTIVATE',
+      action: 'DELETE',
       table_name: 'branches',
       record_id: branchId,
-      old_value: { is_active: true },
-      new_value: { is_active: false },
+      old_value: deletedBranch,
       ip_address: request.headers.get('x-forwarded-for') || '127.0.0.1',
     });
 
     return NextResponse.json({
       success: true,
       data: deletedBranch,
-      message: `Branch '${deletedBranch.name}' has been deactivated (soft-deleted).`,
+      message: `Branch '${deletedBranch.name}' has been permanently deleted from the database.`,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

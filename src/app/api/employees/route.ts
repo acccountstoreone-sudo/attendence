@@ -17,8 +17,7 @@ const createEmployeeSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    // const user = await requireRole(['admin', 'branch_manager']);
-    const user = { role: 'admin' };
+    const user = await requireRole(['admin', 'branch_manager']);
     const { searchParams } = new URL(request.url);
 
     const branchId = searchParams.get('branch_id');
@@ -31,6 +30,7 @@ export async function GET(request: NextRequest) {
     const includeInactive = searchParams.get('include_inactive') === 'true';
 
     const supabase = await createClient();
+    const { data: branchesList } = await supabase.from('branches').select('id, name');
     let query = supabase
       .from('profiles')
       .select('*, branch:branches!profiles_branch_id_fkey(name, code)', { count: 'exact' });
@@ -62,6 +62,7 @@ export async function GET(request: NextRequest) {
 
     type EmployeeData = {
       id: string;
+      branch_id?: string;
       branch?: any;
       branches?: any;
       branch_name?: string;
@@ -77,7 +78,8 @@ export async function GET(request: NextRequest) {
     const employeeList = (employees as EmployeeData[] | null)?.map((e) => {
       // Safely extract branch name whether it's an alias, the default name, an object, or an array
       const branchData = e.branch || e.branches;
-      const bName = Array.isArray(branchData) ? branchData[0]?.name : branchData?.name;
+      const manualBranchName = branchesList?.find(b => b.id === e.branch_id)?.name;
+      const bName = (Array.isArray(branchData) ? branchData[0]?.name : branchData?.name) || manualBranchName;
       
       return {
         ...e,

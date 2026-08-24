@@ -238,6 +238,44 @@ export const BranchSettingsTab: React.FC<BranchSettingsTabProps> = ({ branch }) 
           </div>
         </Card>
       </div>
+
+      {/* Danger Zone */}
+      <Card className="bg-red-50/50 border-red-100 p-6 shadow-md mt-8">
+        <h4 className="text-sm font-semibold text-red-600 uppercase tracking-wider mb-4 flex items-center">
+          <span className="mr-2">⚠️</span> Danger Zone
+        </h4>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h5 className="font-bold text-slate-900">Delete this branch</h5>
+            <p className="text-sm text-slate-600">
+              Permanently remove this branch and all its settings from the database. 
+              This action cannot be undone. You cannot delete a branch that has active employees.
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            className="border-red-200 text-red-600 hover:bg-red-600 hover:text-white"
+            onClick={async () => {
+              if (window.confirm(`Are you absolutely sure you want to delete the branch '${branch.name}'? This will permanently remove it from the database.`)) {
+                try {
+                  const res = await fetch(`/api/branches/${branch.id}`, { method: 'DELETE' });
+                  const data = await res.json();
+                  if (data.success) {
+                    alert('Branch deleted successfully.');
+                    router.push('/admin/branches');
+                  } else {
+                    alert(data.error?.message || 'Failed to delete branch.');
+                  }
+                } catch (err) {
+                  alert('Network error while deleting branch.');
+                }
+              }
+            }}
+          >
+            Delete Branch
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 };
