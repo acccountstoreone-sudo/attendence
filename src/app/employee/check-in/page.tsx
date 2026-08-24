@@ -380,7 +380,9 @@ export default function EmployeeCheckInPage() {
       });
       setSubmitting(false);
       // Show success message then redirect
-      setTimeout(() => router.push('/employee'), 2200);
+      // Fix S5: 1200ms redirect (was 2200ms) — success animation completes in ~600ms,
+      // no need to wait 2.2 seconds before going back to dashboard.
+      setTimeout(() => router.push('/employee'), 1200);
       return;
     }
 
@@ -423,11 +425,11 @@ export default function EmployeeCheckInPage() {
       throw new Error((result.error as { message?: string })?.message ?? `Check-${checkType === 'in' ? 'In' : 'Out'} failed`);
     }
 
-    // Keep submitting=true during redirect delay for consistent UX
+    // Fix S5: 1200ms redirect (was 2200ms)
     setTimeout(() => {
       setSubmitting(false);
       router.push('/employee');
-    }, 2200);
+    }, 1200);
   }, [gps.coords, gps.verified, gps.distance, gps.status, profile, checkType, router, offline, isReverifyMode]);
 
   const isSubmittingRef = useRef(false);
@@ -495,7 +497,8 @@ export default function EmployeeCheckInPage() {
         throw new Error(result.error?.message ?? `Check-${checkType === 'in' ? 'In' : 'Out'} failed`);
       }
 
-      setTimeout(() => router.push('/employee'), 2200);
+      // Fix S5: 1200ms redirect (was 2200ms)
+      setTimeout(() => router.push('/employee'), 1200);
     } catch (err: unknown) {
       setSubmitting(false);
       if (err instanceof Error) {
@@ -700,7 +703,7 @@ export default function EmployeeCheckInPage() {
           <FaceCapture
             checkType={checkType}
             onCapture={handleBiometricSubmit}
-            onUseFingerprint={undefined}
+            onUseFingerprint={profile?.role !== 'admin' ? handleFingerprintSubmit : undefined}
             gpsVerified={gps.verified}
             gpsStatus={gps.status}
             gpsDistance={gps.distance}

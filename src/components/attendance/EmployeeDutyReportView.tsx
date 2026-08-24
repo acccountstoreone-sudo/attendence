@@ -32,7 +32,7 @@ import { useRouter } from 'next/navigation';
 interface DailyLog {
   date: string;
   day_name: string;
-  status: 'present' | 'late' | 'half_day' | 'missed' | 'on_leave' | 'off_day' | 'holiday' | 'upcoming';
+  status: 'present' | 'late' | 'half_day' | 'missed' | 'on_leave' | 'off_day' | 'holiday' | 'upcoming' | 'incomplete';
   check_in_time: string;
   check_out_time: string;
   duty_hours: number;
@@ -296,7 +296,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
   };
 
   const filteredLogs = (data?.daily_breakdown || []).filter((log) => {
-    if (filterTab === 'present' && log.status !== 'present' && log.status !== 'incomplete') return false;
+    if (filterTab === 'present' && (log.status as string) !== 'present' && (log.status as string) !== 'incomplete') return false;
     if (filterTab === 'late' && log.status !== 'late') return false;
     if (filterTab === 'missed' && log.status !== 'missed') return false;
     if (filterTab === 'overtime' && log.overtime_minutes <= 0) return false;
@@ -866,7 +866,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                     filteredLogs.map((log) => (
                       <tr
                         key={log.date}
-                        className={`hover:bg-slate-50/80 transition-colors ${log.status === 'missed' ? 'bg-rose-50/30' : log.status === 'late' ? 'bg-amber-50/30' : log.status === 'incomplete' ? 'bg-orange-50/30' : ''}`}
+                        className={`hover:bg-slate-50/80 transition-colors ${log.status === 'missed' ? 'bg-rose-50/30' : log.status === 'late' ? 'bg-amber-50/30' : (log.status as string) === 'incomplete' ? 'bg-orange-50/30' : ''}`}
                       >
                         <td className="py-3.5 px-4 font-mono font-bold text-slate-800">{log.date}</td>
                         <td className="py-3.5 px-4 text-slate-700 font-semibold">{log.day_name}</td>

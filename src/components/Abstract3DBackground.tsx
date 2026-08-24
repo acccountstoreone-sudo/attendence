@@ -6,11 +6,11 @@ import { Float, Points, PointMaterial } from '@react-three/drei';
 import * as THREE from 'three';
 import { ThreeElements } from '@react-three/fiber';
 
-declare global {
+// Extend JSX IntrinsicElements with react-three-fiber's Three.js elements
+// This tells TypeScript that <group>, <mesh>, etc. are valid JSX elements.
+declare module 'react' {
   namespace JSX {
-    interface IntrinsicElements {
-      [elemName: string]: any;
-    }
+    interface IntrinsicElements extends ThreeElements {}
   }
 }
 
