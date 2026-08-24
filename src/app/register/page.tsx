@@ -142,7 +142,7 @@ export default function RegisterPage() {
         if (webcamRef.current && webcamRef.current.video && webcamRef.current.video.readyState === 4) {
           const faceapi = await import('@vladmandic/face-api');
           const video = webcamRef.current.video;
-          const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }));
+          const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }));
           
           if (!showCameraModal || !webcamRef.current || !webcamRef.current.video) return;
 
@@ -216,7 +216,7 @@ export default function RegisterPage() {
       });
 
       const data = await parseJsonResponse(res);
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      if (!res.ok) throw new Error(typeof data.error === 'string' ? data.error : (data.error?.message || JSON.stringify(data.error) || 'Registration failed'));
 
       setFeedback({ type: 'success', message: 'Verification code sent to your email address.' });
       setStep('otp');
@@ -242,7 +242,7 @@ export default function RegisterPage() {
       });
 
       const data = await parseJsonResponse(res);
-      if (!res.ok) throw new Error(data.error || 'OTP Verification failed');
+      if (!res.ok) throw new Error(typeof data.error === 'string' ? data.error : (data.error?.message || JSON.stringify(data.error) || 'OTP Verification failed'));
 
       // Sign the user in to establish a session for subsequent steps (WebAuthn & KYC)
       const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -368,7 +368,7 @@ export default function RegisterPage() {
         const video = webcamRef.current.video;
         const faceapi = await import('@vladmandic/face-api');
         
-        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.3 }))
+        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
           .withFaceLandmarks()
           .withFaceDescriptor();
 
@@ -408,17 +408,17 @@ export default function RegisterPage() {
       const resp = await fetch('/api/auth/webauthn/register/generate', { method: 'POST', headers });
       const options = await parseJsonResponse(resp);
       if (!resp.ok) {
-        throw new Error(options.error || 'Failed to generate fingerprint options.');
+        throw new Error(typeof options.error === 'string' ? options.error : (options.error?.message || JSON.stringify(options.error) || 'Failed to generate fingerprint options.'));
       }
 
       let asseResp;
       try {
         asseResp = await startRegistration({ optionsJSON: options });
-      } catch (e: unknown) {
-        if (e instanceof Error && (e.name === 'NotAllowedError' || e.message.includes('cancelled'))) {
+      } catch (e: any) {
+        if (e?.name === 'NotAllowedError' || e?.message?.includes('cancelled')) {
            throw new Error('Sensor scan cancelled by user. You can try again or enroll Face scan.');
         }
-        throw e;
+        throw new Error(e?.message || (typeof e === 'object' ? JSON.stringify(e) : String(e)) || 'Fingerprint scan failed on device.');
       }
 
       const verifyResp = await fetch('/api/auth/webauthn/register/verify', {
@@ -429,7 +429,7 @@ export default function RegisterPage() {
 
       const verifyData = await parseJsonResponse(verifyResp);
       if (!verifyResp.ok) {
-         throw new Error(verifyData.error || 'Fingerprint verification failed.');
+         throw new Error(typeof verifyData.error === 'string' ? verifyData.error : (verifyData.error?.message || JSON.stringify(verifyData.error) || 'Fingerprint verification failed.'));
       }
       if (!verifyData.verified) throw new Error('Invalid fingerprint registration.');
 
@@ -479,7 +479,7 @@ export default function RegisterPage() {
       });
 
       const data = await parseJsonResponse(res);
-      if (!res.ok) throw data.error || data.message || data;
+      if (!res.ok) throw new Error(typeof data.error === 'string' ? data.error : (data.error?.message || JSON.stringify(data.error) || data.message || 'KYC submission failed.'));
 
       localStorage.removeItem('anchor_register_form');
       setStep('pending');
