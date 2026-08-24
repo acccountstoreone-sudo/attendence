@@ -81,7 +81,6 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const [msg, setMsg]       = useState('Initializing...');
   const [msgType, setMT]    = useState<'info' | 'success' | 'error' | 'warn'>('info');
   const [camErr, setCamErr] = useState('');
-  const [camErr, setCamErr] = useState('');
 
   const setPhase = useCallback((p: Phase) => {
     if (!mountedRef.current) return;
