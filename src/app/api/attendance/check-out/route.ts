@@ -91,8 +91,8 @@ export async function POST(request: NextRequest) {
           const storedDesc = profile.face_descriptor;
           const distance = Math.sqrt(storedDesc.reduce((sum: number, val: number, i: number) => sum + Math.pow(val - incomingDesc[i], 2), 0));
         
-          // Relaxed distance to 1.40 (from 1.20) to support extremely low quality cameras on cheap devices
-          if (distance > 1.40) {
+          // Relaxed distance to 1.60 (from 1.40) for very loose checking, as managers review photos manually
+          if (distance > 1.60) {
             return NextResponse.json(
               {
                 success: false,
