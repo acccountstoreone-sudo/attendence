@@ -211,7 +211,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               consecutiveFaceFrames++;
               
               if (consecutiveFaceFrames >= 3) {
-                if (!isCapturingRef.current) {
+                if (!isCapturingRef.current && !isEnrollment) {
                   isCapturingRef.current = true;
                   stopScan();
                   if (runCaptureRef.current) {
@@ -257,6 +257,37 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       if (ctx) ctx.drawImage(v, 0, 0, targetW, targetH);
       // Reduce quality to 0.5 (super small) for fast upload
       const dataUrl = c.toDataURL('image/jpeg', 0.5);
+
+      if (isEnrollment) {
+        setPhase('review_enroll');
+        announce('Review your photo and tap Submit to enroll.', 'success');
+        return;
+      }
+
+  const submitEnrollment = useCallback(async () => {
+    setPhase('extract');
+    announce('Processing image...', 'info');
+    
+    const c = canvasRef.current;
+    if (!c) return;
+    
+    let fa = faRef.current;
+    if (!fa) fa = await globalLoadPromise;
+    if (fa) {
+       const face = await fa.detectSingleFace(c, new fa.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
+         .withFaceLandmarks(true)
+         .withFaceDescriptor();
+       if (face) {
+          setPhase('submit');
+          await onCapture(c.toDataURL('image/jpeg', 0.5), Array.from(face.descriptor), false);
+          return;
+       }
+    }
+    
+    // If AI fails on the captured frame
+    announce('Face not clear in the photo. Please retake.', 'error');
+    setPhase('review_enroll'); // Let them see it failed and they can hit retake
+  }, [onCapture, announce]);
 
       if (isManual) {
         // Nano-second Manual Capture: Completely bypass face-api extraction.
@@ -580,6 +611,32 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
 
 
+        {phase === 'review_enroll' && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex w-full gap-3 mt-4 px-6"
+          >
+            <button
+              onClick={() => {
+                isCapturingRef.current = false;
+                if (videoRef.current) videoRef.current.play();
+                startScan();
+              }}
+              className="flex-1 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition-all"
+            >
+              Retake
+            </button>
+            <button
+              onClick={submitEnrollment}
+              className="flex-[2] py-3.5 bg-[#1dbf73] hover:bg-[#16965a] text-white font-extrabold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+            >
+              <CheckCircle2 className="w-5 h-5" />
+              Submit
+            </button>
+          </motion.div>
+        )}
+
         {/* Manual Capture Button */}
         {phase === 'scanning' && (
           <motion.div
@@ -595,7 +652,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
                     ? 'Face detected! Tap "Capture Face" to submit.' 
                     : 'Align your face in the frame to capture, or use Instant Capture.')
                   : (faceDetected 
-                    ? 'Face detected! Tap "Enroll Face" to save.' 
+                    ? 'Face detected! Tap "Capture" to take a photo.' 
                     : 'Align your face in the frame.'))}
             </p>
             <div className="flex gap-4">
@@ -617,7 +674,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
                       className="px-6 py-3 bg-blue-500 hover:bg-blue-400 text-white font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all active:scale-95 flex items-center space-x-2 animate-pulse"
                     >
                       <span className="text-lg">📸</span>
-                      <span>{isEnrollment ? 'Enroll Face' : 'Capture Face'}</span>
+                      <span>{isEnrollment ? 'Capture' : 'Capture Face'}</span>
                     </button>
                   ) : (
                     <button

@@ -110,6 +110,7 @@ export default function RegisterPage() {
   const [faceMessage, setFaceMessage] = useState('Initializing Scanner...');
   const [faceDescriptor, setFaceDescriptor] = useState<number[] | null>(null);
   const [showCameraModal, setShowCameraModal] = useState(false);
+  const [capturedImageData, setCapturedImageData] = useState<string | null>(null);
   const [fingerprintEnrolled, setFingerprintEnrolled] = useState(false);
 
   // Load Face API Models when step changes to biometrics or camera modal is opened
@@ -141,7 +142,7 @@ export default function RegisterPage() {
   // Face Detection Loop inside camera modal
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (showCameraModal && modelsLoaded && !faceImage) {
+    if (showCameraModal && modelsLoaded && !faceImage && !capturedImageData) {
       interval = setInterval(async () => {
         if (webcamRef.current && webcamRef.current.video && webcamRef.current.video.readyState === 4) {
           const faceapi = await import('@vladmandic/face-api');
@@ -364,32 +365,44 @@ export default function RegisterPage() {
     setStep('biometrics');
   };
 
-  const captureFace = useCallback(async () => {
+  const captureImage = useCallback(() => {
+    if (webcamRef.current) {
+      const imageSrc = webcamRef.current.getScreenshot({ width: 640, height: 480 });
+      if (imageSrc) {
+        setCapturedImageData(imageSrc);
+        setFaceMessage('Review photo and tap Submit to enroll.');
+      }
+    }
+  }, []);
+
+  const submitAndEnrollFace = useCallback(async () => {
+    if (!capturedImageData) return;
     setScanning(true);
     setFaceMessage('Extracting 3D biometric vector...');
     try {
-      if (webcamRef.current && webcamRef.current.video) {
-        const video = webcamRef.current.video;
-        const faceapi = await import('@vladmandic/face-api');
-        
-        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
-          .withFaceLandmarks(true)
-          .withFaceDescriptor();
+      const img = new Image();
+      img.src = capturedImageData;
+      await new Promise((resolve) => { img.onload = resolve; });
 
-        if (detection) {
-          const imageSrc = webcamRef.current.getScreenshot({ width: 640, height: 480 });
-          if (imageSrc) {
-            const compressedFace = await compressDataUrl(imageSrc, 500, 0.65);
-            setFaceImage(compressedFace);
-          }
-          setFaceDescriptor(Array.from(detection.descriptor));
-          setFaceMessage('Biometric enrollment successful!');
-          setShowCameraModal(false);
-          setFeedback({ type: 'success', message: '3D Facial vector captured and enrolled successfully!' });
-        } else {
-          setFeedback({ type: 'error', message: 'Failed to extract facial features. Ensure good lighting and try again.' });
-          setFaceMessage('Please center your face in the frame');
-        }
+      const faceapi = await import('@vladmandic/face-api');
+      const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
+        .withFaceLandmarks(true)
+        .withFaceDescriptor();
+
+      if (detection) {
+        const compressedFace = await compressDataUrl(capturedImageData, 500, 0.65);
+        setFaceImage(compressedFace);
+        setFaceDescriptor(Array.from(detection.descriptor));
+        setFaceMessage('Biometric enrollment successful!');
+        setTimeout(() => {
+           setShowCameraModal(false);
+           setCapturedImageData(null);
+        }, 1000);
+        setFeedback({ type: 'success', message: '3D Facial vector captured and enrolled successfully!' });
+      } else {
+        setFeedback({ type: 'error', message: 'Failed to extract facial features from photo. Please retake.' });
+        setCapturedImageData(null);
+        setFaceMessage('Please center your face in the frame');
       }
     } catch (err) {
       console.error(err);
@@ -397,7 +410,7 @@ export default function RegisterPage() {
     } finally {
       setScanning(false);
     }
-  }, [webcamRef]);
+  }, [capturedImageData]);
 
   const handleFingerprintSetup = async () => {
     setLoading(true);
@@ -749,21 +762,40 @@ export default function RegisterPage() {
                     <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 flex flex-col items-center">
                       <div className="flex justify-between items-center w-full mb-4">
                         <h3 className="font-bold text-slate-900 flex items-center gap-2"><ScanFace className="w-5 h-5 text-[#1dbf73]"/> 3D Facial AI Capture</h3>
-                        <button onClick={() => setShowCameraModal(false)} className="p-1 hover:bg-slate-100 rounded-lg text-slate-900"><X className="w-5 h-5"/></button>
+                        <button onClick={() => { setShowCameraModal(false); setCapturedImageData(null); }} className="p-1 hover:bg-slate-100 rounded-lg text-slate-900"><X className="w-5 h-5"/></button>
                       </div>
 
                       <div className="relative w-full aspect-square rounded-2xl overflow-hidden border-2 border-slate-200 bg-black mb-4">
-                        <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" screenshotQuality={0.82} videoConstraints={{ width: 640, height: 480, facingMode: 'user' }} className="w-full h-full object-cover" mirrored />
-                        <div className={`absolute inset-0 border-4 rounded-2xl transition-colors duration-300 ${faceDetected ? 'border-green-500' : 'border-[#1dbf73]'}`} />
+                        {capturedImageData ? (
+                           <img src={capturedImageData} alt="Captured face" className="w-full h-full object-cover" />
+                        ) : (
+                           <Webcam audio={false} ref={webcamRef} screenshotFormat="image/jpeg" screenshotQuality={0.82} videoConstraints={{ width: 640, height: 480, facingMode: 'user' }} className="w-full h-full object-cover" mirrored />
+                        )}
+                        
+                        {!capturedImageData && (
+                          <>
+                            <div className={`absolute inset-0 border-4 rounded-2xl transition-colors duration-300 ${faceDetected ? 'border-green-500' : 'border-[#1dbf73]'}`} />
+                            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] border transition-colors duration-300 rounded-full ${faceDetected ? 'border-green-500 shadow-[0_0_20px_#22c55e]' : 'border-[#1dbf73]/40'}`} />
+                          </>
+                        )}
+
                         <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/75 text-white px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap z-10 shadow-xl">
-                          {faceDetected ? <span className="text-[#1dbf73]">{faceMessage}</span> : <span className="text-yellow-400 animate-pulse">{faceMessage}</span>}
+                          {capturedImageData ? <span className="text-[#1dbf73]">{faceMessage}</span> : (faceDetected ? <span className="text-[#1dbf73]">{faceMessage}</span> : <span className="text-yellow-400 animate-pulse">{faceMessage}</span>)}
                         </div>
-                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] border transition-colors duration-300 rounded-full ${faceDetected ? 'border-green-500 shadow-[0_0_20px_#22c55e]' : 'border-[#1dbf73]/40'}`} />
                       </div>
 
-                      <button onClick={captureFace} disabled={scanning || !faceDetected} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${(!faceDetected || scanning) ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-[#1dbf73] hover:bg-[#16965a] text-white shadow-lg shadow-[#1dbf73]/30'}`}>
-                        {scanning ? <><RefreshCw className="w-4 h-4 animate-spin"/> Processing Vector...</> : <><Camera className="w-4 h-4"/> Capture & Enroll Vector</>}
-                      </button>
+                      {capturedImageData ? (
+                         <div className="w-full flex gap-3">
+                            <button onClick={() => setCapturedImageData(null)} disabled={scanning} className="w-1/3 font-bold py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">Retake</button>
+                            <button onClick={submitAndEnrollFace} disabled={scanning} className="w-2/3 font-bold py-3.5 rounded-xl bg-[#1dbf73] hover:bg-[#16965a] text-white shadow-lg flex items-center justify-center gap-2">
+                               {scanning ? <><RefreshCw className="w-4 h-4 animate-spin"/> Processing...</> : <><CheckCircle2 className="w-4 h-4"/> Submit & Enroll</>}
+                            </button>
+                         </div>
+                      ) : (
+                         <button onClick={captureImage} disabled={!faceDetected} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${!faceDetected ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/30'}`}>
+                            <Camera className="w-4 h-4"/> Capture Face
+                         </button>
+                      )}
                     </div>
                   </div>
                 )}
