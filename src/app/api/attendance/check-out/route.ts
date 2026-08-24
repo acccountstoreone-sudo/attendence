@@ -91,20 +91,13 @@ export async function POST(request: NextRequest) {
           const storedDesc = profile.face_descriptor;
           const distance = Math.sqrt(storedDesc.reduce((sum: number, val: number, i: number) => sum + Math.pow(val - incomingDesc[i], 2), 0));
         
-          // Relaxed distance to 1.60 (from 1.40) for very loose checking, as managers review photos manually
+          // Face match failed! Instead of blocking, we set manual override and flag face_verified as false.
+          // This allows the check-out to succeed immediately, and lets the manager approve it manually.
           if (distance > 1.60) {
-            return NextResponse.json(
-              {
-                success: false,
-                data: null,
-                error: {
-                  code: 'BIOMETRIC_MISMATCH',
-                  message: `Face does not match. Distance: ${distance.toFixed(3)}. Please re-enroll or contact your manager.`,
-                },
-                timestamp: new Date().toISOString(),
-              },
-              { status: 403 }
-            );
+            payload.is_manual_override = true;
+            payload.face_verified = false;
+          } else {
+            payload.face_verified = true;
           }
         }
       } catch (err) {
@@ -330,6 +323,13 @@ export async function POST(request: NextRequest) {
         check_out_time: checkOutTime,
         check_out_lat: payload.latitude,
         check_out_lng: payload.longitude,
+        // Reset approval_status to pending if check-out has manual override or failed face match
+        ...(!geo.within || Boolean(payload.is_manual_override) || !payload.face_verified ? {
+          is_manual_override: true,
+          approval_status: 'pending',
+        } : {}),
+        // face_verified is true only if both check-in and check-out passed face matching
+        face_verified: Boolean(record.face_verified) && Boolean(payload.face_verified),
       })
       .eq('id', record.id)
       .select()
