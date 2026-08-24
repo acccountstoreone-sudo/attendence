@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -8,6 +8,8 @@ import { Spinner } from '@/components/ui/Spinner';
 import { Settings, Clock, CalendarDays, CheckCircle2, AlertTriangle, Info, MapPin, Store, Navigation, Phone, Building2, ShieldCheck, Sparkles, Sliders } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 const LocationMapPicker = dynamic(
   () => import('@/components/admin/LocationMapPicker').then(mod => mod.LocationMapPicker),
@@ -55,6 +57,8 @@ const DAYS_OF_WEEK = [
 ];
 
 export default function StoreSettingsPage() {
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
   const [activeTab, setActiveTab] = useState<'location' | 'duty'>('location');
   const [loading, setLoading] = useState(true);
   const [savingLocation, setSavingLocation] = useState(false);
@@ -68,6 +72,31 @@ export default function StoreSettingsPage() {
   const loadAllData = useCallback(async () => {
     setLoading(true);
     try {
+      // Get currently logged-in user profile role
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+      
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('role, branch_id')
+        .eq('id', user.id)
+        .single();
+        
+      if (prof?.role === 'admin') {
+        // Redirect to admin branches dashboard
+        router.push('/admin/branches');
+        return;
+      }
+
+      if (prof?.role === 'branch_manager' && !prof.branch_id) {
+        setBranchData(null);
+        setLoading(false);
+        return;
+      }
+
       // 1. Load Branch Profile & Geofence
       const branchRes = await fetch('/api/branches');
       const branchJson = await branchRes.json();
@@ -97,7 +126,7 @@ export default function StoreSettingsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [supabase, router]);
 
   useEffect(() => {
     queueMicrotask(() => {
