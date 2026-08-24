@@ -19,7 +19,7 @@ let globalLoadPromise: Promise<typeof import('@vladmandic/face-api') | null> | n
 
 export interface FaceCaptureProps {
   /** Called on successful face capture + descriptor extract. Throws on API failure. */
-  onCapture: (image: string, descriptor: number[]) => Promise<void>;
+  onCapture: (image: string, descriptor: number[], isManualCapture?: boolean) => Promise<void>;
   onUseFingerprint?: () => Promise<void>;
   gpsVerified: boolean;
   gpsStatus: 'locating' | 'inside' | 'approaching' | 'outside' | 'error' | 'not_configured' | 'permission_denied' | 'timeout' | 'not_supported' | 'position_unavailable';
