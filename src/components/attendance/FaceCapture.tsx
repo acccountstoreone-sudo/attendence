@@ -201,10 +201,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       }
 
       try {
-        // Use inputSize:160 for scan — slightly larger than 128 but still fast,
-        // gives better feature extraction on blurry/low-quality cameras (Redmi A3 etc.)
+        // Nano-second optimization: use inputSize: 128 and extremely permissive threshold
+        // for the scan loop to guarantee it catches the face instantly on low-end cameras.
         const det = await fa
-          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.1 }));
+          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.03 }));
 
         if (!det) {
           if (mountedRef.current) {
@@ -251,10 +251,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     try {
       setPhase('extract');
       
-      // Fix F1: Use inputSize:128 for extract (same family as scan's 160 — fast).
-      // scoreThreshold 0.1 keeps parity with scan sensitivity for low-end cameras.
+      // Fix F1: Use inputSize:128 for extract (same family as scan's 128 — fast).
+      // scoreThreshold 0.03 keeps parity with scan sensitivity for low-end cameras.
       const face = await fa
-        .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.1 }))
+        .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.03 }))
         .withFaceLandmarks(true)
         .withFaceDescriptor();
 
