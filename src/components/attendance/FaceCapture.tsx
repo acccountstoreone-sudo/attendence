@@ -83,7 +83,9 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const [msgType, setMT]    = useState<'info' | 'success' | 'error' | 'warn'>('info');
   const [camErr, setCamErr] = useState('');
   const [faceDetected, setFaceDetected] = useState(false);
+  const [showManualBtn, setShowManualBtn] = useState(false);
   const lastFaceDescriptorRef = useRef<number[] | null>(null);
+  const manualBtnTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setPhase = useCallback((p: Phase) => {
     if (!mountedRef.current) return;
@@ -98,6 +100,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
   const stopScan = useCallback(() => {
     if (scanTimerRef.current) { clearTimeout(scanTimerRef.current); scanTimerRef.current = null; }
+    if (manualBtnTimerRef.current) { clearTimeout(manualBtnTimerRef.current); manualBtnTimerRef.current = null; }
   }, []);
 
   // ── Camera ────────────────────────────────────────────
@@ -176,8 +179,14 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     stopScan();
     setPhase('scanning');
     setFaceDetected(false);
+    setShowManualBtn(false);
     lastFaceDescriptorRef.current = null;
     announce('Camera ready. Align your face in the frame.', 'info');
+    
+    if (manualBtnTimerRef.current) clearTimeout(manualBtnTimerRef.current);
+    manualBtnTimerRef.current = setTimeout(() => {
+      if (mountedRef.current) setShowManualBtn(true);
+    }, 3000);
 
     let consecutiveFaceFrames = 0;
 
@@ -579,52 +588,63 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
             className="flex flex-col items-center mt-3 space-y-2"
           >
             <p className="text-blue-300 text-xs font-medium text-center px-4">
-              {!isEnrollment
-                ? (faceDetected 
-                  ? 'Face detected! Tap "Capture Face" to submit.' 
-                  : 'Align your face in the frame to capture, or use Instant Capture.')
-                : (faceDetected 
-                  ? 'Face detected! Tap "Enroll Face" to save.' 
-                  : 'Align your face in the frame.')}
+              {!showManualBtn 
+                ? (faceDetected ? 'Face detected! Hold still for auto-capture...' : 'Align your face in the frame for auto-capture.')
+                : (!isEnrollment
+                  ? (faceDetected 
+                    ? 'Face detected! Tap "Capture Face" to submit.' 
+                    : 'Align your face in the frame to capture, or use Instant Capture.')
+                  : (faceDetected 
+                    ? 'Face detected! Tap "Enroll Face" to save.' 
+                    : 'Align your face in the frame.'))}
             </p>
             <div className="flex gap-4">
-              {faceDetected ? (
-                <button
-                  onClick={() => {
-                    if (isCapturingRef.current) return;
-                    isCapturingRef.current = true;
-                    stopScan();
-                    runCapture(false); // Run real face extraction
-                  }}
-                  className="px-6 py-3 bg-blue-500 hover:bg-blue-400 text-white font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all active:scale-95 flex items-center space-x-2 animate-pulse"
-                >
-                  <span className="text-lg">📸</span>
-                  <span>{isEnrollment ? 'Enroll Face' : 'Capture Face'}</span>
-                </button>
+              {!showManualBtn ? (
+                <div className="px-6 py-3 bg-slate-900/60 text-slate-400 font-bold text-sm rounded-xl flex items-center space-x-2 border border-slate-800">
+                  <span className={`w-2 h-2 rounded-full ${faceDetected ? 'bg-emerald-500' : 'bg-blue-500'} animate-ping`} />
+                  <span className={faceDetected ? 'text-emerald-400' : ''}>{faceDetected ? 'Capturing...' : 'Auto-scanning...'}</span>
+                </div>
               ) : (
-                <button
-                  disabled
-                  type="button"
-                  className="px-6 py-3 bg-slate-900/60 text-slate-400 font-bold text-sm rounded-xl cursor-not-allowed flex items-center space-x-2 border border-slate-800"
-                >
-                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-                  <span>Looking for face...</span>
-                </button>
-              )}
-              {!isEnrollment && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (isCapturingRef.current) return;
-                    isCapturingRef.current = true;
-                    stopScan();
-                    runCapture(true); // Run manual bypass capture
-                  }}
-                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all active:scale-95 flex items-center space-x-2"
-                >
-                  <span className="text-lg">⚡</span>
-                  <span>Instant Capture</span>
-                </button>
+                <>
+                  {faceDetected ? (
+                    <button
+                      onClick={() => {
+                        if (isCapturingRef.current) return;
+                        isCapturingRef.current = true;
+                        stopScan();
+                        runCapture(false); // Run real face extraction
+                      }}
+                      className="px-6 py-3 bg-blue-500 hover:bg-blue-400 text-white font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all active:scale-95 flex items-center space-x-2 animate-pulse"
+                    >
+                      <span className="text-lg">📸</span>
+                      <span>{isEnrollment ? 'Enroll Face' : 'Capture Face'}</span>
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      type="button"
+                      className="px-6 py-3 bg-slate-900/60 text-slate-400 font-bold text-sm rounded-xl cursor-not-allowed flex items-center space-x-2 border border-slate-800"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                      <span>Looking for face...</span>
+                    </button>
+                  )}
+                  {!isEnrollment && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isCapturingRef.current) return;
+                        isCapturingRef.current = true;
+                        stopScan();
+                        runCapture(true); // Run manual bypass capture
+                      }}
+                      className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all active:scale-95 flex items-center space-x-2"
+                    >
+                      <span className="text-lg">⚡</span>
+                      <span>Instant Capture</span>
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </motion.div>
