@@ -29,6 +29,7 @@ export interface FaceCaptureProps {
   isLoading?: boolean;
   checkType?: 'in' | 'out';
   gpsErrorMsg?: string;
+  isEnrollment?: boolean;
 }
 
 type Phase =
@@ -63,7 +64,7 @@ function say(text: string): void {
 
 export const FaceCapture: React.FC<FaceCaptureProps> = ({
   onCapture, onUseFingerprint, gpsVerified, gpsStatus, gpsDistance, gpsRefresh,
-  branchName, checkType = 'in', gpsErrorMsg
+  branchName, checkType = 'in', gpsErrorMsg, isEnrollment = false
 }) => {
   // ── Refs ──────────────────────────────────────────────
   const videoRef       = useRef<HTMLVideoElement | null>(null);
@@ -122,10 +123,12 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const loadModels = useCallback(async () => {
     setPhase('loading');
     setPr(5);
+    announce('Loading Face AI Models...', 'info');
     
     if (globalFa) {
       faRef.current = globalFa;
       setPr(100);
+      announce('Face AI Models Ready.', 'success');
       return globalFa;
     }
     
@@ -144,24 +147,27 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           ]);
           globalFa = fa;
           return fa;
-        } catch {
-          return null;
+        } catch (err: any) {
+          console.error('Face API load error:', err);
+          throw err;
         }
       })();
     }
     
     try {
       const fa = await globalLoadPromise;
-      if (!fa) throw new Error();
+      if (!fa) throw new Error('Failed to load Face AI libraries.');
       
       faRef.current = fa;
       setPr(100);
+      announce('Face AI Models Ready.', 'success');
       return fa;
-    } catch {
-      // Don't show error immediately as it runs in background
+    } catch (err: any) {
+      console.error(err);
+      announce('Face AI Load Error: Failed to download model files. Check your internet connection.', 'error');
       return null;
     }
-  }, [setPhase]);
+  }, [setPhase, announce]);
 
   // ── Face Scan Loop — auto detects when face appears ──
   const startScan = useCallback(() => {
@@ -510,20 +516,39 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
             className="flex flex-col items-center mt-3 space-y-2"
           >
             <p className="text-blue-300 text-xs font-medium text-center px-4">
-              Frame your face and click capture.
+              {!isEnrollment
+                ? 'Use Auto Scan for fast matching, or Instant Capture for manual approval.'
+                : 'Frame your face and click Auto Scan.'}
             </p>
-            <button
-              onClick={() => {
-                if (isCapturingRef.current) return;
-                isCapturingRef.current = true;
-                stopScan();
-                runCapture(false); // Run real face extraction
-              }}
-              className="px-8 py-3 bg-blue-500 hover:bg-blue-400 text-white font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all active:scale-95 flex items-center space-x-2"
-            >
-              <span className="text-lg">📸</span>
-              <span>Capture Face</span>
-            </button>
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  if (isCapturingRef.current) return;
+                  isCapturingRef.current = true;
+                  stopScan();
+                  runCapture(false); // Run real face extraction
+                }}
+                className="px-6 py-3 bg-blue-500 hover:bg-blue-400 text-white font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all active:scale-95 flex items-center space-x-2"
+              >
+                <span className="text-lg">📸</span>
+                <span>Auto Scan</span>
+              </button>
+              {!isEnrollment && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isCapturingRef.current) return;
+                    isCapturingRef.current = true;
+                    stopScan();
+                    runCapture(true); // Run manual bypass capture
+                  }}
+                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all active:scale-95 flex items-center space-x-2"
+                >
+                  <span className="text-lg">⚡</span>
+                  <span>Instant Capture</span>
+                </button>
+              )}
+            </div>
           </motion.div>
         )}
       </div>

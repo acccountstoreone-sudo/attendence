@@ -158,6 +158,7 @@ export function FaceRegister() {
                   gpsDistance={0}
                   gpsRefresh={() => {}}
                   isLoading={loading}
+                  isEnrollment={true}
                 />
               </div>
             </motion.div>
