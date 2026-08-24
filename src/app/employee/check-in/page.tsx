@@ -317,7 +317,7 @@ export default function EmployeeCheckInPage() {
 
   // ── API submission ──────────────────────────────────────
   // This function throws on failure so FaceCapture can handle it.
-  const handleBiometricSubmit = useCallback(async (base64Image: string, faceDescriptor: number[]) => {
+  const handleBiometricSubmit = useCallback(async (base64Image: string, faceDescriptor: number[], isManualCapture = false) => {
     const isAdminOrManager = profile?.role === 'admin' || profile?.role === 'branch_manager';
     if (!gps.coords && !isAdminOrManager) throw new Error('GPS coordinates unavailable. Please retry.');
     // Let the server be the final arbiter of the geofence. Only hard-block the
@@ -392,7 +392,7 @@ export default function EmployeeCheckInPage() {
           latitude: gps.coords?.lat ?? 0,
           longitude: gps.coords?.lng ?? 0,
           branch_id: profile?.branch_id,
-          is_manual_override: isAdminOrManager || !gps.verified,
+          is_manual_override: isAdminOrManager || !gps.verified || isManualCapture,
           // photo_url intentionally omitted — sending raw base64 in the JSON
           // body risks 413 payload errors. Upload to storage separately if needed.
           face_verified: true,
@@ -403,7 +403,7 @@ export default function EmployeeCheckInPage() {
           latitude: gps.coords?.lat ?? 0,
           longitude: gps.coords?.lng ?? 0,
           branch_id: profile?.branch_id,
-          is_manual_override: isAdminOrManager || !gps.verified,
+          is_manual_override: isAdminOrManager || !gps.verified || isManualCapture,
           face_verified: true,
           faceDescriptor,
           liveness_passed: true,

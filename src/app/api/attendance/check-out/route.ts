@@ -87,10 +87,12 @@ export async function POST(request: NextRequest) {
               { status: 403 }
             );
           }
-          const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
-          // Threshold raised 0.90 → 1.20 (same as check-in): manager approval gate
-          // ensures no unauthorized user can be active in the system.
-          if (distance > 1.20) {
+          const incomingDesc = payload.faceDescriptor;
+          const storedDesc = profile.face_descriptor;
+          const distance = Math.sqrt(storedDesc.reduce((sum: number, val: number, i: number) => sum + Math.pow(val - incomingDesc[i], 2), 0));
+        
+          // Relaxed distance to 1.40 (from 1.20) to support extremely low quality cameras on cheap devices
+          if (distance > 1.40) {
             return NextResponse.json(
               {
                 success: false,

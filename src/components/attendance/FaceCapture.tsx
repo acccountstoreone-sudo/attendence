@@ -228,23 +228,43 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
       announce('Processing image...', 'info');
 
-      // Auto-scan AI Extraction on the CANVAS (frozen image), not live video
       const face = await fa
-        .detectSingleFace(c, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.03 }))
+        .detectSingleFace(c, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.01 }))
         .withFaceLandmarks(true)
         .withFaceDescriptor();
 
       if (!face) {
-        announce('Face not clear. Please try again.', 'error');
-        isCapturingRef.current = false;
-        setTimeout(() => { if (mountedRef.current) { v.play(); setPhase('scanning'); } }, 1000);
+        // Fallback to manual check-in if AI fails on a low quality photo
+        announce('Face not clear. Sending to manager for manual review...', 'warn');
+        setPhase('submit');
+        let captureError: unknown = null;
+        try {
+          await onCapture(dataUrl, Array.from({ length: 128 }, () => 0), true);
+        } catch (err) {
+          captureError = err;
+        }
+
+        if (captureError) {
+          const errMsg = captureError instanceof Error ? captureError.message : 'Capture failed. Please try again.';
+          announce(errMsg, 'error');
+          isCapturingRef.current = false;
+          setTimeout(() => { if (mountedRef.current) { v.play(); setPhase('scanning'); } }, 1000);
+        } else {
+          setPhase('success');
+          announce(
+            checkType === 'in' ? 'Manual Check-in recorded!'
+            : checkType === 'out' ? 'Manual Check-out recorded!'
+            : 'Manual capture recorded!',
+            'success'
+          );
+        }
         return;
       }
 
       setPhase('submit');
       let captureError: unknown = null;
       try {
-        await onCapture(dataUrl, Array.from(face.descriptor));
+        await onCapture(dataUrl, Array.from(face.descriptor), false);
       } catch (err) {
         captureError = err;
       }
