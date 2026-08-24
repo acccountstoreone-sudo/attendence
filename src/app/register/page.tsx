@@ -368,7 +368,7 @@ export default function RegisterPage() {
         const video = webcamRef.current.video;
         const faceapi = await import('@vladmandic/face-api');
         
-        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.3 }))
           .withFaceLandmarks()
           .withFaceDescriptor();
 

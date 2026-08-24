@@ -235,7 +235,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       announce('Processing image...', 'info');
 
       const face = await fa
-        .detectSingleFace(c, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.01 }))
+        .detectSingleFace(c, new fa.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.3 }))
         .withFaceLandmarks(true)
         .withFaceDescriptor();
 
