@@ -81,8 +81,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const [msg, setMsg]       = useState('Initializing...');
   const [msgType, setMT]    = useState<'info' | 'success' | 'error' | 'warn'>('info');
   const [camErr, setCamErr] = useState('');
-  const [faceDetected, setFaceDetected] = useState(false);
-  const scanStartTimeRef = useRef<number | null>(null);
+  const [camErr, setCamErr] = useState('');
 
   const setPhase = useCallback((p: Phase) => {
     if (!mountedRef.current) return;
@@ -169,60 +168,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const startScan = useCallback(() => {
     stopScan();
     setPhase('scanning');
-    setFaceDetected(false);
-    scanStartTimeRef.current = Date.now();
-    announce('Look straight at the camera...', 'info');
-
-    const loop = async () => {
-      const fa = faRef.current;
-      const v  = videoRef.current;
-      const ph = phRef.current;
-
-      if (ph === 'cam_err' || !mountedRef.current) { stopScan(); return; }
-      if (ph !== 'scanning') return;
-      if (!fa || !v || v.readyState < 3) {
-        scanTimerRef.current = setTimeout(loop, 50) as unknown as ReturnType<typeof setInterval>;
-        return;
-      }
-      if (isCapturingRef.current) return;
-
-      try {
-        // Nano-second optimization: use inputSize: 128 and extremely permissive threshold
-        // for the scan loop to guarantee it catches the face instantly on low-end cameras.
-        const det = await fa
-          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.03 }));
-
-        if (!det) {
-          if (mountedRef.current) {
-            setFaceDetected(false);
-            setMsg('No face detected. Look directly at the camera.');
-          }
-        } else {
-          // Fix S6: 3% threshold — budget cameras report smaller face boxes;
-          // 3% is permissive enough for Redmi A3 and similar low-end devices.
-          const { width: fw, height: fh } = det.box;
-          const frameArea = (v.videoWidth || 320) * (v.videoHeight || 240);
-          if ((fw * fh) / frameArea < 0.03) {
-            if (mountedRef.current) {
-              setFaceDetected(false);
-              setMsg('Move closer to the camera.');
-            }
-          } else {
-            // Face detected — wait for user to click capture
-            if (mountedRef.current) {
-              setFaceDetected(true);
-            }
-          }
-        }
-      } catch { /* silently continue */ }
-
-      // Schedule next frame only after current processing finishes
-      // Fix S2: 50ms poll (was 100ms) = ~20fps responsiveness
-      scanTimerRef.current = setTimeout(loop, 50) as unknown as ReturnType<typeof setInterval>;
-    };
-
-    loop();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    announce('Camera ready. Frame your face and capture.', 'info');
   }, [stopScan, setPhase, announce]);
 
   // ── Capture + Extract Descriptor ──────────────────────
@@ -458,12 +404,12 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               ? 'linear-gradient(135deg, #10B981, #059669)'
               : phase === 'cam_err'
               ? 'linear-gradient(135deg, #F43F5E, #E11D48)'
-              : faceDetected || isProcessing
+              : isProcessing
               ? 'linear-gradient(135deg, #10B981, #3B82F6)'
               : 'linear-gradient(135deg, #3B82F6, #1E3A5F)',
             boxShadow: phase === 'success'
               ? '0 0 55px rgba(16, 185, 129, 0.5)'
-              : faceDetected || isProcessing
+              : isProcessing
               ? '0 0 50px rgba(16,185,129,0.45)'
               : '0 0 45px rgba(59, 130, 246, 0.35)'
           }}
@@ -479,8 +425,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               style={{ transform: 'scaleX(-1)' }}
             />
 
-            {/* Scanning laser line — when actively scanning */}
-            {(phase === 'scanning' || isProcessing) && (
+            {/* Scanning laser line — only when processing the image */}
+            {isProcessing && (
               <motion.div
                 animate={{ top: ['0%', '100%', '0%'] }}
                 transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
@@ -491,7 +437,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
             {/* Corner brackets */}
             {['tl', 'tr', 'bl', 'br'].map(pos => (
               <div key={pos} className={`absolute w-7 h-7 z-10 pointer-events-none drop-shadow
-                ${faceDetected || phase === 'success' ? 'border-[#1dbf73]' : 'border-white/80'}
+                ${phase === 'success' ? 'border-[#1dbf73]' : 'border-white/80'}
                 ${pos === 'tl' ? 'top-5 left-5 border-t-2 border-l-2 rounded-tl-xl'
                 : pos === 'tr' ? 'top-5 right-5 border-t-2 border-r-2 rounded-tr-xl'
                 : pos === 'bl' ? 'bottom-5 left-5 border-b-2 border-l-2 rounded-bl-xl'
@@ -499,15 +445,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               />
             ))}
 
-            {/* Face detected pulse ring */}
-            {faceDetected && phase === 'scanning' && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: [0.6, 0, 0.6], scale: [1, 1.15, 1] }}
-                transition={{ repeat: Infinity, duration: 1.2 }}
-                className="absolute inset-8 border-2 border-emerald-400 rounded-full pointer-events-none z-10"
-              />
-            )}
+
 
             {/* Success overlay */}
             {phase === 'success' && (
@@ -543,22 +481,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           </div>
         </div>
 
-        {/* Face detection indicator dot */}
-        {phase === 'scanning' && (
-          <div className="flex items-center space-x-2 mt-4 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-lg">
-            <motion.div
-              animate={faceDetected
-                ? { scale: [1, 1.4, 1], backgroundColor: ['#34D399', '#10B981', '#34D399'] }
-                : { scale: [1, 1.2, 1] }
-              }
-              transition={{ repeat: Infinity, duration: faceDetected ? 0.8 : 1.5 }}
-              className={`w-2.5 h-2.5 rounded-full ${faceDetected ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]' : 'bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.8)]'}`}
-            />
-            <span className={`text-xs font-bold tracking-wide uppercase ${faceDetected ? 'text-emerald-400' : 'text-blue-300'}`}>
-              {faceDetected ? 'Face Detected' : 'Scanning...'}
-            </span>
-          </div>
-        )}
+
 
         {/* Manual Capture Button */}
         {phase === 'scanning' && (
