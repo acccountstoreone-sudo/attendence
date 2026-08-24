@@ -177,7 +177,9 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     setPhase('scanning');
     setFaceDetected(false);
     lastFaceDescriptorRef.current = null;
-    announce('Camera ready. Frame your face and capture.', 'info');
+    announce('Camera ready. Align your face in the frame.', 'info');
+
+    let consecutiveFaceFrames = 0;
 
     // Start background loop
     const runBackgroundDetection = async () => {
@@ -190,15 +192,28 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         
         if (fa) {
           try {
-            const face = await fa.detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.3 }))
+            const face = await fa.detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
               .withFaceLandmarks(true)
               .withFaceDescriptor();
               
             if (face && phRef.current === 'scanning') {
               setFaceDetected(true);
               lastFaceDescriptorRef.current = Array.from(face.descriptor);
+              consecutiveFaceFrames++;
+              
+              if (consecutiveFaceFrames >= 3) {
+                if (!isCapturingRef.current) {
+                  isCapturingRef.current = true;
+                  stopScan();
+                  if (runCaptureRef.current) {
+                    runCaptureRef.current(false);
+                  }
+                  return;
+                }
+              }
             } else if (phRef.current === 'scanning') {
               setFaceDetected(false);
+              consecutiveFaceFrames = 0;
             }
           } catch (e) {
             console.error('Background detection error:', e);
@@ -278,7 +293,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         }
         if (fa) {
           const face = await fa
-            .detectSingleFace(c, new fa.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.3 }))
+            .detectSingleFace(c, new fa.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
             .withFaceLandmarks(true)
             .withFaceDescriptor();
           if (face) {
@@ -386,8 +401,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       const camOk = await startCam();
       if (!camOk) return;
 
-      // Load models in the background, don't await!
-      loadModels();
+      // Wait for models to load so user sees loading state
+      await loadModels();
 
       if (gpsVerified) {
         announce('Camera ready. Frame your face and capture.', 'info');
@@ -421,7 +436,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
   // ── Derived state ─────────────────────────────────────
   const gpsOk        = gpsStatus === 'inside';
-  const isProcessing = ['extract', 'submit'].includes(phase);
+  const isProcessing = ['extract', 'submit', 'loading'].includes(phase);
 
   // ─────────────────────────────────────────────────────
   // Render
