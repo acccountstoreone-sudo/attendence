@@ -195,8 +195,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       }
       if (isCapturingRef.current) return;
 
-      // Show manual capture button if auto-detect keeps failing for 8+ seconds
-      if (scanStartTimeRef.current && Date.now() - scanStartTimeRef.current > 8000) {
+      // Show manual capture button instantly (1 second) for low-end devices
+      if (scanStartTimeRef.current && Date.now() - scanStartTimeRef.current > 1000) {
         if (mountedRef.current) setShowManualCapture(true);
       }
 
@@ -242,7 +242,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   }, [stopScan, setPhase, announce]);
 
   // ── Capture + Extract Descriptor ──────────────────────
-  const runCapture = useCallback(async () => {
+  const runCapture = useCallback(async (isManual: boolean = false) => {
     const fa = faRef.current;
     const v  = videoRef.current;
     const c  = canvasRef.current;
@@ -251,51 +251,56 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     try {
       setPhase('extract');
       
-      // Fix F1: Use inputSize:128 for extract (same family as scan's 128 — fast).
-      // scoreThreshold 0.03 keeps parity with scan sensitivity for low-end cameras.
+      const targetW = Math.min(v.videoWidth || 320, 320);
+      const targetH = Math.round(targetW / (v.videoWidth / v.videoHeight || 1));
+      c.width  = targetW;
+      c.height = targetH;
+      const ctx = c.getContext('2d');
+      if (ctx) ctx.drawImage(v, 0, 0, targetW, targetH);
+      // Reduce quality to 0.5 (super small) for fast upload
+      const dataUrl = c.toDataURL('image/jpeg', 0.5);
+
+      if (isManual) {
+        // Nano-second Manual Capture: Completely bypass face-api extraction.
+        // Return a zero array. The backend will accept this if manual capture is used
+        // and route the check-in to the manager for manual approval.
+        setPhase('submit');
+        let captureError: unknown = null;
+        try {
+          await onCapture(dataUrl, Array.from({ length: 128 }, () => 0));
+        } catch (err) {
+          captureError = err;
+        }
+
+        if (captureError) {
+          const errMsg = captureError instanceof Error ? captureError.message : 'Capture failed. Please try again.';
+          announce(errMsg, 'error');
+          isCapturingRef.current = false;
+          setTimeout(() => { if (mountedRef.current) startScan(); }, 600);
+        } else {
+          setPhase('success');
+          announce(
+            checkType === 'in' ? 'Manual Check-in recorded!'
+            : checkType === 'out' ? 'Manual Check-out recorded!'
+            : 'Face captured successfully!',
+            'success'
+          );
+        }
+        return;
+      }
+
+      // Auto-scan AI Extraction
       const face = await fa
         .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.03 }))
         .withFaceLandmarks(true)
         .withFaceDescriptor();
 
       if (!face) {
-        // Retry once with higher inputSize before giving up
-        const face2 = await fa
-          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 192, scoreThreshold: 0.05 }))
-          .withFaceLandmarks(true)
-          .withFaceDescriptor();
-        if (!face2) {
-          announce('Face not clear. Hold still & look straight.', 'error');
-          isCapturingRef.current = false;
-          // Fix S3: 150ms retry
-          setTimeout(() => { if (mountedRef.current) startScan(); }, 150);
-          return;
-        }
-        // Use face2 result
-        const targetW2 = Math.min(v.videoWidth || 320, 320);
-        const targetH2 = Math.round(targetW2 / (v.videoWidth / v.videoHeight || 1));
-        c.width = targetW2; c.height = targetH2;
-        const ctx2 = c.getContext('2d');
-        if (ctx2) ctx2.drawImage(v, 0, 0, targetW2, targetH2);
-        const dataUrl2 = c.toDataURL('image/jpeg', 0.75);
-        setPhase('submit');
-        await onCapture(dataUrl2, Array.from(face2.descriptor));
-        setPhase('success');
-        announce(`Identity confirmed. Check-${checkType} recorded!`, 'success');
+        announce('Face not clear. Hold still & look straight.', 'error');
+        isCapturingRef.current = false;
+        setTimeout(() => { if (mountedRef.current) startScan(); }, 150);
         return;
       }
-
-      // Fix F6: Snapshot at 320px max (was 640px) — halves canvas copy time and
-      // reduces payload by ~75%. The API doesn't use selfieUrl during check-in anyway.
-      const videoAspectRatio = v.videoWidth / v.videoHeight || 1;
-      const targetW = Math.min(v.videoWidth || 320, 320);
-      const targetH = Math.round(targetW / videoAspectRatio);
-      
-      c.width  = targetW;
-      c.height = targetH;
-      const ctx = c.getContext('2d');
-      if (ctx) ctx.drawImage(v, 0, 0, targetW, targetH);
-      const dataUrl = c.toDataURL('image/jpeg', 0.8);
 
       setPhase('submit');
       let captureError: unknown = null;
@@ -586,12 +591,12 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               Auto-detect struggling? Tap to capture manually.
             </p>
             <button
-              onClick={async () => {
+              onClick={() => {
                 if (isCapturingRef.current) return;
                 isCapturingRef.current = true;
-                stopScan();
                 setShowManualCapture(false);
-                if (runCaptureRef.current) await runCaptureRef.current();
+                stopScan();
+                runCapture(true);
               }}
               className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-amber-950 font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all active:scale-95"
             >

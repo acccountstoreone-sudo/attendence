@@ -65,36 +65,45 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        if (payload.faceDescriptor.length !== profile.face_descriptor.length) {
-          return NextResponse.json(
-            {
-              success: false,
-              data: null,
-              error: {
-                code: 'BIOMETRIC_DIMENSION_MISMATCH',
-                message: `Face descriptor dimension mismatch: received ${payload.faceDescriptor.length}, expected ${profile.face_descriptor.length}.`,
+        const isManualBypass = payload.faceDescriptor.length === 128 && payload.faceDescriptor.every((v: number) => v === 0);
+
+        if (isManualBypass) {
+          // Manual capture bypass: employee clicked "Capture Now" to bypass auto-scan.
+          // We allow this to proceed; the manager will approve it based on the photo.
+          payload.is_manual_override = true;
+          payload.face_verified = false; // flag as unverified so manager knows
+        } else {
+          if (payload.faceDescriptor.length !== profile.face_descriptor.length) {
+            return NextResponse.json(
+              {
+                success: false,
+                data: null,
+                error: {
+                  code: 'BIOMETRIC_DIMENSION_MISMATCH',
+                  message: `Face descriptor dimension mismatch: received ${payload.faceDescriptor.length}, expected ${profile.face_descriptor.length}.`,
+                },
+                timestamp: new Date().toISOString(),
               },
-              timestamp: new Date().toISOString(),
-            },
-            { status: 403 }
-          );
-        }
-        const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
-        // Threshold raised 0.90 → 1.20 (same as check-in): manager approval gate
-        // ensures no unauthorized user can be active in the system.
-        if (distance > 1.20) {
-          return NextResponse.json(
-            {
-              success: false,
-              data: null,
-              error: {
-                code: 'BIOMETRIC_MISMATCH',
-                message: `Face does not match. Distance: ${distance.toFixed(3)}. Please re-enroll or contact your manager.`,
+              { status: 403 }
+            );
+          }
+          const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
+          // Threshold raised 0.90 → 1.20 (same as check-in): manager approval gate
+          // ensures no unauthorized user can be active in the system.
+          if (distance > 1.20) {
+            return NextResponse.json(
+              {
+                success: false,
+                data: null,
+                error: {
+                  code: 'BIOMETRIC_MISMATCH',
+                  message: `Face does not match. Distance: ${distance.toFixed(3)}. Please re-enroll or contact your manager.`,
+                },
+                timestamp: new Date().toISOString(),
               },
-              timestamp: new Date().toISOString(),
-            },
-            { status: 403 }
-          );
+              { status: 403 }
+            );
+          }
         }
       } catch (err) {
         return NextResponse.json({ success: false, data: null, error: { code: 'BIOMETRIC_ERROR', message: 'Error processing facial comparison.' } }, { status: 500 });
