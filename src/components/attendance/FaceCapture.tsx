@@ -82,6 +82,9 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const [msgType, setMT]    = useState<'info' | 'success' | 'error' | 'warn'>('info');
   const [camErr, setCamErr] = useState('');
   const [faceDetected, setFaceDetected] = useState(false);
+  // Manual capture fallback: show button if auto-scan fails for 8+ seconds
+  const [showManualCapture, setShowManualCapture] = useState(false);
+  const scanStartTimeRef = useRef<number | null>(null);
 
   const setPhase = useCallback((p: Phase) => {
     if (!mountedRef.current) return;
@@ -175,6 +178,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     stopScan();
     setPhase('scanning');
     setFaceDetected(false);
+    setShowManualCapture(false);
+    scanStartTimeRef.current = Date.now();
     announce('Look straight at the camera...', 'info');
 
     const loop = async () => {
@@ -185,15 +190,21 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       if (ph === 'cam_err' || !mountedRef.current) { stopScan(); return; }
       if (ph !== 'scanning') return;
       if (!fa || !v || v.readyState < 3) {
-        scanTimerRef.current = setTimeout(loop, 100) as unknown as ReturnType<typeof setInterval>;
+        scanTimerRef.current = setTimeout(loop, 50) as unknown as ReturnType<typeof setInterval>;
         return;
       }
       if (isCapturingRef.current) return;
 
+      // Show manual capture button if auto-detect keeps failing for 8+ seconds
+      if (scanStartTimeRef.current && Date.now() - scanStartTimeRef.current > 8000) {
+        if (mountedRef.current) setShowManualCapture(true);
+      }
+
       try {
+        // Use inputSize:160 for scan — slightly larger than 128 but still fast,
+        // gives better feature extraction on blurry/low-quality cameras (Redmi A3 etc.)
         const det = await fa
-          // S2: poll faster (50ms) for ~20fps detection responsiveness
-          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.2 }));
+          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.1 }));
 
         if (!det) {
           if (mountedRef.current) {
@@ -201,11 +212,11 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
             setMsg('No face detected. Look directly at the camera.');
           }
         } else {
-          // Face must be large enough (at least 8% of frame) to ensure it's not too far
+          // Fix S6: 3% threshold — budget cameras report smaller face boxes;
+          // 3% is permissive enough for Redmi A3 and similar low-end devices.
           const { width: fw, height: fh } = det.box;
-          const frameArea = (v.videoWidth || 640) * (v.videoHeight || 640);
-          // Fix S6: 6% threshold (was 8%) — less strict, avoids "move closer" on smaller phones
-          if ((fw * fh) / frameArea < 0.06) {
+          const frameArea = (v.videoWidth || 320) * (v.videoHeight || 240);
+          if ((fw * fh) / frameArea < 0.03) {
             if (mountedRef.current) {
               setFaceDetected(false);
               setMsg('Move closer to the camera.');
@@ -240,18 +251,37 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     try {
       setPhase('extract');
       
-      // Fix F1: Use inputSize:128 (same as scan loop) — avoids a second full
-      // 224-input detection run which added ~400-500ms of latency every capture.
+      // Fix F1: Use inputSize:128 for extract (same family as scan's 160 — fast).
+      // scoreThreshold 0.1 keeps parity with scan sensitivity for low-end cameras.
       const face = await fa
-        .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.2 }))
+        .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 128, scoreThreshold: 0.1 }))
         .withFaceLandmarks(true)
         .withFaceDescriptor();
 
       if (!face) {
-        announce('Face not clear. Please try again.', 'error');
-        isCapturingRef.current = false;
-        // Fix S3: 150ms retry (was 500ms) — faster recovery when face is unclear
-        setTimeout(() => { if (mountedRef.current) startScan(); }, 150);
+        // Retry once with higher inputSize before giving up
+        const face2 = await fa
+          .detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 192, scoreThreshold: 0.05 }))
+          .withFaceLandmarks(true)
+          .withFaceDescriptor();
+        if (!face2) {
+          announce('Face not clear. Hold still & look straight.', 'error');
+          isCapturingRef.current = false;
+          // Fix S3: 150ms retry
+          setTimeout(() => { if (mountedRef.current) startScan(); }, 150);
+          return;
+        }
+        // Use face2 result
+        const targetW2 = Math.min(v.videoWidth || 320, 320);
+        const targetH2 = Math.round(targetW2 / (v.videoWidth / v.videoHeight || 1));
+        c.width = targetW2; c.height = targetH2;
+        const ctx2 = c.getContext('2d');
+        if (ctx2) ctx2.drawImage(v, 0, 0, targetW2, targetH2);
+        const dataUrl2 = c.toDataURL('image/jpeg', 0.75);
+        setPhase('submit');
+        await onCapture(dataUrl2, Array.from(face2.descriptor));
+        setPhase('success');
+        announce(`Identity confirmed. Check-${checkType} recorded!`, 'success');
         return;
       }
 
@@ -525,6 +555,31 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               {faceDetected ? 'Face Detected' : 'Scanning...'}
             </span>
           </div>
+        )}
+
+        {/* Manual capture fallback — shows after 8s of failed auto-scan */}
+        {showManualCapture && phase === 'scanning' && !faceDetected && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center mt-3 space-y-2"
+          >
+            <p className="text-amber-300 text-xs font-medium text-center px-4">
+              Auto-detect struggling? Tap to capture manually.
+            </p>
+            <button
+              onClick={async () => {
+                if (isCapturingRef.current) return;
+                isCapturingRef.current = true;
+                stopScan();
+                setShowManualCapture(false);
+                if (runCaptureRef.current) await runCaptureRef.current();
+              }}
+              className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-amber-950 font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all active:scale-95"
+            >
+              📸 Capture Now
+            </button>
+          </motion.div>
         )}
       </div>
 

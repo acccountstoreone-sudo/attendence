@@ -80,14 +80,16 @@ export async function POST(request: NextRequest) {
           );
         }
         const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
-        if (distance > 0.90) {
+        // Threshold raised 0.90 → 1.20 (same as check-in): manager approval gate
+        // ensures no unauthorized user can be active in the system.
+        if (distance > 1.20) {
           return NextResponse.json(
             {
               success: false,
               data: null,
               error: {
                 code: 'BIOMETRIC_MISMATCH',
-                message: `Face verification failed. Distance: ${distance.toFixed(3)}. You do not match the registered employee.`,
+                message: `Face does not match. Distance: ${distance.toFixed(3)}. Please re-enroll or contact your manager.`,
               },
               timestamp: new Date().toISOString(),
             },

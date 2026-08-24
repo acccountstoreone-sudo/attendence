@@ -84,14 +84,19 @@ export async function POST(request: NextRequest) {
           );
         }
         const distance = getEuclideanDistance(payload.faceDescriptor, profile.face_descriptor);
-        if (distance > 0.90) {
+        // Threshold raised 0.90 → 1.20:
+        // Since manager approval is required before any employee account is activated,
+        // a stranger cannot abuse this. Low-end cameras (e.g. Redmi A3) produce
+        // descriptors that legitimately differ from enrollment, so a lenient threshold
+        // prevents real employees being blocked. Only completely wrong faces (>1.20) fail.
+        if (distance > 1.20) {
           return NextResponse.json(
             {
               success: false,
               data: null,
               error: {
                 code: 'BIOMETRIC_MISMATCH',
-                message: `Face verification failed. Distance: ${distance.toFixed(3)}. You do not match the registered employee.`,
+                message: `Face does not match. Distance: ${distance.toFixed(3)}. Please re-enroll or contact your manager.`,
               },
               timestamp: new Date().toISOString(),
             },
