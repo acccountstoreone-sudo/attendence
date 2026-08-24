@@ -35,9 +35,9 @@ export function FaceRegister() {
     checkEnrollment();
   }, []);
 
-  const handleFaceCapture = async (image: string, descriptor: number[]) => {
+  const handleFaceCapture = async (_image: string, descriptor: number[]) => {
     setLoading(true);
-    setError(null);
+    setError(null);  // Always clear previous error before new attempt
     try {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
@@ -50,23 +50,28 @@ export function FaceRegister() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      // Bug fix: do NOT send selfieUrl (base64 image) — it can cause 413 Payload Too Large.
+      // The face descriptor array is all we need for biometric matching.
       const res = await fetch('/api/employees/enroll-face', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ faceDescriptor: descriptor, selfieUrl: image }),
+        body: JSON.stringify({ faceDescriptor: descriptor }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || data.error || 'Failed to enroll face.');
+
+      let data: Record<string, unknown> = {};
+      try { data = await res.json(); } catch { /* empty response */ }
+
+      if (!res.ok) {
+        if (res.status === 413) throw new Error('Image too large. Please try again.');
+        throw new Error((data.error as { message?: string })?.message || String(data.error) || `Enrollment failed (${res.status}). Please try again.`);
+      }
       setSuccess(true);
       setIsEnrolled(true);
       setTimeout(() => setShowModal(false), 2500);
     } catch (err: unknown) {
       console.error(err);
-      if (err instanceof Error) {
-        setError(err.message || 'An unexpected error occurred during face setup.');
-      } else {
-        setError('An unexpected error occurred during face setup.');
-      }
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred during face setup.');
+      // Don't re-throw — FaceCapture will restart the scan automatically
     } finally {
       setLoading(false);
     }

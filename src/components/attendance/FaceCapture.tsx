@@ -298,15 +298,33 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       const dataUrl = c.toDataURL('image/jpeg', 0.8);
 
       setPhase('submit');
-      await onCapture(dataUrl, Array.from(face.descriptor));
+      let captureError: unknown = null;
+      try {
+        await onCapture(dataUrl, Array.from(face.descriptor));
+      } catch (err) {
+        captureError = err;
+      }
 
-      setPhase('success');
-      announce(`Identity confirmed. Check-${checkType} recorded!`, 'success');
+      if (captureError) {
+        const errMsg = captureError instanceof Error ? captureError.message : 'Enrollment failed. Please try again.';
+        announce(errMsg, 'error');
+        isCapturingRef.current = false;
+        // 600ms error delay before re-scan
+        setTimeout(() => { if (mountedRef.current) startScan(); }, 600);
+      } else {
+        // Success
+        setPhase('success');
+        announce(
+          checkType === 'in' ? 'Identity confirmed. Check-in recorded!'
+          : checkType === 'out' ? 'Identity confirmed. Check-out recorded!'
+          : 'Face enrolled successfully!',
+          'success'
+        );
+      }
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Verification failed. Please try again.';
+      const errMsg = err instanceof Error ? err.message : 'Unexpected error. Please try again.';
       announce(errMsg, 'error');
       isCapturingRef.current = false;
-      // Fix S4: 600ms error delay (was 1500ms) — faster recovery on transient errors
       setTimeout(() => { if (mountedRef.current) startScan(); }, 600);
     }
   }, [announce, setPhase, onCapture, checkType, startScan]);
