@@ -82,8 +82,6 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const [msgType, setMT]    = useState<'info' | 'success' | 'error' | 'warn'>('info');
   const [camErr, setCamErr] = useState('');
   const [faceDetected, setFaceDetected] = useState(false);
-  // Manual capture fallback: show button if auto-scan fails for 8+ seconds
-  const [showManualCapture, setShowManualCapture] = useState(false);
   const scanStartTimeRef = useRef<number | null>(null);
 
   const setPhase = useCallback((p: Phase) => {
@@ -178,7 +176,6 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     stopScan();
     setPhase('scanning');
     setFaceDetected(false);
-    setShowManualCapture(false);
     scanStartTimeRef.current = Date.now();
     announce('Look straight at the camera...', 'info');
 
@@ -194,11 +191,6 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         return;
       }
       if (isCapturingRef.current) return;
-
-      // Show manual capture button instantly (1 second) for low-end devices
-      if (scanStartTimeRef.current && Date.now() - scanStartTimeRef.current > 1000) {
-        if (mountedRef.current) setShowManualCapture(true);
-      }
 
       try {
         // Nano-second optimization: use inputSize: 128 and extremely permissive threshold
@@ -222,12 +214,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               setMsg('Move closer to the camera.');
             }
           } else {
-            // Face detected — auto-capture immediately
-            setFaceDetected(true);
-            isCapturingRef.current = true;
-            stopScan();
-            if (runCaptureRef.current) await runCaptureRef.current();
-            return; // stop loop since we captured
+            // Face detected — wait for user to click capture
+            if (mountedRef.current) {
+              setFaceDetected(true);
+            }
           }
         }
       } catch { /* silently continue */ }
@@ -580,27 +570,27 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           </div>
         )}
 
-        {/* Manual capture fallback — shows after 8s of failed auto-scan */}
-        {showManualCapture && phase === 'scanning' && !faceDetected && (
+        {/* Manual Capture Button */}
+        {phase === 'scanning' && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center mt-3 space-y-2"
           >
-            <p className="text-amber-300 text-xs font-medium text-center px-4">
-              Auto-detect struggling? Tap to capture manually.
+            <p className="text-blue-300 text-xs font-medium text-center px-4">
+              Frame your face and click capture.
             </p>
             <button
               onClick={() => {
                 if (isCapturingRef.current) return;
                 isCapturingRef.current = true;
-                setShowManualCapture(false);
                 stopScan();
-                runCapture(true);
+                runCapture(false); // Run real face extraction
               }}
-              className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-amber-950 font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all active:scale-95"
+              className="px-8 py-3 bg-blue-500 hover:bg-blue-400 text-white font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all active:scale-95 flex items-center space-x-2"
             >
-              📸 Capture Now
+              <span className="text-lg">📸</span>
+              <span>Capture Face</span>
             </button>
           </motion.div>
         )}
