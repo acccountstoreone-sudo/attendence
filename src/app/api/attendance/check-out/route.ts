@@ -174,6 +174,7 @@ export async function POST(request: NextRequest) {
 
     // Verify Geofence if branch is assigned
     let targetBranchId = payload.branch_id || user.branch_id;
+    let isGeoWithin = true;
     
     // Security Fix: Prevent Employees from spoofing their branch_id on check-out
     if (user.role === 'employee') {
@@ -209,6 +210,7 @@ export async function POST(request: NextRequest) {
           Number(branch.longitude),
           branch.geofence_radius_meters || 100
         );
+        isGeoWithin = geo.within;
 
         const isAdminOrMgr = user.role === 'admin' || user.role === 'branch_manager';
 
@@ -324,7 +326,7 @@ export async function POST(request: NextRequest) {
         check_out_lat: payload.latitude,
         check_out_lng: payload.longitude,
         // Reset approval_status to pending if check-out has manual override or failed face match
-        ...(!geo.within || Boolean(payload.is_manual_override) || !payload.face_verified ? {
+        ...(!isGeoWithin || Boolean(payload.is_manual_override) || !payload.face_verified ? {
           is_manual_override: true,
           approval_status: 'pending',
         } : {}),
