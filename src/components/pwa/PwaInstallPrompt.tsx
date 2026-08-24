@@ -21,9 +21,9 @@ function clearWindowPrompt() {
   delete (window as PWAWindow).pwaInstallPrompt;
 }
 
-/** Suppress the prompt for 3 days. */
+/** Suppress the prompt permanently once dismissed. */
 function saveDismissed() {
-  localStorage.setItem('pwa_prompt_dismissed', Date.now().toString());
+  localStorage.setItem('pwa_prompt_dismissed', 'true');
 }
 
 export function PwaInstallPrompt() {
@@ -50,12 +50,11 @@ export function PwaInstallPrompt() {
       return () => {};
     }
 
-    // Check if user dismissed recently (within 3 days)
-    // TEMPORARILY DISABLED for testing so the prompt always shows if requirements are met
-    // const dismissed = localStorage.getItem('pwa_prompt_dismissed');
-    // if (dismissed && Date.now() - Number(dismissed) < 3 * 24 * 60 * 60 * 1000) {
-    //   return () => {};
-    // }
+    // Check if user dismissed previously
+    const dismissed = localStorage.getItem('pwa_prompt_dismissed');
+    if (dismissed === 'true') {
+      return () => {};
+    }
 
     // Detect iOS Safari
     const iosDevice =
@@ -116,15 +115,8 @@ export function PwaInstallPrompt() {
     clearWindowPrompt();
     setDeferredPrompt(null);
 
-    if (outcome === 'accepted') {
-      setShowPrompt(false);
-    } else {
-      // Bug 5 fix: if user dismissed the native prompt, treat it the same as
-      // clicking "Not Now" — suppress for 3 days so we don't call .prompt()
-      // on the spent event object again.
-      saveDismissed();
-      setShowPrompt(false);
-    }
+    saveDismissed();
+    setShowPrompt(false);
   };
 
   const handleDismiss = () => {
