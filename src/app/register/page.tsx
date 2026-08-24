@@ -118,9 +118,13 @@ export default function RegisterPage() {
       const loadModels = async () => {
         try {
           const faceapi = await import('@vladmandic/face-api');
+          // Force WebGL backend for 10x-100x performance on mobile devices.
+          try { await (faceapi.tf as any).setBackend('webgl'); } catch (e) {
+             try { await (faceapi.tf as any).setBackend('cpu'); } catch (err) {}
+          }
           await Promise.all([
             faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-            faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+            faceapi.nets.faceLandmark68TinyNet.loadFromUri('/models'),
             faceapi.nets.faceRecognitionNet.loadFromUri('/models')
           ]);
           setModelsLoaded(true);
@@ -369,7 +373,7 @@ export default function RegisterPage() {
         const faceapi = await import('@vladmandic/face-api');
         
         const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
-          .withFaceLandmarks()
+          .withFaceLandmarks(true)
           .withFaceDescriptor();
 
         if (detection) {
