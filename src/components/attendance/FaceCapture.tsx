@@ -82,6 +82,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const [msg, setMsg]       = useState('Initializing...');
   const [msgType, setMT]    = useState<'info' | 'success' | 'error' | 'warn'>('info');
   const [camErr, setCamErr] = useState('');
+  const [faceDetected, setFaceDetected] = useState(false);
+  const lastFaceDescriptorRef = useRef<number[] | null>(null);
 
   const setPhase = useCallback((p: Phase) => {
     if (!mountedRef.current) return;
@@ -173,7 +175,44 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const startScan = useCallback(() => {
     stopScan();
     setPhase('scanning');
+    setFaceDetected(false);
+    lastFaceDescriptorRef.current = null;
     announce('Camera ready. Frame your face and capture.', 'info');
+
+    // Start background loop
+    const runBackgroundDetection = async () => {
+      if (!mountedRef.current || phRef.current !== 'scanning') return;
+      
+      const v = videoRef.current;
+      if (v && v.readyState === 4 && !v.paused) {
+        let fa = faRef.current;
+        if (!fa) fa = globalFa;
+        
+        if (fa) {
+          try {
+            const face = await fa.detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.3 }))
+              .withFaceLandmarks(true)
+              .withFaceDescriptor();
+              
+            if (face && phRef.current === 'scanning') {
+              setFaceDetected(true);
+              lastFaceDescriptorRef.current = Array.from(face.descriptor);
+            } else if (phRef.current === 'scanning') {
+              setFaceDetected(false);
+            }
+          } catch (e) {
+            console.error('Background detection error:', e);
+          }
+        }
+      }
+      
+      // Schedule next check
+      if (mountedRef.current && phRef.current === 'scanning') {
+        scanTimerRef.current = setTimeout(runBackgroundDetection, 300) as any;
+      }
+    };
+    
+    scanTimerRef.current = setTimeout(runBackgroundDetection, 800) as any;
   }, [stopScan, setPhase, announce]);
 
   // ── Capture + Extract Descriptor ──────────────────────
@@ -224,22 +263,31 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         return;
       }
 
-      // Wait for AI model if it's still loading in the background
-      let fa = faRef.current;
-      if (!fa) {
-        announce('Loading AI...', 'info');
-        fa = await globalLoadPromise;
-      }
-      if (!fa) throw new Error('Failed to load face AI');
-
       announce('Processing image...', 'info');
 
-      const face = await fa
-        .detectSingleFace(c, new fa.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.3 }))
-        .withFaceLandmarks(true)
-        .withFaceDescriptor();
+      // Use the pre-computed descriptor from our background loop
+      let descriptor = lastFaceDescriptorRef.current;
 
-      if (!face) {
+      // Fallback: If not computed yet, run detection on canvas
+      if (!descriptor) {
+        // Wait for AI model if it's still loading in the background
+        let fa = faRef.current;
+        if (!fa) {
+          announce('Loading AI...', 'info');
+          fa = await globalLoadPromise;
+        }
+        if (fa) {
+          const face = await fa
+            .detectSingleFace(c, new fa.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.3 }))
+            .withFaceLandmarks(true)
+            .withFaceDescriptor();
+          if (face) {
+            descriptor = Array.from(face.descriptor);
+          }
+        }
+      }
+
+      if (!descriptor) {
         // Fallback to manual check-in if AI fails on a low quality photo
         announce('Face not clear. Sending to manager for manual review...', 'warn');
         setPhase('submit');
@@ -270,7 +318,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       setPhase('submit');
       let captureError: unknown = null;
       try {
-        await onCapture(dataUrl, Array.from(face.descriptor), false);
+        await onCapture(dataUrl, descriptor, false);
       } catch (err) {
         captureError = err;
       }
@@ -517,22 +565,28 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           >
             <p className="text-blue-300 text-xs font-medium text-center px-4">
               {!isEnrollment
-                ? 'Use Auto Scan for fast matching, or Instant Capture for manual approval.'
-                : 'Frame your face and click Auto Scan.'}
+                ? (faceDetected 
+                  ? 'Face detected! Tap "Capture Face" to submit.' 
+                  : 'Align your face in the frame to capture, or use Instant Capture.')
+                : (faceDetected 
+                  ? 'Face detected! Tap "Enroll Face" to save.' 
+                  : 'Align your face in the frame.')}
             </p>
             <div className="flex gap-4">
-              <button
-                onClick={() => {
-                  if (isCapturingRef.current) return;
-                  isCapturingRef.current = true;
-                  stopScan();
-                  runCapture(false); // Run real face extraction
-                }}
-                className="px-6 py-3 bg-blue-500 hover:bg-blue-400 text-white font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all active:scale-95 flex items-center space-x-2"
-              >
-                <span className="text-lg">📸</span>
-                <span>Auto Scan</span>
-              </button>
+              {faceDetected && (
+                <button
+                  onClick={() => {
+                    if (isCapturingRef.current) return;
+                    isCapturingRef.current = true;
+                    stopScan();
+                    runCapture(false); // Run real face extraction
+                  }}
+                  className="px-6 py-3 bg-blue-500 hover:bg-blue-400 text-white font-extrabold text-sm rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all active:scale-95 flex items-center space-x-2 animate-pulse"
+                >
+                  <span className="text-lg">📸</span>
+                  <span>{isEnrollment ? 'Enroll Face' : 'Capture Face'}</span>
+                </button>
+              )}
               {!isEnrollment && (
                 <button
                   type="button"

@@ -461,7 +461,7 @@ export async function POST(request: NextRequest) {
         status: 'present', // Will be evaluated/overridden by trigger trg_calculate_attendance_status
         is_manual_override: !geo.within || Boolean(payload.is_manual_override),
         is_holiday_duty: isHolidayDuty,
-        approval_status: 'pending', // Requires Branch Manager approval before counting
+        approval_status: (!geo.within || Boolean(payload.is_manual_override)) ? 'pending' : 'approved',
       })
       .select()
       .single();
