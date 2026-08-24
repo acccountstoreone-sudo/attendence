@@ -573,7 +573,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
                   : 'Align your face in the frame.')}
             </p>
             <div className="flex gap-4">
-              {faceDetected && (
+              {faceDetected ? (
                 <button
                   onClick={() => {
                     if (isCapturingRef.current) return;
@@ -585,6 +585,15 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
                 >
                   <span className="text-lg">📸</span>
                   <span>{isEnrollment ? 'Enroll Face' : 'Capture Face'}</span>
+                </button>
+              ) : (
+                <button
+                  disabled
+                  type="button"
+                  className="px-6 py-3 bg-slate-900/60 text-slate-400 font-bold text-sm rounded-xl cursor-not-allowed flex items-center space-x-2 border border-slate-800"
+                >
+                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                  <span>Looking for face...</span>
                 </button>
               )}
               {!isEnrollment && (
