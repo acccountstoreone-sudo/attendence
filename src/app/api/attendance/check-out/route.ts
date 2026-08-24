@@ -216,7 +216,12 @@ export async function POST(request: NextRequest) {
         );
 
         const isAdminOrMgr = user.role === 'admin' || user.role === 'branch_manager';
-        if (!geo.within && !payload.is_offline_sync && !isAdminOrMgr && !payload.is_manual_override) {
+
+        const maxAllowedDistance = payload.is_manual_override 
+          ? (branch.geofence_radius_meters || 100) * 1.5 
+          : (branch.geofence_radius_meters || 100);
+
+        if (!payload.is_offline_sync && !isAdminOrMgr && geo.distance > maxAllowedDistance) {
           return NextResponse.json(
             {
               success: false,
@@ -239,7 +244,7 @@ export async function POST(request: NextRequest) {
 
     // 1. Minimum Duration Constraint (e.g., 15 minutes)
     const diffMinutes = (checkOutDateObj.getTime() - checkInDateObj.getTime()) / 60000;
-    if (diffMinutes < 15 && !payload.is_manual_override) {
+    if (diffMinutes < 15) {
       return NextResponse.json(
         {
           success: false,
@@ -301,7 +306,7 @@ export async function POST(request: NextRequest) {
     const diffLateHours = (checkOutDateObj.getTime() - workEndTimestamp.getTime()) / (1000 * 3600);
     const MAX_LATE_HOURS = 4;
 
-    if (diffLateHours > MAX_LATE_HOURS && !payload.is_manual_override) {
+    if (diffLateHours > MAX_LATE_HOURS) {
       return NextResponse.json(
         {
           success: false,

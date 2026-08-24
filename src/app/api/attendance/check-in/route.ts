@@ -268,9 +268,13 @@ export async function POST(request: NextRequest) {
       branch.geofence_radius_meters || 100
     );
 
-    const isAdminOrManager = user.role === 'admin' || user.role === 'branch_manager' || payload.is_manual_override;
+    const isAdminOrManager = user.role === 'admin' || user.role === 'branch_manager';
 
-    if (!geo.within && !payload.is_offline_sync && !isAdminOrManager) {
+    const maxAllowedDistance = payload.is_manual_override 
+      ? (branch.geofence_radius_meters || 100) * 1.5 
+      : (branch.geofence_radius_meters || 100);
+
+    if (!payload.is_offline_sync && !isAdminOrManager && geo.distance > maxAllowedDistance) {
       return NextResponse.json(
         {
           success: false,
@@ -352,7 +356,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Post-Shift Block: If checking in after the shift has ended
-    if (checkInDateObj.getTime() > workEndTimestamp.getTime() && !payload.is_manual_override) {
+    if (checkInDateObj.getTime() > workEndTimestamp.getTime()) {
       return NextResponse.json(
         {
           success: false,
@@ -383,7 +387,7 @@ export async function POST(request: NextRequest) {
         .eq('status', 'approved')
         .maybeSingle();
 
-      if (!isAdminOrManager && !payload.is_manual_override && (offDayErr || !offDayReq)) {
+      if (!isAdminOrManager && (offDayErr || !offDayReq)) {
         return NextResponse.json(
           {
             success: false,
