@@ -184,9 +184,13 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     announce('Camera ready. Align your face in the frame.', 'info');
     
     if (manualBtnTimerRef.current) clearTimeout(manualBtnTimerRef.current);
-    manualBtnTimerRef.current = setTimeout(() => {
-      if (mountedRef.current) setShowManualBtn(true);
-    }, 3000);
+    if (isEnrollment) {
+      setShowManualBtn(true);
+    } else {
+      manualBtnTimerRef.current = setTimeout(() => {
+        if (mountedRef.current) setShowManualBtn(true);
+      }, 3000);
+    }
 
     let consecutiveFaceFrames = 0;
 
