@@ -5,15 +5,17 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
-import { Clock, Calendar, ShieldCheck, MapPin, MessageSquare, User, Building2 } from 'lucide-react';
+import { Clock, Calendar, ShieldCheck, MessageSquare, User, Building2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { DailyTasksCard } from '@/components/employee/DailyTasksCard';
 
 export default function EmployeeDashboardPage() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<{ full_name: string; branch_name: string; photo_url?: string; whatsapp_number?: string; phone?: string } | null>(null);
+  const [branchId, setBranchId] = useState<string | null>(null);
   const [todayRecord, setTodayRecord] = useState<{ check_in_time?: string; check_out_time?: string; status?: string; approval_status?: string; overtime_minutes?: number; is_holiday_duty?: boolean } | null>(null);
   const [leaveBalances, setLeaveBalances] = useState<{ type: string; available: number; total: number }[]>([]);
   const [liveOvertimeMinutes, setLiveOvertimeMinutes] = useState(0);
@@ -32,6 +34,7 @@ export default function EmployeeDashboardPage() {
       if (prof) {
         const branchData = (prof as any).branch || (prof as any).branches;
         const bName = Array.isArray(branchData) ? branchData[0]?.name : branchData?.name;
+        setBranchId(prof.branch_id || null);
         setProfile({
           full_name: prof.full_name,
           branch_name: bName || 'Anchor Store',
@@ -298,6 +301,11 @@ export default function EmployeeDashboardPage() {
             </Button>
           </div>
         </Card>
+      </div>
+
+      {/* Showroom Daily Tasks Checklist */}
+      <div className="grid grid-cols-1">
+        <DailyTasksCard branchId={branchId} />
       </div>
     </div>
   );

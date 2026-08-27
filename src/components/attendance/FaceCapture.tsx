@@ -33,15 +33,16 @@ export interface FaceCaptureProps {
 }
 
 type Phase =
-  | 'init'      // starting up
-  | 'loading'   // loading face-api models
-  | 'wait_gps'  // models ready, GPS not verified
-  | 'ready'     // GPS verified, camera live — waiting to auto-scan
-  | 'scanning'  // actively scanning for face
-  | 'extract'   // extracting descriptor
-  | 'submit'    // calling onCapture()
-  | 'success'   // done!
-  | 'cam_err';  // camera error
+  | 'init'           // starting up
+  | 'loading'        // loading face-api models
+  | 'wait_gps'       // models ready, GPS not verified
+  | 'ready'          // GPS verified, camera live — waiting to auto-scan
+  | 'scanning'       // actively scanning for face
+  | 'extract'        // extracting descriptor
+  | 'review_enroll'  // enrollment review step
+  | 'submit'         // calling onCapture()
+  | 'success'        // done!
+  | 'cam_err';       // camera error
 
 // ─────────────────────────────────────────────────────────
 // Utilities
@@ -56,6 +57,27 @@ function say(text: string): void {
     u.rate = 0.92; u.volume = 1;
     window.speechSynthesis?.speak(u);
   } catch { /* ignore */ }
+}
+
+/** Wait for video element to be ready to play (readyState >= 3) */
+function waitForVideoReady(video: HTMLVideoElement, timeoutMs = 8000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (video.readyState >= 3) { resolve(); return; }
+    const timer = setTimeout(() => {
+      video.removeEventListener('canplay', onReady);
+      video.removeEventListener('loadeddata', onReady);
+      // Don't hard reject — resolve anyway so the scan loop can still try
+      resolve();
+    }, timeoutMs);
+    function onReady() {
+      clearTimeout(timer);
+      video.removeEventListener('canplay', onReady);
+      video.removeEventListener('loadeddata', onReady);
+      resolve();
+    }
+    video.addEventListener('canplay', onReady);
+    video.addEventListener('loadeddata', onReady);
+  });
 }
 
 // ─────────────────────────────────────────────────────────
@@ -74,7 +96,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   const mountedRef     = useRef(true);
   const isCapturingRef = useRef(false);
   const phRef          = useRef<Phase>('init');
-  const runCaptureRef  = useRef<(() => Promise<void>) | undefined>(undefined);
+  const runCaptureRef  = useRef<((isManual: boolean) => Promise<void>) | undefined>(undefined);
 
   // ── State ─────────────────────────────────────────────
   const [phase, _setPhase]  = useState<Phase>('init');
@@ -109,12 +131,12 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       if (videoRef.current?.srcObject)
         (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
       const stream = await navigator.mediaDevices.getUserMedia({
-        // Fix F2: Use 320×240 instead of 640×640 — smaller frame means
-        // face-api processes ~4x fewer pixels, cutting detection time by ~200-400ms.
         video: { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 } }, audio: false,
       });
       if (videoRef.current && mountedRef.current) {
         videoRef.current.srcObject = stream;
+        // Ensure playback starts (needed on some Android browsers)
+        videoRef.current.play().catch(() => {/* ignore autoplay policy errors */});
       }
       return true;
     } catch {
@@ -125,50 +147,62 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   }, [setPhase]);
 
   // ── Model loading ─────────────────────────────────────
+  // Bug 3 fix: Load models sequentially with real progress steps (5→35→65→100%)
+  // instead of jumping from 5% to 100% after a Promise.all.
+  // Bug 2 fix: Reset globalLoadPromise on failure so a retry is possible.
   const loadModels = useCallback(async () => {
     setPhase('loading');
     setPr(5);
     announce('Loading Face AI Models...', 'info');
-    
+
     if (globalFa) {
       faRef.current = globalFa;
       setPr(100);
       announce('Face AI Models Ready.', 'success');
       return globalFa;
     }
-    
+
     if (!globalLoadPromise) {
       globalLoadPromise = (async () => {
         try {
           const fa = await import('@vladmandic/face-api');
-          // Force WebGL backend for 10x-100x performance on mobile devices.
-          try { await (fa.tf as any).setBackend('webgl'); } catch (e) {
-             try { await (fa.tf as any).setBackend('cpu'); } catch (err) {}
+          // Prefer WebGL backend for 10x–100x perf on mobile; fall back to CPU.
+          try { await (fa.tf as any).setBackend('webgl'); } catch {
+            try { await (fa.tf as any).setBackend('cpu'); } catch { /* ignore */ }
           }
-          await Promise.all([
-            fa.nets.tinyFaceDetector.loadFromUri('/models'),
-            fa.nets.faceLandmark68TinyNet.loadFromUri('/models'),
-            fa.nets.faceRecognitionNet.loadFromUri('/models'),
-          ]);
+
+          // Bug 3 fix: sequential loads with progress updates
+          await fa.nets.tinyFaceDetector.loadFromUri('/models');
+          if (mountedRef.current) setPr(35);
+
+          await fa.nets.faceLandmark68TinyNet.loadFromUri('/models');
+          if (mountedRef.current) setPr(65);
+
+          await fa.nets.faceRecognitionNet.loadFromUri('/models');
+          if (mountedRef.current) setPr(100);
+
           globalFa = fa;
           return fa;
         } catch (err: any) {
+          // Bug 2 fix: always reset so the next attempt can retry
+          globalLoadPromise = null;
           console.error('Face API load error:', err);
           throw err;
         }
       })();
     }
-    
+
     try {
       const fa = await globalLoadPromise;
       if (!fa) throw new Error('Failed to load Face AI libraries.');
-      
       faRef.current = fa;
-      setPr(100);
+      if (mountedRef.current) setPr(100);
       announce('Face AI Models Ready.', 'success');
       return fa;
     } catch (err: any) {
       console.error(err);
+      // Bug 2 fix: clear the promise here too in case it was set by another caller
+      globalLoadPromise = null;
       announce('Face AI Load Error: Failed to download model files. Check your internet connection.', 'error');
       return null;
     }
@@ -182,7 +216,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     setShowManualBtn(false);
     lastFaceDescriptorRef.current = null;
     announce('Camera ready. Align your face in the frame.', 'info');
-    
+
     if (manualBtnTimerRef.current) clearTimeout(manualBtnTimerRef.current);
     if (isEnrollment) {
       setShowManualBtn(true);
@@ -197,23 +231,25 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     // Start background loop
     const runBackgroundDetection = async () => {
       if (!mountedRef.current || phRef.current !== 'scanning') return;
-      
+
       const v = videoRef.current;
-      if (v && v.readyState === 4 && !v.paused) {
+      // Bug 4 fix: also check readyState here — on slow devices/iOS the video
+      // may still be buffering. We silently reschedule instead of stopping.
+      if (v && v.readyState >= 3 && !v.paused) {
         let fa = faRef.current;
         if (!fa) fa = globalFa;
-        
+
         if (fa) {
           try {
             const face = await fa.detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
               .withFaceLandmarks(true)
               .withFaceDescriptor();
-              
+
             if (face && phRef.current === 'scanning') {
               setFaceDetected(true);
               lastFaceDescriptorRef.current = Array.from(face.descriptor);
               consecutiveFaceFrames++;
-              
+
               if (consecutiveFaceFrames >= 3) {
                 if (!isCapturingRef.current && !isEnrollment) {
                   isCapturingRef.current = true;
@@ -233,17 +269,44 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           }
         }
       }
-      
+
       // Schedule next check
       if (mountedRef.current && phRef.current === 'scanning') {
         scanTimerRef.current = setTimeout(runBackgroundDetection, 300) as any;
       }
     };
-    
+
     scanTimerRef.current = setTimeout(runBackgroundDetection, 800) as any;
-  }, [stopScan, setPhase, announce]);
+  }, [stopScan, setPhase, announce, isEnrollment]);
+
+  // ── Enrollment submit (Bug 1 fix: moved OUT of runCapture scope) ──────────
+  const submitEnrollment = useCallback(async () => {
+    setPhase('extract');
+    announce('Processing image...', 'info');
+
+    const c = canvasRef.current;
+    if (!c) return;
+
+    let fa = faRef.current;
+    if (!fa) fa = await globalLoadPromise;
+    if (fa) {
+      const face = await fa.detectSingleFace(c, new fa.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
+        .withFaceLandmarks(true)
+        .withFaceDescriptor();
+      if (face) {
+        setPhase('submit');
+        await onCapture(c.toDataURL('image/jpeg', 0.5), Array.from(face.descriptor), false);
+        return;
+      }
+    }
+
+    // If AI fails on the captured frame
+    announce('Face not clear in the photo. Please retake.', 'error');
+    setPhase('review_enroll'); // Let them see it failed and they can hit retake
+  }, [onCapture, announce, setPhase]);
 
   // ── Capture + Extract Descriptor ──────────────────────
+  // Bug 7 fix: added `isEnrollment` and `startScan` to dependency array.
   const runCapture = useCallback(async (isManual: boolean = false) => {
     const v  = videoRef.current;
     const c  = canvasRef.current;
@@ -252,7 +315,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     try {
       setPhase('extract');
       v.pause(); // Freeze video instantly so user knows photo is taken!
-      
+
       const targetW = Math.min(v.videoWidth || 320, 320);
       const targetH = Math.round(targetW / (v.videoWidth / v.videoHeight || 1));
       c.width  = targetW;
@@ -268,31 +331,6 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         return;
       }
 
-  const submitEnrollment = useCallback(async () => {
-    setPhase('extract');
-    announce('Processing image...', 'info');
-    
-    const c = canvasRef.current;
-    if (!c) return;
-    
-    let fa = faRef.current;
-    if (!fa) fa = await globalLoadPromise;
-    if (fa) {
-       const face = await fa.detectSingleFace(c, new fa.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
-         .withFaceLandmarks(true)
-         .withFaceDescriptor();
-       if (face) {
-          setPhase('submit');
-          await onCapture(c.toDataURL('image/jpeg', 0.5), Array.from(face.descriptor), false);
-          return;
-       }
-    }
-    
-    // If AI fails on the captured frame
-    announce('Face not clear in the photo. Please retake.', 'error');
-    setPhase('review_enroll'); // Let them see it failed and they can hit retake
-  }, [onCapture, announce]);
-
       if (isManual) {
         // Nano-second Manual Capture: Completely bypass face-api extraction.
         // Return a zero array. The backend will accept this if manual capture is used
@@ -300,7 +338,9 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         setPhase('submit');
         let captureError: unknown = null;
         try {
-          await onCapture(dataUrl, Array.from({ length: 128 }, () => 0));
+          // Bug 5 fix: pass `true` as isManualCapture so the parent sets
+          // is_manual_override=true in the attendance payload.
+          await onCapture(dataUrl, Array.from({ length: 128 }, () => 0), true);
         } catch (err) {
           captureError = err;
         }
@@ -403,7 +443,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       isCapturingRef.current = false;
       setTimeout(() => { if (mountedRef.current) { v?.play(); setPhase('scanning'); } }, 1000);
     }
-  }, [announce, setPhase, onCapture, checkType]);
+  // Bug 7 fix: include isEnrollment and startScan in deps
+  }, [announce, setPhase, onCapture, checkType, isEnrollment, startScan]);
 
   useEffect(() => {
     runCaptureRef.current = runCapture;
@@ -445,12 +486,22 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       const camOk = await startCam();
       if (!camOk) return;
 
+      // Bug 4 fix: wait for the video element to be ready before proceeding.
+      // On iPhone Safari, the camera stream may take 1–3s to buffer. If we call
+      // startScan() immediately the readyState check inside the loop always fails
+      // so no faces are ever detected.
+      if (videoRef.current) {
+        await waitForVideoReady(videoRef.current);
+      }
+
       // Wait for models to load so user sees loading state
       await loadModels();
 
+      if (!mountedRef.current) return;
+
       if (gpsVerified) {
         announce('Camera ready. Frame your face and capture.', 'info');
-        setPhase('scanning');
+        startScan();
       } else {
         setPhase('wait_gps');
         if (gpsStatus === 'not_configured') {
@@ -557,8 +608,24 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               style={{ transform: 'scaleX(-1)' }}
             />
 
+            {/* Model loading progress overlay */}
+            {phase === 'loading' && (
+              <div className="absolute inset-0 bg-[#020810]/90 backdrop-blur-sm flex flex-col items-center justify-center z-20 gap-4 px-6">
+                <div className="w-10 h-10 border-[3px] border-white/20 border-t-blue-400 rounded-full animate-spin" />
+                <p className="text-white font-bold text-sm tracking-wide text-center">{msg}</p>
+                <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-blue-400 to-emerald-400 rounded-full"
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                  />
+                </div>
+                <p className="text-slate-400 text-xs">{progress}%</p>
+              </div>
+            )}
+
             {/* Scanning laser line — only when processing the image */}
-            {isProcessing && (
+            {isProcessing && phase !== 'loading' && (
               <motion.div
                 animate={{ top: ['0%', '100%', '0%'] }}
                 transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
@@ -576,8 +643,6 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
                                : 'bottom-5 right-5 border-b-2 border-r-2 rounded-br-xl'}`}
               />
             ))}
-
-
 
             {/* Success overlay */}
             {phase === 'success' && (
@@ -597,8 +662,6 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               </motion.div>
             )}
 
-
-
             {/* Camera error overlay */}
             {phase === 'cam_err' && (
               <div className="absolute inset-0 bg-[#020810]/95 backdrop-blur-xl flex flex-col items-center justify-center z-30 p-6 text-center">
@@ -612,8 +675,6 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
             )}
           </div>
         </div>
-
-
 
         {phase === 'review_enroll' && (
           <motion.div
@@ -649,14 +710,14 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
             className="flex flex-col items-center mt-3 space-y-2"
           >
             <p className="text-blue-300 text-xs font-medium text-center px-4">
-              {!showManualBtn 
+              {!showManualBtn
                 ? (faceDetected ? 'Face detected! Hold still for auto-capture...' : 'Align your face in the frame for auto-capture.')
                 : (!isEnrollment
-                  ? (faceDetected 
-                    ? 'Face detected! Tap "Capture Face" to submit.' 
+                  ? (faceDetected
+                    ? 'Face detected! Tap "Capture Face" to submit.'
                     : 'Align your face in the frame to capture, or use Instant Capture.')
-                  : (faceDetected 
-                    ? 'Face detected! Tap "Capture" to take a photo.' 
+                  : (faceDetected
+                    ? 'Face detected! Tap "Capture" to take a photo.'
                     : 'Align your face in the frame.'))}
             </p>
             <div className="flex gap-4">
@@ -746,7 +807,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         )}
 
         {/* Processing state */}
-        {isProcessing && (
+        {isProcessing && phase !== 'loading' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -806,4 +867,3 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     </div>
   );
 };
-

@@ -4,15 +4,6 @@ import { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Points, PointMaterial } from '@react-three/drei';
 import * as THREE from 'three';
-import { ThreeElements } from '@react-three/fiber';
-
-// Extend JSX IntrinsicElements with react-three-fiber's Three.js elements
-// This tells TypeScript that <group>, <mesh>, etc. are valid JSX elements.
-declare module 'react' {
-  namespace JSX {
-    interface IntrinsicElements extends ThreeElements {}
-  }
-}
 
 
 // Generate random particles in a sphere shape
@@ -44,6 +35,7 @@ function ParticleSwarm() {
   });
 
   return (
+    // @ts-expect-error React 19 JSX namespace conflict with R3F
     <group rotation={[0, 0, Math.PI / 4]}>
       <Points ref={ref} positions={particlesArray} stride={3} frustumCulled={false}>
         <PointMaterial
@@ -56,6 +48,7 @@ function ParticleSwarm() {
           blending={THREE.AdditiveBlending}
         />
       </Points>
+    {/* @ts-expect-error React 19 JSX namespace conflict */}
     </group>
   );
 }
@@ -72,6 +65,7 @@ function WireframeGlobe() {
 
   return (
     <Float speed={1.5} rotationIntensity={0.5} floatIntensity={1}>
+      {/* @ts-expect-error React 19 JSX namespace conflict with R3F */}
       <mesh ref={meshRef}>
         <icosahedronGeometry args={[1.8, 1]} />
         <meshBasicMaterial 
@@ -81,6 +75,7 @@ function WireframeGlobe() {
           opacity={0.15} 
           side={THREE.DoubleSide} 
         />
+      {/* @ts-expect-error React 19 JSX namespace conflict */}
       </mesh>
     </Float>
   );

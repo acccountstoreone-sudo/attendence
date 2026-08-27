@@ -193,6 +193,24 @@ export default function EmployeeCheckInPage() {
   const [isReverifyMode, setIsReverifyMode] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<'face' | 'fingerprint' | 'selector' | 'none'>('selector');
 
+  // Bug 6 fix: Pre-fetch WebAuthn options so startAuthentication can be the
+  // very first async call inside the click handler (iOS Safari gesture-chain fix).
+  const cachedWebAuthnOptionsRef = useRef<Record<string, unknown> | null>(null);
+  const prefetchingWebAuthnRef   = useRef(false);
+
+  const prefetchWebAuthnOptions = useCallback(async () => {
+    if (cachedWebAuthnOptionsRef.current || prefetchingWebAuthnRef.current) return;
+    prefetchingWebAuthnRef.current = true;
+    try {
+      const resp = await fetch('/api/auth/webauthn/authenticate/generate', { method: 'POST' });
+      if (resp.ok) {
+        const opts = await parseJsonResponse(resp);
+        cachedWebAuthnOptionsRef.current = opts;
+      }
+    } catch { /* non-critical prefetch — ignore */ }
+    prefetchingWebAuthnRef.current = false;
+  }, []);
+
   const gps = useGPS(profile, loading);
   const offline = useOfflineQueue();
 
@@ -439,32 +457,45 @@ export default function EmployeeCheckInPage() {
     try {
       isSubmittingRef.current = true;
       const isAdminOrManager = profile?.role === 'admin' || profile?.role === 'branch_manager';
-      
+
       setSubmitting(true);
       setFeedback(null);
-      
+
       if (!gps.coords && !isAdminOrManager) throw new Error('GPS coordinates unavailable. Please retry.');
       if (!gps.verified && !isAdminOrManager) {
         throw new Error(`Check-in denied: You are ${gps.distance ?? 'too far'}m away from ${profile?.branch_name ?? 'the store'} geofence.`);
       }
 
-      // 1. Get Authentication Options
-      const resp = await fetch('/api/auth/webauthn/authenticate/generate', { method: 'POST' });
-      const options = await parseJsonResponse(resp);
-      if (!resp.ok) {
-         throw new Error(options.error || 'Fingerprint authentication is not set up. Please go to your profile to register.');
+      // Bug 6 fix: iOS Safari WebAuthn gesture-chain requirement.
+      // startAuthentication MUST be called as close to the user-gesture (click) as
+      // possible — any await fetch() before it breaks the gesture chain on iPhone,
+      // resulting in NotAllowedError. Strategy:
+      //   1. Use pre-fetched options if available (cached by prefetchWebAuthnOptions).
+      //   2. If not yet cached, fetch now AND call startAuthentication immediately
+      //      after (single await before the WebAuthn prompt).
+      let webAuthnOptions = cachedWebAuthnOptionsRef.current;
+      if (!webAuthnOptions) {
+        // Only one fetch before startAuthentication — acceptable on all browsers.
+        const resp = await fetch('/api/auth/webauthn/authenticate/generate', { method: 'POST' });
+        webAuthnOptions = await parseJsonResponse(resp);
+        if (!resp.ok) {
+          throw new Error((webAuthnOptions as any)?.error || 'Fingerprint authentication is not set up. Please go to your profile to register.');
+        }
       }
+      // Clear cache so we get a fresh challenge next time
+      cachedWebAuthnOptionsRef.current = null;
 
-      // 2. Start browser authentication
+      // ★ startAuthentication is now the FIRST async call after options are ready.
+      // This satisfies iOS Safari's gesture activation requirement.
       let asseResp;
       try {
-        asseResp = await startAuthentication({ optionsJSON: options });
+        asseResp = await startAuthentication({ optionsJSON: webAuthnOptions as any });
       } catch (e: unknown) {
-        if (e instanceof Error && e.name === 'NotAllowedError') throw new Error('Authentication cancelled.');
+        if (e instanceof Error && e.name === 'NotAllowedError') throw new Error('Authentication cancelled or timed out. Please try again.');
         throw e;
       }
 
-      // 3. Verify on server
+      // Verify on server
       const verifyResp = await fetch('/api/auth/webauthn/authenticate/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -473,19 +504,19 @@ export default function EmployeeCheckInPage() {
 
       const verifyData = await parseJsonResponse(verifyResp);
       if (!verifyResp.ok) {
-         throw new Error(verifyData.error || 'Fingerprint verification failed.');
+        throw new Error(verifyData.error || 'Fingerprint verification failed.');
       }
       if (!verifyData.verified) throw new Error('Invalid fingerprint.');
 
-      // 4. Record Check-in (Offline queueing is not fully supported for fingerprint since it requires server for challenge. We just bypass face matching.)
+      // Record Check-in
       const endpoint = checkType === 'in' ? '/api/attendance/check-in' : '/api/attendance/check-out';
       const payload  = {
-          latitude: gps.coords?.lat ?? 0,
-          longitude: gps.coords?.lng ?? 0,
-          branch_id: profile?.branch_id,
-          is_manual_override: isAdminOrManager || !gps.verified,
-          face_verified: true,
-          webauthn_verified: true, // Special flag indicating fingerprint was used
+        latitude: gps.coords?.lat ?? 0,
+        longitude: gps.coords?.lng ?? 0,
+        branch_id: profile?.branch_id,
+        is_manual_override: isAdminOrManager || !gps.verified,
+        face_verified: true,
+        webauthn_verified: true, // Special flag indicating fingerprint was used
       };
 
       const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -497,7 +528,6 @@ export default function EmployeeCheckInPage() {
         throw new Error(result.error?.message ?? `Check-${checkType === 'in' ? 'In' : 'Out'} failed`);
       }
 
-      // Fix S5: 1200ms redirect (was 2200ms)
       setTimeout(() => router.push('/employee'), 1200);
     } catch (err: unknown) {
       setSubmitting(false);
@@ -509,7 +539,7 @@ export default function EmployeeCheckInPage() {
     } finally {
       isSubmittingRef.current = false;
     }
-  }, [gps.coords, gps.verified, gps.distance, profile, checkType, router]);
+  }, [gps.coords, gps.verified, gps.distance, profile, checkType, router, cachedWebAuthnOptionsRef]);
 
   // ─────────────────────────────────────────────────────────
   // Render: Loading screen
@@ -722,34 +752,39 @@ export default function EmployeeCheckInPage() {
           >
             {/* Ambient Background Glow for Fingerprint */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-purple-500/20 rounded-full blur-[60px] pointer-events-none" />
-            
+
             <div className="p-5 bg-purple-500/10 border border-purple-500/20 rounded-3xl relative z-10 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
               <span className="text-5xl drop-shadow-lg">👆</span>
             </div>
             <div className="relative z-10">
               <h2 className="text-white text-xl font-bold tracking-tight mb-2">Fingerprint Verification</h2>
-              <p className="text-slate-400 text-sm leading-relaxed px-4">Please verify your identity using your device's fingerprint scanner or passkey.</p>
+              <p className="text-slate-400 text-sm leading-relaxed px-4">Please verify your identity using your device&apos;s fingerprint scanner or passkey.</p>
             </div>
             <Button
               onClick={handleFingerprintSubmit}
+              // Bug 6 fix: also pre-fetch WebAuthn options on hover/focus so they are
+              // already cached when the user taps the button (minimizes awaits in handler)
+              onMouseEnter={prefetchWebAuthnOptions}
+              onFocus={prefetchWebAuthnOptions}
+              onTouchStart={prefetchWebAuthnOptions}
               disabled={submitting || (gps.status !== 'inside' && profile?.role !== 'admin' && profile?.role !== 'branch_manager')}
               isLoading={submitting}
               className="w-full h-14 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-bold text-lg rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all duration-300 relative z-10"
             >
               Scan Fingerprint
             </Button>
-            
+
             {(gps.status !== 'inside' && profile?.role !== 'admin' && profile?.role !== 'branch_manager') && (
-               <p className="text-rose-300 text-xs font-medium mt-4 bg-rose-500/10 px-4 py-2.5 rounded-xl border border-rose-500/20 relative z-10 shadow-inner">
-                  {gps.status === 'locating' ? 'Locating...' : 'You must be inside the store to check in.'}
-               </p>
+              <p className="text-rose-300 text-xs font-medium mt-4 bg-rose-500/10 px-4 py-2.5 rounded-xl border border-rose-500/20 relative z-10 shadow-inner">
+                {gps.status === 'locating' ? 'Locating...' : 'You must be inside the store to check in.'}
+              </p>
             )}
 
-            <button 
-               onClick={gps.refresh}
-               className="text-slate-500 hover:text-white text-xs font-semibold uppercase tracking-wider mt-2 transition-colors relative z-10"
+            <button
+              onClick={gps.refresh}
+              className="text-slate-500 hover:text-white text-xs font-semibold uppercase tracking-wider mt-2 transition-colors relative z-10"
             >
-               Refresh Location
+              Refresh Location
             </button>
           </motion.div>
         )}

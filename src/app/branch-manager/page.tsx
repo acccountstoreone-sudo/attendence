@@ -11,6 +11,9 @@ import {
   Search,
   FileBarChart,
   Store,
+  ClipboardList,
+  CheckCircle2,
+  Circle,
 } from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
@@ -26,15 +29,32 @@ interface StoreEmployee {
   check_out_time?: string;
 }
 
+const DAILY_TASKS = [
+  { key: 'showroom_clean', label: 'শোরুম পরিষ্কার করা ও ঝাড়ু দেওয়া' },
+  { key: 'generator_oil', label: 'জেনারেটরের তেল চেক করা' },
+  { key: 'products_organized', label: 'শোরুমের সব পণ্য/কাপড় সুন্দরভাবে গোছানো' },
+  { key: 'cash_office_table', label: 'ক্যাশ/অফিস টেবিল পরিষ্কার ও গোছানো' },
+  { key: 'display_rack', label: 'ডিসপ্লে র‍্যাক ও হ্যাঙ্গার ঠিকভাবে সাজানো' },
+  { key: 'mirror_glass_door', label: 'আয়না, গ্লাস ও দরজা পরিষ্কার করা' },
+  { key: 'light_fan_ac', label: 'লাইট, ফ্যান ও AC চেক করা' },
+  { key: 'cash_counter', label: 'ক্যাশ কাউন্টার পরিষ্কার ও গোছানো' },
+  { key: 'dustbin', label: 'ডাস্টবিন পরিষ্কার করা' },
+  { key: 'entrance_clean', label: 'শোরুমের বাইরে প্রবেশপথ পরিষ্কার রাখা' },
+];
+
 export default function BranchManagerDashboardPage() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [loading, setLoading] = useState(true);
   const [storeName, setStoreName] = useState('Anchor Fashion Store');
+  const [branchIdState, setBranchIdState] = useState<string | null>(null);
   const [employees, setEmployees] = useState<StoreEmployee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [pendingCorrections, setPendingCorrections] = useState(0);
   const [exporting, setExporting] = useState(false);
+  const [dailyTasksState, setDailyTasksState] = useState<Record<string, boolean>>({});
+  const [dailyTasksUpdatedBy, setDailyTasksUpdatedBy] = useState<string | null>(null);
+  const [dailyTasksUpdatedAt, setDailyTasksUpdatedAt] = useState<string | null>(null);
 
   const fetchStoreDashboard = useCallback(async () => {
     setLoading(true);
@@ -50,6 +70,7 @@ export default function BranchManagerDashboardPage() {
         .single();
 
       const branchId = profile?.branch_id;
+      if (branchId) setBranchIdState(branchId);
       if (profile) {
         const branchData = (profile as any).branch || (profile as any).branches;
         const bName = Array.isArray(branchData) ? branchData[0]?.name : branchData?.name;
@@ -95,6 +116,26 @@ export default function BranchManagerDashboardPage() {
       }
       const { count: correctionsCount } = await correctionsQuery;
       setPendingCorrections(correctionsCount || 0);
+
+      // 3. Fetch today's daily tasks progress for this branch
+      if (branchId) {
+        const now = new Date();
+        const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const { data: tasksData } = await supabase
+          .from('showroom_daily_tasks')
+          .select('tasks_state, updated_at, completed_by:profiles!showroom_daily_tasks_completed_by_fkey(full_name)')
+          .eq('branch_id', branchId)
+          .eq('date', todayLocal)
+          .maybeSingle();
+        if (tasksData) {
+          setDailyTasksState((tasksData.tasks_state as Record<string, boolean>) || {});
+          setDailyTasksUpdatedAt(tasksData.updated_at || null);
+          const nameData = (tasksData as any).completed_by;
+          setDailyTasksUpdatedBy(
+            Array.isArray(nameData) ? nameData[0]?.full_name : nameData?.full_name || null
+          );
+        }
+      }
 
       // Map employees with their current status today
       if (staffList) {
@@ -405,7 +446,86 @@ export default function BranchManagerDashboardPage() {
           </table>
         </div>
       </div>
+      {/* Daily Tasks Monitor */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#1dbf73]/10 flex items-center justify-center">
+              <ClipboardList className="w-4 h-4 text-[#1dbf73]" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-slate-900">🏬 Showroom Daily Tasks</h3>
+              <p className="text-xs text-slate-500">
+                {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                {dailyTasksUpdatedBy && (
+                  <span className="ml-2 text-slate-400">
+                    · Last updated by <span className="font-medium text-slate-600">{dailyTasksUpdatedBy}</span>
+                    {dailyTasksUpdatedAt && (
+                      <> at {new Date(dailyTasksUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</>
+                    )}
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+          {/* Progress pill */}
+          {(() => {
+            const done = DAILY_TASKS.filter(t => dailyTasksState[t.key]).length;
+            const pct = Math.round((done / DAILY_TASKS.length) * 100);
+            return (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-slate-600">{done}/{DAILY_TASKS.length}</span>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold border-2 ${
+                  pct === 100 ? 'border-[#1dbf73] bg-[#1dbf73]/10 text-[#1dbf73]' : 'border-slate-200 bg-slate-50 text-slate-500'
+                }`}>{pct}%</div>
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Progress bar */}
+        {(() => {
+          const pct = Math.round((DAILY_TASKS.filter(t => dailyTasksState[t.key]).length / DAILY_TASKS.length) * 100);
+          return (
+            <div className="px-5 pt-4">
+              <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="h-1.5 rounded-full transition-all duration-700"
+                  style={{ width: `${pct}%`, background: pct === 100 ? '#1dbf73' : 'linear-gradient(90deg,#1dbf73,#0ea5e9)' }}
+                />
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Task list — read only */}
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-5">
+          {DAILY_TASKS.map((task, idx) => {
+            const done = !!dailyTasksState[task.key];
+            return (
+              <li key={task.key} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border ${
+                done ? 'bg-[#1dbf73]/5 border-[#1dbf73]/25' : 'bg-slate-50 border-slate-200'
+              }`}>
+                {done
+                  ? <CheckCircle2 className="w-4.5 h-4.5 text-[#1dbf73] shrink-0" />
+                  : <Circle className="w-4.5 h-4.5 text-slate-300 shrink-0" />}
+                <div className="flex items-baseline gap-1.5 min-w-0">
+                  <span className={`text-xs font-bold shrink-0 ${done ? 'text-[#1dbf73]' : 'text-slate-400'}`}>
+                    {String(idx + 1).padStart(2, '0')}
+                  </span>
+                  <span className={`text-sm leading-snug ${
+                    done ? 'text-slate-400 line-through decoration-[#1dbf73]/50' : 'text-slate-700'
+                  }`}>{task.label}</span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+
+        {!branchIdState && (
+          <p className="text-center text-xs text-slate-400 pb-4">No branch assigned — cannot load tasks.</p>
+        )}
+      </div>
     </div>
   );
 }
-
