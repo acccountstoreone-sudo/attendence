@@ -59,10 +59,11 @@ export function DailyTasksCard({ branchId }: DailyTasksCardProps) {
   const [currentUserId, setCurrentUserId]     = useState<string | null>(null);
   const [currentUserName, setCurrentUserName] = useState<string>('');
 
-  // Use local date to avoid UTC/Bangladesh tz mismatch
+  // Use Bangladesh timezone strictly to avoid mismatches
   const today = useMemo(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    // Get the current date in Asia/Dhaka timezone
+    const tzDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" }));
+    return `${tzDate.getFullYear()}-${String(tzDate.getMonth() + 1).padStart(2, '0')}-${String(tzDate.getDate()).padStart(2, '0')}`;
   }, []);
 
   const completedCount = branchTasks.filter(t => tasksState[t.task_key]?.status === 'completed').length;
@@ -159,6 +160,7 @@ export function DailyTasksCard({ branchId }: DailyTasksCardProps) {
         p_task_key:     key,
         p_employee_id:  currentUserId,
         p_employee_name: currentUserName,
+        p_date:         today,
       });
 
       if (error) throw error;
@@ -228,9 +230,16 @@ export function DailyTasksCard({ branchId }: DailyTasksCardProps) {
 
       {/* Task list */}
       {loading ? (
-        <div className="flex items-center justify-center py-8 gap-2 text-slate-400">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-sm">লোড হচ্ছে...</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 animate-pulse">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border bg-slate-50 border-slate-200">
+              <div className="w-5 h-5 rounded-full bg-slate-200 shrink-0" />
+              <div className="flex flex-col gap-1.5 w-full">
+                <div className="h-3.5 bg-slate-200 rounded w-2/3" />
+                <div className="h-2.5 bg-slate-200 rounded w-1/3" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : totalCount === 0 ? (
         <div className="text-center py-8 text-slate-500">

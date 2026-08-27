@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { BranchTasksTab } from '@/components/admin/branch/BranchTasksTab';
 
 const LocationMapPicker = dynamic(
   () => import('@/components/admin/LocationMapPicker').then(mod => mod.LocationMapPicker),
@@ -59,7 +60,7 @@ const DAYS_OF_WEEK = [
 export default function StoreSettingsPage() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
-  const [activeTab, setActiveTab] = useState<'location' | 'duty'>('location');
+  const [activeTab, setActiveTab] = useState<'location' | 'duty' | 'tasks'>('location');
   const [loading, setLoading] = useState(true);
   const [savingLocation, setSavingLocation] = useState(false);
   const [savingDuty, setSavingDuty] = useState(false);
@@ -271,7 +272,7 @@ export default function StoreSettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center space-x-2 bg-white p-1.5 rounded-xl border border-slate-200 max-w-md shadow-md">
+      <div className="flex items-center space-x-2 bg-white p-1.5 rounded-xl border border-slate-200 max-w-2xl shadow-md">
         <button
           type="button"
           onClick={() => { setActiveTab('location'); setFeedback(null); }}
@@ -295,6 +296,18 @@ export default function StoreSettingsPage() {
         >
           <Clock className="w-4 h-4 shrink-0" />
           <span>Duty Hours & Rules</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => { setActiveTab('tasks'); setFeedback(null); }}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
+            activeTab === 'tasks'
+              ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-slate-900 shadow-lg shadow-amber-600/20'
+              : 'text-slate-900 hover:text-slate-700 hover:bg-slate-50/50'
+          }`}
+        >
+          <ClipboardList className="w-4 h-4 shrink-0" />
+          <span>Daily Tasks</span>
         </button>
       </div>
 
@@ -653,6 +666,13 @@ export default function StoreSettingsPage() {
             </Button>
           </div>
         </form>
+      )}
+
+      {/* TAB 3: DAILY TASKS */}
+      {activeTab === 'tasks' && branchData && (
+        <div className="bg-[#ffffff] border border-slate-200 p-6 rounded-xl shadow-md">
+          <BranchTasksTab branch={branchData as any} />
+        </div>
       )}
     </div>
   );

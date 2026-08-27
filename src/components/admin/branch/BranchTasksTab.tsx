@@ -225,10 +225,10 @@ export function BranchTasksTab({ branch }: BranchTasksTabProps) {
                 placeholder="Enter task name (e.g., Clean the glass door)"
                 value={newTaskLabel}
                 onChange={(e) => setNewTaskLabel(e.target.value)}
-                className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73]"
+                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#1dbf73] focus:ring-2 focus:ring-[#1dbf73]/20 transition-all placeholder:text-slate-400"
                 required
               />
-              <Button type="submit" disabled={isAddingTask} className="bg-[#1dbf73] hover:bg-[#16965a] text-white whitespace-nowrap">
+              <Button type="submit" disabled={isAddingTask} className="bg-[#1dbf73] hover:bg-[#16965a] text-white whitespace-nowrap rounded-xl px-5 h-auto font-medium shadow-sm shadow-[#1dbf73]/20">
                 {isAddingTask ? <Spinner size="sm" /> : 'Add Task'}
               </Button>
             </form>
@@ -240,7 +240,13 @@ export function BranchTasksTab({ branch }: BranchTasksTabProps) {
             </div>
             <div className="divide-y divide-slate-100">
               {branchTasks.length === 0 ? (
-                <div className="p-8 text-center text-slate-500">No tasks configured for this branch yet.</div>
+                <div className="p-12 text-center flex flex-col items-center justify-center bg-slate-50/50">
+                  <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3 border border-slate-200">
+                    <Settings className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <p className="text-slate-600 font-medium">No tasks configured</p>
+                  <p className="text-sm text-slate-400 mt-1">Add a new daily task above to get started.</p>
+                </div>
               ) : (
                 branchTasks.map(task => (
                   <div key={task.id} className={`p-4 flex items-center justify-between transition-colors ${task.is_active ? 'bg-white' : 'bg-slate-50 opacity-60'}`}>
@@ -330,13 +336,16 @@ export function BranchTasksTab({ branch }: BranchTasksTabProps) {
                   <div className="divide-y divide-slate-100">
                     {dayLogs.map(log => {
                       const taskDef = branchTasks.find(t => t.task_key === log.task_key);
+                      const isDeleted = !taskDef;
+                      
                       return (
                         <div key={log.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
                           <div className="flex items-center gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-[#1dbf73] shrink-0" />
+                            <CheckCircle2 className={`w-5 h-5 shrink-0 ${isDeleted ? 'text-slate-400' : 'text-[#1dbf73]'}`} />
                             <div>
-                              <p className="font-medium text-slate-800 text-sm">
-                                {taskDef?.label || log.task_key}
+                              <p className={`font-medium text-sm flex items-center gap-2 ${isDeleted ? 'text-slate-500 italic' : 'text-slate-800'}`}>
+                                {taskDef?.label || `Deleted Task (${log.task_key.split('_')[1] || log.task_key})`}
+                                {isDeleted && <span className="text-[10px] uppercase font-bold tracking-wider bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">Deleted</span>}
                               </p>
                               <p className="text-xs text-slate-500 mt-0.5">
                                 Completed at {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
