@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
       // Clear the challenge and set fingerprint_enrolled status
       await adminClient.from('profiles').update({ 
         webauthn_current_challenge: null,
+        fingerprint_enrolled: true
       }).eq('id', user.id);
 
       return NextResponse.json({ verified: true });

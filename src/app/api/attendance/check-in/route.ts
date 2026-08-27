@@ -37,7 +37,20 @@ export async function POST(request: NextRequest) {
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 
     // 3. Biometric Verification Check (face match only — no liveness challenge required)
-    if (!payload.webauthn_verified) {
+    if (payload.webauthn_verified) {
+      const verifiedToken = request.cookies.get('webauthn_verified_token');
+      if (!verifiedToken || verifiedToken.value !== 'true') {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: { code: 'WEBAUTHN_INVALID', message: 'Biometric fingerprint session expired or invalid. Please scan your fingerprint again.' },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
+    } else {
       if (!payload.face_verified || !payload.faceDescriptor || payload.faceDescriptor.length === 0) {
         return NextResponse.json(
           {
@@ -69,7 +82,7 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        const isManualBypass = payload.faceDescriptor.length === 128 && payload.faceDescriptor.every((v: number) => v === 0);
+        const isManualBypass = payload.faceDescriptor.length === 1024 && payload.faceDescriptor.every((v: number) => v === 0);
 
         if (isManualBypass) {
           // Manual capture bypass: employee clicked "Capture Now" to bypass auto-scan.
@@ -84,7 +97,7 @@ export async function POST(request: NextRequest) {
                 data: null,
                 error: {
                   code: 'BIOMETRIC_DIMENSION_MISMATCH',
-                  message: `Face descriptor dimension mismatch: received ${payload.faceDescriptor.length}, expected ${profile.face_descriptor.length}.`,
+                  message: `Face descriptor dimension mismatch: received ${payload.faceDescriptor.length}, expected ${profile.face_descriptor.length}. Your face was enrolled using an older system. Please ask your manager to reset your face scan.`,
                 },
                 timestamp: new Date().toISOString(),
               },
@@ -93,11 +106,20 @@ export async function POST(request: NextRequest) {
           }
           const incomingDesc = payload.faceDescriptor;
           const storedDesc = profile.face_descriptor;
-          const distance = Math.sqrt(storedDesc.reduce((sum: number, val: number, i: number) => sum + Math.pow(val - incomingDesc[i], 2), 0));
+
+          let dotProduct = 0;
+          let normA = 0;
+          let normB = 0;
+          for (let i = 0; i < storedDesc.length; i++) {
+            dotProduct += storedDesc[i] * incomingDesc[i];
+            normA += storedDesc[i] * storedDesc[i];
+            normB += incomingDesc[i] * incomingDesc[i];
+          }
+          const similarity = dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
         
           // Face match failed! Instead of blocking, we set manual override and flag face_verified as false.
           // This allows the check-in to succeed immediately, and lets the manager approve it manually.
-          if (distance > 1.60) {
+          if (similarity < 0.50) {
             payload.is_manual_override = true;
             payload.face_verified = false;
           } else {
@@ -514,7 +536,7 @@ export async function POST(request: NextRequest) {
       // Ignore non-fatal location update errors
     }
 
-    return NextResponse.json(
+    const res = NextResponse.json(
       {
         success: true,
         data: {
@@ -527,6 +549,13 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
+    
+    // Clear the WebAuthn token so it cannot be reused for another check-in
+    if (payload.webauthn_verified) {
+      res.cookies.set('webauthn_verified_token', '', { maxAge: 0, path: '/' });
+    }
+    
+    return res;
   } catch (error) {
     return handleApiError(error);
   }

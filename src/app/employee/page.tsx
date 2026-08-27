@@ -9,6 +9,7 @@ import { Clock, Calendar, ShieldCheck, MessageSquare, User, Building2 } from 'lu
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { DailyTasksCard } from '@/components/employee/DailyTasksCard';
+import { preloadHumanModels } from '@/lib/human-preload';
 
 export default function EmployeeDashboardPage() {
   const router = useRouter();
@@ -21,6 +22,9 @@ export default function EmployeeDashboardPage() {
   const [liveOvertimeMinutes, setLiveOvertimeMinutes] = useState(0);
 
   useEffect(() => {
+    // Fire and forget background pre-loader for face verification
+    preloadHumanModels().catch(console.error);
+
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;

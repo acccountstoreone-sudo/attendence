@@ -7,11 +7,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// ─────────────────────────────────────────────────────────
-// Global Cache for Face API
-// ─────────────────────────────────────────────────────────
-let globalFa: typeof import('@vladmandic/face-api') | null = null;
-let globalLoadPromise: Promise<typeof import('@vladmandic/face-api') | null> | null = null;
+import { preloadHumanModels, getHumanInstance } from '@/lib/human-preload';
+import type { Human } from '@vladmandic/human';
 
 // ─────────────────────────────────────────────────────────
 // Types
@@ -91,7 +88,6 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   // ── Refs ──────────────────────────────────────────────
   const videoRef       = useRef<HTMLVideoElement | null>(null);
   const canvasRef      = useRef<HTMLCanvasElement | null>(null);
-  const faRef          = useRef<typeof import('@vladmandic/face-api') | null>(null);
   const scanTimerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef     = useRef(true);
   const isCapturingRef = useRef(false);
@@ -146,63 +142,19 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     }
   }, [setPhase]);
 
-  // ── Model loading ─────────────────────────────────────
-  // Bug 3 fix: Load models sequentially with real progress steps (5→35→65→100%)
-  // instead of jumping from 5% to 100% after a Promise.all.
-  // Bug 2 fix: Reset globalLoadPromise on failure so a retry is possible.
   const loadModels = useCallback(async () => {
     setPhase('loading');
-    setPr(5);
+    setPr(10);
     announce('Loading Face AI Models...', 'info');
 
-    if (globalFa) {
-      faRef.current = globalFa;
-      setPr(100);
-      announce('Face AI Models Ready.', 'success');
-      return globalFa;
-    }
-
-    if (!globalLoadPromise) {
-      globalLoadPromise = (async () => {
-        try {
-          const fa = await import('@vladmandic/face-api');
-          // Prefer WebGL backend for 10x–100x perf on mobile; fall back to CPU.
-          try { await (fa.tf as any).setBackend('webgl'); } catch {
-            try { await (fa.tf as any).setBackend('cpu'); } catch { /* ignore */ }
-          }
-
-          // Bug 3 fix: sequential loads with progress updates
-          await fa.nets.tinyFaceDetector.loadFromUri('/models');
-          if (mountedRef.current) setPr(35);
-
-          await fa.nets.faceLandmark68TinyNet.loadFromUri('/models');
-          if (mountedRef.current) setPr(65);
-
-          await fa.nets.faceRecognitionNet.loadFromUri('/models');
-          if (mountedRef.current) setPr(100);
-
-          globalFa = fa;
-          return fa;
-        } catch (err: any) {
-          // Bug 2 fix: always reset so the next attempt can retry
-          globalLoadPromise = null;
-          console.error('Face API load error:', err);
-          throw err;
-        }
-      })();
-    }
-
     try {
-      const fa = await globalLoadPromise;
-      if (!fa) throw new Error('Failed to load Face AI libraries.');
-      faRef.current = fa;
+      // Use the global preloader to avoid redundant loads
+      const human = await preloadHumanModels();
       if (mountedRef.current) setPr(100);
       announce('Face AI Models Ready.', 'success');
-      return fa;
+      return human;
     } catch (err: any) {
       console.error(err);
-      // Bug 2 fix: clear the promise here too in case it was set by another caller
-      globalLoadPromise = null;
       announce('Face AI Load Error: Failed to download model files. Check your internet connection.', 'error');
       return null;
     }
@@ -233,21 +185,14 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       if (!mountedRef.current || phRef.current !== 'scanning') return;
 
       const v = videoRef.current;
-      // Bug 4 fix: also check readyState here — on slow devices/iOS the video
-      // may still be buffering. We silently reschedule instead of stopping.
       if (v && v.readyState >= 3 && !v.paused) {
-        let fa = faRef.current;
-        if (!fa) fa = globalFa;
-
-        if (fa) {
+        const human = getHumanInstance();
+        if (human) {
           try {
-            const face = await fa.detectSingleFace(v, new fa.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
-              .withFaceLandmarks(true)
-              .withFaceDescriptor();
-
-            if (face && phRef.current === 'scanning') {
+            const res = await human.detect(v) as any;
+            if (res && res.face && res.face.length > 0 && phRef.current === 'scanning') {
               setFaceDetected(true);
-              lastFaceDescriptorRef.current = Array.from(face.descriptor);
+              lastFaceDescriptorRef.current = Array.from(res.face[0].embedding || []);
               consecutiveFaceFrames++;
 
               if (consecutiveFaceFrames >= 3) {
@@ -276,7 +221,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       }
     };
 
-    scanTimerRef.current = setTimeout(runBackgroundDetection, 800) as any;
+    scanTimerRef.current = setTimeout(runBackgroundDetection, 400) as any;
   }, [stopScan, setPhase, announce, isEnrollment]);
 
   // ── Enrollment submit (Bug 1 fix: moved OUT of runCapture scope) ──────────
@@ -287,15 +232,13 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     const c = canvasRef.current;
     if (!c) return;
 
-    let fa = faRef.current;
-    if (!fa) fa = await globalLoadPromise;
-    if (fa) {
-      const face = await fa.detectSingleFace(c, new fa.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
-        .withFaceLandmarks(true)
-        .withFaceDescriptor();
-      if (face) {
+    let human = getHumanInstance();
+    if (!human) human = await preloadHumanModels();
+    if (human) {
+      const res = await human.detect(c) as any;
+      if (res && res.face && res.face.length > 0 && res.face[0].embedding) {
         setPhase('submit');
-        await onCapture(c.toDataURL('image/jpeg', 0.5), Array.from(face.descriptor), false);
+        await onCapture(c.toDataURL('image/jpeg', 0.5), Array.from(res.face[0].embedding), false);
         return;
       }
     }
@@ -340,7 +283,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         try {
           // Bug 5 fix: pass `true` as isManualCapture so the parent sets
           // is_manual_override=true in the attendance payload.
-          await onCapture(dataUrl, Array.from({ length: 128 }, () => 0), true);
+          await onCapture(dataUrl, Array.from({ length: 1024 }, () => 0), true);
         } catch (err) {
           captureError = err;
         }
@@ -370,18 +313,15 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
       // Fallback: If not computed yet, run detection on canvas
       if (!descriptor) {
         // Wait for AI model if it's still loading in the background
-        let fa = faRef.current;
-        if (!fa) {
+        let human = getHumanInstance();
+        if (!human) {
           announce('Loading AI...', 'info');
-          fa = await globalLoadPromise;
+          human = await preloadHumanModels();
         }
-        if (fa) {
-          const face = await fa
-            .detectSingleFace(c, new fa.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
-            .withFaceLandmarks(true)
-            .withFaceDescriptor();
-          if (face) {
-            descriptor = Array.from(face.descriptor);
+        if (human) {
+          const res = await human.detect(c) as any;
+          if (res && res.face && res.face.length > 0 && res.face[0].embedding) {
+            descriptor = Array.from(res.face[0].embedding);
           }
         }
       }
@@ -392,7 +332,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         setPhase('submit');
         let captureError: unknown = null;
         try {
-          await onCapture(dataUrl, Array.from({ length: 128 }, () => 0), true);
+          await onCapture(dataUrl, Array.from({ length: 1024 }, () => 0), true);
         } catch (err) {
           captureError = err;
         }

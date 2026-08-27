@@ -85,7 +85,16 @@ export async function POST(req: NextRequest) {
       // Clear the challenge
       await adminClient.from('profiles').update({ webauthn_challenge: null }).eq('id', user.id);
 
-      return NextResponse.json({ verified: true });
+      // Issue a short-lived secure cookie to prove verification to the check-in route
+      const res = NextResponse.json({ verified: true });
+      res.cookies.set('webauthn_verified_token', 'true', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 300 // 5 minutes
+      });
+      return res;
     }
 
     // Clear the challenge even on failure to prevent stale challenges

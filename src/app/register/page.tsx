@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Webcam from 'react-webcam';
 import { startRegistration } from '@simplewebauthn/browser';
+import { preloadHumanModels, getHumanInstance } from '@/lib/human-preload';
 
 const Abstract3DBackground = dynamic(() => import('@/components/Abstract3DBackground'), {
   ssr: false,
@@ -113,21 +114,12 @@ export default function RegisterPage() {
   const [capturedImageData, setCapturedImageData] = useState<string | null>(null);
   const [fingerprintEnrolled, setFingerprintEnrolled] = useState(false);
 
-  // Load Face API Models when step changes to biometrics or camera modal is opened
+  // Load Human Models when step changes to biometrics or camera modal is opened
   useEffect(() => {
     if (step === 'biometrics' || showCameraModal) {
       const loadModels = async () => {
         try {
-          const faceapi = await import('@vladmandic/face-api');
-          // Force WebGL backend for 10x-100x performance on mobile devices.
-          try { await (faceapi.tf as any).setBackend('webgl'); } catch (e) {
-             try { await (faceapi.tf as any).setBackend('cpu'); } catch (err) {}
-          }
-          await Promise.all([
-            faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-            faceapi.nets.faceLandmark68TinyNet.loadFromUri('/models'),
-            faceapi.nets.faceRecognitionNet.loadFromUri('/models')
-          ]);
+          await preloadHumanModels();
           setModelsLoaded(true);
           setFaceMessage('Please center your face in the frame');
         } catch (e) {
@@ -145,20 +137,22 @@ export default function RegisterPage() {
     if (showCameraModal && modelsLoaded && !faceImage && !capturedImageData) {
       interval = setInterval(async () => {
         if (webcamRef.current && webcamRef.current.video && webcamRef.current.video.readyState === 4) {
-          const faceapi = await import('@vladmandic/face-api');
+          const human = getHumanInstance();
+          if (!human) return;
           const video = webcamRef.current.video;
-          const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }));
+          const res = await human.detect(video) as any;
           
           if (!showCameraModal || !webcamRef.current || !webcamRef.current.video) return;
 
-          if (detection) {
-             const box = detection.box;
+          if (res && res.face && res.face.length > 0) {
+             const face = res.face[0];
+             const box = face.box; // [x, y, width, height]
              const videoWidth = video.videoWidth;
              const videoHeight = video.videoHeight;
              
-             const isLargeEnough = box.width > (videoWidth * 0.20);
-             const centerX = box.x + (box.width / 2);
-             const centerY = box.y + (box.height / 2);
+             const isLargeEnough = box[2] > (videoWidth * 0.20);
+             const centerX = box[0] + (box[2] / 2);
+             const centerY = box[1] + (box[3] / 2);
              const isCentered = (
                centerX > videoWidth * 0.35 && centerX < videoWidth * 0.65 &&
                centerY > videoHeight * 0.35 && centerY < videoHeight * 0.65
@@ -384,15 +378,14 @@ export default function RegisterPage() {
       img.src = capturedImageData;
       await new Promise((resolve) => { img.onload = resolve; });
 
-      const faceapi = await import('@vladmandic/face-api');
-      const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }))
-        .withFaceLandmarks(true)
-        .withFaceDescriptor();
+      let human = getHumanInstance();
+      if (!human) human = await preloadHumanModels();
+      const res = await human.detect(img) as any;
 
-      if (detection) {
+      if (res && res.face && res.face.length > 0 && res.face[0].embedding) {
         const compressedFace = await compressDataUrl(capturedImageData, 500, 0.65);
         setFaceImage(compressedFace);
-        setFaceDescriptor(Array.from(detection.descriptor));
+        setFaceDescriptor(Array.from(res.face[0].embedding));
         setFaceMessage('Biometric enrollment successful!');
         setTimeout(() => {
            setShowCameraModal(false);

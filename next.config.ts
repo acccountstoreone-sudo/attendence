@@ -49,12 +49,22 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     // Suppress Webpack warnings for third-party libraries we can't control
     config.ignoreWarnings = [
       { module: /node_modules\/@vladmandic\/face-api/ },
       { module: /node_modules\/@supabase\/supabase-js/ }
     ];
+    
+    if (isServer) {
+      config.externals.push('@tensorflow/tfjs-node');
+    } else {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        '@tensorflow/tfjs-node': false,
+        fs: false,
+      };
+    }
     return config;
   },
 };

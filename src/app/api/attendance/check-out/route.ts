@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
                 data: null,
                 error: {
                   code: 'BIOMETRIC_DIMENSION_MISMATCH',
-                  message: `Face descriptor dimension mismatch: received ${payload.faceDescriptor.length}, expected ${profile.face_descriptor.length}.`,
+                  message: `Your face was enrolled using an older system. Please ask your manager to reset your face scan.`,
                 },
                 timestamp: new Date().toISOString(),
               },
@@ -89,11 +89,20 @@ export async function POST(request: NextRequest) {
           }
           const incomingDesc = payload.faceDescriptor;
           const storedDesc = profile.face_descriptor;
-          const distance = Math.sqrt(storedDesc.reduce((sum: number, val: number, i: number) => sum + Math.pow(val - incomingDesc[i], 2), 0));
+          
+          let dotProduct = 0;
+          let normA = 0;
+          let normB = 0;
+          for (let i = 0; i < storedDesc.length; i++) {
+            dotProduct += storedDesc[i] * incomingDesc[i];
+            normA += storedDesc[i] * storedDesc[i];
+            normB += incomingDesc[i] * incomingDesc[i];
+          }
+          const similarity = dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
         
           // Face match failed! Instead of blocking, we set manual override and flag face_verified as false.
           // This allows the check-out to succeed immediately, and lets the manager approve it manually.
-          if (distance > 1.60) {
+          if (similarity < 0.50) {
             payload.is_manual_override = true;
             payload.face_verified = false;
           } else {
@@ -368,7 +377,7 @@ export async function POST(request: NextRequest) {
       // Non-fatal
     }
 
-    return NextResponse.json(
+    const res = NextResponse.json(
       {
         success: true,
         data: updatedRecord,
@@ -377,6 +386,13 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     );
+
+    // Clear the WebAuthn token so it cannot be reused for another check-out
+    if (payload.webauthn_verified) {
+      res.cookies.set('webauthn_verified_token', '', { maxAge: 0, path: '/' });
+    }
+
+    return res;
   } catch (error) {
     return handleApiError(error);
   }
