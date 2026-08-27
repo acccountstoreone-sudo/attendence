@@ -745,6 +745,7 @@ export interface EmployeeFullDutyPDFOptions {
     total_late_days: number;
     total_working_days?: number;
     total_on_leave_days?: number;
+    total_tasks_completed?: number;
   };
   columns: string[];
   rows: any[][];
@@ -889,7 +890,7 @@ export function generateEmployeeFullDutyPDF(options: EmployeeFullDutyPDFOptions)
   doc.setTextColor(...primaryColor);
   doc.text(`TOTAL ATTENDANCE & DUTY SUMMARY (${options.periodText.toUpperCase()})`, 18, 81);
 
-  const colW = (pageWidth - 36) / 6;
+  const colW = (pageWidth - 36) / 7;
   const boxY = 85.5;
 
   // Box 1: Present
@@ -969,6 +970,19 @@ export function generateEmployeeFullDutyPDF(options: EmployeeFullDutyPDFOptions)
   doc.setTextColor(16, 185, 129);
   doc.text(`${options.summary.total_overtime_hours}h (${options.summary.total_overtime_minutes}m)`, m6X + 3, boxY + 12.5);
 
+  // Box 7: Tasks Completed
+  const m7X = 18 + colW * 6;
+  doc.setFillColor(236, 253, 245);
+  doc.rect(m7X, boxY, colW - 3, 17, 'F');
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...labelColor);
+  doc.text('TASKS DONE', m7X + 3, boxY + 5);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(16, 185, 129);
+  doc.text(`${options.summary.total_tasks_completed || 0}`, m7X + 3, boxY + 12.5);
+
   // 3. Table Section
   let tableY = 114;
   doc.setFontSize(11);
@@ -1007,11 +1021,13 @@ export function generateEmployeeFullDutyPDF(options: EmployeeFullDutyPDFOptions)
             data.cell.styles.fontSize = 9.5;
             data.cell.styles.fillColor = [236, 253, 245];
           }
-        } else if (colName === 'Duty') {
-          data.cell.styles.textColor = [16, 185, 129];
-          data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fontSize = 9.5;
-          data.cell.styles.fillColor = [236, 253, 245];
+        } else if (colName === 'Duty' || colName === 'Tasks') {
+          if (String(data.cell.raw) !== '0' && String(data.cell.raw) !== '0h') {
+            data.cell.styles.textColor = [16, 185, 129];
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fontSize = 9.5;
+            data.cell.styles.fillColor = [236, 253, 245];
+          }
         } else if (colName === 'Status') {
           const val = String(data.cell.raw).toUpperCase();
           if (val === 'PRESENT') {

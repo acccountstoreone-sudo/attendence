@@ -25,6 +25,7 @@ interface DutyDataPayload {
     total_off_days?: number;
     total_holiday_days?: number;
     total_working_days?: number;
+    total_tasks_completed?: number;
   };
   daily_breakdown: Array<Record<string, unknown>>;
 }
@@ -163,6 +164,7 @@ async function computeAllTimeDutySummary(supabase: any, targetProfile: any) {
       total_on_leave_days: totalOnLeaveDays,
       total_off_days: 0,
       total_holiday_days: 0,
+      total_tasks_completed: 0,
     },
     daily_breakdown: breakdown,
   };
@@ -273,8 +275,9 @@ export async function GET(
         ['Total Missed Days', `${summary.total_missed_days} days`],
         ['Total Late Minutes', `${summary.total_late_minutes} mins (${summary.total_late_days} days)`],
         ['Total Present Days', `${summary.total_present_days} days`],
+        ['Total Tasks Completed', `${summary.total_tasks_completed || 0} tasks`],
         [],
-        ['Date', 'Day of Week', 'Status', 'Check-in Time', 'Check-out Time', 'Duty Hours', 'Late (Mins)', 'Late (Hrs)', 'Overtime (Mins)', 'Overtime (Hrs)', 'Right Time?', 'Face Verified?', 'Location (Lat, Lng)', 'Notes'],
+        ['Date', 'Day of Week', 'Status', 'Check-in Time', 'Check-out Time', 'Duty Hours', 'Late (Mins)', 'Late (Hrs)', 'Overtime (Mins)', 'Overtime (Hrs)', 'Right Time?', 'Face Verified?', 'Tasks Completed', 'Location (Lat, Lng)', 'Notes'],
       ];
 
       const dataRows = (daily_breakdown || []).map((d: Record<string, unknown>) => [
@@ -290,6 +293,7 @@ export async function GET(
         d.overtime_hours || 0,
         d.is_right_time ? 'YES' : 'NO',
         d.face_verified ? 'YES' : 'NO',
+        d.tasks_completed || 0,
         d.check_in_lat && d.check_in_lng ? `"${d.check_in_lat}, ${d.check_in_lng}"` : 'N/A',
         `"${String(d.notes || '').replace(/"/g, '""')}"`,
       ]);
@@ -318,6 +322,7 @@ export async function GET(
         { Metric: 'Total Present Days', Value: summary.total_present_days },
         { Metric: 'Total Leave Days', Value: summary.total_on_leave_days || 0 },
         { Metric: 'Total Off Days / Holidays', Value: (summary.total_off_days || 0) + (summary.total_holiday_days || 0) },
+        { Metric: 'Total Tasks Completed', Value: summary.total_tasks_completed || 0 },
       ];
       const summarySheet = workbook.addWorksheet('Monthly Summary');
       summarySheet.columns = [
@@ -340,6 +345,7 @@ export async function GET(
         'Overtime (Hrs)': d.overtime_hours,
         'Right Time?': d.is_right_time ? 'YES' : 'NO',
         'Face Verified?': d.face_verified ? 'YES' : 'NO',
+        'Tasks Completed': d.tasks_completed || 0,
         'Location (Lat, Lng)': d.check_in_lat && d.check_in_lng ? `${d.check_in_lat}, ${d.check_in_lng}` : 'N/A',
         Notes: d.notes,
       }));
@@ -358,13 +364,14 @@ export async function GET(
     } else {
       // PDF Format (`format === 'pdf'`)
       
-      const head = ['Date', 'Day', 'Status', 'In / Out', 'Duty Hours', 'Late/Right', 'Overtime', 'Face/Loc', 'Notes'];
+      const head = ['Date', 'Day', 'Status', 'In / Out', 'Duty', 'Tasks', 'Late', 'Overtime', 'Face/Loc', 'Notes'];
       const body = (daily_breakdown || []).map((d: Record<string, unknown>) => [
         d.date,
         String(d.day_name || '').slice(0, 3),
         d.status ? String(d.status).toUpperCase() : '',
         `${d.check_in_time || '--:--'} to ${d.check_out_time || '--:--'}`,
         formatDecimalHours(d.duty_hours),
+        String(d.tasks_completed || 0),
         d.is_right_time ? 'Right Time' : `${formatMins(Number(d.late_minutes || 0))} late`,
         formatMins(Number(d.overtime_hours || 0) * 60 + Number(d.overtime_minutes || 0)),
         `${d.face_verified ? 'Yes (Face)' : 'No (Face)'} | ${d.check_in_lat && d.check_in_lng ? `${Number(d.check_in_lat).toFixed(2)}, ${Number(d.check_in_lng).toFixed(2)}` : 'No GPS'}`,
@@ -434,6 +441,7 @@ export async function GET(
           total_late_days: summary.total_late_days || 0,
           total_working_days: summary.total_working_days || (summary.total_present_days + summary.total_missed_days),
           total_on_leave_days: summary.total_on_leave_days || 0,
+          total_tasks_completed: summary.total_tasks_completed || 0,
         },
         columns: head,
         rows: body,

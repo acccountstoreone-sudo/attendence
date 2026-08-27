@@ -59,6 +59,7 @@ export interface DutySummaryResult {
     holiday_overtime_pay?: number;
     total_snack_allowance_pay?: number;
     estimated_payable_salary?: number;
+    total_tasks_completed?: number;
     today_status?: string;
     today_duty_hours?: number;
     today_late_minutes?: number;
@@ -92,6 +93,7 @@ export interface DutySummaryResult {
     is_holiday_duty?: boolean;
     overtime_approval_status?: string;
     approved_overtime_minutes?: number | null;
+    tasks_completed?: number;
   }>;
 }
 
@@ -113,6 +115,7 @@ export async function computeEmployeeDutySummary(
     holidays?: any[];
     leaves?: any[];
     attendanceRecords?: any[];
+    taskLogs?: any[];
   }
 ): Promise<DutySummaryResult> {
   // 1. Fetch Target Profile
@@ -251,6 +254,23 @@ export async function computeEmployeeDutySummary(
     records = dbRecords || [];
   }
 
+  // 5b. Fetch Employee Task Logs
+  let taskLogs = prefetchData?.taskLogs;
+  if (!taskLogs) {
+    const { data: dbTaskLogs } = await supabase
+      .from('showroom_task_logs')
+      .select('date')
+      .eq('employee_id', targetEmployeeId)
+      .eq('action', 'completed')
+      .gte('date', startOfMonthStr)
+      .lte('date', endOfMonthStr);
+    taskLogs = dbTaskLogs || [];
+  }
+  const tasksCompletedByDate: Record<string, number> = {};
+  (taskLogs || []).forEach((log: any) => {
+    tasksCompletedByDate[log.date] = (tasksCompletedByDate[log.date] || 0) + 1;
+  });
+
   const getDhakaDateStr = (isoString: string) => {
     const d = new Date(isoString);
     const formatter = new Intl.DateTimeFormat('en-CA', {
@@ -308,6 +328,7 @@ export async function computeEmployeeDutySummary(
   let totalRegularOvertimeMinutes = 0;
   let totalHolidayOvertimeMinutes = 0;
   let totalLateMinutes = 0;
+  let totalTasksCompleted = 0;
 
   let todayStatus = 'upcoming';
   let todayDutyHours = 0;
@@ -355,6 +376,9 @@ export async function computeEmployeeDutySummary(
 
     const isFutureDay = dateStr > currentDhakaDateStr;
     const dayRecords = recordsByDate[dateStr] || [];
+    const dailyTasksCompleted = tasksCompletedByDate[dateStr] || 0;
+    
+    totalTasksCompleted += dailyTasksCompleted;
 
     const holidayMatch = (holidays || []).find((h) => {
       if (h.holiday_date === dateStr) return true;
@@ -549,6 +573,7 @@ export async function computeEmployeeDutySummary(
         is_holiday_duty: isHolidayDuty,
         overtime_approval_status: approvalStatus,
         approved_overtime_minutes: approvedOt,
+        tasks_completed: dailyTasksCompleted,
       });
     } else {
       if (isFutureDay) {
@@ -566,6 +591,7 @@ export async function computeEmployeeDutySummary(
           notes: 'Upcoming Day',
           face_verified: false,
           is_right_time: false,
+          tasks_completed: 0,
         });
       } else if (holidayMatch) {
         totalHolidayDays++;
@@ -583,6 +609,7 @@ export async function computeEmployeeDutySummary(
           notes: `Holiday: ${holidayMatch.name}`,
           face_verified: false,
           is_right_time: false,
+          tasks_completed: dailyTasksCompleted,
         });
       } else if (isOffDay) {
         totalOffDays++;
@@ -600,6 +627,7 @@ export async function computeEmployeeDutySummary(
           notes: 'Weekly Off Day',
           face_verified: false,
           is_right_time: false,
+          tasks_completed: dailyTasksCompleted,
         });
       } else if (leaveMatch) {
         totalOnLeaveDays++;
@@ -618,6 +646,7 @@ export async function computeEmployeeDutySummary(
           notes: `Approved Leave (${(leaveMatch.type || 'Leave').toUpperCase()})`,
           face_verified: false,
           is_right_time: false,
+          tasks_completed: dailyTasksCompleted,
         });
       } else if (dateStr < joinDateDhaka) {
         dailyBreakdown.push({
@@ -634,6 +663,7 @@ export async function computeEmployeeDutySummary(
           notes: 'Before Joining Date',
           face_verified: false,
           is_right_time: false,
+          tasks_completed: 0,
         });
       } else {
         totalWorkingDays++;
@@ -652,6 +682,7 @@ export async function computeEmployeeDutySummary(
           notes: 'Absent / Missed Duty',
           face_verified: false,
           is_right_time: false,
+          tasks_completed: dailyTasksCompleted,
         });
       }
     }
@@ -724,6 +755,7 @@ export async function computeEmployeeDutySummary(
       holiday_overtime_pay: holidayOvertimePay,
       total_snack_allowance_pay: totalSnackPay,
       estimated_payable_salary: estimatedPayableSalary,
+      total_tasks_completed: totalTasksCompleted,
       today_status: todayStatus,
       today_duty_hours: todayDutyHours,
       today_late_minutes: todayLateMinutes,

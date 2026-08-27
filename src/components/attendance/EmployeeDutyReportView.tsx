@@ -26,6 +26,7 @@ import {
   LocateFixed,
   ExternalLink,
   MessageSquare,
+  ClipboardList,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -48,6 +49,7 @@ interface DailyLog {
   check_out_lat?: number | null;
   check_out_lng?: number | null;
   is_right_time?: boolean;
+  tasks_completed?: number;
 }
 
 interface DutySummaryData {
@@ -102,6 +104,7 @@ interface DutySummaryData {
     today_late_hours?: number;
     today_overtime_minutes?: number;
     today_overtime_hours?: number;
+    total_tasks_completed?: number;
     today_face_verified?: boolean;
     today_check_in_time?: string;
     today_check_out_time?: string;
@@ -766,6 +769,20 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               <div>
                 <p className="text-3xl font-extrabold text-slate-900 tracking-tight">{data.summary.total_on_leave_days + data.summary.total_off_days + data.summary.total_holiday_days} <span className="text-xs font-semibold text-slate-500">days</span></p>
                 <p className="text-[11px] font-medium text-slate-500 mt-1.5">{data.summary.total_on_leave_days} leave, {data.summary.total_off_days + data.summary.total_holiday_days} off/holidays</p>
+              </div>
+            </Card>
+
+            {/* 7. Tasks Completed */}
+            <Card className="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs hover:shadow-md hover:border-[#1dbf73]/50 transition-all duration-200 flex flex-col justify-between group">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-slate-900 tracking-tight">Tasks Completed</span>
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-[#1dbf73] group-hover:scale-110 transition-transform">
+                  <ClipboardList className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <p className="text-3xl font-extrabold text-[#1dbf73] tracking-tight">{data.summary.total_tasks_completed || 0} <span className="text-xs font-semibold text-slate-500">tasks</span></p>
+                <p className="text-[11px] font-medium text-slate-500 mt-1.5">Total tasks finished this month</p>
               </div>
             </Card>
           </div>

@@ -6,22 +6,6 @@ import { createClient } from '@/lib/supabase/client';
 import { ClipboardList, CheckCircle2, Circle, Loader2, Lock } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
-// Task definitions (Bengali labels + English keys)
-// ---------------------------------------------------------------------------
-const DAILY_TASKS = [
-  { key: 'showroom_clean',   label: 'শোরুম পরিষ্কার করা ও ঝাড়ু দেওয়া' },
-  { key: 'generator_oil',    label: 'জেনারেটরের তেল চেক করা' },
-  { key: 'products_organized', label: 'শোরুমের সব পণ্য/কাপড় সুন্দরভাবে গোছানো' },
-  { key: 'cash_office_table', label: 'ক্যাশ/অফিস টেবিল পরিষ্কার ও গোছানো' },
-  { key: 'display_rack',     label: 'ডিসপ্লে র‍্যাক ও হ্যাঙ্গার ঠিকভাবে সাজানো' },
-  { key: 'mirror_glass_door', label: 'আয়না, গ্লাস ও দরজা পরিষ্কার করা' },
-  { key: 'light_fan_ac',     label: 'লাইট, ফ্যান ও AC চেক করা' },
-  { key: 'cash_counter',     label: 'ক্যাশ কাউন্টার পরিষ্কার ও গোছানো' },
-  { key: 'dustbin',          label: 'ডাস্টবিন পরিষ্কার করা' },
-  { key: 'entrance_clean',   label: 'শোরুমের বাইরে প্রবেশপথ পরিষ্কার রাখা' },
-];
-
-// ---------------------------------------------------------------------------
 // Types — new rich per-task JSONB structure
 // ---------------------------------------------------------------------------
 interface TaskEntry {
@@ -32,6 +16,13 @@ interface TaskEntry {
 }
 
 type TasksState = Record<string, TaskEntry>;
+
+interface BranchTask {
+  id: string;
+  task_key: string;
+  label: string;
+  is_active: boolean;
+}
 
 interface DailyTasksCardProps {
   branchId: string | null | undefined;
@@ -59,7 +50,10 @@ function formatLocalTime(iso: string | undefined): string {
 // ---------------------------------------------------------------------------
 export function DailyTasksCard({ branchId }: DailyTasksCardProps) {
   const supabase      = useMemo(() => createClient(), []);
+  
+  const [branchTasks, setBranchTasks] = useState<BranchTask[]>([]);
   const [tasksState, setTasksState] = useState<TasksState>({});
+  
   const [loading, setLoading]       = useState(true);
   const [saving, setSaving]         = useState<string | null>(null); // key of task being saved
   const [currentUserId, setCurrentUserId]     = useState<string | null>(null);
@@ -71,9 +65,9 @@ export function DailyTasksCard({ branchId }: DailyTasksCardProps) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }, []);
 
-  const completedCount = DAILY_TASKS.filter(t => tasksState[t.key]?.status === 'completed').length;
-  const totalCount     = DAILY_TASKS.length;
-  const progressPct    = Math.round((completedCount / totalCount) * 100);
+  const completedCount = branchTasks.filter(t => tasksState[t.task_key]?.status === 'completed').length;
+  const totalCount     = branchTasks.length;
+  const progressPct    = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
   // -------------------------------------------------------------------------
   // Load current user profile
@@ -102,6 +96,17 @@ export function DailyTasksCard({ branchId }: DailyTasksCardProps) {
     if (!branchId) return;
     setLoading(true);
 
+    // 1. Fetch available branch tasks
+    const { data: bTasks } = await supabase
+      .from('branch_tasks')
+      .select('id, task_key, label, is_active')
+      .eq('branch_id', branchId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: true });
+      
+    if (bTasks) setBranchTasks(bTasks);
+
+    // 2. Fetch today's task state
     const { data, error } = await supabase
       .from('showroom_daily_tasks')
       .select('tasks_state')
@@ -198,7 +203,7 @@ export function DailyTasksCard({ branchId }: DailyTasksCardProps) {
           </span>
           <div
             className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-500 ${
-              progressPct === 100
+              progressPct === 100 && totalCount > 0
                 ? 'border-[#1dbf73] bg-[#1dbf73]/10 text-[#1dbf73]'
                 : 'border-slate-200 bg-slate-50 text-slate-600'
             }`}
@@ -214,7 +219,7 @@ export function DailyTasksCard({ branchId }: DailyTasksCardProps) {
           className="h-2 rounded-full transition-all duration-700 ease-out"
           style={{
             width: `${progressPct}%`,
-            background: progressPct === 100
+            background: progressPct === 100 && totalCount > 0
               ? '#1dbf73'
               : 'linear-gradient(90deg, #1dbf73, #0ea5e9)',
           }}
@@ -227,21 +232,25 @@ export function DailyTasksCard({ branchId }: DailyTasksCardProps) {
           <Loader2 className="w-5 h-5 animate-spin" />
           <span className="text-sm">লোড হচ্ছে...</span>
         </div>
+      ) : totalCount === 0 ? (
+        <div className="text-center py-8 text-slate-500">
+          কোন টাস্ক কনফিগার করা নেই। (No tasks configured for this branch.)
+        </div>
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {DAILY_TASKS.map((task, idx) => {
-            const entry     = tasksState[task.key];
+          {branchTasks.map((task, idx) => {
+            const entry     = tasksState[task.task_key];
             const isCompleted = entry?.status === 'completed';
-            const isSaving  = saving === task.key;
+            const isSaving  = saving === task.task_key;
 
             // A task is locked (can't be unticked) if completed by a DIFFERENT employee
             const isLockedByOther = isCompleted && entry.completed_by_id !== currentUserId;
 
             return (
-              <li key={task.key}>
+              <li key={task.task_key}>
                 <button
-                  id={`daily-task-${task.key}`}
-                  onClick={() => toggleTask(task.key)}
+                  id={`daily-task-${task.task_key}`}
+                  onClick={() => toggleTask(task.task_key)}
                   disabled={isSaving || isLockedByOther}
                   title={
                     isLockedByOther
@@ -305,7 +314,7 @@ export function DailyTasksCard({ branchId }: DailyTasksCardProps) {
       )}
 
       {/* Completion banner */}
-      {!loading && progressPct === 100 && (
+      {!loading && progressPct === 100 && totalCount > 0 && (
         <div className="mt-4 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#1dbf73]/10 border border-[#1dbf73]/25 animate-fade-in">
           <span className="text-lg">🎉</span>
           <p className="text-sm font-bold text-[#1dbf73]">
