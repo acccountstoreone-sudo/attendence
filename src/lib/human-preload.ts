@@ -4,9 +4,8 @@ let globalHumanInstance: Human | null = null;
 let initPromise: Promise<Human> | null = null;
 
 const config: Partial<Config> = {
-  // Use official CDN for models to avoid local hosting issues, 
-  // but cache them heavily in the browser.
-  modelBasePath: 'https://vladmandic.github.io/human-models/models/',
+  // Serve models locally to significantly reduce load times
+  modelBasePath: '/models/human',
   filter: { enabled: true, equalization: false },
   face: {
     enabled: true,

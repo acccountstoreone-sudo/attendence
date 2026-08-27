@@ -196,7 +196,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               consecutiveFaceFrames++;
 
               if (consecutiveFaceFrames >= 3) {
-                if (!isCapturingRef.current && !isEnrollment) {
+                if (!isCapturingRef.current) {
                   isCapturingRef.current = true;
                   stopScan();
                   if (runCaptureRef.current) {
@@ -231,6 +231,12 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
     const c = canvasRef.current;
     if (!c) return;
+
+    if (lastFaceDescriptorRef.current) {
+      setPhase('submit');
+      await onCapture(c.toDataURL('image/jpeg', 0.5), lastFaceDescriptorRef.current, false);
+      return;
+    }
 
     let human = getHumanInstance();
     if (!human) human = await preloadHumanModels();

@@ -103,7 +103,7 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
         setReason('');
         fetchBreaks();
       } else {
-        alert(data.error || 'Failed to issue Gate-Pass.');
+        alert(data.error?.message || data.error || 'Failed to issue Gate-Pass.');
       }
     } catch (err) {
       alert('Network error while issuing Gate-Pass.');
@@ -124,7 +124,7 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
       if (data.success) {
         fetchBreaks();
       } else {
-        alert(data.error || 'Failed to verify return.');
+        alert(data.error?.message || data.error || 'Failed to verify return.');
       }
     } catch (err) {
       alert('Network error while verifying return.');
@@ -143,7 +143,7 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
       if (data.success) {
         fetchBreaks();
       } else {
-        alert(data.error || `Failed to ${action} gate pass.`);
+        alert(data.error?.message || data.error || `Failed to ${action} gate pass.`);
       }
     } catch (err) {
       alert(`Network error while trying to ${action} gate pass.`);

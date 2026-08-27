@@ -24,6 +24,7 @@ export function WebAuthnRegister() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const isSupported = typeof window !== 'undefined' && !!window.PublicKeyCredential;
 
   const registerFingerprint = async () => {
     setLoading(true);
@@ -115,6 +116,11 @@ export function WebAuthnRegister() {
         <div className="flex items-center space-x-2 p-3 rounded bg-[#1dbf73]/10 border border-emerald-500/20 text-[#1dbf73] text-sm">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span>Fingerprint successfully registered for this device!</span>
+        </div>
+      ) : !isSupported ? (
+        <div className="flex items-center space-x-2 p-3 rounded bg-amber-500/10 border border-amber-500/20 text-amber-600 text-sm">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>Not supported in this browser. Try Chrome/Edge.</span>
         </div>
       ) : (
         <Button

@@ -81,7 +81,7 @@ export default function EmployeeGatePassPage() {
         setShowForm(false);
         fetchBreaks();
       } else {
-        alert(data.error || 'Failed to request Gate-Pass');
+        alert(data.error?.message || data.error || 'Failed to request Gate-Pass');
       }
     } catch (err) {
       alert('Network error.');
@@ -103,7 +103,7 @@ export default function EmployeeGatePassPage() {
       if (data.success) {
         fetchBreaks();
       } else {
-        alert(data.error || 'Failed to verify return');
+        alert(data.error?.message || data.error || 'Failed to verify return');
       }
     } catch (err) {
       alert('Network error.');

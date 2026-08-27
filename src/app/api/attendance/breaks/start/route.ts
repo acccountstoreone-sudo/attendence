@@ -85,6 +85,9 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .maybeSingle();
 
+    const status = user.role === 'employee' ? 'pending' : 'active';
+    const outTime = status === 'active' ? new Date().toISOString() : undefined;
+
     // 3. Insert into attendance_breaks
     const { data: breakRecord, error: insertErr } = await supabase
       .from('attendance_breaks')
@@ -95,8 +98,9 @@ export async function POST(request: NextRequest) {
         break_type: input.break_type,
         expected_duration_minutes: input.expected_duration_minutes,
         reason: input.reason,
-        status: user.role === 'employee' ? 'pending' : 'active',
+        status: status,
         approved_by: user.role !== 'employee' ? user.id : null,
+        ...(outTime && { out_time: outTime })
       })
       .select('*')
       .single();

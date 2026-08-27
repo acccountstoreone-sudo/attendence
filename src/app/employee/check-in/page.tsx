@@ -192,6 +192,7 @@ export default function EmployeeCheckInPage() {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isReverifyMode, setIsReverifyMode] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<'face' | 'fingerprint' | 'selector' | 'none'>('selector');
+  const isWebAuthnSupported = typeof window !== 'undefined' && !!window.PublicKeyCredential;
 
   // Bug 6 fix: Pre-fetch WebAuthn options so startAuthentication can be the
   // very first async call inside the click handler (iOS Safari gesture-chain fix).
@@ -706,11 +707,20 @@ export default function EmployeeCheckInPage() {
                 <span className="font-bold text-lg tracking-wide">Face Match</span>
               </Button>
               <Button
-                onClick={() => setSelectedMethod('fingerprint')}
-                className="w-full h-16 bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500 hover:to-pink-500 text-white border border-purple-500/30 hover:border-transparent rounded-2xl shadow-lg hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] flex items-center justify-center space-x-3 transition-all duration-300 group"
+                onClick={() => {
+                  if (!isWebAuthnSupported) {
+                    setFeedback({ type: 'error', text: 'Fingerprint is not supported in this browser. Please use Face Match or switch to Chrome/Edge.' });
+                    return;
+                  }
+                  setSelectedMethod('fingerprint');
+                }}
+                className={`w-full h-16 ${!isWebAuthnSupported ? 'bg-slate-800/50 text-slate-500 border-slate-700/50' : 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500 hover:to-pink-500 text-white border-purple-500/30 hover:border-transparent shadow-lg hover:shadow-[0_0_30px_rgba(168,85,247,0.3)]'} border rounded-2xl flex items-center justify-center space-x-3 transition-all duration-300 group`}
               >
                 <span className="text-2xl group-hover:scale-110 transition-transform duration-300">👆</span>
-                <span className="font-bold text-lg tracking-wide">Fingerprint</span>
+                <div className="flex flex-col items-start">
+                  <span className="font-bold text-lg tracking-wide">Fingerprint</span>
+                  {!isWebAuthnSupported && <span className="text-[10px] text-rose-400 font-medium">Not supported here</span>}
+                </div>
               </Button>
             </div>
           </motion.div>
