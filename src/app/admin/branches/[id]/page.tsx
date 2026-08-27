@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { ChevronLeft, Store, LayoutDashboard, Users, Calendar, FileText, Settings, Bell, Clock, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, Store, LayoutDashboard, Users, Calendar, FileText, Settings, Bell, Clock, AlertTriangle, ClipboardList } from 'lucide-react';
 import { Branch, BranchEmployee } from '@/components/admin/branch/types';
 
 import { BranchOverviewTab } from '@/components/admin/branch/BranchOverviewTab';
@@ -15,9 +15,10 @@ import { BranchReportsTab } from '@/components/admin/branch/BranchReportsTab';
 import { BranchSettingsTab } from '@/components/admin/branch/BranchSettingsTab';
 import { BranchAnnouncementTab } from '@/components/admin/branch/BranchAnnouncementTab';
 import { BranchGatePassTab } from '@/components/admin/branch/BranchGatePassTab';
+import { BranchTasksTab } from '@/components/admin/branch/BranchTasksTab';
 import { Card } from '@/components/ui/Card';
 
-type TabType = 'overview' | 'employees' | 'profile' | 'attendance' | 'reports' | 'settings' | 'announcements' | 'gate_pass';
+type TabType = 'overview' | 'employees' | 'profile' | 'attendance' | 'tasks' | 'reports' | 'settings' | 'announcements' | 'gate_pass';
 
 export default function BranchWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -117,6 +118,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
     { id: 'employees', label: 'Employees', icon: <Users className="w-4 h-4 mr-2" /> },
     { id: 'gate_pass', label: 'Gate-Pass & Breaks', icon: <Clock className="w-4 h-4 mr-2 text-[#1dbf73]" /> },
     { id: 'attendance', label: 'Attendance', icon: <Calendar className="w-4 h-4 mr-2" /> },
+    { id: 'tasks', label: 'Daily Tasks', icon: <ClipboardList className="w-4 h-4 mr-2" /> },
     { id: 'reports', label: 'Reports', icon: <FileText className="w-4 h-4 mr-2" /> },
     { id: 'announcements', label: 'Announcements', icon: <Bell className="w-4 h-4 mr-2" /> },
     { id: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4 mr-2" /> },
@@ -240,6 +242,7 @@ export default function BranchWorkspacePage({ params }: { params: Promise<{ id: 
           />
         )}
         {activeTab === 'attendance' && <BranchAttendanceTab branch={branch} />}
+        {activeTab === 'tasks' && <BranchTasksTab branch={branch} />}
         {activeTab === 'gate_pass' && <BranchGatePassTab branch={branch} />}
         {activeTab === 'reports' && <BranchReportsTab branch={branch} />}
         {activeTab === 'settings' && <BranchSettingsTab branch={branch} />}
