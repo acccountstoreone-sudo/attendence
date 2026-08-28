@@ -8,8 +8,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   UserCheck, CheckCircle2, XCircle, Clock, AlertTriangle, 
   Search, Filter, MessageSquare, RefreshCw, Building2, Calendar, ArrowRight,
-  ShieldCheck, AlertCircle, TrendingUp, MapPin
+  ShieldCheck, AlertCircle, TrendingUp, MapPin, Edit3
 } from 'lucide-react';
+import { ManualCorrectionModal } from '@/components/attendance/ManualCorrectionModal';
 
 export interface CorrectionRequestRecord {
   id: string;
@@ -81,6 +82,9 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
 
   const [offDayRequests, setOffDayRequests] = useState<any[]>([]);
   const [offDayModalReq, setOffDayModalReq] = useState<any | null>(null);
+
+  const [editingRecord, setEditingRecord] = useState<any | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const fetchAllData = useCallback(async () => {
     setLoading(true);
@@ -623,6 +627,34 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                             >
                               <MessageSquare className="w-4 h-4 text-slate-900" />
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditingRecord(c);
+                                setIsEditModalOpen(true);
+                              }}
+                              title="Manual Edit"
+                              className="text-slate-500 hover:text-blue-500 px-2 ml-2"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
+                        {!isPending && (
+                          <div className="flex items-center justify-end">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditingRecord(c);
+                                setIsEditModalOpen(true);
+                              }}
+                              title="Manual Edit"
+                              className="text-slate-500 hover:text-blue-500 px-2"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -1120,6 +1152,19 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
           </Card>
         </div>
       )}
+
+      <ManualCorrectionModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingRecord(null);
+        }}
+        record={editingRecord}
+        onSuccess={() => {
+          setFeedback({ type: 'success', text: 'Attendance record manually corrected.' });
+          fetchAllData();
+        }}
+      />
     </div>
   );
 };

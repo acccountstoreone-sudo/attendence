@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Spinner } from '@/components/ui/Spinner';
-import { Settings, Clock, CalendarDays, CheckCircle2, AlertTriangle, Info, MapPin, Store, Navigation, Phone, Building2, ShieldCheck, Sparkles, Sliders } from 'lucide-react';
+import { Settings, Clock, CalendarDays, CheckCircle2, AlertTriangle, Info, MapPin, Store, Navigation, Phone, Building2, ShieldCheck, Sparkles, Sliders, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';

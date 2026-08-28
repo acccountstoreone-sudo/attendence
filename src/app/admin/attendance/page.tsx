@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import {
   Search, MapPin, Clock, Filter, Download, RefreshCw, Calendar,
-  CheckCircle2, XCircle, AlertCircle, Hourglass, Timer, TrendingUp, Building2, Coffee
+  CheckCircle2, XCircle, AlertCircle, Hourglass, Timer, TrendingUp, Building2, Coffee, Edit3
 } from 'lucide-react';
 import { BranchGatePassTab } from '@/components/admin/branch/BranchGatePassTab';
 import Abstract3DBackground from '@/components/Abstract3DBackground';
+import { ManualCorrectionModal } from '@/components/attendance/ManualCorrectionModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type Tab = 'pending' | 'approved' | 'all' | 'breaks';
@@ -54,6 +55,8 @@ function AdminAttendanceContent() {
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     if (searchParams) {
@@ -409,8 +412,8 @@ function AdminAttendanceContent() {
                   <th className="py-4 px-6">Check-Out</th>
                   <th className="py-4 px-6">Overtime</th>
                   <th className="py-4 px-6">Status</th>
-                  {activeTab === 'pending' && <th className="py-4 px-6 text-center">HQ Actions</th>}
-                  {activeTab !== 'pending' && <th className="py-4 px-6 text-right">Approval</th>}
+                  {activeTab === 'pending' && <th className="py-4 px-6 text-center">Actions</th>}
+                  {activeTab !== 'pending' && <th className="py-4 px-6 text-right">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/50 text-sm">
@@ -517,6 +520,18 @@ function AdminAttendanceContent() {
                                 <XCircle className="w-3.5 h-3.5" />
                                 Reject
                               </button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setEditingRecord(rec);
+                                  setIsEditModalOpen(true);
+                                }}
+                                title="Manual Edit"
+                                className="text-slate-500 hover:text-blue-500 px-2"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </Button>
                             </div>
                           </td>
                         )}
@@ -524,19 +539,33 @@ function AdminAttendanceContent() {
                         {/* Approval status badge (approved/all tab) */}
                         {activeTab !== 'pending' && (
                           <td className="py-4 px-6 text-right">
-                            {rec.approval_status === 'approved' ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1dbf73]/15 border border-emerald-500/30 text-[#1dbf73] text-xs font-bold">
-                                <CheckCircle2 className="w-3 h-3" /> Approved
-                              </span>
-                            ) : rec.approval_status === 'rejected' ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-bold">
-                                <XCircle className="w-3 h-3" /> Rejected
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold">
-                                <AlertCircle className="w-3 h-3" /> Pending
-                              </span>
-                            )}
+                            <div className="flex items-center justify-end gap-3">
+                              {rec.approval_status === 'approved' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1dbf73]/15 border border-emerald-500/30 text-[#1dbf73] text-xs font-bold">
+                                  <CheckCircle2 className="w-3 h-3" /> Approved
+                                </span>
+                              ) : rec.approval_status === 'rejected' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-bold">
+                                  <XCircle className="w-3 h-3" /> Rejected
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold">
+                                  <AlertCircle className="w-3 h-3" /> Pending
+                                </span>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setEditingRecord(rec);
+                                  setIsEditModalOpen(true);
+                                }}
+                                title="Manual Edit"
+                                className="text-slate-500 hover:text-blue-500 px-2"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </td>
                         )}
                       </motion.tr>
@@ -550,6 +579,18 @@ function AdminAttendanceContent() {
         </>
         )}
       </Card>
+      <ManualCorrectionModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingRecord(null);
+        }}
+        record={editingRecord}
+        onSuccess={() => {
+          setFeedback({ type: 'success', text: 'Attendance record manually corrected.' });
+          fetchAttendance();
+        }}
+      />
     </div>
   );
 }
