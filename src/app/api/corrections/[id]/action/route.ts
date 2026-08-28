@@ -68,7 +68,6 @@ export async function POST(
           .from('attendance_records')
           .update({
             ...updateField,
-            is_manual_entry: true,
             is_manual_override: true,
             approval_status: 'approved',
             override_reason: `Approved Correction: ${correction.reason}`,
@@ -76,12 +75,17 @@ export async function POST(
           .eq('id', recordId);
 
         if (recUpdErr) {
-          // If is_manual_entry column is missing on older schema, update timestamp directly
-          await supabase.from('attendance_records').update({
+          // If override_reason column is missing on older schema, update timestamp directly
+          const { error: fallbackErr } = await supabase.from('attendance_records').update({
             ...updateField,
             approval_status: 'approved',
             is_manual_override: true,
           }).eq('id', recordId);
+
+          if (fallbackErr) {
+            console.error('Correction approval update failed (fallback):', fallbackErr);
+            throw new Error(`Failed to apply correction to attendance record: ${fallbackErr.message}`);
+          }
         }
       } else {
         // No record_id attached: search for existing record on that date or insert new one
@@ -99,12 +103,13 @@ export async function POST(
         if (existingRecs && existingRecs.length > 0) {
           const targetRec = correction.type === 'check_in' ? existingRecs[0] : existingRecs[existingRecs.length - 1];
           const updateField = correction.type === 'check_in' ? { check_in_time: requestedISO } : { check_out_time: requestedISO };
-          await supabase.from('attendance_records').update({
+          const { error: elseUpdErr } = await supabase.from('attendance_records').update({
             ...updateField,
             approval_status: 'approved',
             is_manual_override: true,
-            is_manual_entry: true,
           }).eq('id', targetRec.id);
+          
+          if (elseUpdErr) throw new Error(elseUpdErr.message);
         } else if (correction.type === 'check_out') {
           // Cannot approve check_out without a check_in record
           return NextResponse.json(
@@ -113,16 +118,28 @@ export async function POST(
           );
         } else {
           // Create new attendance check-in record
-          await supabase.from('attendance_records').insert({
+          const { error: insErr } = await supabase.from('attendance_records').insert({
             employee_id: correction.employee_id,
             branch_id: correction.branch_id,
             check_in_time: requestedISO,
             status: 'present',
             approval_status: 'approved',
             is_manual_override: true,
-            is_manual_entry: true,
             override_reason: `Approved Correction: ${correction.reason}`,
           });
+          
+          if (insErr) {
+            // fallback if override_reason is missing
+            const { error: fallbackInsErr } = await supabase.from('attendance_records').insert({
+              employee_id: correction.employee_id,
+              branch_id: correction.branch_id,
+              check_in_time: requestedISO,
+              status: 'present',
+              approval_status: 'approved',
+              is_manual_override: true,
+            });
+            if (fallbackInsErr) throw new Error(fallbackInsErr.message);
+          }
         }
       }
     }

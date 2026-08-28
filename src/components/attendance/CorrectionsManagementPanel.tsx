@@ -271,6 +271,15 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
     return name.toLowerCase().includes(q) || code.toLowerCase().includes(q) || branch.toLowerCase().includes(q);
   });
 
+  const filteredOffDayRequests = offDayRequests.filter((c) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    const name = c.profiles?.full_name || '';
+    const code = c.profiles?.employee_id || '';
+    const branch = c.branches?.name || '';
+    return name.toLowerCase().includes(q) || code.toLowerCase().includes(q) || branch.toLowerCase().includes(q) || (c.reason && c.reason.toLowerCase().includes(q));
+  });
+
   const checkinsPendingCount = checkins.filter(c => c.approval_status === 'pending').length;
   const correctionsPendingCount = corrections.filter(c => c.status === 'pending').length;
   const overtimesPendingCount = overtimes.filter(c => !c.overtime_approval_status || c.overtime_approval_status === 'pending').length;
@@ -816,6 +825,134 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
             </AnimatePresence>
           </div>
         )
+      ) : categoryTab === 'offday' ? (
+        /* ── Off-Day Requests List ── */
+        filteredOffDayRequests.length === 0 ? (
+          <Card className="p-12 text-center border-dashed border-slate-200 bg-[#ffffff]/50">
+            <Calendar className="w-12 h-12 text-slate-500 mx-auto mb-3 opacity-60" />
+            <h3 className="text-lg font-semibold text-slate-900">No Off-Day Requests Found</h3>
+            <p className="text-sm text-slate-900 mt-1 max-w-md mx-auto">
+              {statusTab === 'pending'
+                ? 'There are currently no pending off-day requests awaiting review.'
+                : `No ${statusTab} off-day requests match your filter criteria.`}
+            </p>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            <AnimatePresence>
+              {filteredOffDayRequests.map((c) => {
+                const isPending = c.status === 'pending';
+                const isApproved = c.status === 'approved';
+                return (
+                  <motion.div
+                    key={`offday-${c.id}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                  >
+                    <Card className={`p-6 border transition-all ${
+                      isPending ? 'border-[#1dbf73]/40 bg-gradient-to-r from-[#ffffff] to-[#f1f5f9]' :
+                      isApproved ? 'border-emerald-500/30 bg-[#ffffff]/70' :
+                      'border-red-500/30 bg-[#ffffff]/50'
+                    }`}>
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        <div className="flex items-start gap-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 ${
+                            isPending ? 'bg-[#1dbf73]/10 text-[#1dbf73] border border-[#1dbf73]/30' :
+                            isApproved ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' :
+                            'bg-red-500/20 text-red-400 border border-red-500/30'
+                          }`}>
+                            {(c.profiles?.full_name || 'E').charAt(0).toUpperCase()}
+                          </div>
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-base font-bold text-slate-900 tracking-wide truncate">
+                                {c.profiles?.full_name || 'Unknown Employee'}
+                              </h3>
+                              <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider ${
+                                isPending ? 'bg-amber-500/20 text-amber-700 border border-amber-500/30' :
+                                isApproved ? 'bg-[#1dbf73]/20 text-[#1dbf73] border border-emerald-500/30' :
+                                'bg-red-500/20 text-red-600 border border-red-500/30'
+                              }`}>
+                                {c.status}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-900">
+                              <span className="flex items-center gap-1.5">
+                                <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                                {c.branches?.name || 'Branch'}
+                              </span>
+                              <span className="text-slate-500">•</span>
+                              <span className="flex items-center gap-1 text-blue-600 font-medium uppercase">
+                                <Calendar className="w-3.5 h-3.5" />
+                                {c.requested_date}
+                              </span>
+                            </div>
+                            <div className="pt-2">
+                              <p className="text-sm text-slate-800 bg-white/90 border border-slate-200 p-3 rounded-xl italic">
+                                &quot;{c.reason}&quot;
+                              </p>
+                            </div>
+                            {c.reviewer_note && (
+                              <div className="pt-1 flex items-center gap-1.5 text-xs text-slate-700">
+                                <MessageSquare className="w-3.5 h-3.5 text-slate-500" />
+                                <span className="font-semibold">Reviewer Note:</span> {c.reviewer_note}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Right: Actions */}
+                        {isPending && (
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleOffDayAction(c.id, 'approve')}
+                              disabled={actingId === c.id}
+                              className="bg-[#16965a] hover:bg-[#1dbf73] text-white shadow-lg shadow-emerald-950/20 font-bold px-4 py-2.5"
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                              {actingId === c.id ? 'Approving...' : 'Approve'}
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                setOffDayModalReq(c);
+                                setModalAction('reject');
+                                setReviewerNote('');
+                              }}
+                              disabled={actingId === c.id}
+                              className="border-red-500/40 text-red-600 hover:bg-red-500/10 font-bold px-3 py-2.5"
+                            >
+                              <XCircle className="w-4 h-4 mr-1.5" />
+                              Reject
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                setOffDayModalReq(c);
+                                setModalAction('approve');
+                                setReviewerNote('');
+                              }}
+                              disabled={actingId === c.id}
+                              title="Add Reviewer Note before approving"
+                              className="px-2.5 py-2.5"
+                            >
+                              <MessageSquare className="w-4 h-4 text-slate-900" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        )
       ) : (
         /* ── Overtime Verification & Approvals List ── */
         filteredOvertimes.length === 0 ? (
@@ -1057,6 +1194,51 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
                 className={modalAction === 'approve' ? 'bg-[#16965a] hover:bg-[#1dbf73] text-white' : 'bg-red-600 hover:bg-red-500 text-white'}
               >
                 {actingId === overtimeModalReq.id ? 'Processing...' : `Confirm ${modalAction === 'approve' ? 'Overtime Approval' : 'Rejection'}`}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Review Note Modal for Off-Day Request */}
+      {offDayModalReq && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <Card className="w-full max-w-md p-6 bg-[#ffffff] border border-slate-200 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                {modalAction === 'approve' ? (
+                  <CheckCircle2 className="w-5 h-5 text-[#1dbf73]" />
+                ) : (
+                  <XCircle className="w-5 h-5 text-red-600" />
+                )}
+                {modalAction === 'approve' ? 'Approve with Note' : 'Reject Off-Day Request'}
+              </h3>
+              <button onClick={() => setOffDayModalReq(null)} className="text-slate-900 hover:text-slate-900 text-sm">✕</button>
+            </div>
+            <p className="text-sm text-slate-900">
+              {modalAction === 'approve' 
+                ? `You are about to approve ${offDayModalReq.profiles?.full_name || 'this employee'}'s off-day request.`
+                : `Please provide a reason for rejecting ${offDayModalReq.profiles?.full_name || 'this employee'}'s off-day request.`}
+            </p>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Reviewer Note / Reason</label>
+              <textarea
+                rows={3}
+                placeholder={modalAction === 'approve' ? 'e.g., Approved for special project.' : 'e.g., Too many staff off today.'}
+                value={reviewerNote}
+                onChange={(e) => setReviewerNote(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73]"
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="secondary" onClick={() => setOffDayModalReq(null)}>Cancel</Button>
+              <Button
+                variant="primary"
+                onClick={() => handleOffDayAction(offDayModalReq.id, modalAction, reviewerNote)}
+                disabled={actingId === offDayModalReq.id}
+                className={modalAction === 'approve' ? 'bg-[#16965a] hover:bg-[#1dbf73] text-white' : 'bg-red-600 hover:bg-red-500 text-white'}
+              >
+                {actingId === offDayModalReq.id ? 'Processing...' : `Confirm ${modalAction === 'approve' ? 'Approval' : 'Rejection'}`}
               </Button>
             </div>
           </Card>

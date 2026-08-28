@@ -312,11 +312,12 @@ export async function POST(request: NextRequest) {
     const { data: companyProfile } = await supabase.from('company_profile').select('default_work_start_time, default_work_end_time').single();
     let workStartTime = companyProfile?.default_work_start_time || '09:00:00';
     let workEndTime = companyProfile?.default_work_end_time || '18:00:00';
+    let weeklyOffDays = [5]; // Default to Friday
     
     if (targetBranchId) {
       const { data: branchSettings } = await supabase
         .from('branch_settings')
-        .select('work_start_time, work_end_time')
+        .select('work_start_time, work_end_time, weekly_off_days')
         .eq('branch_id', targetBranchId)
         .maybeSingle();
       if (branchSettings && branchSettings.work_start_time) {
@@ -324,6 +325,9 @@ export async function POST(request: NextRequest) {
       }
       if (branchSettings && branchSettings.work_end_time) {
         workEndTime = branchSettings.work_end_time;
+      }
+      if (branchSettings && Array.isArray(branchSettings.weekly_off_days)) {
+        weeklyOffDays = branchSettings.weekly_off_days;
       }
     }
 
@@ -391,12 +395,13 @@ export async function POST(request: NextRequest) {
     }
 
     // 6.6 Off-Day Block Check
-    // Friday (5) is the weekly off day. 
+    // Check if today is a weekly off day. 
     // Check if there is an approved off-day request for today.
     let isHolidayDuty = false;
-    const isFriday = new Date(`${year}-${month}-${day}T12:00:00Z`).getUTCDay() === 5;
+    const currentDayOfWeek = new Date(`${year}-${month}-${day}T12:00:00Z`).getUTCDay();
+    const isOffDay = weeklyOffDays.map(Number).includes(Number(currentDayOfWeek));
     
-    if (isFriday) {
+    if (isOffDay) {
       const requestDateStr = `${year}-${month}-${day}`;
       const { data: offDayReq, error: offDayErr } = await supabase
         .from('off_day_overtime_requests')
@@ -413,7 +418,7 @@ export async function POST(request: NextRequest) {
             data: null,
             error: {
               code: 'OFF_DAY_CHECKIN_DENIED',
-              message: 'Check-in denied: Today is an off-day (Friday). You must request off-day overtime and have it approved by a manager before checking in.',
+              message: 'Check-in denied: Today is an off-day. You must request off-day overtime and have it approved by a manager before checking in.',
             },
             timestamp: new Date().toISOString(),
           },
