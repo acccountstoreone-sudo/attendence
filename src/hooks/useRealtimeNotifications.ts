@@ -101,7 +101,6 @@ export function useRealtimeNotifications(userId: string | undefined) {
   }, [userId]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotifications(false);
     
     // Live polling fallback every 12 seconds to guarantee 100% delivery even if WebSocket connection drops

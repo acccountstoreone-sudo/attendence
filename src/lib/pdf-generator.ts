@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import jsPDF from 'jspdf';
 import autoTablePkg from 'jspdf-autotable';
 const autoTable = (autoTablePkg as any).default || autoTablePkg;

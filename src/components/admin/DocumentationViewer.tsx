@@ -151,7 +151,7 @@ export default function DocumentationViewer() {
 
           {filteredDocs.length === 0 && (
             <div className="text-center py-8 text-slate-400 text-sm font-medium">
-              No results found for "{searchQuery}"
+              No results found for &quot;{searchQuery}&quot;
             </div>
           )}
         </div>

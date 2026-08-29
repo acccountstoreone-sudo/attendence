@@ -76,7 +76,6 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchBreaks();
     const interval = setInterval(fetchBreaks, 30000); // Live refresh every 30s
     return () => clearInterval(interval);

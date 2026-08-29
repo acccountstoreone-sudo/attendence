@@ -43,7 +43,6 @@ function LoginPageContent() {
   useEffect(() => {
     const errorParam = searchParams.get('error');
     if (errorParam === 'account_deactivated') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFeedback({ type: 'error', message: 'Your account is pending approval or deactivated. Please contact your manager.' });
       supabase.auth.signOut();
     }

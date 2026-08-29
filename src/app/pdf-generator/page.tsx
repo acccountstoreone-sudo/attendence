@@ -94,7 +94,7 @@ export default function PDFGeneratorPage() {
               </div>
               <h1 className="text-3xl font-bold mb-4 tracking-tight">PDF Generator</h1>
               <p className="text-white/80 leading-relaxed">
-                Create beautifully branded PDF documents instantly. Simply type or paste your Bengali content, and we'll format it with our official headers and footers.
+                Create beautifully branded PDF documents instantly. Simply type or paste your Bengali content, and we&apos;ll format it with our official headers and footers.
               </p>
             </div>
 
