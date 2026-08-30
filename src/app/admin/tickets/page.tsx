@@ -25,6 +25,7 @@ interface TicketData {
   customer_name: string;
   mobile_number: string;
   phone_number?: string;
+  problem?: string;
   ticket_date: string;
   product_price: number;
   status: 'pending' | 'in_review' | 'success';
@@ -53,6 +54,7 @@ export default function AdminTicketsPage() {
     customer_name: '',
     mobile_number: '',
     phone_number: '',
+    problem: '',
     ticket_date: new Date().toISOString().split('T')[0],
     product_price: ''
   });
@@ -108,6 +110,7 @@ export default function AdminTicketsPage() {
         customer_name: formData.customer_name,
         mobile_number: formData.mobile_number,
         phone_number: formData.phone_number || null,
+        problem: formData.problem || null,
         ticket_date: formData.ticket_date,
         product_price: parseFloat(formData.product_price)
       }]);
@@ -121,6 +124,7 @@ export default function AdminTicketsPage() {
         customer_name: '',
         mobile_number: '',
         phone_number: '',
+        problem: '',
         ticket_date: new Date().toISOString().split('T')[0],
         product_price: ''
       });
@@ -210,6 +214,7 @@ export default function AdminTicketsPage() {
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                   <th className="px-6 py-4">Customer</th>
                   <th className="px-6 py-4">Branch</th>
+                  <th className="px-6 py-4">Problem</th>
                   <th className="px-6 py-4">Date</th>
                   <th className="px-6 py-4">Product Price</th>
                   <th className="px-6 py-4">Status</th>
@@ -232,6 +237,9 @@ export default function AdminTicketsPage() {
                         <Store className="w-4 h-4 mr-1 text-indigo-500" />
                         {ticket.branches?.name || 'Unknown Branch'}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 max-w-xs truncate" title={ticket.problem || 'No problem described'}>
+                      {ticket.problem || '-'}
                     </td>
                     <td className="px-6 py-4 text-slate-600">
                       <div className="flex items-center">
@@ -342,6 +350,16 @@ export default function AdminTicketsPage() {
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Problem Description</label>
+                <textarea
+                  placeholder="Describe the product issue..."
+                  value={formData.problem}
+                  onChange={e => setFormData({...formData, problem: e.target.value})}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors min-h-[80px]"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

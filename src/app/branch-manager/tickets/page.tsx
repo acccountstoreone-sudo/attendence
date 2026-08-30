@@ -17,6 +17,7 @@ interface TicketData {
   customer_name: string;
   mobile_number: string;
   phone_number?: string;
+  problem?: string;
   ticket_date: string;
   product_price: number;
   status: 'pending' | 'in_review' | 'success';
@@ -120,6 +121,7 @@ export default function BranchManagerTicketsPage() {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                   <th className="px-6 py-4">Customer</th>
+                  <th className="px-6 py-4">Problem</th>
                   <th className="px-6 py-4">Date</th>
                   <th className="px-6 py-4">Product Price</th>
                   <th className="px-6 py-4">Status</th>
@@ -135,6 +137,9 @@ export default function BranchManagerTicketsPage() {
                         {ticket.mobile_number}
                         {ticket.phone_number && <span>, {ticket.phone_number}</span>}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 max-w-xs truncate" title={ticket.problem || 'No problem described'}>
+                      {ticket.problem || '-'}
                     </td>
                     <td className="px-6 py-4 text-slate-600">
                       <div className="flex items-center">
