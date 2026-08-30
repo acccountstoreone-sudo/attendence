@@ -31,9 +31,29 @@ export async function preloadHumanModels(): Promise<Human> {
     try {
       const { Human } = await import('@vladmandic/human');
       const human = new Human(config);
-      // Load and warmup
-      await human.load();
-      await human.warmup(); // Warmup compiles WebGL shaders
+      
+      // Load models with a timeout to prevent hanging forever
+      const loadWithTimeout = Promise.race([
+        human.load(),
+        new Promise((_, r) => setTimeout(() => r(new Error('Model load timeout')), 15000))
+      ]);
+      await loadWithTimeout;
+
+      // Skip warmup on mobile browsers (especially Firefox Android) to prevent WebGL deadlocks.
+      // Warmup compiles shaders, which can silently hang certain mobile GPUs.
+      const isMobile = typeof navigator !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent);
+      if (!isMobile) {
+        try {
+          const warmupWithTimeout = Promise.race([
+            human.warmup(),
+            new Promise((_, r) => setTimeout(() => r(new Error('Warmup timeout')), 5000))
+          ]);
+          await warmupWithTimeout;
+        } catch (warmupErr) {
+          console.warn('Warmup skipped or timed out:', warmupErr);
+        }
+      }
+      
       globalHumanInstance = human;
       resolve(human);
     } catch (err) {
@@ -49,3 +69,4 @@ export async function preloadHumanModels(): Promise<Human> {
 export function getHumanInstance(): Human | null {
   return globalHumanInstance;
 }
+
