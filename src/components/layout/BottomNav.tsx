@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Clock, History, CalendarDays, User, Store, Users, UserCheck, Coffee } from 'lucide-react';
+import { LayoutDashboard, Clock, History, CalendarDays, User, Store, Users, UserCheck, Coffee, Ticket } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export interface BottomNavProps {
@@ -27,6 +27,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ role }) => {
     { label: 'Shifts', href: '/branch-manager/shifts', icon: <CalendarDays className="w-6 h-6" /> },
     { label: 'Passes', href: '/branch-manager/gate-passes', icon: <Coffee className="w-6 h-6" /> },
     { label: 'Fixes', href: '/branch-manager/corrections', icon: <UserCheck className="w-6 h-6" /> },
+    { label: 'Tickets', href: '/branch-manager/tickets', icon: <Ticket className="w-6 h-6" /> },
   ];
 
   const empNav: NavItem[] = [
@@ -40,8 +41,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({ role }) => {
   const navItems = role === 'branch_manager' ? bmNav : empNav;
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-slate-200 pb-[env(safe-area-inset-bottom)] shadow-lg">
-      <div className="flex items-center justify-around h-16 px-2">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-slate-200 pb-[env(safe-area-inset-bottom)] shadow-lg overflow-x-auto scrollbar-none">
+      <div className="flex items-center justify-start sm:justify-around h-16 px-2 min-w-max gap-4 sm:gap-0">
         {navItems.map((item) => {
           const isRoot = item.href === '/branch-manager' || item.href === '/employee';
           const isActive = isRoot 

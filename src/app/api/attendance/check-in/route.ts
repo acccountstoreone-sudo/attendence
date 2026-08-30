@@ -139,7 +139,10 @@ export async function POST(request: NextRequest) {
       month: '2-digit',
       day: '2-digit',
     });
-    const [month, day, year] = formatter.format(now).split('/');
+    const parts = formatter.formatToParts(now);
+    const month = parts.find((p) => p.type === 'month')?.value || '01';
+    const day = parts.find((p) => p.type === 'day')?.value || '01';
+    const year = parts.find((p) => p.type === 'year')?.value || String(now.getFullYear());
     
     const startOfDay = new Date(`${year}-${month}-${day}T00:00:00+06:00`);
     const endOfDay = new Date(`${year}-${month}-${day}T23:59:59.999+06:00`);
@@ -353,9 +356,20 @@ export async function POST(request: NextRequest) {
     const checkInDateObj = payload.is_offline_sync && payload.timestamp ? new Date(payload.timestamp) : new Date();
     
     // Parse start and end times explicitly in Asia/Dhaka timezone
-    // to avoid server timezone (UTC) issues when deployed.
-    const safeStartTime = workStartTime.split(':').length === 2 ? `${workStartTime}:00` : workStartTime;
-    const safeEndTime = workEndTime.split(':').length === 2 ? `${workEndTime}:00` : workEndTime;
+    // Ensure properly padded format for strict parsing
+    const cleanStart = (workStartTime || '09:00:00').trim();
+    let [sh, sm, ss] = cleanStart.split(':');
+    sh = sh?.padStart(2, '0') || '09';
+    sm = sm?.padStart(2, '0') || '00';
+    ss = (ss || '00').substring(0, 2).padStart(2, '0');
+    const safeStartTime = `${sh}:${sm}:${ss}`;
+    
+    const cleanEnd = (workEndTime || '18:00:00').trim();
+    let [eh, em, es] = cleanEnd.split(':');
+    eh = eh?.padStart(2, '0') || '18';
+    em = em?.padStart(2, '0') || '00';
+    es = (es || '00').substring(0, 2).padStart(2, '0');
+    const safeEndTime = `${eh}:${em}:${es}`;
     
     const workStartTimestamp = new Date(`${year}-${month}-${day}T${safeStartTime}+06:00`);
     const workEndTimestamp = new Date(`${year}-${month}-${day}T${safeEndTime}+06:00`);
@@ -364,13 +378,14 @@ export async function POST(request: NextRequest) {
     const MAX_EARLY_MINUTES = 120; // 2 hours limit
 
     if (diffEarlyMinutes > MAX_EARLY_MINUTES) {
+      const checkInLocalStr = checkInDateObj.toLocaleTimeString('en-US', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit' });
       return NextResponse.json(
         {
           success: false,
           data: null,
           error: {
             code: 'CHECK_IN_TOO_EARLY',
-            message: `Check-in denied: You cannot check in more than ${MAX_EARLY_MINUTES / 60} hours before your shift starts (${workStartTime}).`,
+            message: `Check-in denied: You cannot check in more than ${MAX_EARLY_MINUTES / 60} hours before your shift starts (${safeStartTime}). You tried to check in at ${checkInLocalStr}.`,
           },
           timestamp: new Date().toISOString(),
         },
@@ -386,7 +401,7 @@ export async function POST(request: NextRequest) {
           data: null,
           error: {
             code: 'CHECK_IN_TOO_LATE',
-            message: `Check-in denied: Your shift for today has already ended at ${workEndTime}.`,
+            message: `Check-in denied: Your shift for today has already ended at ${safeEndTime}.`,
           },
           timestamp: new Date().toISOString(),
         },

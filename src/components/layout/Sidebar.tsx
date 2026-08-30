@@ -110,7 +110,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems = role === 'admin' ? adminNav : role === 'branch_manager' ? bmNav : empNav;
 
   const bottomNavHrefs = role === 'branch_manager' 
-    ? ['/branch-manager', '/branch-manager/employees', '/branch-manager/attendance', '/branch-manager/shifts', '/branch-manager/gate-passes', '/branch-manager/corrections']
+    ? ['/branch-manager', '/branch-manager/employees', '/branch-manager/attendance', '/branch-manager/shifts', '/branch-manager/gate-passes', '/branch-manager/corrections', '/branch-manager/tickets']
     : role === 'employee' 
       ? ['/employee', '/employee/check-in', '/employee/history', '/employee/gate-pass', '/employee/profile']
       : [];
