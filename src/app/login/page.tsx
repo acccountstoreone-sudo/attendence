@@ -211,6 +211,19 @@ function LoginPageContent() {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.4 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row relative bg-white overflow-x-hidden font-sans" suppressHydrationWarning={true}>
       
@@ -291,11 +304,22 @@ function LoginPageContent() {
         </motion.div>
       </div>
 
-      {/* RIGHT PANEL: AUTH FORM (Darker Navy Background) */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-slate-50 text-slate-900 order-2">
+      {/* RIGHT PANEL: AUTH FORM */}
+      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-gradient-to-br from-slate-50 to-slate-100/80 text-slate-900 order-2 overflow-hidden">
         
-        {/* Glow Backdrops */}
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#1dbf73]/10 rounded-full filter blur-[150px] pointer-events-none" />
+        {/* Premium Glow Backdrops */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          className="absolute top-[-15%] right-[-10%] w-[60%] h-[60%] bg-gradient-to-br from-[#1dbf73]/15 to-emerald-400/5 rounded-full filter blur-[120px] pointer-events-none" 
+        />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
+          className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-gradient-to-tr from-[#1dbf73]/10 to-transparent rounded-full filter blur-[100px] pointer-events-none" 
+        />
         
         {/* Auth Container */}
         <motion.div 
@@ -338,11 +362,18 @@ function LoginPageContent() {
           </AnimatePresence>
 
           {/* FORM */}
-          <form onSubmit={handleLogin} className="space-y-5 bg-white backdrop-blur-sm border border-slate-200 p-6 sm:p-8 rounded-2xl shadow-2xl">
-            <div>
+          <motion.form 
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            onSubmit={handleLogin} 
+            className="space-y-5 bg-white/70 backdrop-blur-xl border border-white/50 p-6 sm:p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
+          >
+            <motion.div variants={itemVariants}>
               <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-2">Corporate Email</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#1dbf73]/20 to-transparent rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm -z-10" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B] group-focus-within:text-[#1dbf73] transition-colors" />
                 <input
                   type="email"
                   required
@@ -350,18 +381,19 @@ function LoginPageContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@anchorfashion.com"
-                  className="w-full bg-white border border-slate-200 hover:border-[#1dbf73]/50 rounded-xl py-3 pl-11 pr-4 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all disabled:opacity-50"
+                  className="w-full bg-white/80 border border-slate-200 hover:border-[#1dbf73]/50 rounded-xl py-3.5 pl-11 pr-4 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73] focus:ring-2 focus:ring-[#1dbf73]/20 transition-all disabled:opacity-50"
                 />
               </div>
-            </div>
+            </motion.div>
 
-            <div>
+            <motion.div variants={itemVariants}>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase">Password</label>
-                <button type="button" onClick={handleOpenForgotModal} className="text-[11px] text-[#1dbf73] hover:text-slate-900 transition-colors">Forgot?</button>
+                <button type="button" onClick={handleOpenForgotModal} className="text-[11px] text-[#1dbf73] hover:text-[#159a5a] transition-colors font-medium">Forgot?</button>
               </div>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#1dbf73]/20 to-transparent rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm -z-10" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B] group-focus-within:text-[#1dbf73] transition-colors" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
@@ -369,7 +401,7 @@ function LoginPageContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full bg-white border border-slate-200 hover:border-[#1dbf73]/50 rounded-xl py-3 pl-11 pr-11 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73] focus:ring-1 focus:ring-[#1dbf73] transition-all disabled:opacity-50"
+                  className="w-full bg-white/80 border border-slate-200 hover:border-[#1dbf73]/50 rounded-xl py-3.5 pl-11 pr-11 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1dbf73] focus:ring-2 focus:ring-[#1dbf73]/20 transition-all disabled:opacity-50"
                 />
                 <button
                   type="button"
@@ -379,25 +411,28 @@ function LoginPageContent() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-            </div>
+            </motion.div>
 
-            <button
+            <motion.button
+              variants={itemVariants}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-[#1dbf73] to-[#16965a] hover:from-[#18a864] hover:to-[#12784a] hover:shadow-lg hover:shadow-[#1dbf73]/30 transition-all text-slate-900 font-bold py-3.5 rounded-xl text-[13px] tracking-wider uppercase mt-4 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-55 active:scale-95"
+              className="w-full bg-gradient-to-r from-[#1dbf73] to-[#16965a] hover:from-[#18a864] hover:to-[#12784a] shadow-lg shadow-[#1dbf73]/20 hover:shadow-[#1dbf73]/40 transition-all text-slate-900 font-bold py-3.5 rounded-xl text-[13px] tracking-wider uppercase mt-6 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-55"
             >
               {loading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : 'Access Dashboard'}
-            </button>
+            </motion.button>
             
-            <div className="mt-6 text-center text-[12px] text-[#94A3B8] pt-2">
+            <motion.div variants={itemVariants} className="mt-6 text-center text-[12px] text-[#94A3B8] pt-2">
               New employee?{' '}
-              <a href="/register" className="text-[#1dbf73] hover:text-slate-900 font-bold transition-colors">
+              <a href="/register" className="text-[#1dbf73] hover:text-[#159a5a] font-bold transition-colors">
                 Enroll Identity & Biometrics
               </a>
-            </div>
-          </form>
+            </motion.div>
+          </motion.form>
         </motion.div>
       </div>
 
