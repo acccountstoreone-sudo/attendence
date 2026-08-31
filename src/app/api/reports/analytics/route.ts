@@ -16,12 +16,18 @@ export async function GET(request: NextRequest) {
     const user = await requireRole(['admin', 'branch_manager']);
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
-    const targetBranchId = searchParams.get('branch_id') ?? (user.role === 'branch_manager' ? user.branch_id : null);
+    const targetBranchId = searchParams.get('branch_id') || (user.role === 'branch_manager' ? user.branch_id : null);
 
     // ── 1. Chronic Latecomers (this month) ──────────────────────────
     const now = new Date();
-    const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+    const dhakaTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+    const dYear = dhakaTime.getFullYear();
+    const dMonth = dhakaTime.getMonth() + 1;
+    const dDay = dhakaTime.getDate();
+    const dLastDay = new Date(dYear, dMonth, 0).getDate();
+
+    const monthStart = `${dYear}-${String(dMonth).padStart(2, '0')}-01T00:00:00.000+06:00`;
+    const monthEnd = `${dYear}-${String(dMonth).padStart(2, '0')}-${String(dLastDay).padStart(2, '0')}T23:59:59.999+06:00`;
 
     let lateQuery = supabase
       .from('attendance_records')
@@ -97,7 +103,7 @@ export async function GET(request: NextRequest) {
     const trend: { month: string; present: number; late: number; absent: number }[] = [];
     
     // Calculate the start year/month for the past 6 months
-    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const sixMonthsAgo = new Date(Date.UTC(dYear, dhakaTime.getMonth() - 5, 1));
     
     let mvQuery = supabase
       .from('mv_monthly_branch_summary')
@@ -106,7 +112,7 @@ export async function GET(request: NextRequest) {
     if (targetBranchId) mvQuery = mvQuery.eq('branch_id', targetBranchId);
     
     // We fetch a bit wider range just to be safe, filtering in memory
-    mvQuery = mvQuery.gte('year_num', sixMonthsAgo.getFullYear());
+    mvQuery = mvQuery.gte('year_num', sixMonthsAgo.getUTCFullYear());
 
     const { data: mvData } = await mvQuery;
     const historicalMap = new Map<string, { present: number; late: number; absent: number }>();
@@ -129,10 +135,10 @@ export async function GET(request: NextRequest) {
     }
 
     for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const y = d.getFullYear();
-      const m = d.getMonth() + 1;
-      const label = d.toLocaleString('en-US', { month: 'short', year: '2-digit' });
+      const d = new Date(Date.UTC(dYear, dhakaTime.getMonth() - i, 1));
+      const y = d.getUTCFullYear();
+      const m = d.getUTCMonth() + 1;
+      const label = d.toLocaleString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' });
       const key = `${y}-${m}`;
       
       const stats = historicalMap.get(key) || { present: 0, late: 0, absent: 0 };
@@ -140,8 +146,8 @@ export async function GET(request: NextRequest) {
     }
 
     // ── 4. Absent Today ───────────────────────────────────────────
-    const todayStart = now.toISOString().slice(0, 10) + 'T00:00:00.000Z';
-    const todayEnd = now.toISOString().slice(0, 10) + 'T23:59:59.999Z';
+    const todayStart = `${dYear}-${String(dMonth).padStart(2, '0')}-${String(dDay).padStart(2, '0')}T00:00:00.000+06:00`;
+    const todayEnd = `${dYear}-${String(dMonth).padStart(2, '0')}-${String(dDay).padStart(2, '0')}T23:59:59.999+06:00`;
 
     let activeEmpsQ = supabase.from('profiles').select('id, full_name, employee_id, branch_id, branches!branch_id(name)').eq('role', 'employee').eq('is_active', true);
     if (targetBranchId) activeEmpsQ = activeEmpsQ.eq('branch_id', targetBranchId);
@@ -154,12 +160,16 @@ export async function GET(request: NextRequest) {
     const checkedInSet = new Set((checkedIn ?? []).map((r) => r.employee_id));
     const absentToday = (allEmps ?? [])
       .filter((e) => !checkedInSet.has(e.id))
-      .map((e) => ({
-        id: e.id,
-        full_name: e.full_name,
-        employee_id: e.employee_id,
-        branch: (e as unknown as { branches?: { name?: string } }).branches?.name ?? '—',
-      }));
+      .map((e) => {
+        const b: any = (e as any).branches;
+        const bName = Array.isArray(b) ? b[0]?.name : b?.name;
+        return {
+          id: e.id,
+          full_name: e.full_name,
+          employee_id: e.employee_id,
+          branch: bName ?? '—',
+        };
+      });
 
     return NextResponse.json({
       success: true,
@@ -168,7 +178,7 @@ export async function GET(request: NextRequest) {
         branch_leaderboard: leaderboard,
         monthly_trend: trend,
         absent_today: absentToday,
-        month_label: now.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+        month_label: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka', month: 'long', year: 'numeric' }),
       },
       timestamp: new Date().toISOString(),
     });
