@@ -503,6 +503,16 @@ export default function RegisterPage() {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.3 } }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row relative bg-white overflow-x-hidden font-sans" suppressHydrationWarning={true}>
       
@@ -563,8 +573,21 @@ export default function RegisterPage() {
       </div>
 
       {/* RIGHT PANEL: FORM */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-white text-slate-900 order-2">
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#1dbf73]/10 rounded-full filter blur-[150px] pointer-events-none" />
+      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-gradient-to-br from-slate-50 to-slate-100/80 text-slate-900 order-2 overflow-hidden">
+        
+        {/* Premium Glow Backdrops */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          className="absolute top-[-15%] right-[-10%] w-[60%] h-[60%] bg-gradient-to-br from-[#1dbf73]/15 to-emerald-400/5 rounded-full filter blur-[120px] pointer-events-none" 
+        />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
+          className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-gradient-to-tr from-[#1dbf73]/10 to-transparent rounded-full filter blur-[100px] pointer-events-none" 
+        />
         
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-lg relative z-10">
           
@@ -603,44 +626,55 @@ export default function RegisterPage() {
             )}
           </AnimatePresence>
 
-          <div className="bg-white backdrop-blur-sm border border-slate-200 p-6 sm:p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            key={step} // Animate on step change
+            className="bg-white/70 backdrop-blur-xl border border-white/50 p-6 sm:p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] relative overflow-hidden"
+          >
             
             {/* STEP 1: Basic Info */}
             {step === 'basic_info' && (
               <form onSubmit={handleBasicInfoSubmit} className="space-y-4">
-                <div>
+                <motion.div variants={itemVariants}>
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Full Name</label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                    <input type="text" name="fullName" required value={formData.fullName} onChange={handleInputChange} className="w-full bg-white/50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#1dbf73] focus:outline-none text-slate-900" />
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#1dbf73]/20 to-transparent rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm -z-10" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B] group-focus-within:text-[#1dbf73] transition-colors" />
+                    <input type="text" name="fullName" required value={formData.fullName} onChange={handleInputChange} className="w-full bg-white/80 border border-slate-200 hover:border-[#1dbf73]/50 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#1dbf73] focus:ring-2 focus:ring-[#1dbf73]/20 focus:outline-none transition-all text-slate-900" />
                   </div>
-                </div>
-                <div>
+                </motion.div>
+                <motion.div variants={itemVariants}>
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Email</label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                    <input type="email" name="email" required value={formData.email} onChange={handleInputChange} className="w-full bg-white/50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#1dbf73] focus:outline-none text-slate-900" />
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#1dbf73]/20 to-transparent rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm -z-10" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B] group-focus-within:text-[#1dbf73] transition-colors" />
+                    <input type="email" name="email" required value={formData.email} onChange={handleInputChange} className="w-full bg-white/80 border border-slate-200 hover:border-[#1dbf73]/50 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#1dbf73] focus:ring-2 focus:ring-[#1dbf73]/20 focus:outline-none transition-all text-slate-900" />
                   </div>
-                </div>
-                <div>
+                </motion.div>
+                <motion.div variants={itemVariants}>
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                    <input type="password" name="password" required value={formData.password} onChange={handleInputChange} className="w-full bg-white/50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#1dbf73] focus:outline-none text-slate-900" />
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#1dbf73]/20 to-transparent rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm -z-10" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B] group-focus-within:text-[#1dbf73] transition-colors" />
+                    <input type="password" name="password" required value={formData.password} onChange={handleInputChange} className="w-full bg-white/80 border border-slate-200 hover:border-[#1dbf73]/50 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#1dbf73] focus:ring-2 focus:ring-[#1dbf73]/20 focus:outline-none transition-all text-slate-900" />
                   </div>
-                </div>
-                <div>
+                </motion.div>
+                <motion.div variants={itemVariants}>
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Confirm Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                    <input type="password" name="confirmPassword" required value={formData.confirmPassword} onChange={handleInputChange} className="w-full bg-white/50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#1dbf73] focus:outline-none text-slate-900" />
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#1dbf73]/20 to-transparent rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm -z-10" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B] group-focus-within:text-[#1dbf73] transition-colors" />
+                    <input type="password" name="confirmPassword" required value={formData.confirmPassword} onChange={handleInputChange} className="w-full bg-white/80 border border-slate-200 hover:border-[#1dbf73]/50 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#1dbf73] focus:ring-2 focus:ring-[#1dbf73]/20 focus:outline-none transition-all text-slate-900" />
                   </div>
-                </div>
-                <div>
+                </motion.div>
+                <motion.div variants={itemVariants}>
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-1">Branch</label>
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                    <select name="branchId" required value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: e.target.value })} className="w-full bg-white/50 border border-slate-200 rounded-xl py-3 pl-11 pr-10 text-sm focus:border-[#1dbf73] focus:outline-none text-slate-900 appearance-none">
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#1dbf73]/20 to-transparent rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm -z-10" />
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B] group-focus-within:text-[#1dbf73] transition-colors" />
+                    <select name="branchId" required value={formData.branchId} onChange={(e) => setFormData({ ...formData, branchId: e.target.value })} className="w-full bg-white/80 border border-slate-200 hover:border-[#1dbf73]/50 rounded-xl py-3 pl-11 pr-10 text-sm focus:border-[#1dbf73] focus:ring-2 focus:ring-[#1dbf73]/20 focus:outline-none transition-all text-slate-900 appearance-none">
                       <option value="" disabled className="bg-white text-slate-900">Select your branch</option>
                       {branches.map(b => (
                         <option key={b.id} value={b.id} className="bg-white text-slate-900">{b.name}</option>
@@ -650,42 +684,45 @@ export default function RegisterPage() {
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                     </div>
                   </div>
-                </div>
-                <button type="submit" disabled={loading} className="w-full bg-[#1dbf73] hover:bg-[#16965a] text-[#ffffff] font-bold py-3.5 rounded-xl mt-4 flex items-center justify-center gap-2 shadow-lg shadow-[#1dbf73]/20">
+                </motion.div>
+                <motion.button variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading} className="w-full bg-[#1dbf73] hover:bg-[#16965a] text-[#ffffff] font-bold py-3.5 rounded-xl mt-4 flex items-center justify-center gap-2 shadow-lg shadow-[#1dbf73]/20">
                   {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"/> : 'Continue Registration'}
-                </button>
+                </motion.button>
               </form>
             )}
 
             {/* STEP 2: OTP */}
             {step === 'otp' && (
               <form onSubmit={handleOtpSubmit} className="space-y-6">
-                <div>
+                <motion.div variants={itemVariants}>
                   <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-2 text-center">Enter 6-Digit Code</label>
-                  <input type="text" name="otp" required maxLength={6} value={formData.otp} onChange={handleInputChange} className="w-full bg-white/50 border border-slate-200 rounded-xl py-4 text-center text-2xl tracking-[1em] focus:border-[#1dbf73] focus:outline-none text-slate-900 font-mono font-bold" />
-                </div>
-                <button type="submit" disabled={loading} className="w-full bg-[#1dbf73] hover:bg-[#16965a] text-[#ffffff] font-bold py-3.5 rounded-xl flex items-center justify-center shadow-lg shadow-[#1dbf73]/20">
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#1dbf73]/20 to-transparent rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm -z-10" />
+                    <input type="text" name="otp" required maxLength={6} value={formData.otp} onChange={handleInputChange} className="w-full bg-white/80 border border-slate-200 hover:border-[#1dbf73]/50 rounded-xl py-4 text-center text-2xl tracking-[1em] focus:border-[#1dbf73] focus:ring-2 focus:ring-[#1dbf73]/20 focus:outline-none transition-all text-slate-900 font-mono font-bold" />
+                  </div>
+                </motion.div>
+                <motion.button variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading} className="w-full bg-[#1dbf73] hover:bg-[#16965a] text-[#ffffff] font-bold py-3.5 rounded-xl flex items-center justify-center shadow-lg shadow-[#1dbf73]/20">
                   {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"/> : 'Verify Email Address'}
-                </button>
+                </motion.button>
               </form>
             )}
 
             {/* STEP 3: KYC Document Upload (NO NID Number Input!) */}
             {step === 'kyc' && (
               <form onSubmit={handleDocumentProceed} className="space-y-6">
-                <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-xs text-slate-700 leading-relaxed flex gap-3">
+                <motion.div variants={itemVariants} className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-xs text-slate-700 leading-relaxed flex gap-3">
                   <FileText className="w-5 h-5 text-[#1dbf73] shrink-0 mt-0.5" />
                   <div>
                     <p className="font-bold text-slate-900 mb-1">Government Document Verification</p>
                     <p>Please upload clear images (PNG/JPG) or PDFs of both the Front and Back sides of your National ID card. Maximum size: 5MB per file.</p>
                   </div>
-                </div>
+                </motion.div>
 
                 <div className="space-y-4">
                   {/* Front Copy */}
-                  <div>
+                  <motion.div variants={itemVariants}>
                     <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-2">NID Front Side Copy *</label>
-                    <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${nidFront ? 'border-emerald-500/50 bg-emerald-50/60' : 'border-slate-200 hover:border-[#1dbf73]/50 bg-white/50'}`}>
+                    <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${nidFront ? 'border-emerald-500/50 bg-emerald-50/60' : 'border-slate-200 hover:border-[#1dbf73]/50 bg-white/80'}`}>
                       <input
                         type="file"
                         required={!nidFront}
@@ -709,11 +746,10 @@ export default function RegisterPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Back Copy */}
-                  <div>
+                  {/* Back Copy */}
+                  <motion.div variants={itemVariants}>
                     <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-2">NID Back Side Copy *</label>
-                    <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${nidBack ? 'border-emerald-500/50 bg-emerald-50/60' : 'border-slate-200 hover:border-[#1dbf73]/50 bg-white/50'}`}>
+                    <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${nidBack ? 'border-emerald-500/50 bg-emerald-50/60' : 'border-slate-200 hover:border-[#1dbf73]/50 bg-white/80'}`}>
                       <input
                         type="file"
                         required={!nidBack}
@@ -726,8 +762,8 @@ export default function RegisterPage() {
                           {nidBack ? <CheckCircle2 className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-slate-900 truncate">{nidBack ? nidBackName : 'Click or drag to upload NID Back'}</p>
-                          <p className="text-[11px] text-slate-900">{nidBack ? 'File uploaded and ready' : 'Image or PDF (Max 5MB)'}</p>
+                           <p className="text-sm font-bold text-slate-900 truncate">{nidBack ? nidBackName : 'Click or drag to upload NID Back'}</p>
+                           <p className="text-[11px] text-slate-900">{nidBack ? 'File uploaded and ready' : 'Image or PDF (Max 5MB)'}</p>
                         </div>
                         {nidBack && (
                           <button type="button" onClick={(e) => { e.stopPropagation(); setNidBack(null); setNidBackName(''); }} className="p-1.5 hover:bg-rose-100 text-rose-500 rounded-lg relative z-20">
@@ -736,14 +772,14 @@ export default function RegisterPage() {
                         )}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
 
-                <button type="submit" disabled={!nidFront || !nidBack} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all ${(!nidFront || !nidBack) ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-[#1dbf73] hover:bg-[#16965a] text-[#ffffff] shadow-lg shadow-[#1dbf73]/20'}`}>
+                <motion.button variants={itemVariants} whileHover={(!nidFront || !nidBack) ? {} : { scale: 1.02 }} whileTap={(!nidFront || !nidBack) ? {} : { scale: 0.98 }} type="submit" disabled={!nidFront || !nidBack} className={`w-full font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all ${(!nidFront || !nidBack) ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-[#1dbf73] hover:bg-[#16965a] text-[#ffffff] shadow-lg shadow-[#1dbf73]/20'}`}>
                   Proceed to Biometrics Suite <ArrowRight className="w-4 h-4" />
-                </button>
+                </motion.button>
               </form>
-            )}
+            )}}
 
             {/* STEP 4: Unified Biometric Choice Suite */}
             {step === 'biometrics' && (
@@ -793,13 +829,13 @@ export default function RegisterPage() {
                   </div>
                 )}
 
-                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-xs text-slate-700 leading-relaxed">
+                <motion.div variants={itemVariants} className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-xs text-slate-700 leading-relaxed">
                   <p className="font-bold text-slate-900 mb-1">Flexible Biometric Security</p>
                   <p>Enroll either <strong>Facial Recognition</strong>, <strong>Device Fingerprint / Sensor</strong>, or <strong>both</strong>. At least one method must be registered to finalize your onboarding package.</p>
-                </div>
+                </motion.div>
 
                 {/* Option Card 1: Facial Recognition */}
-                <div className={`p-5 rounded-2xl border-2 transition-all ${faceImage ? 'border-emerald-500/50 bg-emerald-50/40' : 'border-slate-200 bg-white hover:border-[#1dbf73]/40'}`}>
+                <motion.div variants={itemVariants} className={`p-5 rounded-2xl border-2 transition-all ${faceImage ? 'border-emerald-500/50 bg-emerald-50/40' : 'border-slate-200 bg-white hover:border-[#1dbf73]/40'}`}>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3.5">
                       <div className={`p-3 rounded-xl ${faceImage ? 'bg-[#1dbf73] text-white' : 'bg-slate-100 text-slate-700'}`}>
@@ -830,10 +866,10 @@ export default function RegisterPage() {
                       {faceImage ? 'Retake Photo' : 'Scan Face Now'}
                     </button>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Option Card 2: Fingerprint Sensor */}
-                <div className={`p-5 rounded-2xl border-2 transition-all ${fingerprintEnrolled ? 'border-emerald-500/50 bg-emerald-50/40' : 'border-slate-200 bg-white hover:border-[#1dbf73]/40'}`}>
+                <motion.div variants={itemVariants} className={`p-5 rounded-2xl border-2 transition-all ${fingerprintEnrolled ? 'border-emerald-500/50 bg-emerald-50/40' : 'border-slate-200 bg-white hover:border-[#1dbf73]/40'}`}>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3.5">
                       <div className={`p-3 rounded-xl ${fingerprintEnrolled ? 'bg-[#1dbf73] text-white' : 'bg-slate-100 text-slate-700'}`}>
@@ -857,31 +893,33 @@ export default function RegisterPage() {
                       {loading ? 'Registering...' : fingerprintEnrolled ? 'Registered' : 'Register Sensor'}
                     </button>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Final Submit Bar */}
-                <div className="pt-2">
-                  <button
+                <motion.div variants={itemVariants} className="pt-2">
+                  <motion.button
+                    whileHover={(!faceImage && !fingerprintEnrolled) ? {} : { scale: 1.02 }}
+                    whileTap={(!faceImage && !fingerprintEnrolled) ? {} : { scale: 0.98 }}
                     type="button"
                     onClick={handleFinalSubmit}
                     disabled={(!faceImage && !fingerprintEnrolled) || loading}
                     className={`w-full font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${(!faceImage && !fingerprintEnrolled) ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200' : 'bg-[#1dbf73] hover:bg-[#16965a] text-white shadow-xl shadow-[#1dbf73]/30 text-base'}`}
                   >
                     {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"/> : <><Sparkles className="w-5 h-5"/> Complete & Submit Onboarding Package</>}
-                  </button>
+                  </motion.button>
                   {(!faceImage && !fingerprintEnrolled) && (
                     <p className="text-[11px] text-center text-rose-500 font-semibold mt-2">
                       ⚠️ Please enroll at least one biometric method (Face OR Fingerprint) above to submit.
                     </p>
                   )}
-                </div>
+                </motion.div>
 
               </div>
             )}
 
             {/* STEP 5: PENDING APPROVAL */}
             {step === 'pending' && (
-              <div className="flex flex-col items-center text-center py-8">
+              <motion.div variants={itemVariants} className="flex flex-col items-center text-center py-8">
                 <div className="w-20 h-20 bg-[#1dbf73]/10 rounded-full flex items-center justify-center border border-emerald-500/20 mb-6 shadow-inner">
                    <ShieldCheck className="w-10 h-10 text-[#1dbf73]" />
                 </div>
@@ -889,13 +927,13 @@ export default function RegisterPage() {
                 <p className="text-sm text-slate-900 mb-8 leading-relaxed max-w-md">
                   Your identity document copies and biometric vectors have been securely transmitted to the Anchor Fashion secure vault. You will be granted login access immediately once your Branch Manager approves your profile.
                 </p>
-                <button onClick={() => router.push('/login')} className="w-full bg-[#1dbf73] hover:bg-[#16965a] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#1dbf73]/20">
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => router.push('/login')} className="w-full bg-[#1dbf73] hover:bg-[#16965a] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#1dbf73]/20">
                   Return to Login Portal
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             )}
 
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     </div>

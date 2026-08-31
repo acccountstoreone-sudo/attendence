@@ -7,11 +7,14 @@ export const dynamic = 'force-dynamic';
 // APP-05 fix: Added proper auth guard and use server Supabase client (not service role)
 export async function GET(request: NextRequest) {
   try {
-    // Previously this had no auth check and used the service role key directly
-    await requireRole(['admin', 'branch_manager']);
+    // Capture user to apply role-based filtering
+    const user = await requireRole(['admin', 'branch_manager']);
 
     const supabase = await createClient();
-    const today = new Date();
+    
+    // Get current time in Dhaka
+    const dhakaTimeStr = new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" });
+    const today = new Date(dhakaTimeStr);
 
     // For weekly trend (last 10 days)
     const tenDaysAgo = new Date(today);
@@ -21,12 +24,18 @@ export async function GET(request: NextRequest) {
     // For monthly trend (current year)
     const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
 
-    // Fetch all attendance logs for the current year
-    const { data: logs, error } = await supabase
+    // Fetch attendance logs for the current year
+    let logsQuery = supabase
       .from('attendance_records')
       .select('check_in_time, status')
       .gte('check_in_time', firstDayOfYear.toISOString())
       .in('status', ['present', 'late', 'half_day']);
+
+    if (user.role === 'branch_manager') {
+      logsQuery = logsQuery.eq('branch_id', user.branch_id);
+    }
+
+    const { data: logs, error } = await logsQuery;
 
     if (error) {
       console.error('Error fetching trends:', error);
@@ -39,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     // Process Weekly Data (last 10 days in Asia/Dhaka timezone)
     const dhakaFmt = new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Asia/Dhaka',
+      timeZone: 'Asia/Dhaka', // Since we already converted today, we could use local formatting, but keeping it explicit is safer
       day: '2-digit',
       month: 'short'
     });
@@ -52,16 +61,25 @@ export async function GET(request: NextRequest) {
       weeklyTrendData.push({ day: dayStr, val: 0 });
     }
 
-    const { count: totalEmployees } = await supabase
+    let empQuery = supabase
       .from('profiles')
       .select('id', { count: 'exact', head: true })
       .in('role', ['employee', 'branch_manager']);
+
+    if (user.role === 'branch_manager') {
+      empQuery = empQuery.eq('branch_id', user.branch_id);
+    }
+
+    const { count: totalEmployees } = await empQuery;
 
     const expectedPerMonth = (totalEmployees || 0) * 22;
 
     logs?.forEach(log => {
       if (!log.check_in_time) return;
-      const logDate = new Date(log.check_in_time);
+      
+      // Convert log time to Dhaka time before extracting month/day
+      const logDhakaStr = new Date(log.check_in_time).toLocaleString("en-US", { timeZone: "Asia/Dhaka" });
+      const logDate = new Date(logDhakaStr);
 
       const monthIndex = logDate.getMonth();
       monthlyCounts[monthIndex]++;
