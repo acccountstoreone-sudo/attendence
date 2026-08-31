@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        const isManualBypass = payload.faceDescriptor.length === 128 && payload.faceDescriptor.every((v: number) => v === 0);
+        const isManualBypass = payload.faceDescriptor.length === 1024 && payload.faceDescriptor.every((v: number) => v === 0);
 
         if (isManualBypass) {
           // Manual capture bypass: employee clicked "Capture Now" to bypass auto-scan.
@@ -90,19 +90,11 @@ export async function POST(request: NextRequest) {
           const incomingDesc = payload.faceDescriptor;
           const storedDesc = profile.face_descriptor;
           
-          let dotProduct = 0;
-          let normA = 0;
-          let normB = 0;
-          for (let i = 0; i < storedDesc.length; i++) {
-            dotProduct += storedDesc[i] * incomingDesc[i];
-            normA += storedDesc[i] * storedDesc[i];
-            normB += incomingDesc[i] * incomingDesc[i];
-          }
-          const similarity = dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+          const distance = getEuclideanDistance(storedDesc, incomingDesc);
         
           // Face match failed! Instead of blocking, we set manual override and flag face_verified as false.
           // This allows the check-out to succeed immediately, and lets the manager approve it manually.
-          if (similarity < 0.50) {
+          if (distance >= 0.60) {
             payload.is_manual_override = true;
             payload.face_verified = false;
           } else {

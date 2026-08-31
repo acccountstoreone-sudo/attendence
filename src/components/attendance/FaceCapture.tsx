@@ -232,26 +232,33 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
     const c = canvasRef.current;
     if (!c) return;
 
-    if (lastFaceDescriptorRef.current) {
-      setPhase('submit');
-      await onCapture(c.toDataURL('image/jpeg', 0.5), lastFaceDescriptorRef.current, false);
-      return;
-    }
-
-    let human = getHumanInstance();
-    if (!human) human = await preloadHumanModels();
-    if (human) {
-      const res = await human.detect(c) as any;
-      if (res && res.face && res.face.length > 0 && res.face[0].embedding) {
+    try {
+      if (lastFaceDescriptorRef.current) {
         setPhase('submit');
-        await onCapture(c.toDataURL('image/jpeg', 0.5), Array.from(res.face[0].embedding), false);
+        await onCapture(c.toDataURL('image/jpeg', 0.5), lastFaceDescriptorRef.current, false);
         return;
       }
-    }
 
-    // If AI fails on the captured frame
-    announce('Face not clear in the photo. Please retake.', 'error');
-    setPhase('review_enroll'); // Let them see it failed and they can hit retake
+      let human = getHumanInstance();
+      if (!human) human = await preloadHumanModels();
+      if (human) {
+        const res = await human.detect(c) as any;
+        if (res && res.face && res.face.length > 0 && res.face[0].embedding) {
+          setPhase('submit');
+          await onCapture(c.toDataURL('image/jpeg', 0.5), Array.from(res.face[0].embedding), false);
+          return;
+        }
+      }
+
+      // If AI fails on the captured frame
+      announce('Face not clear in the photo. Please retake.', 'error');
+      setPhase('review_enroll'); // Let them see it failed and they can hit retake
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : 'Enrollment failed. Please try again.';
+      announce(errMsg, 'error');
+      isCapturingRef.current = false;
+      setTimeout(() => { if (mountedRef.current) { videoRef.current?.play(); setPhase('scanning'); } }, 1500);
+    }
   }, [onCapture, announce, setPhase]);
 
   // ── Capture + Extract Descriptor ──────────────────────

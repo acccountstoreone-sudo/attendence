@@ -50,12 +50,12 @@ export function FaceRegister() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      // Bug fix: do NOT send selfieUrl (base64 image) — it can cause 413 Payload Too Large.
-      // The face descriptor array is all we need for biometric matching.
+      // We need to send selfieUrl so the backend can save the photo_url
+      // The image is already compressed/resized in FaceCapture to prevent 413 errors.
       const res = await fetch('/api/employees/enroll-face', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ faceDescriptor: descriptor }),
+        body: JSON.stringify({ faceDescriptor: descriptor, selfieUrl: _image }),
       });
 
       let data: Record<string, unknown> = {};
