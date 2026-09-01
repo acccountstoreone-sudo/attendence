@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { dispatchToAdmins, dispatchToBranchManagers } from '@/lib/notification-service';
+import { isWithinGeofence } from '@/lib/geo';
 import { z } from 'zod';
 
 const returnBreakSchema = z.object({
   break_id: z.string().uuid().optional(),
   employee_id: z.string().uuid().optional(),
   return_note: z.string().optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -46,6 +49,53 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'No active Gate-Pass found to return from.'
       }, { status: 404 });
+    }
+
+    // GPS Location Verification for Employees Returning Themselves
+    if (user.role === 'employee') {
+      if (!input.latitude || !input.longitude) {
+        return NextResponse.json({
+          success: false,
+          error: {
+            code: 'MISSING_LOCATION',
+            message: 'Location access is required to verify return. Please enable GPS permissions.',
+          }
+        }, { status: 400 });
+      }
+
+      const { data: branch, error: branchErr } = await supabase
+        .from('branches')
+        .select('name, latitude, longitude, geofence_radius_meters, is_active')
+        .eq('id', breakRecord.branch_id)
+        .single();
+
+      if (branchErr || !branch || !branch.latitude || !branch.longitude) {
+        return NextResponse.json({
+          success: false,
+          error: {
+            code: 'BRANCH_GEO_MISSING',
+            message: 'Branch geofence coordinates are not configured.',
+          }
+        }, { status: 500 });
+      }
+
+      const geo = isWithinGeofence(
+        input.latitude,
+        input.longitude,
+        Number(branch.latitude),
+        Number(branch.longitude),
+        branch.geofence_radius_meters || 100
+      );
+
+      if (!geo.within) {
+        return NextResponse.json({
+          success: false,
+          error: {
+            code: 'OUT_OF_GEOFENCE',
+            message: `Return denied: You are ${geo.distance}m away from ${branch.name} (max allowed: ${branch.geofence_radius_meters || 100}m). Please return to the branch to verify.`,
+          }
+        }, { status: 403 });
+      }
     }
 
     // Role check if verifying someone else's break

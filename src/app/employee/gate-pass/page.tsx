@@ -93,21 +93,45 @@ export default function EmployeeGatePassPage() {
   const handleReturn = async () => {
     if (!activeBreak) return;
     setSubmitting(true);
+    
     try {
-      const res = await fetch('/api/attendance/breaks/return', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ break_id: activeBreak.id })
-      });
-      const data = await res.json();
-      if (data.success) {
-        fetchBreaks();
-      } else {
-        alert(data.error?.message || data.error || 'Failed to verify return');
+      if (!navigator.geolocation) {
+        throw new Error('Geolocation is not supported by your browser.');
       }
-    } catch (err) {
-      alert('Network error.');
-    } finally {
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const res = await fetch('/api/attendance/breaks/return', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                break_id: activeBreak.id,
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+              })
+            });
+            const data = await res.json();
+            if (data.success) {
+              fetchBreaks();
+            } else {
+              alert(data.error?.message || data.error || 'Failed to verify return');
+            }
+          } catch (err) {
+            alert('Network error.');
+          } finally {
+            setSubmitting(false);
+          }
+        },
+        (error) => {
+          console.error("Location error:", error);
+          alert('Location access is required to return from a Gate Pass. Please enable GPS permissions.');
+          setSubmitting(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } catch (err: any) {
+      alert(err.message || 'Location error.');
       setSubmitting(false);
     }
   };
