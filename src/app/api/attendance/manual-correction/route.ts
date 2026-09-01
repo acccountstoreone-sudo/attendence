@@ -120,6 +120,9 @@ export async function GET(request: NextRequest) {
     const user = await requireRole(['admin', 'branch_manager']);
     const supabase = await createClient();
 
+    const { searchParams } = new URL(request.url);
+    const branchId = searchParams.get('branch_id');
+
     let query = supabase
       .from('correction_requests')
       .select('*, profiles!correction_requests_employee_id_fkey(full_name)')
@@ -128,6 +131,8 @@ export async function GET(request: NextRequest) {
     // Branch managers only see their branch's requests
     if (user.role === 'branch_manager' && user.branch_id) {
       query = query.eq('branch_id', user.branch_id);
+    } else if (user.role === 'admin' && branchId && branchId !== 'all') {
+      query = query.eq('branch_id', branchId);
     }
 
     const { data: requests, error } = await query;

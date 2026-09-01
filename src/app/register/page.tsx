@@ -745,8 +745,8 @@ export default function RegisterPage() {
                         )}
                       </div>
                     </div>
-                  </div>
-                  {/* Back Copy */}
+                  </motion.div>
+                  {/* Back Copy */}
                   <motion.div variants={itemVariants}>
                     <label className="block text-[11px] font-semibold text-[#94A3B8] tracking-widest uppercase mb-2">NID Back Side Copy *</label>
                     <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${nidBack ? 'border-emerald-500/50 bg-emerald-50/60' : 'border-slate-200 hover:border-[#1dbf73]/50 bg-white/80'}`}>
@@ -779,7 +779,7 @@ export default function RegisterPage() {
                   Proceed to Biometrics Suite <ArrowRight className="w-4 h-4" />
                 </motion.button>
               </form>
-            )}}
+            )}
 
             {/* STEP 4: Unified Biometric Choice Suite */}
             {step === 'biometrics' && (

@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
     const cur = new Date(start);
     while (cur <= end) {
       const dayOfWeek = cur.getDay(); // 0 = Sunday, 5 = Friday
-      const curIso = cur.toISOString().split('T')[0];
+      const curIso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
       const isOffDay = weeklyOffDays.includes(dayOfWeek);
       const isHoliday = holidaysList?.some(h => curIso >= h.start_date && curIso <= h.end_date);
 
