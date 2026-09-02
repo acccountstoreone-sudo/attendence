@@ -49,7 +49,8 @@ export function WebAuthnRegister() {
       });
       const options = await parseJsonResponse(resp);
       if (!resp.ok) {
-        throw new Error(options.error || 'Failed to get registration options');
+        const errMsg = (options.error as any)?.message || (typeof options.error === 'object' ? JSON.stringify(options.error) : options.error);
+        throw new Error(errMsg || 'Failed to get registration options');
       }
 
       // 2. Pass options to browser authenticator (Fingerprint/FaceID)
@@ -76,7 +77,8 @@ export function WebAuthnRegister() {
 
       const verifyData = await parseJsonResponse(verifyResp);
       if (!verifyResp.ok) {
-        throw new Error(verifyData.error || 'Failed to verify registration');
+        const errMsg = (verifyData.error as any)?.message || (typeof verifyData.error === 'object' ? JSON.stringify(verifyData.error) : verifyData.error);
+        throw new Error(errMsg || 'Failed to verify registration');
       }
       if (verifyData.verified) {
         setSuccess(true);

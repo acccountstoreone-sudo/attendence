@@ -34,7 +34,24 @@ export async function POST(request: NextRequest) {
     const { data: profile } = await supabase.from('profiles').select('full_name, face_descriptor').eq('id', user.id).single();
 
     // 3. Biometric Verification Check (face match only — no liveness challenge required)
-    if (!payload.webauthn_verified) {
+    if (payload.webauthn_verified) {
+      const verifiedToken = request.cookies.get('webauthn_verified_token');
+      if (!verifiedToken || verifiedToken.value !== 'true') {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: { code: 'WEBAUTHN_INVALID', message: 'Biometric fingerprint session expired or invalid. Please scan your fingerprint again.' },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
+      
+      // Treat WebAuthn as a valid biometric verification
+      payload.face_verified = true;
+      payload.is_manual_override = false;
+    } else {
       if (!payload.face_verified || !payload.faceDescriptor || payload.faceDescriptor.length === 0) {
         return NextResponse.json(
           {
@@ -327,7 +344,7 @@ export async function POST(request: NextRequest) {
         check_out_lat: payload.latitude,
         check_out_lng: payload.longitude,
         // Reset approval_status to pending if check-out has manual override or failed face match
-        ...(!isGeoWithin || Boolean(payload.is_manual_override) || !payload.face_verified ? {
+        ...((!isAdminOrMgr && !isGeoWithin) || Boolean(payload.is_manual_override) || !payload.face_verified ? {
           is_manual_override: true,
           approval_status: 'pending',
         } : {}),

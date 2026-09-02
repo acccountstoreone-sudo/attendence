@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         type: 'public-key' as const,
         transports: (cred.transports || ['internal']) as any,
       })),
-      userVerification: 'required' as const,
+      userVerification: 'preferred' as const,
     });
 
     // Save challenge using adminClient to ensure bypass of RLS restrictions during check-in flow

@@ -27,6 +27,7 @@ export interface FaceCaptureProps {
   checkType?: 'in' | 'out';
   gpsErrorMsg?: string;
   isEnrollment?: boolean;
+  uploadProgress?: number;
 }
 
 type Phase =
@@ -83,7 +84,7 @@ function waitForVideoReady(video: HTMLVideoElement, timeoutMs = 8000): Promise<v
 
 export const FaceCapture: React.FC<FaceCaptureProps> = ({
   onCapture, onUseFingerprint, gpsVerified, gpsStatus, gpsDistance, gpsRefresh,
-  branchName, checkType = 'in', gpsErrorMsg, isEnrollment = false
+  branchName, checkType = 'in', gpsErrorMsg, isEnrollment = false, uploadProgress
 }) => {
   // ── Refs ──────────────────────────────────────────────
   const videoRef       = useRef<HTMLVideoElement | null>(null);
@@ -117,7 +118,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   }, []);
 
   const stopScan = useCallback(() => {
-    if (scanTimerRef.current) { clearTimeout(scanTimerRef.current); scanTimerRef.current = null; }
+    if (scanTimerRef.current) { cancelAnimationFrame(scanTimerRef.current as any); scanTimerRef.current = null; }
     if (manualBtnTimerRef.current) { clearTimeout(manualBtnTimerRef.current); manualBtnTimerRef.current = null; }
   }, []);
 
@@ -195,7 +196,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               lastFaceDescriptorRef.current = Array.from(res.face[0].embedding || []);
               consecutiveFaceFrames++;
 
-              if (consecutiveFaceFrames >= 3) {
+              if (consecutiveFaceFrames >= 1) {
                 if (!isCapturingRef.current) {
                   isCapturingRef.current = true;
                   stopScan();
@@ -215,13 +216,13 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         }
       }
 
-      // Schedule next check
+      // Schedule next check using requestAnimationFrame for smoother performance
       if (mountedRef.current && phRef.current === 'scanning') {
-        scanTimerRef.current = setTimeout(runBackgroundDetection, 300) as any;
+        scanTimerRef.current = requestAnimationFrame(runBackgroundDetection) as any;
       }
     };
 
-    scanTimerRef.current = setTimeout(runBackgroundDetection, 400) as any;
+    scanTimerRef.current = requestAnimationFrame(runBackgroundDetection) as any;
   }, [stopScan, setPhase, announce, isEnrollment]);
 
   // ── Enrollment submit (Bug 1 fix: moved OUT of runCapture scope) ──────────
@@ -577,14 +578,38 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               </div>
             )}
 
-            {/* Scanning laser line — only when processing the image */}
-            {isProcessing && phase !== 'loading' && (
+            {/* Scanning laser line — active during scanning and processing */}
+            {(isProcessing || phase === 'scanning') && phase !== 'loading' && (
               <motion.div
                 animate={{ top: ['0%', '100%', '0%'] }}
                 transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
-                className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_16px_#60A5FA] z-20 pointer-events-none"
+                className={`absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent ${faceDetected ? 'via-emerald-400' : 'via-blue-400'} to-transparent shadow-[0_0_16px_${faceDetected ? '#34D399' : '#60A5FA'}] z-20 pointer-events-none`}
               />
             )}
+
+            {/* Futuristic Face Detection HUD */}
+            <AnimatePresence>
+              {phase === 'scanning' && faceDetected && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.1 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute inset-8 border border-emerald-400/50 rounded-2xl z-20 pointer-events-none flex items-center justify-center shadow-[inset_0_0_30px_rgba(52,211,153,0.2)]"
+                >
+                  {/* Crosshairs */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-[2px] bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[2px] bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[2px] h-4 bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                  
+                  {/* Central focus ring */}
+                  <div className="w-24 h-24 border border-emerald-400/40 rounded-full flex items-center justify-center">
+                    <div className="w-20 h-20 border border-emerald-400/20 rounded-full animate-ping" />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Corner brackets */}
             {['tl', 'tr', 'bl', 'br'].map(pos => (
@@ -764,15 +789,32 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-sm flex items-center space-x-4 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[1.5rem] px-6 py-5 mb-3 shadow-[0_0_40px_rgba(59,130,246,0.15)] relative overflow-hidden"
+            className="w-full max-w-sm flex flex-col space-y-3 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[1.5rem] px-6 py-5 mb-3 shadow-[0_0_40px_rgba(59,130,246,0.15)] relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10" />
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-              className="w-6 h-6 border-2 border-white/20 border-t-blue-400 rounded-full shrink-0 relative z-10"
-            />
-            <p className="text-white font-bold text-base tracking-wide relative z-10">{msg}</p>
+            <div className="flex items-center space-x-4 relative z-10">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                className="w-6 h-6 border-2 border-white/20 border-t-blue-400 rounded-full shrink-0"
+              />
+              <p className="text-white font-bold text-base tracking-wide">{msg}</p>
+            </div>
+            {uploadProgress !== undefined && uploadProgress > 0 && uploadProgress <= 100 && (
+              <div className="relative z-10 w-full mt-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs text-blue-200 font-medium">Uploading...</span>
+                  <span className="text-xs text-blue-200 font-bold">{uploadProgress}%</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden shadow-inner">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-blue-400 to-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)]"
+                    animate={{ width: `${uploadProgress}%` }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                  />
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
 

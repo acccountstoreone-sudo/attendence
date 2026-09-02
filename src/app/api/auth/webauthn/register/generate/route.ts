@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       })),
       authenticatorSelection: {
         authenticatorAttachment: 'platform' as const,
-        userVerification: 'required' as const,
+        userVerification: 'preferred' as const,
         residentKey: 'required' as const
       }
     });

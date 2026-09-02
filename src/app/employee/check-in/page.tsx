@@ -411,7 +411,7 @@ export default function EmployeeCheckInPage() {
           latitude: gps.coords?.lat ?? 0,
           longitude: gps.coords?.lng ?? 0,
           branch_id: profile?.branch_id,
-          is_manual_override: isAdminOrManager || !gps.verified || isManualCapture,
+          is_manual_override: !gps.verified || isManualCapture,
           // photo_url intentionally omitted — sending raw base64 in the JSON
           // body risks 413 payload errors. Upload to storage separately if needed.
           face_verified: true,
@@ -422,7 +422,7 @@ export default function EmployeeCheckInPage() {
           latitude: gps.coords?.lat ?? 0,
           longitude: gps.coords?.lng ?? 0,
           branch_id: profile?.branch_id,
-          is_manual_override: isAdminOrManager || !gps.verified || isManualCapture,
+          is_manual_override: !gps.verified || isManualCapture,
           face_verified: true,
           faceDescriptor,
           liveness_passed: true,
@@ -463,7 +463,7 @@ export default function EmployeeCheckInPage() {
       setFeedback(null);
 
       if (!gps.coords && !isAdminOrManager) throw new Error('GPS coordinates unavailable. Please retry.');
-      if (!gps.verified && !isAdminOrManager) {
+      if (gps.status === 'outside' && !isAdminOrManager) {
         throw new Error(`Check-in denied: You are ${gps.distance ?? 'too far'}m away from ${profile?.branch_name ?? 'the store'} geofence.`);
       }
 
@@ -480,7 +480,9 @@ export default function EmployeeCheckInPage() {
         const resp = await fetch('/api/auth/webauthn/authenticate/generate', { method: 'POST' });
         webAuthnOptions = await parseJsonResponse(resp);
         if (!resp.ok) {
-          throw new Error((webAuthnOptions as any)?.error || 'Fingerprint authentication is not set up. Please go to your profile to register.');
+          const errMsg = (webAuthnOptions as any)?.error;
+          const msg = typeof errMsg === 'object' ? (errMsg.message || JSON.stringify(errMsg)) : errMsg;
+          throw new Error(msg || 'Fingerprint authentication is not set up. Please go to your profile to register.');
         }
       }
       // Clear cache so we get a fresh challenge next time
@@ -505,7 +507,9 @@ export default function EmployeeCheckInPage() {
 
       const verifyData = await parseJsonResponse(verifyResp);
       if (!verifyResp.ok) {
-        throw new Error(verifyData.error || 'Fingerprint verification failed.');
+        const errMsg = verifyData.error;
+        const msg = typeof errMsg === 'object' ? (errMsg.message || JSON.stringify(errMsg)) : errMsg;
+        throw new Error(msg || 'Fingerprint verification failed.');
       }
       if (!verifyData.verified) throw new Error('Invalid fingerprint.');
 
@@ -515,7 +519,7 @@ export default function EmployeeCheckInPage() {
         latitude: gps.coords?.lat ?? 0,
         longitude: gps.coords?.lng ?? 0,
         branch_id: profile?.branch_id,
-        is_manual_override: isAdminOrManager || !gps.verified,
+        is_manual_override: !gps.verified,
         face_verified: true,
         webauthn_verified: true, // Special flag indicating fingerprint was used
       };
@@ -526,7 +530,9 @@ export default function EmployeeCheckInPage() {
       setSubmitting(false);
 
       if (!result.success) {
-        throw new Error(result.error?.message ?? `Check-${checkType === 'in' ? 'In' : 'Out'} failed`);
+        const errMsg = result.error;
+        const msg = typeof errMsg === 'object' ? (errMsg.message || JSON.stringify(errMsg)) : errMsg;
+        throw new Error(msg || `Check-${checkType === 'in' ? 'In' : 'Out'} failed`);
       }
 
       setTimeout(() => router.push('/employee'), 1200);
@@ -777,16 +783,16 @@ export default function EmployeeCheckInPage() {
               onMouseEnter={prefetchWebAuthnOptions}
               onFocus={prefetchWebAuthnOptions}
               onTouchStart={prefetchWebAuthnOptions}
-              disabled={submitting || (gps.status !== 'inside' && profile?.role !== 'admin' && profile?.role !== 'branch_manager')}
+              disabled={submitting || (gps.status === 'outside' && profile?.role !== 'admin' && profile?.role !== 'branch_manager')}
               isLoading={submitting}
               className="w-full h-14 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-bold text-lg rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all duration-300 relative z-10"
             >
               Scan Fingerprint
             </Button>
 
-            {(gps.status !== 'inside' && profile?.role !== 'admin' && profile?.role !== 'branch_manager') && (
+            {(gps.status === 'outside' && profile?.role !== 'admin' && profile?.role !== 'branch_manager') && (
               <p className="text-rose-300 text-xs font-medium mt-4 bg-rose-500/10 px-4 py-2.5 rounded-xl border border-rose-500/20 relative z-10 shadow-inner">
-                {gps.status === 'locating' ? 'Locating...' : 'You must be inside the store to check in.'}
+                {gps.status === 'locating' ? 'Locating...' : 'You must be inside or approaching the store to check in.'}
               </p>
             )}
 

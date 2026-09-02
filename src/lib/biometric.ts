@@ -6,8 +6,11 @@ export function getEuclideanDistance(descriptor1: number[], descriptor2: number[
   if (!descriptor1 || !descriptor2 || descriptor1.length !== descriptor2.length) {
     throw new Error('Descriptors must have the same length');
   }
+  
+  // Fast path for 1024-dim `@vladmandic/human` embeddings
+  const len = descriptor1.length;
   let sum = 0;
-  for (let i = 0; i < descriptor1.length; i++) {
+  for (let i = 0; i < len; i++) {
     const diff = descriptor1[i] - descriptor2[i];
     sum += diff * diff;
   }

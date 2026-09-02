@@ -4,6 +4,9 @@ let globalHumanInstance: Human | null = null;
 let initPromise: Promise<Human> | null = null;
 
 const config: Partial<Config> = {
+  // Use WASM backend to avoid WebGL shader compilation hangs (especially on mobile)
+  backend: 'wasm',
+  wasmPath: 'https://cdn.jsdelivr.net/npm/@vladmandic/human/assets/',
   // Serve models locally to significantly reduce load times
   modelBasePath: '/models/human',
   filter: { enabled: true, equalization: false },

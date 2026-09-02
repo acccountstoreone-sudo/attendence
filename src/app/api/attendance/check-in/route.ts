@@ -50,6 +50,10 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         );
       }
+      
+      // Treat WebAuthn as a valid biometric verification
+      payload.face_verified = true;
+      payload.is_manual_override = false;
     } else {
       if (!payload.face_verified || !payload.faceDescriptor || payload.faceDescriptor.length === 0) {
         return NextResponse.json(
@@ -493,9 +497,9 @@ export async function POST(request: NextRequest) {
         check_in_lng: payload.longitude,
         face_verified: payload.face_verified,
         status: 'present', // Will be evaluated/overridden by trigger trg_calculate_attendance_status
-        is_manual_override: !geo.within || Boolean(payload.is_manual_override),
+        is_manual_override: (!isAdminOrManager && !geo.within) || Boolean(payload.is_manual_override),
         is_holiday_duty: isHolidayDuty,
-        approval_status: (!geo.within || Boolean(payload.is_manual_override)) ? 'pending' : 'approved',
+        approval_status: ((!isAdminOrManager && !geo.within) || Boolean(payload.is_manual_override)) ? 'pending' : 'approved',
       })
       .select()
       .single();

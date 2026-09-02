@@ -11,6 +11,7 @@ export function FaceRegister() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -37,34 +38,49 @@ export function FaceRegister() {
 
   const handleFaceCapture = async (_image: string, descriptor: number[]) => {
     setLoading(true);
+    setUploadProgress(0);
     setError(null);  // Always clear previous error before new attempt
     try {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/employees/enroll-face');
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
-      // We need to send selfieUrl so the backend can save the photo_url
-      // The image is already compressed/resized in FaceCapture to prevent 413 errors.
-      const res = await fetch('/api/employees/enroll-face', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ faceDescriptor: descriptor, selfieUrl: _image }),
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            setUploadProgress(percentComplete);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            let data: Record<string, unknown> = {};
+            try { data = JSON.parse(xhr.responseText); } catch { /* empty response */ }
+            
+            if (xhr.status === 413) {
+              reject(new Error('Image too large. Please try again.'));
+            } else {
+              const errMsg = (data.error as { message?: string })?.message 
+                || (typeof data.error === 'object' ? JSON.stringify(data.error) : String(data.error)) 
+                || `Enrollment failed (${xhr.status}). Please try again.`;
+              reject(new Error(errMsg));
+            }
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Network error occurred during upload. Please check your connection.'));
+
+        xhr.send(JSON.stringify({ faceDescriptor: descriptor, selfieUrl: _image }));
       });
 
-      let data: Record<string, unknown> = {};
-      try { data = await res.json(); } catch { /* empty response */ }
-
-      if (!res.ok) {
-        if (res.status === 413) throw new Error('Image too large. Please try again.');
-        throw new Error((data.error as { message?: string })?.message || String(data.error) || `Enrollment failed (${res.status}). Please try again.`);
-      }
       setSuccess(true);
       setIsEnrolled(true);
       setTimeout(() => setShowModal(false), 2500);
@@ -159,6 +175,7 @@ export function FaceRegister() {
                   gpsRefresh={() => {}}
                   isLoading={loading}
                   isEnrollment={true}
+                  uploadProgress={uploadProgress}
                 />
               </div>
             </motion.div>
