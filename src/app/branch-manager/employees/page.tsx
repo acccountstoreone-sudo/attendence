@@ -61,7 +61,6 @@ export default function StoreEmployeesPage() {
     setLoading(false);
   }, []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadData(); }, [loadData]);
 
   const toggleActive = async (emp: Employee) => {

@@ -294,7 +294,7 @@ export default function EmployeeGatePassPage() {
           <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
             <h3 className="font-bold text-slate-900 flex items-center gap-2">
               <History className="w-5 h-5 text-slate-400" />
-              Today's Passes
+              Today&apos;s Passes
             </h3>
           </div>
           <div className="divide-y divide-slate-100">

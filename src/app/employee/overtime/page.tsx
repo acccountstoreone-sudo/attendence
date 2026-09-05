@@ -201,7 +201,7 @@ export default function EmployeeOvertimePage() {
             <div className="py-12 flex flex-col items-center text-center text-slate-500">
               <Clock className="w-12 h-12 mb-4 text-slate-300" />
               <h3 className="text-lg font-medium text-slate-900 mb-1">No Overtime Records</h3>
-              <p>You haven't logged any overtime yet.</p>
+              <p>You haven&apos;t logged any overtime yet.</p>
             </div>
           ) : (
             <table className="w-full text-left border-collapse min-w-[700px]">
@@ -265,7 +265,7 @@ export default function EmployeeOvertimePage() {
             <div className="py-12 flex flex-col items-center text-center text-slate-500">
               <FileText className="w-12 h-12 mb-4 text-slate-300" />
               <h3 className="text-lg font-medium text-slate-900 mb-1">No Requests</h3>
-              <p>You haven't submitted any off-day requests yet.</p>
+              <p>You haven&apos;t submitted any off-day requests yet.</p>
             </div>
           ) : (
             <table className="w-full text-left border-collapse min-w-[700px]">

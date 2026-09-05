@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { dispatchToAdmins } from '@/lib/notification-service';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 async function uploadDataUrl(supabase: any, dataUrl: string, pathPrefix: string, userId: string) {
   const matches = dataUrl.match(/^data:(.+);base64,(.+)$/);
   if (!matches) {

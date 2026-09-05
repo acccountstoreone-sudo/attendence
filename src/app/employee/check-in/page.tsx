@@ -792,7 +792,7 @@ export default function EmployeeCheckInPage() {
 
             {(gps.status === 'outside' && profile?.role !== 'admin' && profile?.role !== 'branch_manager') && (
               <p className="text-rose-300 text-xs font-medium mt-4 bg-rose-500/10 px-4 py-2.5 rounded-xl border border-rose-500/20 relative z-10 shadow-inner">
-                {gps.status === 'locating' ? 'Locating...' : 'You must be inside or approaching the store to check in.'}
+                You must be inside or approaching the store to check in.
               </p>
             )}
 

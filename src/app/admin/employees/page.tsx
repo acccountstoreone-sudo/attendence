@@ -89,7 +89,6 @@ export default function AdminEmployeesPage() {
     setLoading(false);
   }, [supabase]);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadData(); }, [loadData]);
 
   useEffect(() => {

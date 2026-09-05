@@ -193,6 +193,7 @@ export async function POST(request: NextRequest) {
     // Verify Geofence if branch is assigned
     let targetBranchId = payload.branch_id || user.branch_id;
     let isGeoWithin = true;
+    const isAdminOrMgr = user.role === 'admin' || user.role === 'branch_manager';
     
     // Security Fix: Prevent Employees from spoofing their branch_id on check-out
     if (user.role === 'employee') {
@@ -229,8 +230,6 @@ export async function POST(request: NextRequest) {
           branch.geofence_radius_meters || 100
         );
         isGeoWithin = geo.within;
-
-        const isAdminOrMgr = user.role === 'admin' || user.role === 'branch_manager';
 
         const maxAllowedDistance = payload.is_manual_override 
           ? (branch.geofence_radius_meters || 100) * 1.5 
