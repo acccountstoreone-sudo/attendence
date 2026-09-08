@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       
       // Treat WebAuthn as a valid biometric verification
       payload.face_verified = true;
-      payload.is_manual_override = false;
+      // Do not override payload.is_manual_override here, as it might be true due to out-of-geofence check-in
     } else {
       if (!payload.face_verified || !payload.faceDescriptor || payload.faceDescriptor.length === 0) {
         return NextResponse.json(

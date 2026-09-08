@@ -32,21 +32,36 @@ export default function EmployeeGatePassPage() {
       const [month, day, year] = formatter.format(now).split('/');
       const todayStart = new Date(`${year}-${month}-${day}T00:00:00+06:00`).toISOString();
 
-      const { data } = await supabase
+      // 1. Fetch any unresolved active or pending break for the employee (across all time so old unreturned passes don't secretly lock them)
+      const { data: unresolved } = await supabase
+        .from('attendance_breaks')
+        .select('*')
+        .eq('employee_id', user.id)
+        .is('return_time', null)
+        .in('status', ['active', 'pending'])
+        .order('created_at', { ascending: false });
+
+      const active = unresolved?.find(b => b.status === 'active') || null;
+      const pending = unresolved?.find(b => b.status === 'pending') || null;
+      setActiveBreak(active);
+      setPendingBreak(pending);
+
+      // 2. Fetch today's passes for history list
+      const { data: todayList } = await supabase
         .from('attendance_breaks')
         .select('*')
         .eq('employee_id', user.id)
         .gte('created_at', todayStart)
         .order('created_at', { ascending: false });
 
-      if (data) {
-        setTodaysBreaks(data);
-        const active = data.find(b => b.status === 'active' || b.status === 'overstayed');
-        const pending = data.find(b => b.status === 'pending');
-        setActiveBreak(active || null);
-        setPendingBreak(pending || null);
-        if (!active && !pending) setShowForm(true);
-        else setShowForm(false);
+      if (todayList) {
+        setTodaysBreaks(todayList);
+      }
+
+      if (!active && !pending) {
+        setShowForm(true);
+      } else {
+        setShowForm(false);
       }
     } catch (err) {
       console.error('Failed to load gate passes', err);
@@ -57,7 +72,7 @@ export default function EmployeeGatePassPage() {
 
   useEffect(() => {
     fetchBreaks();
-    const interval = setInterval(fetchBreaks, 30000);
+    const interval = setInterval(fetchBreaks, 15000);
     return () => clearInterval(interval);
   }, [supabase]);
 
@@ -90,6 +105,59 @@ export default function EmployeeGatePassPage() {
     }
   };
 
+  const handleCancelPending = async () => {
+    if (!pendingBreak) return;
+    if (!confirm('Are you sure you want to cancel this Gate-Pass request?')) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/attendance/breaks/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          break_id: pendingBreak.id,
+          action: 'reject'
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPendingBreak(null);
+        fetchBreaks();
+      } else {
+        alert(data.error?.message || data.error || 'Failed to cancel Gate-Pass request.');
+      }
+    } catch (err) {
+      alert('Network error while cancelling Gate-Pass request.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const executeReturn = async (lat?: number, lng?: number) => {
+    try {
+      const res = await fetch('/api/attendance/breaks/return', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          break_id: activeBreak.id,
+          latitude: lat,
+          longitude: lng
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActiveBreak(null);
+        fetchBreaks();
+      } else {
+        const msg = typeof data.error === 'object' ? data.error?.message : data.error;
+        alert(msg || 'Failed to verify return');
+      }
+    } catch (err) {
+      alert('Network error while verifying return.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleReturn = async () => {
     if (!activeBreak) return;
     setSubmitting(true);
@@ -99,36 +167,26 @@ export default function EmployeeGatePassPage() {
         throw new Error('Geolocation is not supported by your browser.');
       }
 
+      // Try high accuracy first, fallback to standard accuracy
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const res = await fetch('/api/attendance/breaks/return', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                break_id: activeBreak.id,
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude
-              })
-            });
-            const data = await res.json();
-            if (data.success) {
-              fetchBreaks();
-            } else {
-              alert(data.error?.message || data.error || 'Failed to verify return');
-            }
-          } catch (err) {
-            alert('Network error.');
-          } finally {
-            setSubmitting(false);
-          }
+        (position) => {
+          executeReturn(position.coords.latitude, position.coords.longitude);
         },
-        (error) => {
-          console.error("Location error:", error);
-          alert('Location access is required to return from a Gate Pass. Please enable GPS permissions.');
-          setSubmitting(false);
+        (firstErr) => {
+          console.warn("High accuracy GPS failed, retrying with standard accuracy...", firstErr);
+          navigator.geolocation.getCurrentPosition(
+            (fallbackPos) => {
+              executeReturn(fallbackPos.coords.latitude, fallbackPos.coords.longitude);
+            },
+            (finalErr) => {
+              console.error("Location error:", finalErr);
+              alert('Location access is required to return from a Gate Pass. Please enable GPS permissions and ensure you are at the store.');
+              setSubmitting(false);
+            },
+            { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 }
+          );
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
       );
     } catch (err: any) {
       alert(err.message || 'Location error.');
@@ -182,6 +240,14 @@ export default function EmployeeGatePassPage() {
               </p>
               <p className="text-sm text-slate-500 mt-1">Your store manager must approve this request before you can leave.</p>
             </div>
+            <Button
+              variant="outline"
+              className="border-rose-300 text-rose-600 hover:bg-rose-50 hover:border-rose-400 font-bold px-6 py-2 rounded-xl text-xs transition-colors"
+              onClick={handleCancelPending}
+              disabled={submitting}
+            >
+              {submitting ? 'Cancelling...' : '✕ Cancel Gate-Pass Request'}
+            </Button>
           </div>
         </div>
       ) : activeBreak ? (

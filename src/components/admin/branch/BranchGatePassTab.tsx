@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Clock, User, CheckCircle2, AlertTriangle, Plus, RefreshCw, LogOut } from 'lucide-react';
+import { Clock, User, CheckCircle2, AlertTriangle, Plus, RefreshCw, LogOut, Calendar, Search } from 'lucide-react';
 import { Branch } from './types';
 
 interface BranchGatePassTabProps {
@@ -35,6 +35,8 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
   const [breaks, setBreaks] = useState<BreakRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'pending' | 'active' | 'completed' | 'overstayed' | 'all'>('pending');
+  const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | 'all'>('today');
+  const [searchTerm, setSearchTerm] = useState('');
   
   // Modal states for issuing Gate Pass
   const [showIssueModal, setShowIssueModal] = useState(false);
@@ -48,7 +50,7 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
   const fetchBreaks = useCallback(async () => {
     setLoading(true);
     try {
-      const url = `/api/attendance/breaks/list?branch_id=${branch.id}${filter !== 'all' ? `&status=${filter}` : ''}`;
+      const url = `/api/attendance/breaks/list?branch_id=${branch.id}${filter !== 'all' ? `&status=${filter}` : ''}&date=${dateFilter}`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
@@ -59,7 +61,7 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
     } finally {
       setLoading(false);
     }
-  }, [branch.id, filter]);
+  }, [branch.id, filter, dateFilter]);
 
   const fetchEmployees = async () => {
     try {
@@ -178,7 +180,22 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
             Track temporary store exits (Prayer, Lunch, Bank duty) with live countdowns & overstay detection.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Date Selector */}
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 shadow-sm">
+            <Calendar className="w-3.5 h-3.5 text-[#1dbf73] shrink-0" />
+            <span className="text-[11px] font-bold text-slate-500 uppercase">Date:</span>
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value as any)}
+              className="bg-transparent text-xs text-slate-900 font-bold focus:outline-none cursor-pointer"
+            >
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="all">All Dates</option>
+            </select>
+          </div>
+
           <Button
             onClick={() => fetchBreaks()}
             variant="outline"
@@ -196,39 +213,72 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex space-x-2 border-b border-slate-200 pb-2 overflow-x-auto whitespace-nowrap">
-        {(['pending', 'active', 'overstayed', 'completed', 'all'] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setFilter(t)}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-all shrink-0 ${
-              filter === t
-                ? 'bg-[#1dbf73] text-white shadow-md'
-                : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
-            }`}
-          >
-            {t === 'pending' && '⏳ Pending Approvals'}
-            {t === 'active' && '🔴 Live Outside (Active)'}
-            {t === 'overstayed' && '⚠️ Overstayed Alerts'}
-            {t === 'completed' && '✅ Returned Today'}
-            {t === 'all' && '📋 All Passes'}
-          </button>
-        ))}
+      {/* Filter Tabs & Search */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+        <div className="flex space-x-2 overflow-x-auto whitespace-nowrap pb-1 md:pb-0">
+          {(['pending', 'active', 'overstayed', 'completed', 'all'] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setFilter(t)}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-all shrink-0 ${
+                filter === t
+                  ? 'bg-[#1dbf73] text-white shadow-md'
+                  : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+              }`}
+            >
+              {t === 'pending' && '⏳ Pending Approvals'}
+              {t === 'active' && '🔴 Live Outside (Active)'}
+              {t === 'overstayed' && '⚠️ Overstayed Alerts'}
+              {t === 'completed' && (dateFilter === 'today' ? '✅ Returned Today' : dateFilter === 'yesterday' ? '✅ Returned Yesterday' : '✅ Returned Passes')}
+              {t === 'all' && '📋 All Passes'}
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="relative w-full md:w-64">
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search staff or reason..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-8 pr-7 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 ring-[#1dbf73]/50 font-medium"
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
+          )}
+        </div>
       </div>
 
       {/* List of Gate Passes */}
       {loading ? (
         <div className="p-12 text-center text-slate-500 font-medium">Loading gate passes...</div>
-      ) : breaks.length === 0 ? (
+      ) : breaks.filter(item => {
+          if (!searchTerm) return true;
+          const term = searchTerm.toLowerCase();
+          const name = item.profiles?.full_name?.toLowerCase() || '';
+          const empId = item.profiles?.employee_id?.toLowerCase() || '';
+          const rsn = item.reason?.toLowerCase() || '';
+          return name.includes(term) || empId.includes(term) || rsn.includes(term);
+        }).length === 0 ? (
         <Card className="p-12 text-center border-slate-200 shadow-sm bg-white">
           <LogOut className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-900 font-bold">No {filter !== 'all' ? filter : ''} gate passes found right now.</p>
+          <p className="text-slate-900 font-bold">No {filter !== 'all' ? filter : ''} gate passes found{searchTerm ? ' matching search' : ''}.</p>
           <p className="text-xs text-slate-400 mt-1">When staff go out for Namaz or Bank duties, active passes will appear here live.</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {breaks.map((item) => {
+          {breaks
+            .filter(item => {
+              if (!searchTerm) return true;
+              const term = searchTerm.toLowerCase();
+              const name = item.profiles?.full_name?.toLowerCase() || '';
+              const empId = item.profiles?.employee_id?.toLowerCase() || '';
+              const rsn = item.reason?.toLowerCase() || '';
+              return name.includes(term) || empId.includes(term) || rsn.includes(term);
+            })
+            .map((item) => {
             const runningMins = (item.status === 'pending' || item.status === 'rejected') ? 0 : 
               (item.status === 'active' 
                 ? getRunningMinutes(item.out_time) 
@@ -379,8 +429,8 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
                   </div>
                 )}
                 
-                {/* Return button if active */}
-                {item.status === 'active' && (
+                {/* Return button if active or unreturned */}
+                {!item.return_time && (item.status === 'active' || item.status === 'overstayed') && (
                   <Button
                     onClick={() => handleVerifyReturn(item.id, item.profiles?.full_name || 'Employee')}
                     className="w-full bg-[#1dbf73] hover:bg-[#19a563] text-white font-bold text-xs py-2 mt-2"

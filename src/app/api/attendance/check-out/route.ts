@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const payload = checkOutSchema.parse(body);
 
     const supabase = await createClient();
-    const { data: profile } = await supabase.from('profiles').select('full_name, face_descriptor').eq('id', user.id).single();
+    const { data: profile } = await supabase.from('profiles').select('full_name, face_descriptor, face_enrolled, requires_face_reverification').eq('id', user.id).single();
 
     // 3. Biometric Verification Check (face match only — no liveness challenge required)
     if (payload.webauthn_verified) {
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       
       // Treat WebAuthn as a valid biometric verification
       payload.face_verified = true;
-      payload.is_manual_override = false;
+      // Do not override payload.is_manual_override here, as it might be true due to out-of-geofence check-out
     } else {
       if (!payload.face_verified || !payload.faceDescriptor || payload.faceDescriptor.length === 0) {
         return NextResponse.json(
@@ -64,16 +64,18 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // 3b. Verify against stored face descriptor
+      // 3b. Verify against stored face descriptor & reverification status
       
-      if (!profile || !profile.face_descriptor) {
+      if (!profile || !profile.face_descriptor || profile.face_enrolled === false || (profile as Record<string, unknown>).requires_face_reverification === true) {
         return NextResponse.json(
           {
             success: false,
             data: null,
             error: {
-              code: 'BIOMETRIC_ENROLLMENT_MISSING',
-              message: 'No facial biometric data found for this employee. Please register your face first.',
+              code: 'BIOMETRIC_REVERIFICATION_REQUIRED',
+              message: (profile as Record<string, unknown>)?.requires_face_reverification
+                ? 'Admin has cancelled and reset your face verification. You must re-verify your face.'
+                : 'No facial biometric data found for this employee. Please register your face first.',
             },
             timestamp: new Date().toISOString(),
           },

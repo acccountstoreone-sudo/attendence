@@ -29,11 +29,28 @@ export async function POST(request: NextRequest) {
       targetEmployeeId = input.employee_id;
     }
 
-    // 1. Find active break record
+    // Check if break_id was provided and already returned
+    if (input.break_id) {
+      const { data: existingBreak } = await supabase
+        .from('attendance_breaks')
+        .select('id, return_time, status')
+        .eq('id', input.break_id)
+        .maybeSingle();
+
+      if (existingBreak?.return_time) {
+        return NextResponse.json({
+          success: false,
+          error: 'This Gate-Pass has already been returned and verified.'
+        }, { status: 400 });
+      }
+    }
+
+    // 1. Find unreturned active break record
     let query = supabase
       .from('attendance_breaks')
       .select('*, profiles!attendance_breaks_employee_id_fkey(full_name, branch_id)')
-      .eq('status', 'active');
+      .is('return_time', null)
+      .in('status', ['active', 'overstayed']);
 
     if (input.break_id) {
       query = query.eq('id', input.break_id);
