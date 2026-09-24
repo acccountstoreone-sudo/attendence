@@ -78,6 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Audit Logs', href: '/admin/audit', icon: <ShieldAlert className="w-5 h-5" /> },
     { label: 'System Docs', href: '/admin/docs', icon: <BookOpen className="w-5 h-5 text-[#1dbf73]" /> },
     { label: 'Tickets', href: '/admin/tickets', icon: <Ticket className="w-5 h-5 text-indigo-500" /> },
+    { label: 'Announcements', href: '/admin/broadcast', icon: <Megaphone className="w-5 h-5" /> },
     { label: 'My Profile', href: '/admin/profile', icon: <User className="w-5 h-5" /> },
   ];
 
