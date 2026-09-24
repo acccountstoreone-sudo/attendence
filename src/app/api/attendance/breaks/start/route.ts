@@ -62,12 +62,12 @@ export async function POST(request: NextRequest) {
       if (activeBreak.status === 'pending') {
         return NextResponse.json({
           success: false,
-          error: `You already have a pending Gate-Pass request (${activeBreak.break_type.replace('_', ' ')}). Please wait for approval or cancel it.`
+          error: `You already have a pending Gate-Pass request (${activeBreak.break_type.replace(/_/g, ' ')}). Please wait for approval or cancel it.`
         }, { status: 409 });
       }
       return NextResponse.json({
         success: false,
-        error: `You already have an active Gate-Pass (${activeBreak.break_type.replace('_', ' ')}) running since ${new Date(activeBreak.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. Please verify return first.`
+        error: `You already have an active Gate-Pass (${activeBreak.break_type.replace(/_/g, ' ')}) running since ${new Date(activeBreak.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. Please verify return first.`
       }, { status: 409 });
     }
 

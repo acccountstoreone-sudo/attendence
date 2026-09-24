@@ -19,6 +19,7 @@ interface BreakRecord {
   return_time: string | null;
   status: string;
   reason: string;
+  created_at?: string;           // Bug B fix: was missing, forcing unsafe (item as any) casts
   actual_duration_minutes?: number;
   profiles?: { full_name?: string; photo_url?: string; profile_picture?: string; employee_id?: string; role?: string };
   branches?: { name?: string };
@@ -85,7 +86,12 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
 
   const handleIssueGatePass = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEmpId || !reason) return;
+    // Bug 3 fix: surface a clear error if employee list failed to load
+    if (!selectedEmpId) {
+      alert('No employee selected. The employee list may have failed to load — please close and re-open the modal.');
+      return;
+    }
+    if (!reason) return;
     setSubmitting(true);
     try {
       const res = await fetch('/api/attendance/breaks/start', {
@@ -252,16 +258,20 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
       </div>
 
       {/* List of Gate Passes */}
-      {loading ? (
-        <div className="p-12 text-center text-slate-500 font-medium">Loading gate passes...</div>
-      ) : breaks.filter(item => {
+      {/* Bug 4 fix: compute the filtered list once and reuse it in both the empty-state
+          check and the card map, eliminating the duplicated predicate. */}
+      {(() => {
+        const filteredBreaks = breaks.filter(item => {
           if (!searchTerm) return true;
           const term = searchTerm.toLowerCase();
           const name = item.profiles?.full_name?.toLowerCase() || '';
           const empId = item.profiles?.employee_id?.toLowerCase() || '';
           const rsn = item.reason?.toLowerCase() || '';
           return name.includes(term) || empId.includes(term) || rsn.includes(term);
-        }).length === 0 ? (
+        });
+        return loading ? (
+        <div className="p-12 text-center text-slate-500 font-medium">Loading gate passes...</div>
+      ) : filteredBreaks.length === 0 ? (
         <Card className="p-12 text-center border-slate-200 shadow-sm bg-white">
           <LogOut className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <p className="text-slate-900 font-bold">No {filter !== 'all' ? filter : ''} gate passes found{searchTerm ? ' matching search' : ''}.</p>
@@ -269,24 +279,27 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {breaks
-            .filter(item => {
-              if (!searchTerm) return true;
-              const term = searchTerm.toLowerCase();
-              const name = item.profiles?.full_name?.toLowerCase() || '';
-              const empId = item.profiles?.employee_id?.toLowerCase() || '';
-              const rsn = item.reason?.toLowerCase() || '';
-              return name.includes(term) || empId.includes(term) || rsn.includes(term);
-            })
+          {filteredBreaks
             .map((item) => {
-            const runningMins = (item.status === 'pending' || item.status === 'rejected') ? 0 : 
-              (item.status === 'active' 
-                ? getRunningMinutes(item.out_time) 
-                : (item.actual_duration_minutes || (item.return_time ? Math.max(1, Math.round((new Date(item.return_time).getTime() - new Date(item.out_time).getTime()) / 60000)) : getRunningMinutes(item.out_time))));
+            // Bug 8 fix: derive runningMins by checking return_time presence first.
+            // Previously, an active-overstay with no return_time fell into the else branch
+            // and attempted actual_duration_minutes (null), causing silent fallback issues.
+            const runningMins =
+              (item.status === 'pending' || item.status === 'rejected') ? 0
+              : !item.return_time
+                ? getRunningMinutes(item.out_time)
+                : (item.actual_duration_minutes ??
+                    Math.max(1, Math.round(
+                      (new Date(item.return_time).getTime() - new Date(item.out_time).getTime()) / 60000
+                    )));
             
             const isPending = item.status === 'pending';
             const isRejected = item.status === 'rejected';
-            const isReturned = item.status === 'completed' || item.status === 'overstayed';
+            // Bug A fix: use return_time as the source of truth for whether an employee
+            // has physically returned. status='overstayed' is also applied to employees
+            // who are STILL OUTSIDE past their limit — so checking status alone causes
+            // live-overstayed cards to incorrectly render as "RETURNED LATE".
+            const isReturned = item.return_time !== null;
             const lateMins = Math.max(0, runningMins - item.expected_duration_minutes);
             const isLate = lateMins > 0;
             
@@ -387,8 +400,11 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
                   <div className="flex justify-between">
                     <span className="font-medium text-slate-400">{isPending ? 'Requested At:' : 'Out Time:'}</span>
                     <span className="font-bold text-slate-800">
-                      {isPending 
-                        ? new Date((item as any).created_at || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                      {isPending
+                        // created_at is now typed on BreakRecord (Bug B fix) — no cast needed
+                        ? (item.created_at
+                            ? new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            : 'N/A')
                         : (item.out_time ? new Date(item.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A')}
                     </span>
                   </div>
@@ -442,7 +458,8 @@ export const BranchGatePassTab: React.FC<BranchGatePassTabProps> = ({ branch }) 
             );
           })}
         </div>
-      )}
+      ) /* end filteredBreaks.length === 0 ternary */
+      })() /* end IIFE */}
 
       {/* Issue Gate Pass Modal */}
       {showIssueModal && (

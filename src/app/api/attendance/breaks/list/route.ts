@@ -58,7 +58,8 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     let query = supabase
       .from('attendance_breaks')
-      .select('*, profiles!attendance_breaks_employee_id_fkey(full_name, employee_id, role, photo_url), branches(name, code)', { count: 'exact' });
+      // Bug 9 fix: include profile_picture so the UI avatar fallback (photo_url ?? profile_picture) works
+      .select('*, profiles!attendance_breaks_employee_id_fkey(full_name, employee_id, role, photo_url, profile_picture), branches(name, code)', { count: 'exact' });
 
     // Role-based scoping
     if (user.role === 'employee') {

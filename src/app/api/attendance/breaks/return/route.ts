@@ -68,9 +68,16 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
+    // Bug 1 fix: Enforce branch-ownership check immediately after finding the record,
+    // regardless of whether break_id or employee_id was used to locate it.
+    if (user.role === 'branch_manager' && breakRecord.branch_id !== user.branch_id) {
+      throw new Error('FORBIDDEN: This Gate-Pass belongs to another store.');
+    }
+
     // GPS Location Verification for Employees Returning Themselves
     if (user.role === 'employee') {
-      if (!input.latitude || !input.longitude) {
+      // Bug 6 fix: use == null instead of falsy check so valid coordinate 0 is accepted
+      if (input.latitude == null || input.longitude == null) {
         return NextResponse.json({
           success: false,
           error: {
@@ -115,10 +122,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Role check if verifying someone else's break
-    if (user.role === 'branch_manager' && breakRecord.branch_id !== user.branch_id) {
-      throw new Error('FORBIDDEN: This Gate-Pass belongs to another store.');
-    }
+    // Branch ownership already verified above immediately after finding breakRecord.
 
     const now = new Date();
     const outTime = new Date(breakRecord.out_time);

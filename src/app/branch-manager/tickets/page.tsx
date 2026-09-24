@@ -14,13 +14,20 @@ import { createClient } from '@/lib/supabase/client';
 
 interface TicketData {
   id: string;
+  complaint_id: string;
+  ticket_datetime: string;
   customer_name: string;
   mobile_number: string;
-  phone_number?: string;
-  problem?: string;
-  ticket_date: string;
-  product_price: number;
-  status: 'pending' | 'in_review' | 'success';
+  invoice_no?: string;
+  product_details?: string;
+  complaint_type?: string;
+  complaint_details?: string;
+  employee_name?: string;
+  priority: string;
+  status: 'pending' | 'processing' | 'resolved' | 'closed';
+  action_taken?: string;
+  remarks?: string;
+  follow_up_date?: string;
   created_at: string;
 }
 
@@ -120,10 +127,11 @@ export default function BranchManagerTicketsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                  <th className="px-6 py-4">ID & Date</th>
                   <th className="px-6 py-4">Customer</th>
-                  <th className="px-6 py-4">Problem</th>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4">Product Price</th>
+                  <th className="px-6 py-4">Employee</th>
+                  <th className="px-6 py-4">Details</th>
+                  <th className="px-6 py-4">Priority</th>
                   <th className="px-6 py-4">Status</th>
                 </tr>
               </thead>
@@ -131,42 +139,49 @@ export default function BranchManagerTicketsPage() {
                 {filteredTickets.map(ticket => (
                   <tr key={ticket.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4">
+                      <div className="font-bold text-indigo-600">{ticket.complaint_id}</div>
+                      <div className="text-slate-500 text-xs flex items-center mt-1">
+                        <CalendarDays className="w-3 h-3 mr-1" />
+                        {new Date(ticket.ticket_datetime).toLocaleString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
                       <div className="font-bold text-slate-900">{ticket.customer_name}</div>
                       <div className="text-slate-500 text-xs flex items-center mt-1">
                         <Phone className="w-3 h-3 mr-1" />
                         {ticket.mobile_number}
-                        {ticket.phone_number && <span>, {ticket.phone_number}</span>}
                       </div>
+                      {ticket.invoice_no && (
+                        <div className="text-slate-500 text-xs mt-1">Inv: {ticket.invoice_no}</div>
+                      )}
                     </td>
-                    <td className="px-6 py-4 text-slate-600 max-w-xs truncate" title={ticket.problem || 'No problem described'}>
-                      {ticket.problem || '-'}
+                    <td className="px-6 py-4 text-slate-700">
+                      {ticket.employee_name || '-'}
                     </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      <div className="flex items-center">
-                        <CalendarDays className="w-4 h-4 mr-1 text-slate-400" />
-                        {new Date(ticket.ticket_date).toLocaleDateString()}
-                      </div>
+                    <td className="px-6 py-4 text-slate-600 max-w-xs truncate" title={ticket.complaint_details || 'No details'}>
+                      <span className="font-semibold text-slate-800 block text-xs mb-1">{ticket.complaint_type}</span>
+                      {ticket.product_details && <div className="text-xs text-slate-500 mb-1">Prod: {ticket.product_details}</div>}
+                      {ticket.complaint_details || '-'}
                     </td>
-                    <td className="px-6 py-4 font-semibold text-slate-900">
-                      <div className="flex items-center">
-                        <DollarSign className="w-4 h-4 mr-1 text-emerald-500" />
-                        {ticket.product_price.toLocaleString()}
-                      </div>
+                    <td className="px-6 py-4 font-semibold">
+                      <span className={`text-xs px-2 py-1 rounded-full ${ticket.priority === 'Urgent' ? 'bg-rose-100 text-rose-700' : ticket.priority === 'High' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-700'}`}>
+                        {ticket.priority}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        ticket.status === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                        ticket.status === 'in_review' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                        ticket.status === 'resolved' || ticket.status === 'closed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        ticket.status === 'processing' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                         'bg-slate-100 text-slate-700 border-slate-200'
                       }`}>
-                        {ticket.status.replace('_', ' ').toUpperCase()}
+                        {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
                       </span>
                     </td>
                   </tr>
                 ))}
                 {filteredTickets.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
                       <Ticket className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                       <p>No tickets found for your branch.</p>
                     </td>
