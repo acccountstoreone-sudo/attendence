@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
       title: `${targetEmployeeName} ${isEmployeeRequest ? 'requested' : 'started'} ${breakTitle}`,
       message: `${isEmployeeRequest ? 'Requested at' : 'Out time'}: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} | Expected: ${input.expected_duration_minutes} mins | Reason: "${input.reason}"`,
       type: 'warning',
-      actionUrl: `/admin/attendance?branch=${targetBranchId}&tab=breaks`,
+      actionUrl: `/branch-manager/gate-passes`,
     });
 
     await dispatchToAdmins({

@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
         title: `⚠️ Gate-Pass Overstay Alert: ${empName}`,
         message: `Returned from ${breakTitle} after ${actualDurationMinutes}m (Expected: ${breakRecord.expected_duration_minutes}m. Overstayed by ${actualDurationMinutes - breakRecord.expected_duration_minutes}m).`,
         type: 'alert',
-        actionUrl: `/admin/attendance?branch=${breakRecord.branch_id}&tab=breaks`,
+        actionUrl: `/branch-manager/gate-passes`,
       });
       await dispatchToAdmins({
         title: `⚠️ Gate-Pass Overstay: ${empName}`,
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
         title: `✅ ${empName} Returned to Store`,
         message: `Verified return from ${breakTitle} inside allowed limit (${actualDurationMinutes} mins total).`,
         type: 'success',
-        actionUrl: `/admin/attendance?branch=${breakRecord.branch_id}&tab=breaks`,
+        actionUrl: `/branch-manager/gate-passes`,
       });
     }
 
