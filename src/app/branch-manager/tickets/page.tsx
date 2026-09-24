@@ -74,6 +74,7 @@ export default function BranchManagerTicketsPage() {
   }, [loadData]);
 
   const filteredTickets = tickets.filter(t => 
+    (t.complaint_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (t.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (t.mobile_number || '').includes(searchTerm)
   );
@@ -108,7 +109,7 @@ export default function BranchManagerTicketsPage() {
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
-            placeholder="Search tickets by customer name or phone..."
+            placeholder="Search by Complaint ID, Customer Name or Phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
