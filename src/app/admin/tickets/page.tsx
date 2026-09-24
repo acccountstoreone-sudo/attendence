@@ -66,7 +66,10 @@ export default function AdminTicketsPage() {
     complaint_type: 'Other',
     complaint_details: '',
     employee_name: '',
-    priority: 'Medium'
+    priority: 'Medium',
+    action_taken: '',
+    remarks: '',
+    follow_up_date: ''
   });
 
   const loadData = useCallback(async () => {
@@ -125,7 +128,10 @@ export default function AdminTicketsPage() {
         complaint_type: formData.complaint_type,
         complaint_details: formData.complaint_details || null,
         employee_name: formData.employee_name || null,
-        priority: formData.priority
+        priority: formData.priority,
+        action_taken: formData.action_taken || null,
+        remarks: formData.remarks || null,
+        follow_up_date: formData.follow_up_date || null
       }]);
 
       if (error) throw error;
@@ -142,7 +148,10 @@ export default function AdminTicketsPage() {
         complaint_type: 'Other',
         complaint_details: '',
         employee_name: '',
-        priority: 'Medium'
+        priority: 'Medium',
+        action_taken: '',
+        remarks: '',
+        follow_up_date: ''
       });
       loadData();
     } catch (err: unknown) {
@@ -269,12 +278,24 @@ export default function AdminTicketsPage() {
                     <td className="px-6 py-4 text-slate-600 max-w-xs truncate" title={ticket.complaint_details || 'No details'}>
                       <span className="font-semibold text-slate-800 block text-xs mb-1">{ticket.complaint_type}</span>
                       {ticket.product_details && <div className="text-xs text-slate-500 mb-1">Prod: {ticket.product_details}</div>}
-                      {ticket.complaint_details || '-'}
+                      <div className="whitespace-normal">{ticket.complaint_details || '-'}</div>
+                      {(ticket.action_taken || ticket.remarks) && (
+                        <div className="mt-2 text-xs border-t border-slate-200 pt-2 whitespace-normal">
+                          {ticket.action_taken && <div className="text-indigo-700 mb-1"><span className="font-semibold">Action:</span> {ticket.action_taken}</div>}
+                          {ticket.remarks && <div className="text-slate-500"><span className="font-semibold">Remarks:</span> {ticket.remarks}</div>}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 font-semibold">
                       <span className={`text-xs px-2 py-1 rounded-full ${ticket.priority === 'Urgent' ? 'bg-rose-100 text-rose-700' : ticket.priority === 'High' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-700'}`}>
                         {ticket.priority}
                       </span>
+                      {ticket.follow_up_date && (
+                        <div className="mt-2 text-xs text-slate-600 flex items-center font-medium bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-max">
+                          <CalendarDays className="w-3 h-3 mr-1 text-indigo-500" />
+                          F/U: {new Date(ticket.follow_up_date).toLocaleDateString()}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
@@ -443,14 +464,45 @@ export default function AdminTicketsPage() {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Employee Name</label>
+                  <input
+                    type="text"
+                    placeholder="Who took the complaint?"
+                    value={formData.employee_name}
+                    onChange={e => setFormData({...formData, employee_name: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Follow-up Date</label>
+                  <input
+                    type="date"
+                    value={formData.follow_up_date}
+                    onChange={e => setFormData({...formData, follow_up_date: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Employee Name</label>
-                <input
-                  type="text"
-                  placeholder="Who took the complaint?"
-                  value={formData.employee_name}
-                  onChange={e => setFormData({...formData, employee_name: e.target.value})}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Action Taken</label>
+                <textarea
+                  placeholder="What action was taken?"
+                  value={formData.action_taken}
+                  onChange={e => setFormData({...formData, action_taken: e.target.value})}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors min-h-[60px]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Remarks</label>
+                <textarea
+                  placeholder="Any additional remarks..."
+                  value={formData.remarks}
+                  onChange={e => setFormData({...formData, remarks: e.target.value})}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors min-h-[60px]"
                 />
               </div>
 

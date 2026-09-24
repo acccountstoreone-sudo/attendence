@@ -161,12 +161,24 @@ export default function BranchManagerTicketsPage() {
                     <td className="px-6 py-4 text-slate-600 max-w-xs truncate" title={ticket.complaint_details || 'No details'}>
                       <span className="font-semibold text-slate-800 block text-xs mb-1">{ticket.complaint_type}</span>
                       {ticket.product_details && <div className="text-xs text-slate-500 mb-1">Prod: {ticket.product_details}</div>}
-                      {ticket.complaint_details || '-'}
+                      <div className="whitespace-normal">{ticket.complaint_details || '-'}</div>
+                      {(ticket.action_taken || ticket.remarks) && (
+                        <div className="mt-2 text-xs border-t border-slate-200 pt-2 whitespace-normal">
+                          {ticket.action_taken && <div className="text-indigo-700 mb-1"><span className="font-semibold">Action:</span> {ticket.action_taken}</div>}
+                          {ticket.remarks && <div className="text-slate-500"><span className="font-semibold">Remarks:</span> {ticket.remarks}</div>}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 font-semibold">
                       <span className={`text-xs px-2 py-1 rounded-full ${ticket.priority === 'Urgent' ? 'bg-rose-100 text-rose-700' : ticket.priority === 'High' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-700'}`}>
                         {ticket.priority}
                       </span>
+                      {ticket.follow_up_date && (
+                        <div className="mt-2 text-xs text-slate-600 flex items-center font-medium bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-max">
+                          <CalendarDays className="w-3 h-3 mr-1 text-indigo-500" />
+                          F/U: {new Date(ticket.follow_up_date).toLocaleDateString()}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
