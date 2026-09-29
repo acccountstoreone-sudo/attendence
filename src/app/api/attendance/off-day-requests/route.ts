@@ -77,9 +77,13 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { requestId, status, reviewer_note } = body;
+    const { requestId, status: actionStatus, reviewer_note } = body;
 
-    if (!requestId || !['approved', 'rejected'].includes(status)) {
+    let finalStatus = actionStatus;
+    if (actionStatus === 'approve') finalStatus = 'approved';
+    if (actionStatus === 'reject') finalStatus = 'rejected';
+
+    if (!requestId || !['approved', 'rejected'].includes(finalStatus)) {
       return NextResponse.json({ success: false, error: 'Invalid payload' }, { status: 400 });
     }
 
@@ -102,7 +106,7 @@ export async function POST(req: Request) {
     const { data: updated, error: updateErr } = await supabase
       .from('off_day_overtime_requests')
       .update({
-        status,
+        status: finalStatus,
         reviewer_note,
         approved_by: user.id,
         approved_at: new Date().toISOString()

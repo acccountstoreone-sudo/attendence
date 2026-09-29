@@ -62,6 +62,21 @@ export async function POST(
       const recordId = correction.record_id;
 
       if (recordId) {
+        // Fetch existing record to validate constraint before updating
+        const { data: existingRec } = await supabase.from('attendance_records').select('check_in_time, check_out_time').eq('id', recordId).single();
+        if (existingRec) {
+          if (correction.type === 'check_in' && existingRec.check_out_time) {
+            if (new Date(requestedISO) > new Date(existingRec.check_out_time)) {
+              return NextResponse.json({ success: false, error: 'Cannot approve: The requested check-in time is later than the existing check-out time.' }, { status: 422 });
+            }
+          }
+          if (correction.type === 'check_out' && existingRec.check_in_time) {
+            if (new Date(requestedISO) < new Date(existingRec.check_in_time)) {
+              return NextResponse.json({ success: false, error: 'Cannot approve: The requested check-out time is earlier than the existing check-in time.' }, { status: 422 });
+            }
+          }
+        }
+
         // Update existing record
         const updateField = correction.type === 'check_in' ? { check_in_time: requestedISO } : { check_out_time: requestedISO };
         const { error: recUpdErr } = await supabase
@@ -102,6 +117,18 @@ export async function POST(
 
         if (existingRecs && existingRecs.length > 0) {
           const targetRec = correction.type === 'check_in' ? existingRecs[0] : existingRecs[existingRecs.length - 1];
+          
+          if (correction.type === 'check_in' && targetRec.check_out_time) {
+            if (new Date(requestedISO) > new Date(targetRec.check_out_time)) {
+              return NextResponse.json({ success: false, error: 'Cannot approve: The requested check-in time is later than the existing check-out time.' }, { status: 422 });
+            }
+          }
+          if (correction.type === 'check_out' && targetRec.check_in_time) {
+            if (new Date(requestedISO) < new Date(targetRec.check_in_time)) {
+              return NextResponse.json({ success: false, error: 'Cannot approve: The requested check-out time is earlier than the existing check-in time.' }, { status: 422 });
+            }
+          }
+
           const updateField = correction.type === 'check_in' ? { check_in_time: requestedISO } : { check_out_time: requestedISO };
           const { error: elseUpdErr } = await supabase.from('attendance_records').update({
             ...updateField,
