@@ -36,6 +36,9 @@ interface TicketData {
   action_taken?: string;
   remarks?: string;
   follow_up_date?: string;
+  compliment?: string;
+  call_status?: string;
+  call_note?: string;
   created_at: string;
   branches?: { name: string };
 }
@@ -69,7 +72,10 @@ export default function AdminTicketsPage() {
     priority: 'Medium',
     action_taken: '',
     remarks: '',
-    follow_up_date: ''
+    follow_up_date: '',
+    compliment: '',
+    call_status: 'Not Called',
+    call_note: ''
   });
 
   const loadData = useCallback(async () => {
@@ -113,6 +119,22 @@ export default function AdminTicketsPage() {
     }
   };
 
+  const handleCallStatusChange = async (ticketId: string, newCallStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('tickets')
+        .update({ call_status: newCallStatus })
+        .eq('id', ticketId);
+
+      if (error) throw error;
+      
+      setFeedback({ type: 'success', text: 'Call status updated successfully.' });
+      loadData();
+    } catch (err: unknown) {
+      setFeedback({ type: 'error', text: (err as Error).message || 'Failed to update call status.' });
+    }
+  };
+
   const handleCreateTicket = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -131,7 +153,10 @@ export default function AdminTicketsPage() {
         priority: formData.priority,
         action_taken: formData.action_taken || null,
         remarks: formData.remarks || null,
-        follow_up_date: formData.follow_up_date || null
+        follow_up_date: formData.follow_up_date || null,
+        compliment: formData.compliment || null,
+        call_status: formData.call_status,
+        call_note: formData.call_note || null
       }]);
 
       if (error) throw error;
@@ -151,7 +176,10 @@ export default function AdminTicketsPage() {
         priority: 'Medium',
         action_taken: '',
         remarks: '',
-        follow_up_date: ''
+        follow_up_date: '',
+        compliment: '',
+        call_status: 'Not Called',
+        call_note: ''
       });
       loadData();
     } catch (err: unknown) {
@@ -242,7 +270,7 @@ export default function AdminTicketsPage() {
                   <th className="px-6 py-4">Customer</th>
                   <th className="px-6 py-4">Branch & Emp</th>
                   <th className="px-6 py-4">Details</th>
-                  <th className="px-6 py-4">Priority</th>
+                  <th className="px-6 py-4">Priority & Call</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Actions</th>
                 </tr>
@@ -297,6 +325,29 @@ export default function AdminTicketsPage() {
                           F/U: {new Date(ticket.follow_up_date).toLocaleDateString()}
                         </div>
                       )}
+                      
+                      <div className="mt-3">
+                        <select 
+                          value={ticket.call_status || 'Not Called'}
+                          onChange={(e) => handleCallStatusChange(ticket.id, e.target.value)}
+                          className="text-xs border border-slate-200 rounded-lg bg-white px-2 py-1 outline-none focus:border-indigo-500 font-normal w-full"
+                        >
+                          <option value="Not Called">📞 Not Called</option>
+                          <option value="Received">✅ Received</option>
+                          <option value="Not Answered">❌ Not Answered</option>
+                          <option value="Unreachable">📵 Unreachable</option>
+                        </select>
+                        {ticket.call_note && (
+                          <div className="text-[10px] text-slate-500 mt-1 font-normal break-words max-w-[150px]">
+                            {ticket.call_note}
+                          </div>
+                        )}
+                        {ticket.compliment && (
+                          <div className="text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 mt-1 font-normal break-words max-w-[150px]">
+                            {ticket.compliment}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
@@ -485,6 +536,43 @@ export default function AdminTicketsPage() {
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Call Status</label>
+                  <select
+                    value={formData.call_status}
+                    onChange={e => setFormData({...formData, call_status: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                  >
+                    <option value="Not Called">Not Called</option>
+                    <option value="Received">Received</option>
+                    <option value="Not Answered">Not Answered</option>
+                    <option value="Unreachable">Unreachable</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Call Note</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Customer will come tomorrow"
+                    value={formData.call_note}
+                    onChange={e => setFormData({...formData, call_note: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Compliment</label>
+                <input
+                  type="text"
+                  placeholder="Any compliment or positive feedback..."
+                  value={formData.compliment}
+                  onChange={e => setFormData({...formData, compliment: e.target.value})}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                />
               </div>
 
               <div>
