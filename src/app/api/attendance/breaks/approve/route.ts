@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { getAdminClient } from '@/lib/supabase/admin';
 import { dispatchNotification } from '@/lib/notification-service';
 import { z } from 'zod';
 
@@ -48,11 +49,13 @@ export async function POST(request: NextRequest) {
       throw new Error('FORBIDDEN: You can only approve gate passes for your own store.');
     }
 
+    const adminClient = getAdminClient(supabase);
+
     // 2. Update the status
     const newStatus = input.action === 'approve' ? 'active' : 'rejected';
     const outTime = input.action === 'approve' ? new Date().toISOString() : null;
 
-    const { data: updatedBreak, error: updateErr } = await supabase
+    const { data: updatedBreak, error: updateErr } = await adminClient
       .from('attendance_breaks')
       .update({
         status: newStatus,
