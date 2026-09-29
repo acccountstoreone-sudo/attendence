@@ -3,6 +3,8 @@ import { requireRole, handleApiError } from '@/lib/auth';
 import { dispatchToBranchStaff, dispatchToBranchManagers } from '@/lib/notification-service';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const broadcastSchema = z.object({
   title: z.string().min(2),
   message: z.string().min(2),

@@ -2,27 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRole, handleApiError } from '@/lib/auth';
 import { getAdminClient } from '@/lib/supabase/admin';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    await requireRole(['admin']);
+    const user = await requireRole(['admin', 'branch_manager']);
     const adminClient = getAdminClient();
     if (!adminClient) {
       throw new Error('Admin client not available');
     }
 
     // Fetch latest system notifications to derive broadcast history
-    const { data, error } = await adminClient
+    let query = adminClient
       .from('notifications')
-      .select('title, message, created_at')
+      .select('title, message, created_at, user_id')
       .eq('type', 'system')
       .order('created_at', { ascending: false })
-      .limit(1000);
+      .limit(500);
+
+    const { data, error } = await query;
 
     if (error) {
       throw new Error(`DB Error: ${error.message}`);
     }
 
-    // Deduplicate broadcasts
+    // Deduplicate broadcasts — group by title + message + hour window
     const history: any[] = [];
     const seen = new Set<string>();
 

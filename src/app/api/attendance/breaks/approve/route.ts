@@ -11,12 +11,13 @@ const approveBreakSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // Bug 2 fix: Employees are excluded from this endpoint. Only BMs and admins may
-    // approve or reject gate passes. Employees cancel their own pending requests via
-    // a dedicated self-cancel flow (action=reject on /api/attendance/breaks/cancel).
-    const user = await requireRole(['branch_manager', 'admin']);
+    const user = await requireRole(['employee', 'branch_manager', 'admin']);
     const body = await request.json();
     const input = approveBreakSchema.parse(body);
+
+    if (user.role === 'employee' && input.action !== 'reject') {
+      throw new Error('FORBIDDEN: Employees can only cancel their own requests.');
+    }
 
     const supabase = await createClient();
 
@@ -38,7 +39,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Only branch managers and admins reach this point (requireRole enforces this).
+    if (user.role === 'employee' && breakRecord.employee_id !== user.id) {
+      throw new Error('FORBIDDEN: You can only cancel your own gate pass.');
+    }
+
+    // Only branch managers and admins reach this point for approval.
     if (user.role === 'branch_manager' && breakRecord.branch_id !== user.branch_id) {
       throw new Error('FORBIDDEN: You can only approve gate passes for your own store.');
     }
@@ -79,7 +84,8 @@ export async function POST(request: NextRequest) {
         type: 'attendance_approval',
         actionUrl: '/employee/gate-pass',
       }).catch(err => console.error('Failed to dispatch notification:', err));
-    } else {
+    } else if (user.role !== 'employee') {
+      // Only notify employee on rejection if it's done by a manager (not self-cancel)
       dispatchNotification({
         userId: breakRecord.employee_id,
         title: `Gate Pass Request Declined: ${title}`,

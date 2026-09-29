@@ -119,7 +119,7 @@ export default function EmployeeAnnouncementsPage() {
                 </div>
                 
                 <div className="space-y-4 flex flex-col">
-                  {grouped[dateKey].reverse().map((announcement: any) => {
+                  {grouped[dateKey].map((announcement: any) => {
                     const dateObj = new Date(announcement.created_at);
                     const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                     const isUnread = !announcement.is_read;

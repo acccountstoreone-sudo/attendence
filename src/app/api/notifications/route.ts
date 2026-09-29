@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { dispatchNotification } from '@/lib/notification-service';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const createNotificationSchema = z.object({
   user_id: z.string().uuid(),
   title: z.string().min(2),
