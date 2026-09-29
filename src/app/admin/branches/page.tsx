@@ -73,7 +73,6 @@ export default function AdminBranchesPage() {
     setLoading(false);
   }, [supabase]);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadBranches(); }, [loadBranches]);
 
   // View Details -> Navigate to /admin/branches/[id]

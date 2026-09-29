@@ -77,7 +77,7 @@ export default function BranchManagerMembershipsPage() {
           Verify Membership & Discount
         </h1>
         <p className="text-sm text-slate-600">
-          Enter the customer's registered phone number to verify their VIP membership and available discounts.
+          Enter the customer&apos;s registered phone number to verify their VIP membership and available discounts.
         </p>
       </div>
 
@@ -121,7 +121,7 @@ export default function BranchManagerMembershipsPage() {
                   <div className="bg-white border border-rose-200 p-6 rounded-2xl shadow-xl text-center max-w-sm">
                     <XCircle className="w-12 h-12 text-rose-500 mx-auto mb-3" />
                     <h3 className="text-xl font-bold text-rose-700">Membership Inactive</h3>
-                    <p className="text-sm text-slate-600 mt-2">This customer's membership is currently inactive. No discount applies.</p>
+                    <p className="text-sm text-slate-600 mt-2">This customer&apos;s membership is currently inactive. No discount applies.</p>
                   </div>
                 </div>
               )}
@@ -154,7 +154,7 @@ export default function BranchManagerMembershipsPage() {
                     <Percent className="w-10 h-10 text-indigo-500 ml-1" />
                   </div>
                   <p className="text-indigo-800 text-sm mt-4 font-medium">
-                    Apply a {result.discount_percentage}% discount on the customer's total purchase.
+                    Apply a {result.discount_percentage}% discount on the customer&apos;s total purchase.
                   </p>
                 </div>
               </div>
