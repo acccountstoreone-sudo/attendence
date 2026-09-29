@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       const { error: updateError } = await adminClient
         .from('profiles')
         .update({
-          registration_step: 'rejected',
+          registration_step: 'kyc', // Send them back to KYC step to re-upload documents
           kyc_status: 'rejected',
           is_active: false,
         })
