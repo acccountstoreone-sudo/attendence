@@ -12,8 +12,7 @@ import {
   Plus,
   CheckCircle2,
   XCircle,
-  X,
-  Store
+  X
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
