@@ -11,7 +11,11 @@ import {
   XCircle,
   Percent,
   User,
-  ShieldCheck
+  ShieldCheck,
+  Star,
+  Gift,
+  Mail,
+  Award
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -20,6 +24,11 @@ interface Membership {
   customer_name: string;
   customer_phone: string;
   discount_percentage: number;
+  email?: string;
+  date_of_birth?: string;
+  total_spent: number;
+  reward_points: number;
+  membership_tier: string;
   status: boolean;
 }
 
@@ -144,6 +153,40 @@ export default function BranchManagerMembershipsPage() {
                     <div className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200 mb-2">
                       <CheckCircle2 className="w-3 h-3 mr-1" /> Active Member
                     </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center">
+                    <Award className="w-6 h-6 text-indigo-500 mb-1" />
+                    <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Tier</span>
+                    <span className={`text-sm font-bold mt-1 px-2 py-0.5 rounded-full ${
+                      result.membership_tier === 'VIP' ? 'bg-purple-100 text-purple-700' :
+                      result.membership_tier === 'Platinum' ? 'bg-slate-800 text-slate-200' :
+                      result.membership_tier === 'Gold' ? 'bg-amber-100 text-amber-700' :
+                      'bg-slate-200 text-slate-700'
+                    }`}>
+                      {result.membership_tier || 'Silver'}
+                    </span>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center">
+                    <Star className="w-6 h-6 text-amber-500 mb-1" />
+                    <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Points</span>
+                    <span className="text-base font-bold text-slate-800 mt-1">{result.reward_points || 0}</span>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center">
+                    <Gift className="w-6 h-6 text-rose-500 mb-1" />
+                    <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Birthday</span>
+                    <span className="text-sm font-bold text-slate-800 mt-1">
+                      {result.date_of_birth ? new Date(result.date_of_birth).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center">
+                    <Mail className="w-6 h-6 text-sky-500 mb-1" />
+                    <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Email</span>
+                    <span className="text-xs font-bold text-slate-800 mt-1 break-all px-1">
+                      {result.email || 'N/A'}
+                    </span>
                   </div>
                 </div>
 

@@ -24,6 +24,11 @@ interface Membership {
   customer_name: string;
   customer_phone: string;
   discount_percentage: number;
+  email?: string;
+  date_of_birth?: string;
+  total_spent: number;
+  reward_points: number;
+  membership_tier: string;
   status: boolean;
   created_at: string;
 }
@@ -44,6 +49,11 @@ export default function AdminMembershipsPage() {
     customer_name: '',
     customer_phone: '',
     discount_percentage: 10,
+    email: '',
+    date_of_birth: '',
+    total_spent: 0,
+    reward_points: 0,
+    membership_tier: 'Silver',
     status: true
   });
 
@@ -81,6 +91,11 @@ export default function AdminMembershipsPage() {
             customer_name: formData.customer_name,
             customer_phone: formData.customer_phone,
             discount_percentage: formData.discount_percentage,
+            email: formData.email || null,
+            date_of_birth: formData.date_of_birth || null,
+            total_spent: formData.total_spent,
+            reward_points: formData.reward_points,
+            membership_tier: formData.membership_tier,
             status: formData.status,
             updated_at: new Date().toISOString()
           })
@@ -93,6 +108,11 @@ export default function AdminMembershipsPage() {
           customer_name: formData.customer_name,
           customer_phone: formData.customer_phone,
           discount_percentage: formData.discount_percentage,
+          email: formData.email || null,
+          date_of_birth: formData.date_of_birth || null,
+          total_spent: formData.total_spent,
+          reward_points: formData.reward_points,
+          membership_tier: formData.membership_tier,
           status: formData.status,
           created_by: userData?.user?.id
         }]);
@@ -112,7 +132,10 @@ export default function AdminMembershipsPage() {
   };
 
   const resetForm = () => {
-    setFormData({ id: '', customer_name: '', customer_phone: '', discount_percentage: 10, status: true });
+    setFormData({ 
+      id: '', customer_name: '', customer_phone: '', discount_percentage: 10, 
+      email: '', date_of_birth: '', total_spent: 0, reward_points: 0, membership_tier: 'Silver', status: true 
+    });
     setIsEditing(false);
   };
 
@@ -127,6 +150,11 @@ export default function AdminMembershipsPage() {
       customer_name: member.customer_name,
       customer_phone: member.customer_phone,
       discount_percentage: member.discount_percentage,
+      email: member.email || '',
+      date_of_birth: member.date_of_birth || '',
+      total_spent: member.total_spent || 0,
+      reward_points: member.reward_points || 0,
+      membership_tier: member.membership_tier || 'Silver',
       status: member.status
     });
     setIsEditing(true);
@@ -206,6 +234,7 @@ export default function AdminMembershipsPage() {
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                   <th className="px-6 py-4">Customer</th>
                   <th className="px-6 py-4">Phone</th>
+                  <th className="px-6 py-4">Tier & Points</th>
                   <th className="px-6 py-4">Discount</th>
                   <th className="px-6 py-4">Joined Date</th>
                   <th className="px-6 py-4">Status</th>
@@ -218,9 +247,25 @@ export default function AdminMembershipsPage() {
                     <td className="px-6 py-4 font-bold text-slate-900">
                       {member.customer_name}
                     </td>
-                    <td className="px-6 py-4 text-slate-600 flex items-center">
-                      <Phone className="w-3 h-3 mr-1.5 text-slate-400" />
-                      {member.customer_phone}
+                    <td className="px-6 py-4 text-slate-600 flex flex-col justify-center">
+                      <div className="flex items-center">
+                        <Phone className="w-3 h-3 mr-1.5 text-slate-400" />
+                        {member.customer_phone}
+                      </div>
+                      {member.email && <span className="text-xs text-slate-400 mt-1">{member.email}</span>}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className={`inline-flex items-center w-fit px-2 py-0.5 rounded text-xs font-bold ${
+                          member.membership_tier === 'VIP' ? 'bg-purple-100 text-purple-700' :
+                          member.membership_tier === 'Platinum' ? 'bg-slate-800 text-slate-200' :
+                          member.membership_tier === 'Gold' ? 'bg-amber-100 text-amber-700' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                          {member.membership_tier}
+                        </span>
+                        <span className="text-xs text-indigo-600 font-semibold mt-1">{member.reward_points} pts</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2 py-1 bg-emerald-50 text-emerald-700 font-bold rounded-lg border border-emerald-200">
@@ -287,31 +332,92 @@ export default function AdminMembershipsPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number <span className="text-rose-500">*</span></label>
-                <input
-                  required
-                  type="tel"
-                  placeholder="e.g. 01700000000"
-                  value={formData.customer_phone}
-                  onChange={e => setFormData({...formData, customer_phone: e.target.value})}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Discount Percentage (%) <span className="text-rose-500">*</span></label>
-                <div className="relative">
-                  <Percent className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number <span className="text-rose-500">*</span></label>
                   <input
                     required
+                    type="tel"
+                    placeholder="e.g. 01700000000"
+                    value={formData.customer_phone}
+                    onChange={e => setFormData({...formData, customer_phone: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    placeholder="Email (Optional)"
+                    value={formData.email}
+                    onChange={e => setFormData({...formData, email: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Membership Tier <span className="text-rose-500">*</span></label>
+                  <select
+                    required
+                    value={formData.membership_tier}
+                    onChange={e => setFormData({...formData, membership_tier: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                  >
+                    <option value="Silver">Silver</option>
+                    <option value="Gold">Gold</option>
+                    <option value="Platinum">Platinum</option>
+                    <option value="VIP">VIP</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Date of Birth</label>
+                  <input
+                    type="date"
+                    value={formData.date_of_birth}
+                    onChange={e => setFormData({...formData, date_of_birth: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Discount (%) <span className="text-rose-500">*</span></label>
+                  <div className="relative">
+                    <Percent className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                    <input
+                      required
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={formData.discount_percentage}
+                      onChange={e => setFormData({...formData, discount_percentage: Number(e.target.value)})}
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Total Spent</label>
+                  <input
                     type="number"
                     min="0"
-                    max="100"
-                    step="0.1"
-                    value={formData.discount_percentage}
-                    onChange={e => setFormData({...formData, discount_percentage: Number(e.target.value)})}
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                    step="0.01"
+                    value={formData.total_spent}
+                    onChange={e => setFormData({...formData, total_spent: Number(e.target.value)})}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Points</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.reward_points}
+                    onChange={e => setFormData({...formData, reward_points: Number(e.target.value)})}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
                   />
                 </div>
               </div>
