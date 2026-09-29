@@ -226,13 +226,14 @@ export async function POST(request: NextRequest) {
     // MISS-01: Initialize leave balances for new employees
     if (payload.role === 'employee') {
       const currentYear = new Date().getFullYear();
-      const { data: leaveTypes } = await supabase.from('leave_types').select('id, default_days').eq('is_active', true);
+      // Fix: correct column is 'default_days_per_year', no 'is_active' column exists
+      const { data: leaveTypes } = await supabase.from('leave_types').select('id, default_days_per_year');
       if (leaveTypes && leaveTypes.length > 0) {
-        const balances = leaveTypes.map((lt: { id: string; default_days?: number }) => ({
+        const balances = leaveTypes.map((lt: { id: string; default_days_per_year?: number }) => ({
           user_id: newProfile.id,
           leave_type_id: lt.id,
           year: currentYear,
-          allocated_days: lt.default_days ?? 10,
+          allocated_days: lt.default_days_per_year ?? 10,
           used_days: 0,
         }));
         await supabase.from('leave_balances').upsert(balances, { onConflict: 'user_id,leave_type_id,year', ignoreDuplicates: true });
