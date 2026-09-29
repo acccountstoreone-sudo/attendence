@@ -434,22 +434,32 @@ export async function computeEmployeeDutySummary(
       }
 
       let evaluatedStatus = firstLog.status || 'present';
-      if (lateMins > dailyGraceMinutes) {
-        evaluatedStatus = 'late';
-      } else if (dutyHours > 0 && dutyHours < halfDayHours && checkOutMs) {
-        evaluatedStatus = 'half_day';
+      if (leaveMatch && (evaluatedStatus === 'absent' || evaluatedStatus === 'missed' || dutyHours === 0)) {
+        evaluatedStatus = 'on_leave';
+      } else if (evaluatedStatus !== 'absent' && evaluatedStatus !== 'missed') {
+        if (lateMins > dailyGraceMinutes) {
+          evaluatedStatus = 'late';
+        } else if (dutyHours > 0 && dutyHours < halfDayHours && checkOutMs) {
+          evaluatedStatus = 'half_day';
+        }
       }
 
       if (evaluatedStatus === 'present' || evaluatedStatus === 'incomplete') {
         totalPresentDays++;
-      }
-      if (evaluatedStatus === 'late') {
+      } else if (evaluatedStatus === 'late') {
         totalLateDays++;
         totalLateMinutes += lateMins;
-      } else if (lateMins > 0) {
+      } else if (evaluatedStatus === 'half_day') {
+        totalHalfDays++;
+      } else if (evaluatedStatus === 'absent' || evaluatedStatus === 'missed') {
+        totalMissedDays++;
+      } else if (evaluatedStatus === 'on_leave') {
+        totalOnLeaveDays++;
+      }
+      
+      if (evaluatedStatus !== 'late' && lateMins > 0 && evaluatedStatus !== 'absent' && evaluatedStatus !== 'missed' && evaluatedStatus !== 'on_leave') {
         totalLateMinutes += lateMins;
       }
-      if (evaluatedStatus === 'half_day') totalHalfDays++;
 
       let otMins = 0;
       const approvalStatus = checkOutLog.overtime_approval_status || firstLog.overtime_approval_status || 'auto';
@@ -520,7 +530,7 @@ export async function computeEmployeeDutySummary(
       if (evaluatedStatus === 'late') {
         totalLateDays++;
         totalLateMinutes += lateMins;
-      } else if (lateMins > 0) {
+      } else if (lateMins > 0 && evaluatedStatus !== 'on_leave' && evaluatedStatus !== 'absent' && evaluatedStatus !== 'missed') {
         totalLateMinutes += lateMins;
       }
       if (evaluatedStatus === 'half_day') totalHalfDays++;
@@ -562,7 +572,11 @@ export async function computeEmployeeDutySummary(
         late_hours: Number((lateMins / 60).toFixed(2)),
         overtime_minutes: effectiveOtMins,
         overtime_hours: Number((effectiveOtMins / 60).toFixed(2)),
-        notes: evaluatedStatus === 'late' ? `${lateMins} mins late` : effectiveOtMins > 0 ? `${effectiveOtMins} mins ${isHolidayDuty ? '(Holiday/Off-day 2x OT)' : 'overtime'}` : 'Checked In right time',
+        notes: evaluatedStatus === 'on_leave' ? `Approved Leave (${(leaveMatch?.type || 'Leave').toUpperCase()})` 
+             : evaluatedStatus === 'absent' || evaluatedStatus === 'missed' ? 'Absent / Missed Duty'
+             : evaluatedStatus === 'late' ? `${lateMins} mins late` 
+             : effectiveOtMins > 0 ? `${effectiveOtMins} mins ${isHolidayDuty ? '(Holiday/Off-day 2x OT)' : 'overtime'}` 
+             : 'Checked In right time',
         face_verified: isVerified,
         face_match_score: firstLog.face_match_score ? Number(firstLog.face_match_score) : null,
         check_in_lat: firstLog.check_in_lat ? Number(firstLog.check_in_lat) : null,

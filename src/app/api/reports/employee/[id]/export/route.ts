@@ -38,6 +38,12 @@ async function computeAllTimeDutySummary(supabase: any, targetProfile: any) {
     .order('check_in_time', { ascending: false })
     .limit(2000);
 
+  const { data: leaves } = await supabase
+    .from('leave_requests')
+    .select('*')
+    .or(`employee_id.eq.${targetProfile.id},user_id.eq.${targetProfile.id}`)
+    .eq('status', 'approved');
+
   const list = records || [];
   let totalDutyHours = 0;
   let totalOvertimeMinutes = 0;
@@ -51,7 +57,13 @@ async function computeAllTimeDutySummary(supabase: any, targetProfile: any) {
     const d = new Date(r.check_in_time);
     const dateStr = !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : (r.date || 'N/A');
     const dayName = !isNaN(d.getTime()) ? d.toLocaleDateString('en-US', { weekday: 'long' }) : 'Day';
-    const status = r.status || 'present';
+    
+    const leaveMatch = (leaves || []).find((l: any) => dateStr >= l.start_date && dateStr <= l.end_date);
+    let rawStatus = r.status || 'present';
+    if (leaveMatch && (!r.check_in_time || rawStatus === 'absent' || rawStatus === 'missed')) {
+      rawStatus = 'on_leave';
+    }
+    const status = rawStatus;
     const stLower = String(status).toLowerCase().replace('_', '-');
     const isToday = dateStr === new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
     
@@ -110,7 +122,7 @@ async function computeAllTimeDutySummary(supabase: any, targetProfile: any) {
       totalPresentDays += 1;
     } else if (stLower === 'absent' || stLower === 'missed') {
       totalMissedDays += 1;
-    } else if (stLower === 'leave' || stLower === 'on_leave') {
+    } else if (stLower === 'leave' || stLower === 'on-leave' || stLower === 'on_leave') {
       totalOnLeaveDays += 1;
     }
 

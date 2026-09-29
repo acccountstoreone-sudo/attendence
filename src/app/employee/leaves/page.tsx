@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { Calendar, CheckCircle2, AlertTriangle, ArrowLeft, FileText } from 'lucide-react';
+import { Calendar, CheckCircle2, AlertTriangle, ArrowLeft, FileText, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface LeaveBalanceItem {
@@ -17,6 +17,18 @@ interface LeaveBalanceItem {
   used: number;
 }
 
+interface LeaveHistoryItem {
+  id: string;
+  leave_type_name: string;
+  start_date: string;
+  end_date: string;
+  total_days: number;
+  status: 'pending' | 'approved' | 'rejected';
+  reason: string;
+  reviewer_note?: string;
+  created_at: string;
+}
+
 export default function EmployeeLeavePage() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -25,6 +37,8 @@ export default function EmployeeLeavePage() {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const [balances, setBalances] = useState<LeaveBalanceItem[]>([]);
+  const [history, setHistory] = useState<LeaveHistoryItem[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
   const [leaveType, setLeaveType] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -67,15 +81,30 @@ export default function EmployeeLeavePage() {
     }
   }, [supabase]);
 
+  const loadHistory = useCallback(async () => {
+    try {
+      const res = await fetch('/api/leaves/list');
+      const json = await res.json();
+      if (json.success) {
+        setHistory(json.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load leave history', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     const init = async () => {
       await loadBalances();
+      await loadHistory();
       if (isMounted) setLoading(false);
     };
     init();
     return () => { isMounted = false; };
-  }, [loadBalances]);
+  }, [loadBalances, loadHistory]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +131,7 @@ export default function EmployeeLeavePage() {
         setEndDate('');
         setReason('');
         loadBalances(); // Refresh balances in case backend returns updated counts
+        loadHistory();
       } else {
         const errorMessage = typeof json.error === 'object' && json.error?.message
           ? json.error.message
@@ -275,6 +305,56 @@ export default function EmployeeLeavePage() {
             {submitting ? 'Submitting Request...' : 'Submit Leave Application'}
           </Button>
         </form>
+      </Card>
+
+      {/* Leave History Card */}
+      <Card className="bg-white border-slate-200 p-0 overflow-hidden shadow-2xl mt-8">
+        <div className="p-6 border-b border-slate-200 flex items-center space-x-3">
+          <History className="w-5 h-5 text-blue-500" />
+          <h3 className="text-lg font-bold text-slate-900">Leave History</h3>
+        </div>
+        {loadingHistory ? (
+          <div className="p-10 flex justify-center"><Spinner size="md" label="Loading history..." /></div>
+        ) : history.length === 0 ? (
+          <div className="p-10 text-center text-slate-500 border-t border-slate-100">No leave requests found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 text-slate-900 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                  <th className="py-3 px-5">Type</th>
+                  <th className="py-3 px-5">Dates</th>
+                  <th className="py-3 px-5 text-center">Days</th>
+                  <th className="py-3 px-5 text-center">Status</th>
+                  <th className="py-3 px-5">Note</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {history.map(req => (
+                  <tr key={req.id} className="hover:bg-slate-50 transition-colors text-sm">
+                    <td className="py-4 px-5 font-bold text-slate-900">{req.leave_type_name}</td>
+                    <td className="py-4 px-5 text-slate-600 font-medium">
+                      {req.start_date} <span className="text-slate-400 text-xs mx-1">to</span> {req.end_date}
+                    </td>
+                    <td className="py-4 px-5 font-bold text-slate-900 text-center">{req.total_days}</td>
+                    <td className="py-4 px-5 text-center">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider ${
+                        req.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                        req.status === 'rejected' ? 'bg-rose-100 text-rose-700' :
+                        'bg-amber-100 text-amber-700'
+                      }`}>
+                        {req.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-5 text-slate-500 max-w-[200px] truncate" title={req.reviewer_note || req.reason}>
+                      {req.reviewer_note || req.reason}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
     </div>
   );
