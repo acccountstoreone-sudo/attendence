@@ -217,13 +217,10 @@ export default function AdminTicketsPage() {
     link.click();
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (tickets.length === 0) return;
     
-    const doc = new jsPDF('landscape');
-    doc.text('Customer Tickets Report', 14, 15);
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+    setFeedback({ type: 'success', text: 'Generating PDF...' });
     
     const tableData = tickets.map(t => [
       t.complaint_id,
@@ -237,15 +234,35 @@ export default function AdminTicketsPage() {
       t.call_status || 'Not Called'
     ]);
 
-    autoTable(doc, {
-      startY: 28,
-      head: [['ID', 'Date', 'Customer', 'Phone', 'Branch', 'Type', 'Priority', 'Status', 'Call']],
-      body: tableData,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [79, 70, 229] } // Indigo-600
-    });
+    try {
+      const res = await fetch('/api/export/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reportTitle: 'CUSTOMER TICKETS REPORT',
+          reportSubtitle: 'All Branches',
+          metaRef: `TKT-${new Date().getFullYear()}`,
+          metaBranch: 'All Branches',
+          metaPeriod: new Date().toLocaleDateString(),
+          metaPreparedBy: 'Admin',
+          metaRecordsCount: tickets.length,
+          columns: ['ID', 'Date', 'Customer', 'Phone', 'Branch', 'Type', 'Priority', 'Status', 'Call'],
+          rows: tableData,
+          filename: `tickets_export_${new Date().toISOString().split('T')[0]}.pdf`
+        })
+      });
 
-    doc.save(`tickets_export_${new Date().toISOString().split('T')[0]}.pdf`);
+      if (!res.ok) throw new Error('Failed to generate PDF');
+
+      const blob = await res.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `tickets_export_${new Date().toISOString().split('T')[0]}.pdf`;
+      link.click();
+      setFeedback(null);
+    } catch (err: any) {
+      setFeedback({ type: 'error', text: err.message || 'Error generating PDF' });
+    }
   };
 
   const filteredTickets = tickets.filter(t => 

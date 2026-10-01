@@ -205,13 +205,10 @@ export default function BranchManagerTicketsPage() {
     link.click();
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (tickets.length === 0) return;
     
-    const doc = new jsPDF('landscape');
-    doc.text('Branch Tickets Report', 14, 15);
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+    setFeedback({ type: 'success', text: 'Generating PDF...' });
     
     const tableData = tickets.map(t => [
       t.complaint_id,
@@ -224,15 +221,35 @@ export default function BranchManagerTicketsPage() {
       t.call_status || 'Not Called'
     ]);
 
-    autoTable(doc, {
-      startY: 28,
-      head: [['ID', 'Date', 'Customer', 'Phone', 'Type', 'Priority', 'Status', 'Call']],
-      body: tableData,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [79, 70, 229] } // Indigo-600
-    });
+    try {
+      const res = await fetch('/api/export/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reportTitle: 'BRANCH TICKETS REPORT',
+          reportSubtitle: 'Store Branch',
+          metaRef: `TKT-${new Date().getFullYear()}`,
+          metaBranch: 'Assigned Branch',
+          metaPeriod: new Date().toLocaleDateString(),
+          metaPreparedBy: 'Branch Manager',
+          metaRecordsCount: tickets.length,
+          columns: ['ID', 'Date', 'Customer', 'Phone', 'Type', 'Priority', 'Status', 'Call'],
+          rows: tableData,
+          filename: `branch_tickets_export_${new Date().toISOString().split('T')[0]}.pdf`
+        })
+      });
 
-    doc.save(`branch_tickets_export_${new Date().toISOString().split('T')[0]}.pdf`);
+      if (!res.ok) throw new Error('Failed to generate PDF');
+
+      const blob = await res.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `branch_tickets_export_${new Date().toISOString().split('T')[0]}.pdf`;
+      link.click();
+      setFeedback(null);
+    } catch (err: any) {
+      setFeedback({ type: 'error', text: err.message || 'Error generating PDF' });
+    }
   };
 
   const filteredTickets = tickets.filter(t => 
