@@ -60,6 +60,7 @@ export default function AdminTicketsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMonth, setFilterMonth] = useState<string>('');
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
+  const [filterBranch, setFilterBranch] = useState<string>('');
   const [selectedTicketIds, setSelectedTicketIds] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
@@ -263,15 +264,19 @@ export default function AdminTicketsPage() {
       t.call_status || 'Not Called'
     ]);
 
+    const selectedBranchName = filterBranch && branches.length > 0
+      ? branches.find(b => b.id === filterBranch)?.name || 'Filtered Branch'
+      : 'All Branches';
+
     try {
       const res = await fetch('/api/export/pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           reportTitle: 'CUSTOMER TICKETS REPORT',
-          reportSubtitle: 'All Branches',
+          reportSubtitle: selectedBranchName,
           metaRef: `TKT-${new Date().getFullYear()}`,
-          metaBranch: 'All Branches',
+          metaBranch: selectedBranchName,
           metaPeriod: new Date().toLocaleDateString(),
           metaPreparedBy: 'Admin',
           metaRecordsCount: ticketsToExport.length,
@@ -303,8 +308,9 @@ export default function AdminTicketsPage() {
     const date = new Date(t.ticket_datetime);
     const matchMonth = filterMonth ? date.getMonth() + 1 === parseInt(filterMonth) : true;
     const matchYear = filterYear ? date.getFullYear() === parseInt(filterYear) : true;
+    const matchBranch = filterBranch ? t.branch_id === filterBranch : true;
 
-    return matchSearch && matchMonth && matchYear;
+    return matchSearch && matchMonth && matchYear && matchBranch;
   });
 
   return (
@@ -386,6 +392,16 @@ export default function AdminTicketsPage() {
             />
           </div>
           <div className="flex gap-2 w-full md:w-auto">
+            <select
+              value={filterBranch}
+              onChange={(e) => setFilterBranch(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-indigo-500 w-full md:w-32 truncate"
+            >
+              <option value="">All Branches</option>
+              {branches.map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
             <select
               value={filterMonth}
               onChange={(e) => setFilterMonth(e.target.value)}

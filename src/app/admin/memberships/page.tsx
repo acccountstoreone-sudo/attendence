@@ -32,16 +32,25 @@ interface Membership {
   reward_points: number;
   membership_tier: string;
   status: boolean;
+  branch_id?: string;
+  branches?: { name: string };
   created_at: string;
+}
+
+interface Branch {
+  id: string;
+  name: string;
 }
 
 export default function AdminMembershipsPage() {
   const supabase = useMemo(() => createClient(), []);
   const [loading, setLoading] = useState(true);
   const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMonth, setFilterMonth] = useState<string>('');
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
+  const [filterBranch, setFilterBranch] = useState<string>('');
   const [selectedMembershipIds, setSelectedMembershipIds] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -59,14 +68,19 @@ export default function AdminMembershipsPage() {
     total_spent: 0,
     reward_points: 0,
     membership_tier: 'Silver',
-    status: true
+    status: true,
+    branch_id: ''
   });
 
   const loadData = useCallback(async () => {
     setLoading(true);
+
+    const { data: bData } = await supabase.from('branches').select('id, name').eq('is_active', true).order('name');
+    if (bData) setBranches(bData);
+
     const { data, error } = await supabase
       .from('memberships')
-      .select('*')
+      .select('*, branches(name)')
       .order('created_at', { ascending: false });
 
     if (!error && data) {
@@ -102,6 +116,7 @@ export default function AdminMembershipsPage() {
             reward_points: formData.reward_points,
             membership_tier: formData.membership_tier,
             status: formData.status,
+            branch_id: formData.branch_id || null,
             updated_at: new Date().toISOString()
           })
           .eq('id', formData.id);
@@ -119,6 +134,7 @@ export default function AdminMembershipsPage() {
           reward_points: formData.reward_points,
           membership_tier: formData.membership_tier,
           status: formData.status,
+          branch_id: formData.branch_id || null,
           created_by: userData?.user?.id
         }]);
         
@@ -139,7 +155,7 @@ export default function AdminMembershipsPage() {
   const resetForm = () => {
     setFormData({ 
       id: '', customer_name: '', customer_phone: '', discount_percentage: 10, 
-      email: '', date_of_birth: '', total_spent: 0, reward_points: 0, membership_tier: 'Silver', status: true 
+      email: '', date_of_birth: '', total_spent: 0, reward_points: 0, membership_tier: 'Silver', status: true, branch_id: '' 
     });
     setIsEditing(false);
   };
@@ -191,11 +207,12 @@ export default function AdminMembershipsPage() {
 
     if (membershipsToExport.length === 0) return;
     
-    const headers = ['Name', 'Phone', 'Email', 'Tier', 'Points', 'Total Spent', 'Discount %', 'Status', 'Joined Date'];
+    const headers = ['Name', 'Phone', 'Email', 'Branch', 'Tier', 'Points', 'Total Spent', 'Discount %', 'Status', 'Joined Date'];
     const csvData = membershipsToExport.map(m => [
       `"${m.customer_name}"`,
       `"${m.customer_phone}"`,
       `"${m.email || ''}"`,
+      `"${m.branches?.name || ''}"`,
       `"${m.membership_tier || 'Silver'}"`,
       m.reward_points,
       m.total_spent,
@@ -221,9 +238,14 @@ export default function AdminMembershipsPage() {
     
     setFeedback({ type: 'success', text: 'Generating PDF...' });
     
+    const selectedBranchName = filterBranch && branches.length > 0
+      ? branches.find(b => b.id === filterBranch)?.name || 'Filtered Branch'
+      : 'All Branches';
+    
     const tableData = membershipsToExport.map(m => [
       m.customer_name,
       m.customer_phone,
+      m.branches?.name || 'Unknown',
       m.membership_tier || 'Silver',
       m.reward_points.toString(),
       m.total_spent.toString(),
@@ -238,13 +260,13 @@ export default function AdminMembershipsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           reportTitle: 'MEMBERSHIPS REPORT',
-          reportSubtitle: 'All Branches',
+          reportSubtitle: selectedBranchName,
           metaRef: `MBR-${new Date().getFullYear()}`,
-          metaBranch: 'All Branches',
+          metaBranch: selectedBranchName,
           metaPeriod: new Date().toLocaleDateString(),
           metaPreparedBy: 'Admin',
           metaRecordsCount: membershipsToExport.length,
-          columns: ['Name', 'Phone', 'Tier', 'Points', 'Spent', 'Discount', 'Status', 'Joined'],
+          columns: ['Name', 'Phone', 'Branch', 'Tier', 'Points', 'Spent', 'Discount', 'Status', 'Joined'],
           rows: tableData,
           filename: `memberships_export_${new Date().toISOString().split('T')[0]}.pdf`
         })
@@ -270,8 +292,9 @@ export default function AdminMembershipsPage() {
     const date = new Date(m.created_at);
     const matchMonth = filterMonth ? date.getMonth() + 1 === parseInt(filterMonth) : true;
     const matchYear = filterYear ? date.getFullYear() === parseInt(filterYear) : true;
+    const matchBranch = filterBranch ? m.branch_id === filterBranch : true;
 
-    return matchSearch && matchMonth && matchYear;
+    return matchSearch && matchMonth && matchYear && matchBranch;
   });
 
   return (
@@ -351,6 +374,16 @@ export default function AdminMembershipsPage() {
           </div>
           <div className="flex gap-2 w-full md:w-auto">
             <select
+              value={filterBranch}
+              onChange={(e) => setFilterBranch(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-indigo-500 w-full md:w-32 truncate"
+            >
+              <option value="">All Branches</option>
+              {branches.map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+            <select
               value={filterMonth}
               onChange={(e) => setFilterMonth(e.target.value)}
               className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-indigo-500 w-full md:w-32"
@@ -396,6 +429,7 @@ export default function AdminMembershipsPage() {
                   </th>
                   <th className="px-4 py-4">Customer</th>
                   <th className="px-6 py-4">Phone</th>
+                  <th className="px-6 py-4">Branch</th>
                   <th className="px-6 py-4">Tier & Points</th>
                   <th className="px-6 py-4">Discount</th>
                   <th className="px-6 py-4">Joined Date</th>
@@ -423,6 +457,9 @@ export default function AdminMembershipsPage() {
                         {member.customer_phone}
                       </div>
                       {member.email && <span className="text-xs text-slate-400 mt-1">{member.email}</span>}
+                    </td>
+                    <td className="px-6 py-4 font-medium text-slate-700">
+                      {member.branches?.name || 'Unknown'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
@@ -500,6 +537,21 @@ export default function AdminMembershipsPage() {
                   onChange={e => setFormData({...formData, customer_name: e.target.value})}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Branch <span className="text-rose-500">*</span></label>
+                <select
+                  required
+                  value={formData.branch_id}
+                  onChange={e => setFormData({...formData, branch_id: e.target.value})}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                >
+                  <option value="">Select a branch</option>
+                  {branches.map(b => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

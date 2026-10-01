@@ -52,6 +52,7 @@ export default function BranchManagerTicketsPage() {
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedTicketIds, setSelectedTicketIds] = useState<Set<string>>(new Set());
   const [userBranchId, setUserBranchId] = useState<string>('');
+  const [userBranchName, setUserBranchName] = useState<string>('');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
   // Modal state
@@ -83,12 +84,13 @@ export default function BranchManagerTicketsPage() {
     if (userData?.user) {
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('branch_id')
+        .select('branch_id, branches(name)')
         .eq('id', userData.user.id)
         .single();
 
       if (profileData?.branch_id) {
         setUserBranchId(profileData.branch_id);
+        setUserBranchName(profileData.branches?.name || 'Unknown Branch');
         // Load tickets for this branch
         const { data, error } = await supabase
           .from('tickets')
@@ -537,15 +539,26 @@ export default function BranchManagerTicketsPage() {
             </div>
             
             <form onSubmit={handleCreateTicket} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Date & Time <span className="text-rose-500">*</span></label>
-                <input
-                  required
-                  type="datetime-local"
-                  value={formData.ticket_datetime}
-                  onChange={e => setFormData({...formData, ticket_datetime: e.target.value})}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Branch</label>
+                  <input
+                    disabled
+                    type="text"
+                    value={userBranchName}
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Date & Time <span className="text-rose-500">*</span></label>
+                  <input
+                    required
+                    type="datetime-local"
+                    value={formData.ticket_datetime}
+                    onChange={e => setFormData({...formData, ticket_datetime: e.target.value})}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
