@@ -14,10 +14,14 @@ import {
   Phone,
   Store,
   CalendarDays,
-  DollarSign
+  DollarSign,
+  Download,
+  FileText
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface TicketData {
   id: string;
@@ -189,6 +193,61 @@ export default function AdminTicketsPage() {
     }
   };
 
+  const handleExportCSV = () => {
+    if (tickets.length === 0) return;
+    
+    const headers = ['Complaint ID', 'Date', 'Customer Name', 'Phone', 'Branch', 'Type', 'Priority', 'Status', 'Call Status'];
+    const csvData = tickets.map(t => [
+      `"${t.complaint_id}"`,
+      `"${new Date(t.ticket_datetime).toLocaleString()}"`,
+      `"${t.customer_name}"`,
+      `"${t.mobile_number}"`,
+      `"${t.branches?.name || ''}"`,
+      `"${t.complaint_type}"`,
+      `"${t.priority}"`,
+      `"${t.status}"`,
+      `"${t.call_status || 'Not Called'}"`
+    ].join(','));
+    
+    const csvContent = [headers.join(','), ...csvData].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `tickets_export_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
+  const handleExportPDF = () => {
+    if (tickets.length === 0) return;
+    
+    const doc = new jsPDF('landscape');
+    doc.text('Customer Tickets Report', 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+    
+    const tableData = tickets.map(t => [
+      t.complaint_id,
+      new Date(t.ticket_datetime).toLocaleDateString(),
+      t.customer_name,
+      t.mobile_number,
+      t.branches?.name || 'Unknown',
+      t.complaint_type || '',
+      t.priority || '',
+      t.status.toUpperCase(),
+      t.call_status || 'Not Called'
+    ]);
+
+    autoTable(doc, {
+      startY: 28,
+      head: [['ID', 'Date', 'Customer', 'Phone', 'Branch', 'Type', 'Priority', 'Status', 'Call']],
+      body: tableData,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [79, 70, 229] } // Indigo-600
+    });
+
+    doc.save(`tickets_export_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   const filteredTickets = tickets.filter(t => 
     (t.complaint_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (t.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -212,14 +271,34 @@ export default function AdminTicketsPage() {
             Manage customer product issues and returns across branches.
           </p>
         </div>
-        <Button
-          variant="primary"
-          icon={<Plus className="w-4 h-4 text-white" />}
-          onClick={() => setIsModalOpen(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white"
-        >
-          Create Ticket
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            icon={<Download className="w-4 h-4" />}
+            onClick={handleExportCSV}
+            disabled={tickets.length === 0}
+            className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+          >
+            CSV
+          </Button>
+          <Button
+            variant="secondary"
+            icon={<FileText className="w-4 h-4" />}
+            onClick={handleExportPDF}
+            disabled={tickets.length === 0}
+            className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+          >
+            PDF
+          </Button>
+          <Button
+            variant="primary"
+            icon={<Plus className="w-4 h-4 text-white" />}
+            onClick={() => setIsModalOpen(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+          >
+            Create Ticket
+          </Button>
+        </div>
       </div>
 
       {/* Feedback */}

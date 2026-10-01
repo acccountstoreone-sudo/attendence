@@ -14,7 +14,8 @@ import {
   Phone,
   Percent,
   CalendarDays,
-  Edit2
+  Edit2,
+  Download
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -161,6 +162,30 @@ export default function AdminMembershipsPage() {
     setIsModalOpen(true);
   };
 
+  const handleExportCSV = () => {
+    if (memberships.length === 0) return;
+    
+    const headers = ['Name', 'Phone', 'Email', 'Tier', 'Points', 'Total Spent', 'Discount %', 'Status', 'Joined Date'];
+    const csvData = memberships.map(m => [
+      `"${m.customer_name}"`,
+      `"${m.customer_phone}"`,
+      `"${m.email || ''}"`,
+      `"${m.membership_tier || 'Silver'}"`,
+      m.reward_points,
+      m.total_spent,
+      m.discount_percentage,
+      m.status ? 'Active' : 'Inactive',
+      `"${new Date(m.created_at).toLocaleDateString()}"`
+    ].join(','));
+    
+    const csvContent = [headers.join(','), ...csvData].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `memberships_export_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
   const filteredMemberships = memberships.filter(m => 
     m.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.customer_phone.includes(searchTerm)
@@ -181,14 +206,25 @@ export default function AdminMembershipsPage() {
             Manage VIP customers and their specific discount rates.
           </p>
         </div>
-        <Button
-          variant="primary"
-          icon={<Plus className="w-4 h-4 text-white" />}
-          onClick={openCreateModal}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white"
-        >
-          Add Member
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            icon={<Download className="w-4 h-4" />}
+            onClick={handleExportCSV}
+            disabled={memberships.length === 0}
+            className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+          >
+            Export CSV
+          </Button>
+          <Button
+            variant="primary"
+            icon={<Plus className="w-4 h-4 text-white" />}
+            onClick={openCreateModal}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+          >
+            Add Member
+          </Button>
+        </div>
       </div>
 
       <AnimatePresence>
