@@ -1,25 +1,25 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import {
+  Users,
   Search,
-  Phone,
+  Plus,
   CheckCircle2,
   XCircle,
+  X,
+  Phone,
   Percent,
-  User,
-  ShieldCheck,
-  Star,
-  Gift,
-  Mail,
-  Award,
-  Wallet,
-  Crown
+  CalendarDays,
+  Edit2,
+  Download,
+  FileText
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Membership {
   id: string;
@@ -32,21 +32,26 @@ interface Membership {
   reward_points: number;
   membership_tier: string;
   status: boolean;
+  created_at: string;
 }
 
 export default function BranchManagerMembershipsPage() {
   const supabase = useMemo(() => createClient(), []);
-  const [loading, setLoading] = useState(false);
-  const [searchPhone, setSearchPhone] = useState('');
-  const [result, setResult] = useState<Membership | null>(null);
-  const [searched, setSearched] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  
-  // Add Member Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [userBranchId, setUserBranchId] = useState<string>('');
+  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterMonth, setFilterMonth] = useState<string>('');
+  const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedMembershipIds, setSelectedMembershipIds] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
+    id: '',
     customer_name: '',
     customer_phone: '',
     discount_percentage: 10,
@@ -58,266 +63,449 @@ export default function BranchManagerMembershipsPage() {
     status: true
   });
 
-  const handleCreateMembership = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setFeedback(null);
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('Authentication required');
-
-      // Get branch ID
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    
+    // First, get the current user's branch_id
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData?.user) {
       const { data: profileData } = await supabase
         .from('profiles')
         .select('branch_id')
         .eq('id', userData.user.id)
         .single();
-      
-      const branchId = profileData?.branch_id;
 
-      const { error } = await supabase.from('memberships').insert([{
-        ...formData,
-        branch_id: branchId,
-        created_by: userData.user.id
-      }]);
+      if (profileData?.branch_id) {
+        setUserBranchId(profileData.branch_id);
+        const { data, error } = await supabase
+          .from('memberships')
+          .select('*')
+          .eq('branch_id', profileData.branch_id)
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
+        if (!error && data) {
+          setMemberships(data as Membership[]);
+        } else if (error) {
+          setFeedback({ type: 'error', text: `Failed to load memberships. Ensure migrations are applied.` });
+        }
+      }
+    }
+    setLoading(false);
+  }, [supabase]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setFeedback(null);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
       
-      setFeedback({ type: 'success', text: 'Membership created successfully!' });
-      setTimeout(() => {
-        setIsModalOpen(false);
-        setFeedback(null);
-        setFormData({
-          customer_name: '', customer_phone: '', discount_percentage: 10,
-          email: '', date_of_birth: '', total_spent: 0, reward_points: 0,
-          membership_tier: 'Silver', status: true
-        });
-      }, 2000);
-      
+      if (isEditing) {
+        const { error } = await supabase
+          .from('memberships')
+          .update({
+            customer_name: formData.customer_name,
+            customer_phone: formData.customer_phone,
+            discount_percentage: formData.discount_percentage,
+            email: formData.email || null,
+            date_of_birth: formData.date_of_birth || null,
+            total_spent: formData.total_spent,
+            reward_points: formData.reward_points,
+            membership_tier: formData.membership_tier,
+            status: formData.status,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', formData.id);
+        
+        if (error) throw error;
+        setFeedback({ type: 'success', text: 'Membership updated successfully.' });
+      } else {
+        const { error } = await supabase.from('memberships').insert([{
+          customer_name: formData.customer_name,
+          customer_phone: formData.customer_phone,
+          discount_percentage: formData.discount_percentage,
+          email: formData.email || null,
+          date_of_birth: formData.date_of_birth || null,
+          total_spent: formData.total_spent,
+          reward_points: formData.reward_points,
+          membership_tier: formData.membership_tier,
+          status: formData.status,
+          branch_id: userBranchId,
+          created_by: userData?.user?.id
+        }]);
+        
+        if (error) throw error;
+        setFeedback({ type: 'success', text: 'Membership created successfully.' });
+      }
+
+      setIsModalOpen(false);
+      resetForm();
+      loadData();
     } catch (err: unknown) {
-      setFeedback({ type: 'error', text: (err as Error).message || 'Failed to create membership' });
+      setFeedback({ type: 'error', text: (err as Error).message || 'Action failed.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchPhone.trim()) return;
+  const resetForm = () => {
+    setFormData({ 
+      id: '', customer_name: '', customer_phone: '', discount_percentage: 10, 
+      email: '', date_of_birth: '', total_spent: 0, reward_points: 0, membership_tier: 'Silver', status: true 
+    });
+    setIsEditing(false);
+  };
+
+  const openCreateModal = () => {
+    resetForm();
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (member: Membership) => {
+    setFormData({
+      id: member.id,
+      customer_name: member.customer_name,
+      customer_phone: member.customer_phone,
+      discount_percentage: member.discount_percentage,
+      email: member.email || '',
+      date_of_birth: member.date_of_birth || '',
+      total_spent: member.total_spent || 0,
+      reward_points: member.reward_points || 0,
+      membership_tier: member.membership_tier || 'Silver',
+      status: member.status
+    });
+    setIsEditing(true);
+    setIsModalOpen(true);
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedMembershipIds(new Set(filteredMemberships.map(m => m.id)));
+    } else {
+      setSelectedMembershipIds(new Set());
+    }
+  };
+
+  const handleSelectMembership = (id: string) => {
+    const newSet = new Set(selectedMembershipIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedMembershipIds(newSet);
+  };
+
+  const handleExportCSV = () => {
+    const membershipsToExport = selectedMembershipIds.size > 0 
+      ? filteredMemberships.filter(m => selectedMembershipIds.has(m.id))
+      : filteredMemberships;
+
+    if (membershipsToExport.length === 0) return;
     
-    setLoading(true);
-    setSearched(true);
-    setResult(null);
-    setErrorMsg(null);
+    const headers = ['Name', 'Phone', 'Email', 'Tier', 'Points', 'Total Spent', 'Discount %', 'Status', 'Joined Date'];
+    const csvData = membershipsToExport.map(m => [
+      `"${m.customer_name}"`,
+      `"${m.customer_phone}"`,
+      `"${m.email || ''}"`,
+      `"${m.membership_tier || 'Silver'}"`,
+      m.reward_points,
+      m.total_spent,
+      m.discount_percentage,
+      m.status ? 'Active' : 'Inactive',
+      `"${new Date(m.created_at).toLocaleDateString()}"`
+    ].join(','));
+    
+    const csvContent = [headers.join(','), ...csvData].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `memberships_export_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
+  const handleExportPDF = async () => {
+    const membershipsToExport = selectedMembershipIds.size > 0 
+      ? filteredMemberships.filter(m => selectedMembershipIds.has(m.id))
+      : filteredMemberships;
+
+    if (membershipsToExport.length === 0) return;
+    
+    setFeedback({ type: 'success', text: 'Generating PDF...' });
+    
+    const tableData = membershipsToExport.map(m => [
+      m.customer_name,
+      m.customer_phone,
+      m.membership_tier || 'Silver',
+      m.reward_points.toString(),
+      m.total_spent.toString(),
+      `${m.discount_percentage}%`,
+      m.status ? 'Active' : 'Inactive',
+      new Date(m.created_at).toLocaleDateString()
+    ]);
 
     try {
-      const { data, error } = await supabase
-        .from('memberships')
-        .select('*')
-        .eq('customer_phone', searchPhone.trim())
-        .single();
+      const res = await fetch('/api/export/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reportTitle: 'MEMBERSHIPS REPORT',
+          reportSubtitle: 'Store Branch',
+          metaRef: `MBR-${new Date().getFullYear()}`,
+          metaBranch: 'Assigned Branch',
+          metaPeriod: new Date().toLocaleDateString(),
+          metaPreparedBy: 'Branch Manager',
+          metaRecordsCount: membershipsToExport.length,
+          columns: ['Name', 'Phone', 'Tier', 'Points', 'Spent', 'Discount', 'Status', 'Joined'],
+          rows: tableData,
+          filename: `memberships_export_${new Date().toISOString().split('T')[0]}.pdf`
+        })
+      });
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // No rows returned
-          setErrorMsg('No membership found for this phone number.');
-        } else {
-          setErrorMsg(`Failed to check membership: ${error.message}`);
-        }
-      } else if (data) {
-        setResult(data as Membership);
-      }
-    } catch (err: unknown) {
-      setErrorMsg((err as Error).message || 'An error occurred.');
-    } finally {
-      setLoading(false);
+      if (!res.ok) throw new Error('Failed to generate PDF');
+
+      const blob = await res.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `memberships_export_${new Date().toISOString().split('T')[0]}.pdf`;
+      link.click();
+      setFeedback(null);
+    } catch (err: any) {
+      setFeedback({ type: 'error', text: err.message || 'Error generating PDF' });
     }
   };
 
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'VIP':
-        return 'from-purple-900 via-indigo-900 to-purple-800 text-purple-100 border-purple-500 shadow-purple-900/50';
-      case 'Platinum':
-        return 'from-slate-900 via-slate-800 to-slate-900 text-slate-200 border-slate-500 shadow-slate-900/50';
-      case 'Gold':
-        return 'from-amber-500 via-yellow-500 to-amber-600 text-amber-950 border-amber-300 shadow-amber-600/40';
-      default: // Silver
-        return 'from-slate-200 via-slate-100 to-slate-300 text-slate-800 border-slate-400 shadow-slate-300/50';
-    }
-  };
+  const filteredMemberships = memberships.filter(m => {
+    const matchSearch = m.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.customer_phone.includes(searchTerm);
+      
+    const date = new Date(m.created_at);
+    const matchMonth = filterMonth ? date.getMonth() + 1 === parseInt(filterMonth) : true;
+    const matchYear = filterYear ? date.getFullYear() === parseInt(filterYear) : true;
 
-  const getTierIconColor = (tier: string) => {
-    switch (tier) {
-      case 'VIP': return 'text-purple-300';
-      case 'Platinum': return 'text-slate-400';
-      case 'Gold': return 'text-amber-100';
-      default: return 'text-slate-500';
-    }
-  };
+    return matchSearch && matchMonth && matchYear;
+  });
 
   return (
-    <div className="space-y-8 pb-12 max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-white via-indigo-950/10 to-slate-50 p-6 md:p-8 rounded-3xl border border-slate-200 shadow-xl text-center md:text-left">
+    <div className="space-y-8 pb-12 relative">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-white via-indigo-950/10 to-slate-50 p-6 rounded-3xl border border-slate-200 shadow-xl">
         <div>
-          <div className="flex justify-center md:justify-start mb-2">
-            <div className="p-3 bg-indigo-100 rounded-full text-indigo-600">
-              <ShieldCheck className="w-8 h-8" />
-            </div>
+          <div className="flex items-center space-x-2 text-indigo-600 text-xs font-bold uppercase tracking-widest mb-1">
+            <Users className="w-4 h-4" />
+            <span>Customer Loyalty</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Verify & Manage Membership
+            Branch Memberships
           </h1>
-          <p className="text-sm text-slate-600 mt-2">
-            Enter the customer&apos;s registered phone number to verify their VIP membership, or add a new member for your branch.
+          <p className="text-sm text-slate-600 mt-1">
+            Manage VIP customers and their specific discount rates for your branch.
           </p>
         </div>
-        <Button
-          variant="primary"
-          onClick={() => setIsModalOpen(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold whitespace-nowrap shrink-0"
-        >
-          Add New Member
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            icon={<Download className="w-4 h-4" />}
+            onClick={handleExportCSV}
+            disabled={filteredMemberships.length === 0}
+            className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+          >
+            CSV {selectedMembershipIds.size > 0 && `(${selectedMembershipIds.size})`}
+          </Button>
+          <Button
+            variant="secondary"
+            icon={<FileText className="w-4 h-4" />}
+            onClick={handleExportPDF}
+            disabled={filteredMemberships.length === 0}
+            className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+          >
+            PDF {selectedMembershipIds.size > 0 && `(${selectedMembershipIds.size})`}
+          </Button>
+          <Button
+            variant="primary"
+            icon={<Plus className="w-4 h-4 text-white" />}
+            onClick={openCreateModal}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+          >
+            Add Member
+          </Button>
+        </div>
       </div>
 
-      <Card className="bg-white border-slate-200 p-6 shadow-md">
-        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
+      <AnimatePresence>
+        {feedback && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className={`flex items-center gap-3 p-4 rounded-xl border text-sm font-medium ${
+              feedback.type === 'success'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                : 'bg-rose-50 border-rose-200 text-rose-700'
+            }`}
+          >
+            {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <XCircle className="w-5 h-5 shrink-0" />}
+            <span>{feedback.text}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <Card className="bg-white border-slate-200 p-4">
+        <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
-            <Phone className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
-              type="tel"
-              placeholder="Enter customer phone number (e.g. 017...)"
-              value={searchPhone}
-              onChange={(e) => setSearchPhone(e.target.value)}
-              required
-              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors font-medium"
+              type="text"
+              placeholder="Search by Name or Phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
-          <Button 
-            type="submit" 
-            variant="primary" 
-            disabled={loading || !searchPhone.trim()}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-8 sm:w-auto w-full flex items-center justify-center font-bold"
-          >
-            {loading ? <Spinner size="sm" /> : <><Search className="w-4 h-4 mr-2" /> Verify</>}
-          </Button>
-        </form>
+          <div className="flex gap-2 w-full md:w-auto">
+            <select
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-indigo-500 w-full md:w-32"
+            >
+              <option value="">All Months</option>
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {new Date(0, i).toLocaleString('default', { month: 'short' })}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filterYear}
+              onChange={(e) => setFilterYear(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-indigo-500 w-full md:w-32"
+            >
+              <option value="">All Years</option>
+              {[2025, 2026, 2027, 2028].map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+        </div>
       </Card>
 
-      {/* Results Section */}
-      {searched && !loading && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {errorMsg ? (
-            <div className="bg-rose-50 border border-rose-200 rounded-2xl p-8 text-center shadow-sm">
-              <XCircle className="w-12 h-12 text-rose-400 mx-auto mb-3" />
-              <h3 className="text-lg font-bold text-rose-900 mb-1">Not Found</h3>
-              <p className="text-sm text-rose-600">{errorMsg}</p>
-            </div>
-          ) : result ? (
-            <div className="relative">
-              {!result.status && (
-                <div className="absolute top-0 left-0 w-full h-full bg-slate-900/60 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-2xl">
-                  <div className="bg-white border-2 border-rose-500 p-6 rounded-2xl shadow-2xl text-center max-w-sm transform -rotate-2">
-                    <XCircle className="w-16 h-16 text-rose-500 mx-auto mb-3" />
-                    <h3 className="text-2xl font-black text-rose-700 uppercase tracking-widest">Inactive</h3>
-                    <p className="text-sm text-slate-600 mt-2 font-bold">This membership is disabled. No discount applies.</p>
-                  </div>
-                </div>
-              )}
-              
-              <div className={`relative overflow-hidden rounded-3xl p-1 shadow-2xl transition-all duration-500 bg-gradient-to-br ${getTierColor(result.membership_tier)}`}>
-                <div className="absolute top-0 right-0 p-8 opacity-10">
-                  <Crown className="w-64 h-64 transform rotate-12" />
-                </div>
-                
-                <div className="relative z-10 p-8 backdrop-blur-sm rounded-[22px] bg-white/10 border border-white/20">
-                  <div className="flex items-start justify-between mb-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 shadow-inner">
-                        <User className="w-8 h-8 opacity-90" />
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <Spinner size="lg" label="Loading Memberships..." />
+        </div>
+      ) : (
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                  <th className="px-4 py-4 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      checked={filteredMemberships.length > 0 && selectedMembershipIds.size === filteredMemberships.length}
+                      onChange={handleSelectAll}
+                    />
+                  </th>
+                  <th className="px-4 py-4">Customer</th>
+                  <th className="px-6 py-4">Phone</th>
+                  <th className="px-6 py-4">Tier & Points</th>
+                  <th className="px-6 py-4">Discount</th>
+                  <th className="px-6 py-4">Joined Date</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 text-sm">
+                {filteredMemberships.map(member => (
+                  <tr key={member.id} className={`transition-colors ${selectedMembershipIds.has(member.id) ? 'bg-indigo-50/50' : 'hover:bg-slate-50'}`}>
+                    <td className="px-4 py-4 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                        checked={selectedMembershipIds.has(member.id)}
+                        onChange={() => handleSelectMembership(member.id)}
+                      />
+                    </td>
+                    <td className="px-4 py-4 font-bold text-slate-900">
+                      {member.customer_name}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 flex flex-col justify-center">
+                      <div className="flex items-center">
+                        <Phone className="w-3 h-3 mr-1.5 text-slate-400" />
+                        {member.customer_phone}
                       </div>
-                      <div>
-                        <h2 className="text-3xl font-black tracking-tight">{result.customer_name}</h2>
-                        <div className="flex items-center opacity-80 mt-1 font-medium">
-                          <Phone className="w-4 h-4 mr-1.5" />
-                          <span>{result.customer_phone}</span>
-                        </div>
+                      {member.email && <span className="text-xs text-slate-400 mt-1">{member.email}</span>}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className={`inline-flex items-center w-fit px-2 py-0.5 rounded text-xs font-bold ${
+                          member.membership_tier === 'VIP' ? 'bg-purple-100 text-purple-700' :
+                          member.membership_tier === 'Platinum' ? 'bg-slate-800 text-slate-200' :
+                          member.membership_tier === 'Gold' ? 'bg-amber-100 text-amber-700' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                          {member.membership_tier}
+                        </span>
+                        <span className="text-xs text-indigo-600 font-semibold mt-1">{member.reward_points} pts</span>
                       </div>
-                    </div>
-                    <div className="text-right flex flex-col items-end">
-                      <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-xs font-black uppercase tracking-widest border border-white/30 shadow-sm mb-2">
-                        {result.membership_tier || 'Silver'} MEMBER
-                      </div>
-                      <div className="inline-flex items-center text-xs font-bold opacity-80">
-                        <CheckCircle2 className="w-3 h-3 mr-1" /> ACTIVE
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-                    <div className="bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex flex-col items-center justify-center text-center hover:bg-black/30 transition-colors">
-                      <Wallet className={`w-6 h-6 mb-2 ${getTierIconColor(result.membership_tier)}`} />
-                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-1">Total Spent</span>
-                      <span className="text-lg font-black">৳{Number(result.total_spent || 0).toLocaleString()}</span>
-                    </div>
-                    <div className="bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex flex-col items-center justify-center text-center hover:bg-black/30 transition-colors">
-                      <Star className={`w-6 h-6 mb-2 ${getTierIconColor(result.membership_tier)}`} />
-                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-1">Points</span>
-                      <span className="text-lg font-black">{result.reward_points || 0}</span>
-                    </div>
-                    <div className="bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex flex-col items-center justify-center text-center hover:bg-black/30 transition-colors">
-                      <Gift className={`w-6 h-6 mb-2 ${getTierIconColor(result.membership_tier)}`} />
-                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-1">Birthday</span>
-                      <span className="text-sm font-bold">
-                        {result.date_of_birth ? new Date(result.date_of_birth).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2 py-1 bg-emerald-50 text-emerald-700 font-bold rounded-lg border border-emerald-200">
+                        {member.discount_percentage}%
                       </span>
-                    </div>
-                    <div className="bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex flex-col items-center justify-center text-center hover:bg-black/30 transition-colors overflow-hidden">
-                      <Mail className={`w-6 h-6 mb-2 ${getTierIconColor(result.membership_tier)}`} />
-                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-1">Email</span>
-                      <span className="text-xs font-bold truncate w-full px-2" title={result.email}>
-                        {result.email || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 flex items-center">
+                      <CalendarDays className="w-4 h-4 mr-1.5 text-slate-400" />
+                      {new Date(member.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        member.status ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-800'
+                      }`}>
+                        {member.status ? 'Active' : 'Inactive'}
                       </span>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-2xl p-6 text-center shadow-xl transform hover:scale-[1.02] transition-transform">
-                    <span className="text-slate-500 font-black text-xs uppercase tracking-widest block mb-2">Approved Discount Rate</span>
-                    <div className="flex items-center justify-center">
-                      <span className="text-7xl font-black text-slate-900 tracking-tighter leading-none">{result.discount_percentage}</span>
-                      <Percent className="w-12 h-12 text-indigo-600 ml-1" />
-                    </div>
-                    <div className="mt-4 inline-block px-4 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full text-sm font-bold">
-                      Ready to apply at checkout
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : null}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => openEditModal(member)}
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Edit Membership"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {filteredMemberships.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                      <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                      <p>No memberships found.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      {/* Add Member Modal */}
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col">
             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h2 className="text-xl font-bold text-slate-900">Add New Member</h2>
+              <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Edit Membership' : 'Add New Member'}</h2>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-full hover:bg-slate-100">
-                <XCircle className="w-5 h-5" />
+                <X className="w-5 h-5" />
               </button>
             </div>
             
-            <form onSubmit={handleCreateMembership} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-              {feedback && (
-                <div className={`p-3 rounded-xl text-sm font-bold flex items-center gap-2 ${feedback.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                  {feedback.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                  {feedback.text}
-                </div>
-              )}
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">Customer Name <span className="text-rose-500">*</span></label>
                 <input
@@ -420,12 +608,27 @@ export default function BranchManagerMembershipsPage() {
                 </div>
               </div>
 
+              {isEditing && (
+                <div className="flex items-center space-x-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="status"
+                    checked={formData.status}
+                    onChange={e => setFormData({...formData, status: e.target.checked})}
+                    className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                  />
+                  <label htmlFor="status" className="text-sm font-medium text-slate-700">
+                    Active Membership
+                  </label>
+                </div>
+              )}
+
               <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
                 <Button variant="secondary" onClick={() => setIsModalOpen(false)} type="button">
                   Cancel
                 </Button>
                 <Button variant="primary" type="submit" disabled={isSubmitting} className="bg-indigo-600 hover:bg-indigo-700 text-white border-none min-w-[120px]">
-                  {isSubmitting ? <Spinner size="sm" /> : 'Add Member'}
+                  {isSubmitting ? <Spinner size="sm" /> : isEditing ? 'Save Changes' : 'Add Member'}
                 </Button>
               </div>
             </form>

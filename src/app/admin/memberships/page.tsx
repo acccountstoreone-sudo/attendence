@@ -15,7 +15,8 @@ import {
   Percent,
   CalendarDays,
   Edit2,
-  Download
+  Download,
+  FileText
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -39,6 +40,9 @@ export default function AdminMembershipsPage() {
   const [loading, setLoading] = useState(true);
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterMonth, setFilterMonth] = useState<string>('');
+  const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedMembershipIds, setSelectedMembershipIds] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Modal
@@ -162,11 +166,33 @@ export default function AdminMembershipsPage() {
     setIsModalOpen(true);
   };
 
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedMembershipIds(new Set(filteredMemberships.map(m => m.id)));
+    } else {
+      setSelectedMembershipIds(new Set());
+    }
+  };
+
+  const handleSelectMembership = (id: string) => {
+    const newSet = new Set(selectedMembershipIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedMembershipIds(newSet);
+  };
+
   const handleExportCSV = () => {
-    if (memberships.length === 0) return;
+    const membershipsToExport = selectedMembershipIds.size > 0 
+      ? filteredMemberships.filter(m => selectedMembershipIds.has(m.id))
+      : filteredMemberships;
+
+    if (membershipsToExport.length === 0) return;
     
     const headers = ['Name', 'Phone', 'Email', 'Tier', 'Points', 'Total Spent', 'Discount %', 'Status', 'Joined Date'];
-    const csvData = memberships.map(m => [
+    const csvData = membershipsToExport.map(m => [
       `"${m.customer_name}"`,
       `"${m.customer_phone}"`,
       `"${m.email || ''}"`,
@@ -186,10 +212,67 @@ export default function AdminMembershipsPage() {
     link.click();
   };
 
-  const filteredMemberships = memberships.filter(m => 
-    m.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.customer_phone.includes(searchTerm)
-  );
+  const handleExportPDF = async () => {
+    const membershipsToExport = selectedMembershipIds.size > 0 
+      ? filteredMemberships.filter(m => selectedMembershipIds.has(m.id))
+      : filteredMemberships;
+
+    if (membershipsToExport.length === 0) return;
+    
+    setFeedback({ type: 'success', text: 'Generating PDF...' });
+    
+    const tableData = membershipsToExport.map(m => [
+      m.customer_name,
+      m.customer_phone,
+      m.membership_tier || 'Silver',
+      m.reward_points.toString(),
+      m.total_spent.toString(),
+      `${m.discount_percentage}%`,
+      m.status ? 'Active' : 'Inactive',
+      new Date(m.created_at).toLocaleDateString()
+    ]);
+
+    try {
+      const res = await fetch('/api/export/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reportTitle: 'MEMBERSHIPS REPORT',
+          reportSubtitle: 'All Branches',
+          metaRef: `MBR-${new Date().getFullYear()}`,
+          metaBranch: 'All Branches',
+          metaPeriod: new Date().toLocaleDateString(),
+          metaPreparedBy: 'Admin',
+          metaRecordsCount: membershipsToExport.length,
+          columns: ['Name', 'Phone', 'Tier', 'Points', 'Spent', 'Discount', 'Status', 'Joined'],
+          rows: tableData,
+          filename: `memberships_export_${new Date().toISOString().split('T')[0]}.pdf`
+        })
+      });
+
+      if (!res.ok) throw new Error('Failed to generate PDF');
+
+      const blob = await res.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `memberships_export_${new Date().toISOString().split('T')[0]}.pdf`;
+      link.click();
+      setFeedback(null);
+    } catch (err: any) {
+      setFeedback({ type: 'error', text: err.message || 'Error generating PDF' });
+    }
+  };
+
+  const filteredMemberships = memberships.filter(m => {
+    const matchSearch = m.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.customer_phone.includes(searchTerm);
+      
+    const date = new Date(m.created_at);
+    const matchMonth = filterMonth ? date.getMonth() + 1 === parseInt(filterMonth) : true;
+    const matchYear = filterYear ? date.getFullYear() === parseInt(filterYear) : true;
+
+    return matchSearch && matchMonth && matchYear;
+  });
 
   return (
     <div className="space-y-8 pb-12 relative">
@@ -211,10 +294,19 @@ export default function AdminMembershipsPage() {
             variant="secondary"
             icon={<Download className="w-4 h-4" />}
             onClick={handleExportCSV}
-            disabled={memberships.length === 0}
+            disabled={filteredMemberships.length === 0}
             className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
           >
-            Export CSV
+            CSV {selectedMembershipIds.size > 0 && `(${selectedMembershipIds.size})`}
+          </Button>
+          <Button
+            variant="secondary"
+            icon={<FileText className="w-4 h-4" />}
+            onClick={handleExportPDF}
+            disabled={filteredMemberships.length === 0}
+            className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+          >
+            PDF {selectedMembershipIds.size > 0 && `(${selectedMembershipIds.size})`}
           </Button>
           <Button
             variant="primary"
@@ -246,15 +338,41 @@ export default function AdminMembershipsPage() {
       </AnimatePresence>
 
       <Card className="bg-white border-slate-200 p-4">
-        <div className="relative max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search by Name or Phone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
-          />
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Search by Name or Phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
+            />
+          </div>
+          <div className="flex gap-2 w-full md:w-auto">
+            <select
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-indigo-500 w-full md:w-32"
+            >
+              <option value="">All Months</option>
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {new Date(0, i).toLocaleString('default', { month: 'short' })}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filterYear}
+              onChange={(e) => setFilterYear(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-indigo-500 w-full md:w-32"
+            >
+              <option value="">All Years</option>
+              {[2025, 2026, 2027, 2028].map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </Card>
 
@@ -268,7 +386,15 @@ export default function AdminMembershipsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                  <th className="px-6 py-4">Customer</th>
+                  <th className="px-4 py-4 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      checked={filteredMemberships.length > 0 && selectedMembershipIds.size === filteredMemberships.length}
+                      onChange={handleSelectAll}
+                    />
+                  </th>
+                  <th className="px-4 py-4">Customer</th>
                   <th className="px-6 py-4">Phone</th>
                   <th className="px-6 py-4">Tier & Points</th>
                   <th className="px-6 py-4">Discount</th>
@@ -279,8 +405,16 @@ export default function AdminMembershipsPage() {
               </thead>
               <tbody className="divide-y divide-slate-200 text-sm">
                 {filteredMemberships.map(member => (
-                  <tr key={member.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-bold text-slate-900">
+                  <tr key={member.id} className={`transition-colors ${selectedMembershipIds.has(member.id) ? 'bg-indigo-50/50' : 'hover:bg-slate-50'}`}>
+                    <td className="px-4 py-4 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                        checked={selectedMembershipIds.has(member.id)}
+                        onChange={() => handleSelectMembership(member.id)}
+                      />
+                    </td>
+                    <td className="px-4 py-4 font-bold text-slate-900">
                       {member.customer_name}
                     </td>
                     <td className="px-6 py-4 text-slate-600 flex flex-col justify-center">

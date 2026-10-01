@@ -58,6 +58,9 @@ export default function AdminTicketsPage() {
   const [tickets, setTickets] = useState<TicketData[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterMonth, setFilterMonth] = useState<string>('');
+  const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedTicketIds, setSelectedTicketIds] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
   // Modal state
@@ -193,11 +196,33 @@ export default function AdminTicketsPage() {
     }
   };
 
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedTicketIds(new Set(filteredTickets.map(t => t.id)));
+    } else {
+      setSelectedTicketIds(new Set());
+    }
+  };
+
+  const handleSelectTicket = (id: string) => {
+    const newSet = new Set(selectedTicketIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedTicketIds(newSet);
+  };
+
   const handleExportCSV = () => {
-    if (tickets.length === 0) return;
+    const ticketsToExport = selectedTicketIds.size > 0 
+      ? filteredTickets.filter(t => selectedTicketIds.has(t.id))
+      : filteredTickets;
+
+    if (ticketsToExport.length === 0) return;
     
     const headers = ['Complaint ID', 'Date', 'Customer Name', 'Phone', 'Branch', 'Type', 'Priority', 'Status', 'Call Status'];
-    const csvData = tickets.map(t => [
+    const csvData = ticketsToExport.map(t => [
       `"${t.complaint_id}"`,
       `"${new Date(t.ticket_datetime).toLocaleString()}"`,
       `"${t.customer_name}"`,
@@ -218,11 +243,15 @@ export default function AdminTicketsPage() {
   };
 
   const handleExportPDF = async () => {
-    if (tickets.length === 0) return;
+    const ticketsToExport = selectedTicketIds.size > 0 
+      ? filteredTickets.filter(t => selectedTicketIds.has(t.id))
+      : filteredTickets;
+
+    if (ticketsToExport.length === 0) return;
     
     setFeedback({ type: 'success', text: 'Generating PDF...' });
     
-    const tableData = tickets.map(t => [
+    const tableData = ticketsToExport.map(t => [
       t.complaint_id,
       new Date(t.ticket_datetime).toLocaleDateString(),
       t.customer_name,
@@ -245,7 +274,7 @@ export default function AdminTicketsPage() {
           metaBranch: 'All Branches',
           metaPeriod: new Date().toLocaleDateString(),
           metaPreparedBy: 'Admin',
-          metaRecordsCount: tickets.length,
+          metaRecordsCount: ticketsToExport.length,
           columns: ['ID', 'Date', 'Customer', 'Phone', 'Branch', 'Type', 'Priority', 'Status', 'Call'],
           rows: tableData,
           filename: `tickets_export_${new Date().toISOString().split('T')[0]}.pdf`
@@ -265,12 +294,18 @@ export default function AdminTicketsPage() {
     }
   };
 
-  const filteredTickets = tickets.filter(t => 
-    (t.complaint_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (t.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (t.mobile_number || '').includes(searchTerm) ||
-    (t.branches?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTickets = tickets.filter(t => {
+    const matchSearch = (t.complaint_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (t.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (t.mobile_number || '').includes(searchTerm) ||
+      (t.branches?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const date = new Date(t.ticket_datetime);
+    const matchMonth = filterMonth ? date.getMonth() + 1 === parseInt(filterMonth) : true;
+    const matchYear = filterYear ? date.getFullYear() === parseInt(filterYear) : true;
+
+    return matchSearch && matchMonth && matchYear;
+  });
 
   return (
     <div className="space-y-8 pb-12 relative">
@@ -293,19 +328,19 @@ export default function AdminTicketsPage() {
             variant="secondary"
             icon={<Download className="w-4 h-4" />}
             onClick={handleExportCSV}
-            disabled={tickets.length === 0}
+            disabled={filteredTickets.length === 0}
             className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
           >
-            CSV
+            CSV {selectedTicketIds.size > 0 && `(${selectedTicketIds.size})`}
           </Button>
           <Button
             variant="secondary"
             icon={<FileText className="w-4 h-4" />}
             onClick={handleExportPDF}
-            disabled={tickets.length === 0}
+            disabled={filteredTickets.length === 0}
             className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
           >
-            PDF
+            PDF {selectedTicketIds.size > 0 && `(${selectedTicketIds.size})`}
           </Button>
           <Button
             variant="primary"
@@ -337,17 +372,43 @@ export default function AdminTicketsPage() {
         )}
       </AnimatePresence>
 
-      {/* Search */}
+      {/* Search and Filters */}
       <Card className="bg-white border-slate-200 p-4">
-        <div className="relative max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search by Complaint ID, Customer Name or Phone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
-          />
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Search by Complaint ID, Customer Name or Phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
+            />
+          </div>
+          <div className="flex gap-2 w-full md:w-auto">
+            <select
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-indigo-500 w-full md:w-32"
+            >
+              <option value="">All Months</option>
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {new Date(0, i).toLocaleString('default', { month: 'short' })}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filterYear}
+              onChange={(e) => setFilterYear(e.target.value)}
+              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-indigo-500 w-full md:w-32"
+            >
+              <option value="">All Years</option>
+              {[2025, 2026, 2027, 2028].map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </Card>
 
@@ -362,7 +423,15 @@ export default function AdminTicketsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                  <th className="px-6 py-4">ID & Date</th>
+                  <th className="px-4 py-4 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                      checked={filteredTickets.length > 0 && selectedTicketIds.size === filteredTickets.length}
+                      onChange={handleSelectAll}
+                    />
+                  </th>
+                  <th className="px-4 py-4">ID & Date</th>
                   <th className="px-6 py-4">Customer</th>
                   <th className="px-6 py-4">Branch & Emp</th>
                   <th className="px-6 py-4">Details</th>
@@ -373,8 +442,16 @@ export default function AdminTicketsPage() {
               </thead>
               <tbody className="divide-y divide-slate-200 text-sm">
                 {filteredTickets.map(ticket => (
-                  <tr key={ticket.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4">
+                  <tr key={ticket.id} className={`transition-colors ${selectedTicketIds.has(ticket.id) ? 'bg-indigo-50/50' : 'hover:bg-slate-50'}`}>
+                    <td className="px-4 py-4 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                        checked={selectedTicketIds.has(ticket.id)}
+                        onChange={() => handleSelectTicket(ticket.id)}
+                      />
+                    </td>
+                    <td className="px-4 py-4">
                       <div className="font-bold text-indigo-600">{ticket.complaint_id}</div>
                       <div className="text-slate-500 text-xs flex items-center mt-1">
                         <CalendarDays className="w-3 h-3 mr-1" />
