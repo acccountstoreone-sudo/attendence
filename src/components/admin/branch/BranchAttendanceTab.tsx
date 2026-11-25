@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Calendar, Filter, Download, User, MapPin } from 'lucide-react';
+import { Calendar, Filter, Download, User, MapPin, Edit3, CalendarPlus, CheckCircle2 } from 'lucide-react';
 import { Branch } from './types';
+import { ManualCorrectionModal } from '@/components/attendance/ManualCorrectionModal';
+import { ManualAttendanceModal } from '@/components/attendance/ManualAttendanceModal';
 
 interface BranchAttendanceTabProps {
   branch: Branch;
@@ -20,25 +22,30 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [showFilter, setShowFilter] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<any | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isManualAddOpen, setIsManualAddOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const fetchAttendance = useCallback(async () => {
+    setLoading(true);
+    try {
+      const url = `/api/attendance/history?branch_id=${branch.id}&limit=100${view === 'daily' ? `&date=${selectedDate}` : `&month=${selectedMonth}&year=${selectedYear}`}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const json = await res.json();
+        setRecords(json.data || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [branch.id, view, selectedDate, selectedMonth, selectedYear]);
 
   useEffect(() => {
-    async function fetchAttendance() {
-      setLoading(true);
-      try {
-        const url = `/api/attendance/history?branch_id=${branch.id}&limit=100${view === 'daily' ? `&date=${selectedDate}` : `&month=${selectedMonth}&year=${selectedYear}`}`;
-        const res = await fetch(url);
-        if (res.ok) {
-          const json = await res.json();
-          setRecords(json.data || []);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchAttendance();
-  }, [branch.id, view, selectedDate, selectedMonth, selectedYear]);
+  }, [fetchAttendance]);
 
   const formatTime = (timeStr?: string) => {
     if (!timeStr) return '--:--';
@@ -70,6 +77,9 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
               Monthly
             </button>
           </div>
+          <Button variant="primary" size="sm" onClick={() => setIsManualAddOpen(true)} className="bg-[#1dbf73] hover:bg-[#16965a] text-white border-none font-bold">
+            <CalendarPlus className="w-4 h-4 mr-1.5" /> Manual Entry
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setShowFilter(!showFilter)}>
             <Filter className="w-4 h-4 mr-2" /> Filter
           </Button>
@@ -78,6 +88,13 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
           </Button>
         </div>
       </div>
+
+      {toastMsg && (
+        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center justify-between">
+          <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#1dbf73]" /> {toastMsg}</span>
+          <button onClick={() => setToastMsg(null)} className="text-xs font-bold opacity-70 hover:opacity-100">✕</button>
+        </div>
+      )}
 
       {showFilter && (
         <Card className="p-4 bg-white border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
@@ -154,6 +171,7 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Status</th>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Location</th>
                   <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs">Hours</th>
+                  <th className="px-6 py-4 font-medium uppercase tracking-wider text-xs text-right">Edit</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -183,7 +201,7 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider ${
                         record.status === 'present' ? 'bg-[#1dbf73]/10 text-[#1dbf73]' :
                         record.status === 'late' ? 'bg-orange-500/10 text-orange-500' :
-                        record.status === 'half-day' ? 'bg-yellow-500/10 text-yellow-600' :
+                        record.status === 'half_day' || record.status === 'half-day' ? 'bg-yellow-500/10 text-yellow-600' :
                         'bg-red-500/10 text-red-500'
                       }`}>
                         {record.status}
@@ -200,6 +218,20 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
                           })()}
                        </div>
                     </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingRecord(record);
+                          setIsEditModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-colors"
+                        title="Edit attendance record"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Edit
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -207,6 +239,31 @@ export const BranchAttendanceTab: React.FC<BranchAttendanceTabProps> = ({ branch
           </div>
         )}
       </Card>
+
+      <ManualCorrectionModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingRecord(null);
+        }}
+        record={editingRecord}
+        allowDelete={true}
+        onSuccess={(msg) => {
+          setToastMsg(msg || 'Attendance record updated successfully.');
+          fetchAttendance();
+        }}
+      />
+
+      <ManualAttendanceModal
+        isOpen={isManualAddOpen}
+        onClose={() => setIsManualAddOpen(false)}
+        branchId={branch.id}
+        defaultDates={view === 'daily' ? [selectedDate] : undefined}
+        onSuccess={(msg) => {
+          setToastMsg(msg || 'Manual attendance saved successfully.');
+          fetchAttendance();
+        }}
+      />
     </div>
   );
 };

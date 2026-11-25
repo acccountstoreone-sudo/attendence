@@ -144,13 +144,41 @@ export async function POST(
             { status: 422 }
           );
         } else {
+          // Resolve branch_id & coordinates so check_in_lat/check_in_lng NOT NULL constraints are satisfied
+          let targetBranchId = correction.branch_id;
+          if (!targetBranchId) {
+            const { data: empProf } = await supabase
+              .from('profiles')
+              .select('branch_id')
+              .eq('id', correction.employee_id)
+              .maybeSingle();
+            targetBranchId = empProf?.branch_id;
+          }
+
+          const { data: branchGeo } = targetBranchId
+            ? await supabase
+                .from('branches')
+                .select('latitude, longitude')
+                .eq('id', targetBranchId)
+                .maybeSingle()
+            : { data: null };
+
+          const fallbackLat = Number(branchGeo?.latitude ?? 23.8103);
+          const fallbackLng = Number(branchGeo?.longitude ?? 90.4125);
+
           // Create new attendance check-in record
           const { error: insErr } = await supabase.from('attendance_records').insert({
             employee_id: correction.employee_id,
-            branch_id: correction.branch_id,
+            branch_id: targetBranchId,
             check_in_time: requestedISO,
+            check_in_lat: fallbackLat,
+            check_in_lng: fallbackLng,
+            face_verified: false,
             status: 'present',
             approval_status: 'approved',
+            approved_by: user.id,
+            approved_at: new Date().toISOString(),
+            approval_note: input.reviewer_note || `Approved Correction: ${correction.reason}`,
             is_manual_override: true,
             override_reason: `Approved Correction: ${correction.reason}`,
           });
@@ -159,8 +187,10 @@ export async function POST(
             // fallback if override_reason is missing
             const { error: fallbackInsErr } = await supabase.from('attendance_records').insert({
               employee_id: correction.employee_id,
-              branch_id: correction.branch_id,
+              branch_id: targetBranchId,
               check_in_time: requestedISO,
+              check_in_lat: fallbackLat,
+              check_in_lng: fallbackLng,
               status: 'present',
               approval_status: 'approved',
               is_manual_override: true,

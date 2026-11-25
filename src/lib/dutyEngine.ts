@@ -94,6 +94,12 @@ export interface DutySummaryResult {
     overtime_approval_status?: string;
     approved_overtime_minutes?: number | null;
     tasks_completed?: number;
+    record_id?: string | null;
+    raw_check_in_time?: string | null;
+    raw_check_out_time?: string | null;
+    is_manual_override?: boolean;
+    override_reason?: string | null;
+    approval_status?: string | null;
   }>;
 }
 
@@ -411,6 +417,8 @@ export async function computeEmployeeDutySummary(
         ? new Date(checkOutLog.check_out_time).getTime()
         : null;
 
+      const isExplicitManualOverride = Boolean(firstLog.is_manual_override && firstLog.override_reason);
+
       if (checkOutMs && checkOutMs > checkInMs) {
         dutyHours = Math.max(0, Number(((checkOutMs - checkInMs) / 3600000).toFixed(2)));
       } else if (dateStr === currentDhakaDateStr) {
@@ -421,8 +429,8 @@ export async function computeEmployeeDutySummary(
       } else if (!checkOutMs) {
         dutyHours = 0;
         // The checkOutLog status might have been set to 'present' or 'late' on check-in.
-        // If it was never checked out, it's incomplete.
-        if (firstLog) firstLog.status = 'incomplete';
+        // If it was never checked out, it's incomplete — unless explicitly overridden by Admin/Manager.
+        if (firstLog && !isExplicitManualOverride) firstLog.status = 'incomplete';
       }
 
       const checkInMinutes = getDhakaMinutesOfDay(firstLog.check_in_time);
@@ -434,7 +442,12 @@ export async function computeEmployeeDutySummary(
       }
 
       let evaluatedStatus = firstLog.status || 'present';
-      if (leaveMatch && (evaluatedStatus === 'absent' || evaluatedStatus === 'missed' || dutyHours === 0)) {
+      if (isExplicitManualOverride && ['present', 'late', 'half_day', 'absent'].includes(evaluatedStatus)) {
+        // Respect explicit manual override set by Admin/Manager
+        if (evaluatedStatus !== 'late') {
+          lateMins = 0;
+        }
+      } else if (leaveMatch && (evaluatedStatus === 'absent' || evaluatedStatus === 'missed' || dutyHours === 0)) {
         evaluatedStatus = 'on_leave';
       } else if (evaluatedStatus !== 'absent' && evaluatedStatus !== 'missed') {
         if (lateMins > dailyGraceMinutes) {
@@ -453,8 +466,10 @@ export async function computeEmployeeDutySummary(
         totalHalfDays++;
       } else if (evaluatedStatus === 'absent' || evaluatedStatus === 'missed') {
         totalMissedDays++;
+        dutyHours = 0;
       } else if (evaluatedStatus === 'on_leave') {
         totalOnLeaveDays++;
+        dutyHours = 0;
       }
       
       if (evaluatedStatus !== 'late' && lateMins > 0 && evaluatedStatus !== 'absent' && evaluatedStatus !== 'missed' && evaluatedStatus !== 'on_leave') {
@@ -525,15 +540,11 @@ export async function computeEmployeeDutySummary(
         }
       }
 
-      if (!isOffDay && !holidayMatch) totalWorkingDays++;
-      if (evaluatedStatus === 'present') totalPresentDays++;
-      if (evaluatedStatus === 'late') {
-        totalLateDays++;
-        totalLateMinutes += lateMins;
-      } else if (lateMins > 0 && evaluatedStatus !== 'on_leave' && evaluatedStatus !== 'absent' && evaluatedStatus !== 'missed') {
-        totalLateMinutes += lateMins;
+      if (evaluatedStatus === 'absent' || evaluatedStatus === 'missed' || evaluatedStatus === 'on_leave') {
+        effectiveOtMins = 0;
       }
-      if (evaluatedStatus === 'half_day') totalHalfDays++;
+
+      if (!isOffDay && !holidayMatch) totalWorkingDays++;
 
       totalDutyHours += dutyHours;
       totalOvertimeMinutes += effectiveOtMins;
@@ -572,7 +583,9 @@ export async function computeEmployeeDutySummary(
         late_hours: Number((lateMins / 60).toFixed(2)),
         overtime_minutes: effectiveOtMins,
         overtime_hours: Number((effectiveOtMins / 60).toFixed(2)),
-        notes: evaluatedStatus === 'on_leave' ? `Approved Leave (${(leaveMatch?.type || 'Leave').toUpperCase()})` 
+        notes: isExplicitManualOverride
+             ? `Manual Edit: ${firstLog.override_reason}`
+             : evaluatedStatus === 'on_leave' ? `Approved Leave (${(leaveMatch?.type || 'Leave').toUpperCase()})` 
              : evaluatedStatus === 'absent' || evaluatedStatus === 'missed' ? 'Absent / Missed Duty'
              : evaluatedStatus === 'late' ? `${lateMins} mins late` 
              : effectiveOtMins > 0 ? `${effectiveOtMins} mins ${isHolidayDuty ? '(Holiday/Off-day 2x OT)' : 'overtime'}` 
@@ -588,6 +601,12 @@ export async function computeEmployeeDutySummary(
         overtime_approval_status: approvalStatus,
         approved_overtime_minutes: approvedOt,
         tasks_completed: dailyTasksCompleted,
+        record_id: firstLog.id || null,
+        raw_check_in_time: firstLog.check_in_time || null,
+        raw_check_out_time: checkOutLog.check_out_time || null,
+        is_manual_override: Boolean(firstLog.is_manual_override),
+        override_reason: firstLog.override_reason || firstLog.approval_note || null,
+        approval_status: firstLog.approval_status || null,
       });
     } else {
       if (isFutureDay) {

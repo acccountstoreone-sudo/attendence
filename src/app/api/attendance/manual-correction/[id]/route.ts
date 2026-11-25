@@ -79,19 +79,37 @@ export async function PUT(
           .update(updateData)
           .eq('id', recordId);
       } else {
+        // Resolve branch coordinates to satisfy NOT NULL constraints on attendance_records
+        const { data: branchGeo } = correctionRequest.branch_id
+          ? await supabase
+              .from('branches')
+              .select('latitude, longitude')
+              .eq('id', correctionRequest.branch_id)
+              .maybeSingle()
+          : { data: null };
+
+        const fallbackLat = Number(branchGeo?.latitude ?? 23.8103);
+        const fallbackLng = Number(branchGeo?.longitude ?? 90.4125);
+
         // Create new record
-        const insertData: Record<string, string | boolean> = {
+        const insertData: Record<string, string | number | boolean> = {
           employee_id: correctionRequest.employee_id,
           branch_id: correctionRequest.branch_id,
-          date: correctionRequest.date,
+          check_in_lat: fallbackLat,
+          check_in_lng: fallbackLng,
+          face_verified: false,
           status: 'present',
+          approval_status: 'approved',
+          approved_by: user.id,
+          approved_at: new Date().toISOString(),
+          approval_note: review_note || correctionRequest.reason,
           is_manual_override: true,
           override_reason: correctionRequest.reason,
-          check_in_method: 'manual',
         };
         if (correctionRequest.type === 'check_in') {
           insertData.check_in_time = correctionRequest.requested_time;
         } else {
+          insertData.check_in_time = correctionRequest.requested_time;
           insertData.check_out_time = correctionRequest.requested_time;
         }
         await supabase.from('attendance_records').insert(insertData);

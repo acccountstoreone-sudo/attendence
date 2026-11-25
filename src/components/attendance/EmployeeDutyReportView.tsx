@@ -27,8 +27,13 @@ import {
   ExternalLink,
   MessageSquare,
   ClipboardList,
+  Edit3,
+  CalendarPlus,
+  CheckSquare,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { ManualCorrectionModal } from '@/components/attendance/ManualCorrectionModal';
+import { ManualAttendanceModal } from '@/components/attendance/ManualAttendanceModal';
 
 interface DailyLog {
   date: string;
@@ -50,6 +55,12 @@ interface DailyLog {
   check_out_lng?: number | null;
   is_right_time?: boolean;
   tasks_completed?: number;
+  record_id?: string | null;
+  raw_check_in_time?: string | null;
+  raw_check_out_time?: string | null;
+  is_manual_override?: boolean;
+  override_reason?: string | null;
+  approval_status?: string | null;
 }
 
 interface DutySummaryData {
@@ -116,9 +127,16 @@ interface DutySummaryData {
 interface Props {
   employeeId: string;
   backUrl?: string;
+  canEditAttendance?: boolean;
+  allowDelete?: boolean;
 }
 
-export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
+export function EmployeeDutyReportView({
+  employeeId,
+  backUrl,
+  canEditAttendance = false,
+  allowDelete = false,
+}: Props) {
   const router = useRouter();
   const currentDate = new Date();
   const [month, setMonth] = useState<number>(currentDate.getMonth() + 1);
@@ -132,6 +150,21 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
   const [resettingFace, setResettingFace] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showMapModal, setShowMapModal] = useState<{ lat: number; lng: number; title: string; subtitle?: string } | null>(null);
+
+  // Manual attendance add/edit states
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [isManualAddOpen, setIsManualAddOpen] = useState<boolean>(false);
+  const [manualModalDates, setManualModalDates] = useState<string[] | undefined>(undefined);
+  const [editingRecord, setEditingRecord] = useState<{
+    id: string;
+    check_in_time: string | null;
+    check_out_time: string | null;
+    status: string;
+    approval_status?: string;
+    override_reason?: string | null;
+    full_name?: string;
+  } | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
 
   const handleResetFaceVerification = async () => {
     if (!data?.employee?.id) return;
@@ -170,14 +203,16 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
     let mounted = true;
     const fetchDutyData = async () => {
       setLoading(true);
-      setFeedback(null);
       try {
         const res = await fetch(`/api/reports/employee/${employeeId}/duty-summary?month=${month}&year=${year}`);
         const json = await res.json();
         if (!res.ok || !json.success) {
           throw new Error(json.error?.message || 'Failed to calculate monthly duty profile.');
         }
-        if (mounted) setData(json.data);
+        if (mounted) {
+          setData(json.data);
+          setSelectedDates([]);
+        }
       } catch (err: unknown) {
         if (mounted) setFeedback({ type: 'error', text: err instanceof Error ? err.message : 'Error fetching report.' });
       } finally {
@@ -314,6 +349,38 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
     }
     return true;
   });
+
+  const missedDates = (data?.daily_breakdown || [])
+    .filter((log) => log.status === 'missed')
+    .map((log) => log.date);
+
+  const toggleDateSelection = (dateStr: string) => {
+    setSelectedDates((prev) =>
+      prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr].sort()
+    );
+  };
+
+  const openManualAddForDates = (dates?: string[]) => {
+    setManualModalDates(dates && dates.length > 0 ? dates : undefined);
+    setIsManualAddOpen(true);
+  };
+
+  const openEditForLog = (log: DailyLog) => {
+    if (!log.record_id) {
+      openManualAddForDates([log.date]);
+      return;
+    }
+    setEditingRecord({
+      id: log.record_id,
+      check_in_time: log.raw_check_in_time || `${log.date}T09:00:00+06:00`,
+      check_out_time: log.raw_check_out_time || null,
+      status: log.status === 'incomplete' ? 'present' : log.status,
+      approval_status: log.approval_status || 'approved',
+      override_reason: log.override_reason || null,
+      full_name: data?.employee?.full_name,
+    });
+    setIsEditModalOpen(true);
+  };
 
   return (
     <div className="space-y-6 pb-12">
@@ -458,9 +525,8 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             {feedback && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className={`p-4 rounded-xl border text-sm font-semibold shadow-sm ${
-                  feedback.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800'
-                }`}
+                className={`p-4 rounded-xl border text-sm font-semibold shadow-sm ${feedback.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800'
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <XCircle className="w-5 h-5 text-rose-600 shrink-0" />}
@@ -488,12 +554,11 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider shadow-2xs border ${
-                    data.summary.today_status === 'present' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                    data.summary.today_status === 'late' ? 'bg-amber-50 text-amber-800 border-amber-200' :
-                    data.summary.today_status === 'half_day' ? 'bg-sky-50 text-sky-700 border-sky-200' :
-                    'bg-slate-100 text-slate-900 border-slate-200'
-                  }`}>
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider shadow-2xs border ${data.summary.today_status === 'present' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      data.summary.today_status === 'late' ? 'bg-amber-50 text-amber-800 border-amber-200' :
+                        data.summary.today_status === 'half_day' ? 'bg-sky-50 text-sky-700 border-sky-200' :
+                          'bg-slate-100 text-slate-900 border-slate-200'
+                    }`}>
                     Status Today: {data.summary.today_status || 'Upcoming'}
                   </span>
                 </div>
@@ -580,18 +645,17 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                   <div className="bg-slate-50/80 p-3.5 rounded-xl border border-slate-200/80">
                     <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Facial Biometric Enrollment</span>
                     <div className="flex items-center justify-between mt-1">
-                      <span className={`text-xs font-extrabold flex items-center gap-1.5 ${
-                        data.employee.requires_face_reverification
+                      <span className={`text-xs font-extrabold flex items-center gap-1.5 ${data.employee.requires_face_reverification
                           ? 'text-rose-600 animate-pulse'
                           : data.employee.face_enrolled
-                          ? 'text-emerald-600'
-                          : 'text-amber-600'
-                      }`}>
+                            ? 'text-emerald-600'
+                            : 'text-amber-600'
+                        }`}>
                         {data.employee.requires_face_reverification
                           ? <><ShieldAlert className="w-4 h-4" /> Reverification Required</>
                           : data.employee.face_enrolled
-                          ? <><CheckCircle2 className="w-4 h-4" /> Active & Enrolled</>
-                          : <><AlertCircle className="w-4 h-4" /> Not Enrolled Yet</>}
+                            ? <><CheckCircle2 className="w-4 h-4" /> Active & Enrolled</>
+                            : <><AlertCircle className="w-4 h-4" /> Not Enrolled Yet</>}
                       </span>
                     </div>
                   </div>
@@ -790,13 +854,54 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
           {/* Daily Breakdown Section */}
           <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
             {/* Table Header Controls */}
-            <div className="p-6 border-b border-slate-200/80 bg-slate-50/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h3 className="font-bold text-slate-900 text-base tracking-tight">Day-by-Day Duty & Overtime Roster ({months[month - 1]} {year})</h3>
-                <p className="text-xs text-slate-900 font-medium mt-0.5">Exact daily check-in, check-out, duty hours, overtime, GPS, and punctuality logs</p>
+            <div className="p-6 border-b border-slate-200/80 bg-slate-50/60 flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base tracking-tight">Day-by-Day Duty & Overtime Roster ({months[month - 1]} {year})</h3>
+                  <p className="text-xs text-slate-900 font-medium mt-0.5">
+                    Exact daily check-in, check-out, duty hours, overtime, GPS, and punctuality logs
+                    {canEditAttendance && ' — select missed days or click Edit to manually update attendance.'}
+                  </p>
+                </div>
+
+                {canEditAttendance && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {selectedDates.length > 0 && (
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => openManualAddForDates(selectedDates)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl gap-1.5 shadow-sm border-0"
+                      >
+                        <CheckSquare className="w-3.5 h-3.5" />
+                        Update Selected ({selectedDates.length} {selectedDates.length === 1 ? 'Day' : 'Days'})
+                      </Button>
+                    )}
+                    {missedDates.length > 0 && (
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => openManualAddForDates(missedDates)}
+                        className="bg-[#1dbf73] hover:bg-[#16965a] text-white font-bold text-xs px-3.5 py-2 rounded-xl gap-1.5 shadow-sm border-0"
+                      >
+                        <CalendarPlus className="w-3.5 h-3.5" />
+                        Fix All {missedDates.length} Missed Day{missedDates.length > 1 ? 's' : ''}
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openManualAddForDates()}
+                      className="border-slate-300 bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs px-3.5 py-2 rounded-xl gap-1.5"
+                    >
+                      <CalendarPlus className="w-3.5 h-3.5 text-[#1dbf73]" />
+                      Manual Entry
+                    </Button>
+                  </div>
+                )}
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                 {/* Search input */}
                 <div className="relative w-full sm:w-64">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -813,41 +918,36 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                 <div className="flex items-center bg-slate-200/60 p-1 rounded-xl border border-slate-300/50 w-full sm:w-auto overflow-x-auto gap-1">
                   <button
                     onClick={() => setFilterTab('all')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                      filterTab === 'all' ? 'bg-white text-slate-900 shadow-sm border border-slate-300/80' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
-                    }`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${filterTab === 'all' ? 'bg-white text-slate-900 shadow-sm border border-slate-300/80' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
+                      }`}
                   >
                     All ({data.daily_breakdown.length})
                   </button>
                   <button
                     onClick={() => setFilterTab('present')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                      filterTab === 'present' ? 'bg-[#1dbf73] text-white shadow-sm' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
-                    }`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${filterTab === 'present' ? 'bg-[#1dbf73] text-white shadow-sm' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
+                      }`}
                   >
                     Present
                   </button>
                   <button
                     onClick={() => setFilterTab('late')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                      filterTab === 'late' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
-                    }`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${filterTab === 'late' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
+                      }`}
                   >
                     Late ({data.summary.total_late_days})
                   </button>
                   <button
                     onClick={() => setFilterTab('missed')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                      filterTab === 'missed' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
-                    }`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${filterTab === 'missed' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
+                      }`}
                   >
                     Missed ({data.summary.total_missed_days})
                   </button>
                   <button
                     onClick={() => setFilterTab('overtime')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                      filterTab === 'overtime' ? 'bg-sky-600 text-white shadow-sm' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
-                    }`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${filterTab === 'overtime' ? 'bg-sky-600 text-white shadow-sm' : 'text-slate-900 hover:text-slate-900 hover:bg-white/60'
+                      }`}
                   >
                     Overtime
                   </button>
@@ -860,6 +960,7 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 text-slate-500 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200/80">
+                    {canEditAttendance && <th className="py-3.5 pl-4 pr-2 w-8">Sel</th>}
                     <th className="py-3.5 px-4">Date</th>
                     <th className="py-3.5 px-4">Day</th>
                     <th className="py-3.5 px-4">Status</th>
@@ -870,87 +971,144 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
                     <th className="py-3.5 px-4 text-center">Overtime</th>
                     <th className="py-3.5 px-4 text-center">Face & GPS</th>
                     <th className="py-3.5 px-4">Notes / Remark</th>
+                    {canEditAttendance && <th className="py-3.5 px-4 text-right">Edit</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-xs font-medium">
                   {filteredLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="py-16 text-center text-slate-500 font-semibold">
+                      <td colSpan={canEditAttendance ? 12 : 10} className="py-16 text-center text-slate-500 font-semibold">
                         No daily logs found matching the selected filter or search term.
                       </td>
                     </tr>
                   ) : (
-                    filteredLogs.map((log) => (
-                      <tr
-                        key={log.date}
-                        className={`hover:bg-slate-50/80 transition-colors ${log.status === 'missed' ? 'bg-rose-50/30' : log.status === 'late' ? 'bg-amber-50/30' : (log.status as string) === 'incomplete' ? 'bg-orange-50/30' : ''}`}
-                      >
-                        <td className="py-3.5 px-4 font-mono font-bold text-slate-800">{log.date}</td>
-                        <td className="py-3.5 px-4 text-slate-700 font-semibold">{log.day_name}</td>
-                        <td className="py-3.5 px-4">{getStatusBadge(log.status, log.late_minutes, log.overtime_minutes)}</td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-slate-700">{log.check_in_time}</td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-slate-700">{log.check_out_time}</td>
-                        <td className="py-3.5 px-4 text-center font-extrabold text-slate-800">
-                          {log.duty_hours > 0 ? `${log.duty_hours}h` : <span className="text-slate-400 font-normal">-</span>}
-                        </td>
-                        <td className="py-3.5 px-4 text-center font-mono">
-                          {log.is_right_time ? (
-                            <span className="px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 text-[11px]">
-                              Right Time
-                            </span>
-                          ) : log.late_minutes > 0 ? (
-                            <span className="px-2 py-1 rounded-md bg-amber-50 text-amber-800 font-bold border border-amber-200 text-[11px]">
-                              +{log.late_minutes}m ({log.late_hours}h)
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 font-normal">-</span>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4 text-center font-mono">
-                          {log.overtime_minutes > 0 ? (
-                            <span className="px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 text-[11px]">
-                              +{log.overtime_hours}h ({log.overtime_minutes}m)
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 font-normal">-</span>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4 text-center">
-                          {log.check_in_time !== '--:--' && log.status !== 'upcoming' && log.status !== 'holiday' && log.status !== 'off_day' ? (
-                            <div className="flex items-center justify-center gap-2">
-                              <span
-                                title={log.face_verified ? 'Verified with facial biometrics' : 'Face verification not matched or bypassed'}
-                                className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
-                                  log.face_verified
-                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                    : 'bg-rose-50 text-rose-700 border border-rose-200'
-                                }`}
-                              >
-                                {log.face_verified ? '✓ Face' : '✗ Face'}
-                              </span>
-                              {log.check_in_lat && log.check_in_lng ? (
-                                <button
-                                  onClick={() => setShowMapModal({
-                                    lat: log.check_in_lat!,
-                                    lng: log.check_in_lng!,
-                                    title: `Check-in GPS Location (${log.date})`,
-                                    subtitle: `Coordinates: ${log.check_in_lat!.toFixed(5)}, ${log.check_in_lng!.toFixed(5)} | Check-in: ${log.check_in_time}`,
-                                  })}
-                                  className="px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-200 font-bold text-[10px] hover:bg-sky-100 flex items-center gap-1 transition-colors"
-                                >
-                                  <MapPin className="w-2.5 h-2.5" /> GPS
-                                </button>
+                    filteredLogs.map((log) => {
+                      const canSelectDay = log.status !== 'upcoming';
+                      const isSelected = selectedDates.includes(log.date);
+                      return (
+                        <tr
+                          key={log.date}
+                          className={`hover:bg-slate-50/80 transition-colors ${isSelected ? 'bg-blue-50/60' : log.status === 'missed' ? 'bg-rose-50/30' : log.status === 'late' ? 'bg-amber-50/30' : (log.status as string) === 'incomplete' ? 'bg-orange-50/30' : ''}`}
+                        >
+                          {canEditAttendance && (
+                            <td className="py-3.5 pl-4 pr-2">
+                              {canSelectDay ? (
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleDateSelection(log.date)}
+                                  className="rounded border-slate-300 text-[#1dbf73] focus:ring-[#1dbf73] cursor-pointer"
+                                  title={`Select ${log.date} for bulk update`}
+                                />
                               ) : (
-                                <span className="text-[10px] text-slate-400 font-medium">No GPS</span>
+                                <span className="text-slate-300">—</span>
+                              )}
+                            </td>
+                          )}
+                          <td className="py-3.5 px-4 font-mono font-bold text-slate-800">{log.date}</td>
+                          <td className="py-3.5 px-4 text-slate-700 font-semibold">{log.day_name}</td>
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {getStatusBadge(log.status, log.late_minutes, log.overtime_minutes)}
+                              {log.is_manual_override && log.override_reason && (
+                                <span className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 text-[10px] font-bold uppercase">
+                                  Manual
+                                </span>
                               )}
                             </div>
-                          ) : (
-                            <span className="text-slate-400 font-normal text-[11px]">-</span>
+                          </td>
+                          <td className="py-3.5 px-4 font-mono font-bold text-slate-700">{log.check_in_time}</td>
+                          <td className="py-3.5 px-4 font-mono font-bold text-slate-700">{log.check_out_time}</td>
+                          <td className="py-3.5 px-4 text-center font-extrabold text-slate-800">
+                            {log.duty_hours > 0 ? `${log.duty_hours}h` : <span className="text-slate-400 font-normal">-</span>}
+                          </td>
+                          <td className="py-3.5 px-4 text-center font-mono">
+                            {log.is_right_time ? (
+                              <span className="px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 text-[11px]">
+                                Right Time
+                              </span>
+                            ) : log.late_minutes > 0 ? (
+                              <span className="px-2 py-1 rounded-md bg-amber-50 text-amber-800 font-bold border border-amber-200 text-[11px]">
+                                +{log.late_minutes}m ({log.late_hours}h)
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 font-normal">-</span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 text-center font-mono">
+                            {log.overtime_minutes > 0 ? (
+                              <span className="px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 text-[11px]">
+                                +{log.overtime_hours}h ({log.overtime_minutes}m)
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 font-normal">-</span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            {log.check_in_time !== '--:--' && log.status !== 'upcoming' && log.status !== 'holiday' && log.status !== 'off_day' ? (
+                              <div className="flex items-center justify-center gap-2">
+                                <span
+                                  title={log.face_verified ? 'Verified with facial biometrics' : 'Face verification not matched or bypassed'}
+                                  className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${log.face_verified
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                      : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                    }`}
+                                >
+                                  {log.face_verified ? '✓ Face' : '✗ Face'}
+                                </span>
+                                {log.check_in_lat && log.check_in_lng ? (
+                                  <button
+                                    onClick={() => setShowMapModal({
+                                      lat: log.check_in_lat!,
+                                      lng: log.check_in_lng!,
+                                      title: `Check-in GPS Location (${log.date})`,
+                                      subtitle: `Coordinates: ${log.check_in_lat!.toFixed(5)}, ${log.check_in_lng!.toFixed(5)} | Check-in: ${log.check_in_time}`,
+                                    })}
+                                    className="px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-200 font-bold text-[10px] hover:bg-sky-100 flex items-center gap-1 transition-colors"
+                                  >
+                                    <MapPin className="w-2.5 h-2.5" /> GPS
+                                  </button>
+                                ) : (
+                                  <span className="text-[10px] text-slate-400 font-medium">No GPS</span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 font-normal text-[11px]">-</span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-900 font-medium">{log.notes}</td>
+                          {canEditAttendance && (
+                            <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                              {log.status !== 'upcoming' ? (
+                                log.record_id ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => openEditForLog(log)}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-bold transition-colors"
+                                    title="Edit attendance record"
+                                  >
+                                    <Edit3 className="w-3 h-3" />
+                                    Edit
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => openManualAddForDates([log.date])}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] font-bold transition-colors"
+                                    title="Manually mark attendance for this day"
+                                  >
+                                    <CalendarPlus className="w-3 h-3" />
+                                    Mark Present
+                                  </button>
+                                )
+                              ) : (
+                                <span className="text-slate-300 text-[11px]">—</span>
+                              )}
+                            </td>
                           )}
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-900 font-medium">{log.notes}</td>
-                      </tr>
-                    ))
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -1015,6 +1173,54 @@ export function EmployeeDutyReportView({ employeeId, backUrl }: Props) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Manual Attendance Add / Bulk Update Modal */}
+      {canEditAttendance && data?.employee && (
+        <>
+          <ManualAttendanceModal
+            isOpen={isManualAddOpen}
+            onClose={() => {
+              setIsManualAddOpen(false);
+              setManualModalDates(undefined);
+            }}
+            defaultEmployee={{
+              id: data.employee.id,
+              full_name: data.employee.full_name,
+              employee_id: data.employee.employee_id,
+              branch_id: data.employee.branch_id,
+              branch_name: data.employee.branch_name,
+            }}
+            defaultDates={manualModalDates}
+            defaultWorkStart={data.period.work_start_time}
+            defaultWorkEnd={data.period.work_end_time}
+            onSuccess={(msg) => {
+              setFeedback({
+                type: 'success',
+                text: msg || 'Manual attendance saved and duty report updated!',
+              });
+              setSelectedDates([]);
+              setRefreshIndex((prev) => prev + 1);
+            }}
+          />
+
+          <ManualCorrectionModal
+            isOpen={isEditModalOpen}
+            onClose={() => {
+              setIsEditModalOpen(false);
+              setEditingRecord(null);
+            }}
+            record={editingRecord}
+            allowDelete={allowDelete}
+            onSuccess={(msg) => {
+              setFeedback({
+                type: 'success',
+                text: msg || 'Attendance record updated successfully!',
+              });
+              setRefreshIndex((prev) => prev + 1);
+            }}
+          />
+        </>
       )}
     </div>
   );

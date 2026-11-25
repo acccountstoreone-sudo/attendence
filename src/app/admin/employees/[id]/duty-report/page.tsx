@@ -12,7 +12,12 @@ export default function AdminEmployeeDutyReportPage() {
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <EmployeeDutyReportView employeeId={employeeId} backUrl="/admin/employees" />
+      <EmployeeDutyReportView
+        employeeId={employeeId}
+        backUrl="/admin/employees"
+        canEditAttendance={true}
+        allowDelete={true}
+      />
     </div>
   );
 }

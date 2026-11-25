@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
         status,
         approval_status,
         is_manual_override,
+        override_reason,
         approved_by,
         approved_at,
         approval_note,

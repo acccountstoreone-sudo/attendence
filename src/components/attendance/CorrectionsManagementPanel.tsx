@@ -8,9 +8,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   UserCheck, CheckCircle2, XCircle, Clock, AlertTriangle, 
   Search, Filter, MessageSquare, RefreshCw, Building2, Calendar, ArrowRight,
-  ShieldCheck, AlertCircle, TrendingUp, MapPin, Edit3
+  ShieldCheck, AlertCircle, TrendingUp, MapPin, Edit3, CalendarPlus
 } from 'lucide-react';
 import { ManualCorrectionModal } from '@/components/attendance/ManualCorrectionModal';
+import { ManualAttendanceModal } from '@/components/attendance/ManualAttendanceModal';
 
 export interface CorrectionRequestRecord {
   id: string;
@@ -85,6 +86,7 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
 
   const [editingRecord, setEditingRecord] = useState<any | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isManualAddOpen, setIsManualAddOpen] = useState(false);
 
   const fetchAllData = useCallback(async () => {
     setLoading(true);
@@ -298,10 +300,20 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
             Review live check-in approvals, manual override entries, employee time adjustment requests, and overtime sign-offs.
           </p>
         </div>
-        <Button onClick={fetchAllData} variant="secondary" className="flex items-center gap-2 shrink-0">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <Button
+            onClick={() => setIsManualAddOpen(true)}
+            variant="primary"
+            className="bg-[#1dbf73] hover:bg-[#16965a] text-white font-bold flex items-center gap-2 border-none"
+          >
+            <CalendarPlus className="w-4 h-4" />
+            Manual Attendance / Add Days
+          </Button>
+          <Button onClick={fetchAllData} variant="secondary" className="flex items-center gap-2">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Category Tabs (Check-ins vs Corrections vs Overtime vs Off-Day) */}
@@ -1342,8 +1354,17 @@ export const CorrectionsManagementPanel: React.FC<CorrectionsManagementPanelProp
           setEditingRecord(null);
         }}
         record={editingRecord}
-        onSuccess={() => {
-          setFeedback({ type: 'success', text: 'Attendance record manually corrected.' });
+        allowDelete={role === 'admin'}
+        onSuccess={(msg) => {
+          setFeedback({ type: 'success', text: msg || 'Attendance record manually corrected.' });
+          fetchAllData();
+        }}
+      />
+      <ManualAttendanceModal
+        isOpen={isManualAddOpen}
+        onClose={() => setIsManualAddOpen(false)}
+        onSuccess={(msg) => {
+          setFeedback({ type: 'success', text: msg || 'Manual attendance saved successfully.' });
           fetchAllData();
         }}
       />

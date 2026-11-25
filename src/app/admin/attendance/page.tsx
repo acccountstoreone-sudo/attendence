@@ -7,12 +7,13 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import {
-  Search, MapPin, Clock, Filter, Download, RefreshCw, Calendar,
-  CheckCircle2, XCircle, AlertCircle, Hourglass, Timer, TrendingUp, Building2, Coffee, Edit3
+  Search, Clock, Filter, Download, RefreshCw, Calendar,
+  CheckCircle2, XCircle, AlertCircle, Hourglass, TrendingUp, Building2, Coffee, Edit3, CalendarPlus
 } from 'lucide-react';
 import { BranchGatePassTab } from '@/components/admin/branch/BranchGatePassTab';
 import Abstract3DBackground from '@/components/Abstract3DBackground';
 import { ManualCorrectionModal } from '@/components/attendance/ManualCorrectionModal';
+import { ManualAttendanceModal } from '@/components/attendance/ManualAttendanceModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type Tab = 'pending' | 'approved' | 'all' | 'breaks';
@@ -28,13 +29,37 @@ interface AttendanceRecord {
   approval_status: string;
   approved_at: string | null;
   approval_note: string | null;
+  override_reason?: string | null;
   overtime_minutes: number;
   is_manual_override?: boolean;
 }
 
+function formatDate(isoString: string | null) {
+  if (!isoString) return '—';
+  return new Date(isoString).toLocaleDateString('en-US', {
+    timeZone: 'Asia/Dhaka',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 function formatTime(isoString: string | null) {
   if (!isoString) return '—';
-  return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return new Date(isoString).toLocaleTimeString([], {
+    timeZone: 'Asia/Dhaka',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function getTodayDhakaStr() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Dhaka',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
 }
 
 function formatOvertime(minutes: number) {
@@ -57,6 +82,8 @@ function AdminAttendanceContent() {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isManualAddOpen, setIsManualAddOpen] = useState(false);
+  const todayDhaka = getTodayDhakaStr();
 
   useEffect(() => {
     if (searchParams) {
@@ -78,7 +105,6 @@ function AdminAttendanceContent() {
 
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
-    setFeedback(null);
     try {
       const statusParam = activeTab === 'all' ? 'all' : activeTab;
       const res = await fetch(`/api/attendance/approve?date=${selectedDate}&status=${statusParam}`);
@@ -102,6 +128,7 @@ function AdminAttendanceContent() {
         approval_status: String(item.approval_status || 'pending'),
         approved_at: item.approved_at as string | null,
         approval_note: item.approval_note as string | null,
+        override_reason: (item.override_reason as string | null) || null,
         overtime_minutes: Number(item.overtime_minutes || 0),
         is_manual_override: Boolean(item.is_manual_override),
       }));
@@ -258,7 +285,16 @@ function AdminAttendanceContent() {
           </p>
         </div>
 
-        <div className="relative z-10 flex gap-2">
+        <div className="relative z-10 flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="primary"
+            className="bg-slate-900 hover:bg-slate-800 text-white border-none font-bold shadow-sm"
+            icon={<CalendarPlus className="w-4 h-4" />}
+            onClick={() => setIsManualAddOpen(true)}
+          >
+            Manual Attendance / Add Days
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -372,6 +408,7 @@ function AdminAttendanceContent() {
                 <option value="all">All Statuses</option>
                 <option value="present">Present</option>
                 <option value="late">Late</option>
+                <option value="half_day">Half Day</option>
                 <option value="absent">Absent</option>
                 <option value="on_leave">On Leave</option>
               </select>
@@ -382,16 +419,38 @@ function AdminAttendanceContent() {
               )}
             </div>
 
-            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2">
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5">
               <Calendar className="w-4 h-4 text-[#1dbf73] shrink-0" />
-              <select
-                value={selectedDate}
-                onChange={e => setSelectedDate(e.target.value)}
+              <input
+                type="date"
+                value={selectedDate === 'all' ? '' : selectedDate}
+                max={todayDhaka}
+                onChange={e => setSelectedDate(e.target.value || 'all')}
                 className="bg-transparent text-sm text-slate-900 focus:outline-none font-medium"
+                title="Filter by specific date"
+              />
+              <button
+                type="button"
+                onClick={() => setSelectedDate(todayDhaka)}
+                className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
+                  selectedDate === todayDhaka
+                    ? 'bg-[#1dbf73] text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
               >
-                <option value="all">All Dates / Recent</option>
-                <option value={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`}>Today</option>
-              </select>
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedDate('all')}
+                className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
+                  selectedDate === 'all'
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                All Dates
+              </button>
             </div>
           </div>
         </div>
@@ -408,6 +467,7 @@ function AdminAttendanceContent() {
                 <tr className="bg-white border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-900 font-bold">
                   <th className="py-4 px-6">Employee</th>
                   <th className="py-4 px-6">Branch / Store</th>
+                  <th className="py-4 px-6">Date</th>
                   <th className="py-4 px-6">Check-In</th>
                   <th className="py-4 px-6">Check-Out</th>
                   <th className="py-4 px-6">Overtime</th>
@@ -420,7 +480,7 @@ function AdminAttendanceContent() {
                 <AnimatePresence>
                   {filteredRecords.length === 0 ? (
                     <tr>
-                      <td colSpan={7}>
+                      <td colSpan={8}>
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-16 text-center text-slate-500 text-sm">
                           {activeTab === 'pending'
                             ? <><CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-emerald-600/40" /><p className="font-semibold text-[#1dbf73]/60">All caught up! No pending attendance check-in approvals across stores.</p></>
@@ -451,7 +511,14 @@ function AdminAttendanceContent() {
                                   <span className="text-[10px] bg-purple-500/15 text-purple-700 px-1.5 py-0.5 rounded font-bold uppercase">Manual / Override</span>
                                 )}
                               </div>
-                              <p className="text-xs text-slate-500 font-mono mt-0.5">ID: {rec.employee_id.slice(0, 8)}</p>
+                              <p className="text-xs text-slate-500 font-mono mt-0.5">
+                                ID: {rec.employee_id.slice(0, 8)}
+                                {rec.override_reason && (
+                                  <span className="ml-2 font-sans text-purple-700 font-medium" title={rec.override_reason}>
+                                    • {rec.override_reason.length > 35 ? `${rec.override_reason.slice(0, 35)}…` : rec.override_reason}
+                                  </span>
+                                )}
+                              </p>
                             </div>
                           </div>
                         </td>
@@ -462,6 +529,11 @@ function AdminAttendanceContent() {
                             <Building2 className="w-4 h-4 text-[#1dbf73]/60 mr-2 shrink-0" />
                             {rec.branch_name}
                           </div>
+                        </td>
+
+                        {/* Date */}
+                        <td className="py-4 px-6 text-slate-900 font-mono text-xs font-semibold">
+                          {formatDate(rec.check_in_time)}
                         </td>
 
                         {/* Check-In */}
@@ -491,7 +563,15 @@ function AdminAttendanceContent() {
                         {/* Status */}
                         <td className="py-4 px-6">
                           <Badge
-                            status={rec.status === 'late' ? 'late' : rec.status === 'absent' ? 'absent' : 'present'}
+                            status={
+                              rec.status === 'late'
+                                ? 'late'
+                                : rec.status === 'absent'
+                                  ? 'absent'
+                                  : rec.status === 'half_day'
+                                    ? 'half_day'
+                                    : 'present'
+                            }
                             variant="subtle"
                           />
                         </td>
@@ -586,9 +666,19 @@ function AdminAttendanceContent() {
           setEditingRecord(null);
         }}
         record={editingRecord}
-        onSuccess={() => {
-          setFeedback({ type: 'success', text: 'Attendance record manually corrected.' });
+        allowDelete={true}
+        onSuccess={(msg) => {
+          setFeedback({ type: 'success', text: msg || 'Attendance record manually corrected.' });
           fetchAttendance();
+        }}
+      />
+      <ManualAttendanceModal
+        isOpen={isManualAddOpen}
+        onClose={() => setIsManualAddOpen(false)}
+        onSuccess={(msg) => {
+          setFeedback({ type: 'success', text: msg || 'Manual attendance saved successfully.' });
+          if (activeTab === 'pending') setActiveTab('all');
+          else fetchAttendance();
         }}
       />
     </div>

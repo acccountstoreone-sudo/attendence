@@ -19,6 +19,8 @@ import {
   Download,
   FileText,
   FileSpreadsheet,
+  CalendarPlus,
+  CheckCircle2,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -55,6 +57,131 @@ export default function EmployeeHistoryPage() {
   const [correctionReason, setCorrectionReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [correctionSuccess, setCorrectionSuccess] = useState('');
+
+  // Missing Day(s) Request Modal State (e.g. app issue prevented attendance for multiple days)
+  const todayDhaka = useMemo(() => {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Dhaka',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+  }, []);
+  const [isMissingModalOpen, setIsMissingModalOpen] = useState(false);
+  const [missingFromDate, setMissingFromDate] = useState(todayDhaka);
+  const [missingToDate, setMissingToDate] = useState(todayDhaka);
+  const [missingExcluded, setMissingExcluded] = useState<Set<string>>(new Set());
+  const [missingCheckIn, setMissingCheckIn] = useState('09:00');
+  const [missingCheckOut, setMissingCheckOut] = useState('18:00');
+  const [missingIncludeOut, setMissingIncludeOut] = useState(true);
+  const [missingReason, setMissingReason] = useState('');
+  const [missingSubmitting, setMissingSubmitting] = useState(false);
+  const [missingError, setMissingError] = useState('');
+  const [missingSuccess, setMissingSuccess] = useState('');
+
+  const missingDateList = useMemo(() => {
+    if (!missingFromDate || !missingToDate || missingFromDate > missingToDate) return [];
+    const list: string[] = [];
+    const cursor = new Date(`${missingFromDate}T12:00:00Z`);
+    const end = new Date(`${missingToDate}T12:00:00Z`);
+    let guard = 0;
+    while (cursor <= end && guard < 14) {
+      list.push(cursor.toISOString().slice(0, 10));
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+      guard++;
+    }
+    return list;
+  }, [missingFromDate, missingToDate]);
+
+  const activeMissingDates = useMemo(
+    () => missingDateList.filter((d) => !missingExcluded.has(d)),
+    [missingDateList, missingExcluded]
+  );
+
+  const toggleMissingDate = (d: string) => {
+    setMissingExcluded((prev) => {
+      const next = new Set(prev);
+      if (next.has(d)) next.delete(d);
+      else next.add(d);
+      return next;
+    });
+  };
+
+  const submitMissingAttendanceRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMissingError('');
+    setMissingSuccess('');
+
+    if (activeMissingDates.length === 0) {
+      setMissingError('Please select at least one date.');
+      return;
+    }
+    if (!missingCheckIn) {
+      setMissingError('Check-in time is required.');
+      return;
+    }
+    if (missingIncludeOut && missingCheckOut && missingCheckOut <= missingCheckIn) {
+      setMissingError('Check-out time must be later than check-in time.');
+      return;
+    }
+    if (missingReason.trim().length < 5) {
+      setMissingError('Please provide a clear reason (at least 5 characters).');
+      return;
+    }
+
+    setMissingSubmitting(true);
+    try {
+      let submittedCount = 0;
+      for (const dateStr of activeMissingDates) {
+        // Submit check-in request
+        const inRes = await fetch('/api/corrections/apply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            date: dateStr,
+            type: 'check_in',
+            requested_time: `${dateStr}T${missingCheckIn}:00+06:00`,
+            reason: missingReason.trim(),
+          }),
+        });
+        const inJson = await inRes.json();
+        if (!inRes.ok || !inJson.success) {
+          throw new Error(inJson.error?.message || inJson.error || `Failed to submit request for ${dateStr}`);
+        }
+        submittedCount++;
+
+        // Submit check-out request if included
+        if (missingIncludeOut && missingCheckOut) {
+          const outRes = await fetch('/api/corrections/apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              date: dateStr,
+              type: 'check_out',
+              requested_time: `${dateStr}T${missingCheckOut}:00+06:00`,
+              reason: missingReason.trim(),
+            }),
+          });
+          const outJson = await outRes.json();
+          if (!outRes.ok || !outJson.success) {
+            throw new Error(outJson.error?.message || outJson.error || `Failed to submit check-out request for ${dateStr}`);
+          }
+        }
+      }
+
+      setMissingSuccess(
+        `Submitted missing attendance request for ${submittedCount} day${submittedCount > 1 ? 's' : ''}. Admin / Manager has been notified!`
+      );
+      setTimeout(() => {
+        setIsMissingModalOpen(false);
+        setMissingSuccess('');
+      }, 2200);
+    } catch (err: unknown) {
+      setMissingError(err instanceof Error ? err.message : 'Failed to submit request.');
+    } finally {
+      setMissingSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     async function loadHistory() {
@@ -240,6 +367,26 @@ export default function EmployeeHistoryPage() {
           <h1 className="text-2xl font-extrabold text-slate-900">My Attendance History</h1>
           <p className="text-sm text-slate-900 mt-1">Full record of your check-in/out timestamps and daily status.</p>
         </div>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => {
+            setMissingFromDate(todayDhaka);
+            setMissingToDate(todayDhaka);
+            setMissingExcluded(new Set());
+            setMissingCheckIn('09:00');
+            setMissingCheckOut('18:00');
+            setMissingIncludeOut(true);
+            setMissingReason('');
+            setMissingError('');
+            setMissingSuccess('');
+            setIsMissingModalOpen(true);
+          }}
+          className="bg-[#1dbf73] hover:bg-[#16965a] text-white font-bold border-none shadow-sm shrink-0"
+          icon={<CalendarPlus className="w-4 h-4" />}
+        >
+          Request Missing Attendance
+        </Button>
       </div>
 
       {/* Filters and Export */}
@@ -584,6 +731,189 @@ export default function EmployeeHistoryPage() {
                   disabled={isSubmitting || !!correctionSuccess}
                 >
                   {isSubmitting ? 'Submitting...' : 'Submit Request'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Missing Day(s) Attendance Request Modal */}
+      {isMissingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200/60 bg-slate-50/70 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#1dbf73] text-white flex items-center justify-center">
+                  <CalendarPlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-slate-900">Request Missing Attendance</h3>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Could not check in due to an app issue? Request Admin to update your day(s).
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMissingModalOpen(false)}
+                className="p-2 text-slate-500 hover:text-slate-900 bg-white hover:bg-slate-100 rounded-full border border-slate-200 transition-colors"
+                disabled={missingSubmitting}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={submitMissingAttendanceRequest} className="p-6 space-y-4 overflow-y-auto flex-1">
+              {missingError && (
+                <div className="p-3 bg-rose-50 text-rose-700 text-sm rounded-xl border border-rose-200 flex items-center gap-2 font-medium">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{missingError}</span>
+                </div>
+              )}
+              {missingSuccess && (
+                <div className="p-3 bg-emerald-50 text-emerald-700 text-sm rounded-xl border border-emerald-200 flex items-center gap-2 font-medium">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>{missingSuccess}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5">
+                    From Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={missingFromDate}
+                    max={todayDhaka}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setMissingFromDate(val);
+                      if (val > missingToDate) setMissingToDate(val);
+                    }}
+                    required
+                    disabled={missingSubmitting}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5">
+                    To Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={missingToDate}
+                    min={missingFromDate}
+                    max={todayDhaka}
+                    onChange={(e) => setMissingToDate(e.target.value)}
+                    required
+                    disabled={missingSubmitting}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73]"
+                  />
+                </div>
+              </div>
+
+              {missingDateList.length > 0 && (
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                  <p className="text-[11px] font-semibold text-slate-600">
+                    Selected days ({activeMissingDates.length}) — click any day to exclude off-days:
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {missingDateList.map((d) => {
+                      const included = !missingExcluded.has(d);
+                      return (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => toggleMissingDate(d)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-colors ${
+                            included
+                              ? 'bg-[#1dbf73]/15 border-[#1dbf73]/40 text-[#16965a]'
+                              : 'bg-white border-slate-200 text-slate-400 line-through'
+                          }`}
+                        >
+                          {d}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5">
+                    Check-In Time *
+                  </label>
+                  <input
+                    type="time"
+                    value={missingCheckIn}
+                    onChange={(e) => setMissingCheckIn(e.target.value)}
+                    required
+                    disabled={missingSubmitting}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1dbf73]"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                      Check-Out Time
+                    </label>
+                    <label className="flex items-center gap-1 text-[11px] font-medium text-slate-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={missingIncludeOut}
+                        onChange={(e) => setMissingIncludeOut(e.target.checked)}
+                        disabled={missingSubmitting}
+                        className="rounded border-slate-300 text-[#1dbf73] focus:ring-[#1dbf73]"
+                      />
+                      Include
+                    </label>
+                  </div>
+                  <input
+                    type="time"
+                    value={missingCheckOut}
+                    onChange={(e) => setMissingCheckOut(e.target.value)}
+                    disabled={missingSubmitting || !missingIncludeOut}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-mono text-slate-900 focus:outline-none focus:border-[#1dbf73] disabled:bg-slate-100 disabled:text-slate-400"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5">
+                  Reason *
+                </label>
+                <textarea
+                  value={missingReason}
+                  onChange={(e) => setMissingReason(e.target.value)}
+                  placeholder="e.g., App problem prevented check-in, I was present on duty..."
+                  required
+                  minLength={5}
+                  rows={3}
+                  disabled={missingSubmitting}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#1dbf73] resize-none"
+                />
+              </div>
+
+              <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-slate-200">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsMissingModalOpen(false)}
+                  disabled={missingSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="bg-[#1dbf73] hover:bg-[#16965a] text-white font-bold"
+                  disabled={missingSubmitting || !!missingSuccess || activeMissingDates.length === 0}
+                  isLoading={missingSubmitting}
+                >
+                  Submit Request ({activeMissingDates.length} {activeMissingDates.length === 1 ? 'Day' : 'Days'})
                 </Button>
               </div>
             </form>
